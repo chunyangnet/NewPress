@@ -1,0 +1,51 @@
+{{define "navigation-badge"}}{{if .Text}}<span class="nav-badge{{if .HideOnMobile}} nav-badge-mobile-hidden{{end}}" data-style="{{.Style}}" data-placement="{{.Placement}}">{{.Text}}</span>{{end}}{{end}}
+{{define "navigation-label"}}<span class="nav-link-label"><span>{{.Label}}</span>{{template "navigation-badge" .Badge}}</span>{{end}}
+{{define "navigation-children"}}
+<ul class="navigation-children">
+  {{range .}}
+  <li class="nav-item-{{.ID}} {{if .Active}}is-active{{end}} {{if .Children}}has-children{{end}}">
+    <a href="{{.URL}}" {{if .Current}}aria-current="page"{{end}} {{if .NewWindow}}target="_blank"{{end}} {{if .Rel}}rel="{{.Rel}}"{{end}}>
+      {{if .Icon}}<span class="navigation-item-icon">{{template "icon" .Icon}}</span>{{end}}
+      <span><b class="nav-link-label"><span>{{.Label}}</span>{{template "navigation-badge" .Badge}}</b>{{if .Description}}<small>{{.Description}}</small>{{end}}</span>
+      {{if .Children}}{{template "icon" "chevron-right"}}{{else if .NewWindow}}{{template "icon" "external-link"}}{{end}}
+    </a>
+    {{if .Children}}{{template "navigation-children" .Children}}{{end}}
+  </li>
+  {{end}}
+</ul>
+{{end}}
+
+{{define "primary-navigation"}}
+{{range .Navigation.Primary}}
+<div class="primary-menu-entry nav-item-{{.ID}} is-presentation-{{.Presentation}} {{if .Active}}is-active{{end}} {{if .Children}}has-children{{end}}">
+  <a href="{{.URL}}" {{if .Current}}aria-current="page"{{end}} {{if .NewWindow}}target="_blank"{{end}} {{if .Rel}}rel="{{.Rel}}"{{end}}>
+    {{if not .Icon}}<i class="primary-menu-accent" aria-hidden="true"></i>{{end}}{{if .Icon}}{{template "icon" .Icon}}{{end}}{{template "navigation-label" .}}{{if .Children}}{{template "icon" "chevron-down"}}{{else if .NewWindow}}{{template "icon" "external-link"}}{{end}}
+  </a>
+  {{if .Children}}<div class="primary-menu-flyout"><div class="primary-menu-flyout-head"><span>子栏目</span><b>{{.Label}}</b>{{if .Description}}<p>{{.Description}}</p>{{end}}</div>{{template "navigation-children" .Children}}</div>{{end}}
+</div>
+{{end}}
+{{end}}
+
+{{define "utility-navigation"}}
+{{range .Navigation.Utility}}<a class="nav-item-{{.ID}} {{if .Active}}is-active{{end}}" href="{{.URL}}" {{if .Current}}aria-current="page"{{end}} {{if .NewWindow}}target="_blank"{{end}} {{if .Rel}}rel="{{.Rel}}"{{end}}>{{if .Icon}}{{template "icon" .Icon}}{{end}}{{template "navigation-label" .}}{{if .NewWindow}} {{template "icon" "external-link"}}{{end}}</a>{{end}}
+{{end}}
+
+{{define "mobile-navigation"}}
+{{range $i, $item := .Navigation.MobileDock}}
+{{if eq $i 2}}{{template "mobile-central-action" $}}{{end}}
+<a class="nav-item-{{.ID}} {{if .Active}}is-current{{end}}" href="{{.URL}}" {{if .Active}}aria-current="page"{{end}} {{if .NewWindow}}target="_blank"{{end}} {{if .Rel}}rel="{{.Rel}}"{{end}}><span>{{if .Icon}}{{template "icon" .Icon}}{{else}}{{template "icon" "circle-help"}}{{end}}</span><small class="nav-link-label"><span>{{.Label}}</span>{{template "navigation-badge" .Badge}}</small></a>
+{{end}}
+{{if lt (len .Navigation.MobileDock) 3}}{{template "mobile-central-action" .}}{{end}}
+{{end}}
+
+{{define "mobile-central-action"}}
+{{if index .ThemeValues "mobile_quick_action"}}
+{{if .Navigation.MobileActionConfigured}}
+{{range .Navigation.MobileAction}}<a class="mobile-create mobile-create-custom nav-item-{{.ID}}" href="{{.URL}}" aria-label="{{.Label}}" title="{{.Label}}" {{if .Active}}aria-current="page"{{end}} {{if .NewWindow}}target="_blank"{{end}} {{if .Rel}}rel="{{.Rel}}"{{end}}><span>{{if .Icon}}{{template "icon" .Icon}}{{else}}{{template "icon" "plus"}}{{end}}</span><small class="nav-link-label"><span>{{.Label}}</span>{{template "navigation-badge" .Badge}}</small></a>{{end}}
+{{else}}<button class="mobile-create" type="button" data-modal-open="quick-actions" aria-label="打开快捷操作" aria-controls="quick-actions" aria-haspopup="dialog" aria-expanded="false"><span>{{template "icon" "plus"}}</span><small>快捷</small></button>{{end}}
+{{end}}
+{{end}}
+
+{{define "footer-navigation"}}
+{{range .Navigation.Footer}}<div class="footer-column nav-item-{{.ID}}"><h2>{{if .Icon}}{{template "icon" .Icon}}{{end}}{{template "navigation-label" .}}</h2>{{if .Children}}{{range .Children}}<a class="nav-item-{{.ID}}" href="{{.URL}}" {{if .Current}}aria-current="page"{{end}} {{if .NewWindow}}target="_blank"{{end}} {{if .Rel}}rel="{{.Rel}}"{{end}}>{{if .Icon}}{{template "icon" .Icon}}{{end}}{{template "navigation-label" .}}</a>{{end}}{{else}}<a href="{{.URL}}" {{if .Current}}aria-current="page"{{end}} {{if .NewWindow}}target="_blank"{{end}} {{if .Rel}}rel="{{.Rel}}"{{end}}>{{if .Description}}{{.Description}}{{else}}访问入口{{end}}</a>{{end}}</div>{{end}}
+{{end}}

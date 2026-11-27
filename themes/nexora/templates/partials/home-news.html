@@ -1,0 +1,5 @@
+{{define "home-news"}}
+<section data-home-section="news" class="news-section section-shell" id="news" aria-labelledby="news-title"><div class="section-heading"><div><h2 id="news-title">{{.Settings.news_title}}</h2>{{if .Settings.news_description}}<p>{{.Settings.news_description}}</p>{{end}}</div><a class="text-link" href="/explore/">全部动态{{template "icon-arrow" .}}</a></div>
+  <div class="news-grid">{{range $index, $post := .Posts}}{{if lt $index 3}}{{template "news-card" (dict "Post" $post "Page" $)}}{{end}}{{else}}<div class="empty-news"><h3>暂无企业动态</h3><p>发布的新闻与文章会显示在这里。</p></div>{{end}}</div>
+</section>
+{{end}}

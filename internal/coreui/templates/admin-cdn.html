@@ -1,0 +1,172 @@
+{{define "content"}}
+<section class="admin-page admin-settings-page cdn-admin" data-cdn-admin data-state="{{.CDN.StateJSON}}" data-readonly="{{.Admin.ReadOnly}}" data-user-id="{{.Admin.Principal.UserID}}" data-csrf="{{.Admin.CSRFToken}}">
+  <header class="admin-page-heading"><div><p class="cdn-eyebrow">网络与缓存</p><h1>CDN 加速</h1><p class="cdn-muted">配置加速域名，提交缓存刷新任务并测量线路。</p></div><a class="admin-button admin-button-quiet" href="/admin/plugins/">返回插件</a></header>
+  <div class="cdn-overview"><div class="cdn-overview-title"><span class="cdn-signal" aria-hidden="true"></span><div><b data-cdn-enabled>读取状态</b><p data-cdn-connection-count>尚无连接</p></div></div><dl><div><dt>待处理</dt><dd data-count="queued">0</dd></div><div><dt>进行中</dt><dd data-count="running">0</dd></div><div><dt>云端已受理</dt><dd data-count="accepted">0</dd></div><div><dt>需关注</dt><dd data-count="failed">0</dd></div></dl></div>
+  <p class="admin-inline-notice" data-cdn-disabled hidden>插件尚未启用。保存连接后，在插件页启用即可运行任务。<a href="/admin/plugins/">管理插件</a></p>
+  <p class="cdn-message" data-message hidden role="status" aria-live="polite"></p>
+  <noscript><p class="admin-inline-notice">此管理页需要 JavaScript。CDN 插件停用后，主题资源恢复本站地址。</p></noscript>
+  <div class="admin-settings-layout" data-settings-layout>
+    {{template "admin-settings-nav" (dict "Groups" .CDN.Groups "Prefix" "cdn-")}}
+    <div class="cdn-main">
+      <form id="cdn-settings" autocomplete="off">
+        <fieldset class="cdn-form" {{if .Admin.ReadOnly}}disabled{{end}}>
+          <section id="cdn-connections" class="admin-setting-section" data-settings-section>
+            <header><div><h2>服务连接</h2><p>最多 8 个连接。每个连接都有独立凭据、域名范围与任务记录。</p></div><button class="admin-button admin-button-secondary" type="button" data-add>添加连接</button></header>
+            <div class="cdn-connections"><nav class="cdn-profiles" data-profiles aria-label="CDN 连接"></nav>
+              <div class="cdn-empty" data-empty><span class="cdn-empty-symbol" aria-hidden="true">{{template "icon" "radio-tower"}}</span><h3>尚未添加服务连接</h3><p>添加服务商连接并验证权限后，即可提交缓存任务。</p><p class="cdn-muted">Cloudflare · 腾讯云 · 阿里云 · 七牛 · AWS</p></div>
+              <fieldset class="cdn-editor" data-editor hidden><legend data-editor-title>连接配置</legend><p class="cdn-muted" data-provider-note></p>
+                <div class="cdn-fields">
+                  <label>连接名称<input data-profile="name" maxlength="80" placeholder="例如：主站 Cloudflare" required></label>
+                  <label>服务商<select data-profile="provider"><option value="cloudflare">Cloudflare</option><option value="tencent">腾讯云 CDN</option><option value="edgeone">腾讯云 EdgeOne</option><option value="aliyun">阿里云 CDN</option><option value="qiniu">七牛云 Fusion</option><option value="cloudfront">Amazon CloudFront</option></select></label>
+                  <label class="cdn-wide">加速域名<textarea data-profile="domains" rows="3" spellcheck="false" placeholder="www.example.com&#10;static.example.com" required></textarea><small>每行一个精确主机名，不含协议、端口或通配符；所有操作限定在此列表。</small></label>
+                  <label data-resource-field><span data-resource-label>Zone ID</span><input data-profile="resource_id" maxlength="80" spellcheck="false"><small>不是账号 ID。</small></label>
+                  <label data-access-field>AccessKey ID / SecretId<input data-profile="access_key" maxlength="256" spellcheck="false" autocomplete="off"></label>
+                  <label><span data-secret-label>API Token</span><input type="password" data-profile="secret" maxlength="8192" autocomplete="new-password"><small data-secret-hint>保存后不再回显。</small></label>
+                  <label data-token-field>临时安全令牌（可选）<input type="password" data-profile="token" maxlength="8192" autocomplete="new-password"><small data-token-hint>使用长期密钥时留空。</small></label>
+                  <label class="cdn-check cdn-wide" data-clear-token-field><input type="checkbox" data-clear-token>清除已保存的临时安全令牌</label>
+                  <label class="cdn-check cdn-wide"><input type="checkbox" data-profile="auto_purge">此连接参与自动刷新</label>
+                </div>
+                <div class="cdn-capabilities" data-capabilities aria-label="接口能力"></div>
+                <div class="cdn-actions"><button type="button" class="admin-button admin-button-secondary" data-test>验证连接</button><button type="button" class="admin-button admin-button-quiet cdn-danger" data-remove>移除连接</button></div>
+              </fieldset>
+            </div>
+          </section>
+          <section id="cdn-policy" class="admin-setting-section" data-settings-section>
+            <header><div><h2>加速与联动</h2><p>公开主题资源使用独立加速域名；内容和媒体变更在后台刷新。</p></div><a class="admin-button admin-button-quiet" data-export="rules" href="/api/v1/admin/plugins/cdn/export?kind=rules">导出策略建议</a></header>
+            <div class="cdn-section cdn-fields">
+              <label class="cdn-wide">主题资源 CDN 地址<input type="url" data-setting="asset_base" placeholder="https://static.example.com"><small>可留空。填写已连接的 HTTPS 根域名，需要将 /theme-assets/* 回源到本站。先用诊断验证资源可访问，再开启。后台和预览使用本站资源。</small></label>
+              <label class="cdn-check cdn-wide"><input type="checkbox" data-setting="core_assets">同时加速公共核心资源（需将 /core-assets/* 回源本站）<small>默认关闭。启用前检查 CSS、JS、字体的回源和 CORS。后台、预览、账号与支付页面保持同源；不改变页面缓存策略。</small></label>
+              <label>静态资源缓存（秒）<input type="number" data-setting="static_ttl" min="0" max="86400" required><small>仅设置已启用加速的主题/公共核心静态资源缓存，不强制缓存会员、文章或支付页面。</small></label>
+              <label>并发任务<input type="number" data-setting="workers" min="1" max="4" required><small>同一连接串行执行，最多 4 个连接并行。</small></label>
+              <label>每连接提交间隔（秒）<input type="number" data-setting="interval_seconds" min="2" max="300" required></label>
+              <label>任务最多尝试次数<input type="number" data-setting="max_attempts" min="1" max="6" required><small>暂时性错误递增退避；参数或权限错误不会无限重试。</small></label>
+              <label class="cdn-check cdn-wide"><input type="checkbox" data-setting="auto_content">文章发布、编辑和状态变更后刷新关联 URL</label>
+              <label class="cdn-check cdn-wide"><input type="checkbox" data-setting="auto_comments">评论新增、编辑和审核后刷新关联页面</label>
+              <label class="cdn-check cdn-wide"><input type="checkbox" data-setting="auto_storage">对象存储完成上传或删除后刷新公开下载 URL</label>
+              <label class="cdn-check cdn-wide"><input type="checkbox" data-setting="paused">暂停队列，保留待处理任务</label>
+              <div class="cdn-wide cdn-policy-note">保留源站的 private / no-store 策略。对象存储中的 S3、R2、COS、OSS、七牛与 Cloudreve 可通过公开下载域名联动；CDN 连接中的域名需与其一致。</div>
+              <div class="cdn-actions cdn-wide"><a class="admin-button admin-button-secondary" data-export="settings" href="/api/v1/admin/plugins/cdn/export?kind=settings">导出配置（不含密钥）</a><button class="admin-button admin-button-quiet" type="button" data-import>导入配置</button><input type="file" accept=".json,application/json" data-import-file hidden></div>
+            </div>
+          </section>
+        </fieldset>
+      </form>
+      <section id="cdn-operations" class="admin-setting-section" data-settings-section>
+        <header><div><h2>缓存任务</h2><p>操作使用已保存的连接。任务持久保存，服务商返回受理结果后可查看回执。</p></div><span class="cdn-label">任务队列</span></header>
+        <form data-operation-form class="cdn-section"><fieldset class="cdn-form" {{if .Admin.ReadOnly}}disabled{{end}}><div class="cdn-fields">
+          <label>连接<select data-action-profile required></select></label><label>操作<select data-operation required></select></label>
+          <label class="cdn-wide" data-target-field>目标列表<textarea data-targets rows="5" placeholder="https://www.example.com/posts/hello" spellcheck="false"></textarea><small data-target-help>每行一个 HTTPS URL，每批最多 100 条。</small></label>
+        </div><p class="cdn-policy-note" data-operation-note>API 已受理与全球节点刷新完成是不同状态。</p><div class="cdn-actions"><button class="admin-button" type="submit" data-submit-job>提交任务</button><span class="cdn-muted" data-target-count>0 个目标</span></div></fieldset></form>
+      </section>
+      <section id="cdn-routing" class="admin-setting-section cdn-routing" data-settings-section data-routing>
+        <header><div><span class="cdn-label cdn-cloudflare-label">自定义域名接入</span><h2>接入与分流</h2><p>默认线路走常规接入，指定地区或运营商走优选域名。每次云端变更先预览再执行。</p></div><button type="button" class="admin-button admin-button-quiet" data-route-refresh>刷新</button></header>
+        <div class="cdn-section">
+          <ol class="cdn-routing-steps" aria-label="接入步骤"><li>连接 DNS</li><li>准备 SaaS</li><li>完成验证</li><li>检查并切流</li></ol>
+          <p class="cdn-message" data-route-message role="status" aria-live="polite" hidden></p>
+          <form data-routing-form autocomplete="off"><fieldset class="cdn-form" {{if .Admin.ReadOnly}}disabled{{end}}>
+            <div class="cdn-result-heading"><div><h3>DNS 连接</h3><p class="cdn-muted">阿里云云解析或腾讯云 DNSPod，使用独立凭据。</p></div><button type="button" class="admin-button admin-button-secondary" data-dns-add>添加 DNS</button></div>
+            <label class="cdn-routing-select">当前连接<select data-dns-select aria-label="DNS 连接"></select></label>
+            <fieldset class="cdn-editor" data-dns-editor hidden><legend>DNS 凭据</legend><div class="cdn-fields">
+              <label>名称<input data-dns="name" required maxlength="80"></label>
+              <label>服务商<select data-dns="provider"><option value="aliyun">阿里云云解析 DNS</option><option value="dnspod">腾讯云 DNSPod</option></select></label>
+              <label class="cdn-wide">托管区域<input data-dns="zone" required placeholder="example.com 或委派的子域 app.example.com" spellcheck="false"><small>需已在此服务商添加区域。NS 委派、域名授权和 DNSSEC 配置在服务商控制台完成。</small></label>
+              <label>AccessKey ID / SecretId<input data-dns="access_key" required maxlength="256" autocomplete="off" spellcheck="false"></label>
+              <label>Secret Key<input data-dns="secret" type="password" maxlength="8192" autocomplete="new-password"><small data-dns-secret>保存后不回显；同一账号留空保留。</small></label>
+              <label>临时令牌（可选）<input data-dns="token" type="password" maxlength="8192" autocomplete="new-password"></label>
+              <label class="cdn-check"><input data-dns-clear type="checkbox">清除已保存的临时令牌</label>
+            </div><div class="cdn-actions"><button type="button" class="admin-button admin-button-quiet cdn-danger" data-dns-remove>移除 DNS 连接</button></div></fieldset>
+            <div class="cdn-result-heading"><div><h3>访问域名</h3><p class="cdn-muted">Cloudflare 连接复用“服务连接”页中的 Zone 和 API Token。</p></div><button type="button" class="admin-button admin-button-secondary" data-route-add>添加方案</button></div>
+            <label class="cdn-routing-select">当前方案<select data-route-select aria-label="接入方案"></select></label>
+            <fieldset class="cdn-editor" data-route-editor hidden><legend>接入方案配置</legend><div class="cdn-fields">
+              <label>方案名称<input data-route="name" required maxlength="80"></label>
+              <label>Cloudflare Zone 连接<select data-route="cf_profile_id" required></select></label>
+              <label>DNS 连接<select data-route="dns_profile_id" required></select></label>
+              <label>访客访问域名<input data-route="hostname" required placeholder="app.example.com" spellcheck="false"></label>
+              <label>Fallback origin<input data-route="fallback_origin" required placeholder="origin.saas-example.com" spellcheck="false"><small>需预先存在于 Cloudflare Zone，且为已代理的回源记录。</small></label>
+              <label>常规 SaaS CNAME 目标<input data-route="target" required placeholder="customers.saas-example.com" spellcheck="false"><small>同 Zone 内的代理记录，可与 fallback origin 相同。</small></label>
+              <div class="cdn-wide cdn-preferred-services" data-preferred-services>
+                <div class="cdn-preferred-picker">
+                  <label for="cdn-preferred-service">公益优选服务参考<select id="cdn-preferred-service" data-preferred-service aria-describedby="cdn-preferred-note cdn-preferred-caution">
+                    <option value="">自行填写 / 查看服务</option>
+                    <option value="cf-cname.xingpingcn.top" data-name="xingpingcn" data-source="https://github.com/xingpingcn/enhanced-FaaS-in-China" data-note="面向大陆电信、联通、移动做分网优选；维护者说明约每 40 分钟更新。适合先在自己的访问域名上测试。" data-history="公开项目始于 2024 年，本次核对时仍有更新记录。">xingpingcn · 三网定时优选</option>
+                    <option value="www.cloudflare.182682.xyz" data-name="WeTest 微测网" data-suffix=".cloudflare.182682.xyz" data-source="https://www.wetest.vip/page/cloudflare/cname.html" data-note="站方自行维护，支持 IPv4 / IPv6；维护者标注每 15 分钟更新。支持任意子域名前缀，不承诺各省三网都更快。" data-history="站方公开列明维护方式与周期；未提供连续可用率记录。">WeTest 微测网 · 定时更新 / 双栈</option>
+                    <option value="newpress.cf.090227.xyz" data-name="CM 优选" data-suffix=".cf.090227.xyz" data-source="https://cf.090227.xyz/" data-note="维护者公开提供三网优选入口与统计，支持任意子域名前缀；这里使用 newpress 前缀。CNAME 更新频率未明确公布。" data-history="可查看维护者服务页、三网统计和分运营商 IP 接口。">CM 优选 · 三网入口 / 泛域名</option>
+                    <option value="cf.877774.xyz" data-name="秋名山优选" data-source="https://github.com/qmsdh/Best-CF-IP" data-note="维护者公开提供此 CNAME 及网站接入教程。未明确公布持续测速频率，建议作为备用，先检查自己的域名能否正常访问。" data-history="公开项目始于 2025 年；更新频率和长期可用率待核实。">秋名山优选 · 备用观察</option>
+                  </select></label>
+                  <button type="button" class="admin-button admin-button-secondary" data-preferred-fill disabled>填入目标</button>
+                </div>
+                <div class="cdn-preferred-info" aria-live="polite">
+                  <p id="cdn-preferred-note" data-preferred-note>选择服务查看维护说明，再按“填入目标”使用；也可以直接填写自己的优选域名。</p>
+                  <p data-preferred-history hidden></p>
+                  <a data-preferred-source target="_blank" rel="noopener noreferrer" hidden>查看维护者说明 ↗</a>
+                </div>
+                <p class="cdn-muted cdn-preferred-checked">资料与解析核对：<time datetime="2026-11-23">2026-11-23</time>。这是单次核对，不是实时可用状态。</p>
+                <p class="cdn-policy-note" id="cdn-preferred-caution">公益服务没有长期可用保证，维护时间长也不代表三网始终更快。需先完成本站域名的 SaaS 接入和证书验证，再检查、预览切流；建议保留常规线路并开启健康监测和失败回退。可用性检查不能代替大陆三网测速。</p>
+                <details class="cdn-preferred-excluded"><summary>暂不推荐的旧地址及原因</summary><p>本次解析核对中，<code>bestcf.top</code> 指向域名到期停放服务；小韩的 <code>newpress.cf.cname.vvhan.com</code> 返回名称不存在。两者暂不加入可选名单，需等待维护者确认恢复。单次解析失败也可能受本地网络影响。</p></details>
+              </div>
+              <label class="cdn-wide">优选 CNAME 目标<input data-route="preferred_target" required placeholder="选择上方服务填入，或填写自己的优选域名" spellcheck="false"><small>仅填写域名，不含 https:// 或路径。填入不会立即切流；保存后使用访问域名的 Host / SNI 检查此目标。</small></label>
+              <label class="cdn-wide">优选线路<select data-route="preferred_lines" data-select-ui="multiple" data-max-selected="8" multiple size="5" aria-describedby="cdn-route-line-help"></select><small id="cdn-route-line-help">先保存方案并“检查接入”，再选择账号实际可用的中国大陆、地区或运营商线路；最多 8 条。默认线路自动指向常规目标。</small></label>
+              <label>DNS TTL（秒）<input data-route="ttl" type="number" min="60" max="86400" required></label>
+              <label>健康检查公开路径<input data-route="health_path" required placeholder="/health.txt"><small>需返回 HTTP 2xx，不跟随跳转，不携带登录信息。</small></label>
+              <label class="cdn-wide">期望响应内容（可选）<input data-route="expected_body" maxlength="256" placeholder="例如 newpress-ok"><small>在响应前 16 KiB 内匹配，用来确认请求到达正确网站。默认最多抽测 3 个 IP，来自本站服务器出口。</small></label>
+              <label class="cdn-check cdn-wide"><input data-route="manage_existing" type="checkbox">允许在计划中接管已有 CNAME（仍需预览并确认具体变更）</label>
+              <label class="cdn-check cdn-wide"><input data-route="monitor" type="checkbox">定期检查证书、DNS 和两条线路的健康状态</label>
+              <label>检查间隔（秒）<input data-route="interval" type="number" min="60" max="86400" required></label>
+              <label>连续失败次数<input data-route="failure_threshold" type="number" min="2" max="10" required></label>
+              <label>连续恢复次数<input data-route="recovery_threshold" type="number" min="2" max="10" required></label>
+              <label>切换冷却（秒）<input data-route="cooldown" type="number" min="300" max="86400" required></label>
+              <label class="cdn-check cdn-wide"><input data-route="auto_failover" type="checkbox">达到失败阈值时，自动把本方案管理的优选记录改为常规目标</label>
+              <label class="cdn-check cdn-wide"><input data-route="auto_recover" type="checkbox">达到恢复阈值且过冷却期后，自动恢复优选目标</label>
+            </div><div class="cdn-actions"><button type="button" class="admin-button admin-button-quiet cdn-danger" data-route-remove>移除方案配置</button></div></fieldset>
+            <div class="cdn-routing-save cdn-actions"><button type="submit" class="admin-button" data-routing-save>保存接入配置</button><button type="button" class="admin-button admin-button-quiet" data-routing-reset>撤销更改</button><span class="cdn-muted" data-routing-dirty></span></div>
+          </fieldset></form>
+          <div class="cdn-actions cdn-routing-actions" aria-label="接入操作">
+            <button type="button" class="admin-button admin-button-secondary" data-route-action="inspect">检查接入</button>
+            <button type="button" class="admin-button admin-button-secondary" data-route-action="preview_setup">预览 SaaS 准备</button>
+            <button type="button" class="admin-button admin-button-secondary" data-route-action="preview_validation">预览验证解析</button>
+            <button type="button" class="admin-button" data-route-action="preview_route">预览地区分流</button>
+            <button type="button" class="admin-button admin-button-quiet" data-route-action="preview_fallback">预览回退</button>
+            <button type="button" class="admin-button admin-button-quiet" data-route-action="preview_restore">预览恢复优选</button>
+          </div>
+          <div data-route-report class="cdn-routing-report"><p class="cdn-muted">保存方案并检查接入，查看证书、NS 委派和可用解析线路。</p></div>
+          <div class="cdn-result-heading"><div><h3>变更计划</h3><p class="cdn-muted">计划 10 分钟有效。DNS 回滚也会重新预览；SaaS 回源为整个 Zone 共用，创建的主机名不会自动删除。</p></div><a class="admin-button admin-button-quiet" data-routing-export href="/api/v1/admin/plugins/cdn/export?kind=routing-plans">导出计划</a></div>
+          <div data-routing-plans></div>
+          <div class="cdn-result-heading"><div><h3>接入任务</h3><p class="cdn-muted">云端操作串行执行。结果未知时保留回执并停止，不自动重放。</p></div><a class="admin-button admin-button-quiet" data-routing-export href="/api/v1/admin/plugins/cdn/export?kind=routing">导出配置（不含密钥）</a></div>
+          <div data-routing-tasks></div>
+          <p class="cdn-help">自动监测不会自动更换续期 TXT。发现新验证要求后，预览并执行新的验证计划。暂停 CDN 队列或禁用插件会停止定时监测。DNS 缓存按 TTL 更新，不会立即改变所有访客的连接。</p>
+        </div>
+        <dialog class="cdn-confirm" data-routing-confirm aria-labelledby="cdn-routing-confirm-title"><form method="dialog"><h2 id="cdn-routing-confirm-title">执行接入计划</h2><p>下面的变更会写入云端。执行时将再次核对当前状态。</p><pre data-routing-confirm-text></pre><div class="cdn-actions"><button class="admin-button admin-button-secondary" value="cancel" autofocus>取消</button><button class="admin-button" value="confirm">执行以上变更</button></div></form></dialog>
+      </section>
+      <section id="cdn-optimizer" class="admin-setting-section cdn-optimizer" data-settings-section>
+        <header><div><span class="cdn-label cdn-cloudflare-label">线路测量</span><h2>节点优选</h2><p>测量当前服务器出口到 Cloudflare IP 的连接质量，筛选可用线路。</p></div><span class="cdn-network-icon" aria-hidden="true">{{template "icon" "route"}}</span></header>
+        <div class="cdn-section"><p class="cdn-scope">测量位置：本站服务器。Anycast 路由由网络决定，选择 IP 不能固定全球机房，也不能代表所有访客的体验。</p>
+          <form data-benchmark-form><fieldset class="cdn-form" {{if .Admin.ReadOnly}}disabled{{end}}><div class="cdn-fields">
+            <label>Cloudflare 连接<select data-benchmark-profile required></select></label>
+            <label>自动采样地址族<select name="family"><option value="4">IPv4</option><option value="6">IPv6</option></select></label>
+            <label class="cdn-wide">测速资源 URL<input type="url" name="url" required placeholder="https://www.example.com/cdn-cgi/trace"><small>必须是此连接下可公开访问的域名。测吞吐量时，请使用自己的较大静态文件；/cdn-cgi/trace 适合测延迟。</small></label>
+            <label class="cdn-wide">候选 IP（可留空）<textarea name="candidates" rows="3" spellcheck="false" placeholder="留空从实时官方网段中限量抽样；或每行填写一个 IP"></textarea><small>最多 64 个，逐个验证属于 Cloudflare 官方网段；不会扫描整个 CIDR。</small></label>
+            <label>自动采样数量<input type="number" name="sample_count" value="24" min="1" max="64" required></label>
+            <label>每 IP 延迟测量轮数<input type="number" name="rounds" value="3" min="1" max="5" required></label>
+            <label>并发连接<input type="number" name="concurrency" value="3" min="1" max="4" required></label>
+            <label>单次超时（秒）<input type="number" name="timeout_seconds" value="5" min="2" max="15" required></label>
+            <label>每 IP 额外下载上限<select name="download_bytes"><option value="0">只测连接和首字节延迟</option><option value="524288">512 KiB</option><option value="1048576">1 MiB</option><option value="8388608">8 MiB</option></select></label>
+            <label>最低成功率（%）<input type="number" name="minimum_success" value="100" min="50" max="100" required></label>
+          </div><div class="cdn-actions"><button type="submit" class="admin-button" data-benchmark-start>开始优选</button><span class="cdn-muted" data-benchmark-budget></span></div></fieldset></form>
+          <div class="cdn-result-heading"><div><h3>线路测量结果</h3><p class="cdn-muted">按成功率、P95 首字节延迟和下载速度排序；下载不足 64 KiB 时不显示吞吐量。</p></div><select data-benchmark-history aria-label="历史测速结果"><option value="">尚无测速结果</option></select></div>
+          <p class="cdn-muted" data-benchmark-summary></p>
+          <div class="cdn-table-scroll"><table class="cdn-table cdn-node-table"><caption class="cdn-sr-only">Cloudflare 节点测量结果</caption><thead><tr><th>IP / 接入机房</th><th>成功率</th><th>首字节 P50 / P95</th><th>TCP / TLS</th><th>下载</th><th>筛选</th></tr></thead><tbody data-node-results><tr><td colspan="6" class="cdn-table-empty">运行第一次测量，了解当前出口可用的 Cloudflare 线路。</td></tr></tbody></table></div>
+          <div class="cdn-actions cdn-result-exports" data-benchmark-exports hidden><a class="admin-button admin-button-secondary" data-result-format="csv">导出 CSV</a><a class="admin-button admin-button-quiet" data-result-format="json">JSON</a><a class="admin-button admin-button-quiet" data-result-format="hosts">最佳 IP 的 hosts 片段</a></div>
+          <p class="cdn-help">这里的测速导出供手动测试，不修改 hosts 或 DNS。实际访客分流请使用“接入与分流”。不要把优选 IP 填成 Cloudflare 橙云记录的源站地址，以免产生代理循环或 Error 1000。</p>
+        </div>
+      </section>
+      <section id="cdn-records" class="admin-setting-section" data-settings-section>
+        <header><div><h2>运行记录</h2><p>保留最近 200 个任务。受理回执可用于云端控制台查询。</p></div><button type="button" class="admin-button admin-button-quiet" data-refresh>刷新状态</button></header>
+        <div class="cdn-toolbar"><label>状态<select data-select-ui="soft" data-filter><option value="">全部</option><option value="queued">待处理</option><option value="running">进行中</option><option value="retrying">等待重试</option><option value="accepted">云端已受理</option><option value="succeeded">检查已完成</option><option value="failed">失败</option><option value="interrupted">已中断</option><option value="cancelled">已取消</option></select></label><label>搜索<input type="search" data-search placeholder="连接、URL 或任务 ID"></label><a class="admin-button admin-button-quiet" data-export="jobs" href="/api/v1/admin/plugins/cdn/export?kind=jobs">导出记录</a><span class="cdn-muted" data-last-refresh></span></div>
+        <p class="cdn-message" data-last-error hidden role="alert"></p>
+        <div class="cdn-table-scroll"><table class="cdn-table"><caption class="cdn-sr-only">CDN 任务历史</caption><thead><tr><th>任务 / 连接</th><th>状态</th><th>时间 / 尝试</th><th>详情</th><th>操作</th></tr></thead><tbody data-jobs><tr><td colspan="5" class="cdn-table-empty">尚无任务。</td></tr></tbody></table></div>
+      </section>
+      <footer class="cdn-savebar"><span data-save-status aria-live="polite">配置已保存</span><div class="cdn-actions"><button class="admin-button admin-button-quiet" type="button" data-reset>撤销未保存更改</button><button class="admin-button" type="submit" form="cdn-settings" data-save {{if .Admin.ReadOnly}}disabled{{end}}>保存配置</button></div></footer>
+    </div>
+  </div>
+  <dialog class="cdn-confirm" data-confirm aria-labelledby="cdn-confirm-title"><form method="dialog"><h2 id="cdn-confirm-title">确认操作范围</h2><p data-confirm-text></p><pre data-confirm-targets></pre><div class="cdn-actions"><button class="admin-button admin-button-secondary" value="cancel" autofocus>取消</button><button class="admin-button" value="confirm">确认继续</button></div></form></dialog>
+</section>
+{{end}}

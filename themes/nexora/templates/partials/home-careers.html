@@ -1,0 +1,3 @@
+{{define "home-careers"}}
+<section data-home-section="careers" class="careers-section section-shell" id="careers" aria-labelledby="careers-title"><div class="careers-heading"><div><h2 id="careers-title">{{.Settings.careers_title}}</h2><p>{{.Settings.careers_description}}</p></div>{{template "nexora-action-link" (dict "Page" . "URL" .Settings.careers_link "Label" .Settings.careers_button "Class" "outline-button dark-button")}}</div>{{template "enterprise-jobs" .}}</section>
+{{end}}

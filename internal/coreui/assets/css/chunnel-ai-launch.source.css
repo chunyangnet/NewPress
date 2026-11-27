@@ -1,0 +1,6 @@
+.admin-workbench .admin-composer-modes .ai-editor-launch { display: inline-flex; align-items: center; gap: 6px; color: var(--tone-accent, var(--admin-brand)); background: var(--paper); border: 1px solid var(--paper-deep); }
+.ai-editor-launch .icon { width: 15px; height: 15px; }
+.ai-launch-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--admin-brand); }
+.aipm-paragraph{padding:.75rem 1rem;border-top:1px solid var(--admin-border,#dce2e7)}.aipm-paragraph summary{cursor:pointer;font-weight:600}.aipm-paragraph label:not([hidden]){display:inline-grid;gap:.3rem;margin:.4rem .6rem .4rem 0}.aipm-paragraph label[data-paragraph-preview]:not([hidden]){display:grid}.aipm-paragraph textarea{width:100%}.aipm-paragraph [role=status]{font-size:.86rem}
+.ai-image-launch { margin-left: auto; flex-shrink: 0; }
+.ai-load-status { font-size: 12px; color: var(--muted); }

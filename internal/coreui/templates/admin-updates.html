@@ -1,0 +1,84 @@
+{{define "content"}}
+<section class="np-update" data-update-center data-csrf="{{.Admin.CSRFToken}}" data-readonly="{{.Admin.ReadOnly}}">
+  <header class="np-update-header">
+    <div><h1>系统更新</h1></div>
+    <div class="np-update-environment">{{template "icon" "database"}}<span>{{.Updates.Environment}}<small>{{.Updates.Platform}}</small></span></div>
+  </header>
+  <noscript><p class="np-update-notice">在线更新需要启用 JavaScript，才能显示实时进度并执行操作。</p></noscript>
+  {{if .Admin.ReadOnly}}<p class="np-update-notice">当前为本机只读预览。配置和更新操作需要管理员登录。</p>{{end}}
+  {{if not .Updates.Managed}}<p class="np-update-notice">当前为直接运行模式。使用 <code>newpress run</code> 启动后，即可在线切换版本。Docker 部署使用新版镜像中的默认启动命令。</p>{{end}}
+  {{if not .Updates.Configured}}<p class="np-update-notice">更新源尚未接入。后续配置发布仓库与校验公钥后，后台首页会提示已验证的新版本。</p>{{end}}
+  <p class="np-update-feedback" role="status" data-update-feedback hidden></p>
+  <div class="np-update-layout">
+    <div class="np-update-main">
+      <section class="np-update-release" aria-label="版本信息">
+        <div class="np-update-section-label"><span>01 / 版本通道</span><span class="np-update-badge" data-update-badge>等待检查</span></div>
+        <div class="np-update-versions"><div><small>当前运行</small><strong data-update-current>{{.Updates.Current}}</strong></div><span class="np-update-version-arrow">{{template "icon" "arrow-right"}}</span><div><small>可用版本</small><strong data-update-target>—</strong></div></div>
+        <p class="np-update-release-description"><span data-update-discovery aria-live="polite">{{if .Updates.TrustedPublisher}}已配置核心发布公钥{{else}}请由运维配置核心发布公钥{{end}}</span></p>
+        <div class="np-update-notes" hidden data-update-notes-wrap><span>本次更新</span><p data-update-notes></p></div>
+        <div class="np-update-release-actions"><button class="np-update-button" type="button" data-update-check {{if .Admin.ReadOnly}}disabled{{end}}>{{template "icon" "refresh-cw"}}检查更新</button><span data-update-source-label>{{if .Updates.Source.Official}}GitHub / Gitee 公开双源{{else}}Gitee 私有发布源{{end}}</span></div>
+        <div class="np-update-install" data-update-install hidden>
+          <label><input type="checkbox" data-update-backup>我已确认站点与数据库备份可恢复，允许短暂重启。</label>
+          <p>文件模式会自动生成恢复包。PostgreSQL 需要数据库和站点文件恢复回执。观察期内检查失败将恢复原版本。</p>
+          <button class="np-update-button is-primary" type="button" data-update-start disabled>{{template "icon" "arrow-down-to-line"}}安装更新</button>
+        </div>
+      </section>
+      <section class="np-update-policy" aria-labelledby="update-policy-title">
+        <header class="np-policy-head"><h2 id="update-policy-title">更新策略</h2><span data-update-policy-origin>{{if .Updates.Policy.Customized}}站点自定义{{else}}部署默认{{end}}</span></header>
+        <form id="update-policy-form" data-update-policy-form>
+          <fieldset data-update-policy-fields {{if .Admin.ReadOnly}}disabled{{end}}>
+            {{template "admin-switch" (dict "ID" "update-policy-auto" "Name" "auto_check" "Checked" .Updates.Policy.AutoCheck "Label" "自动检查更新" "Help" "发现新版本后，由管理员确认安装。")}}
+            <div class="np-policy-durations">
+              <div><label for="update-policy-interval">检查间隔</label>
+                <div class="np-policy-number"><input id="update-policy-interval" name="check_interval_minutes" type="number" min="1" max="10080" step="any" inputmode="decimal" value="{{.Updates.Policy.CheckIntervalMinutes}}" required aria-describedby="update-interval-help"><span>分钟</span></div>
+                <small id="update-interval-help">1 分钟至 7 天</small>
+              </div>
+              <div><label for="update-policy-window">健康观察时长</label>
+                <div class="np-policy-number"><input id="update-policy-window" name="observation_seconds" type="number" min="2" max="600" step="any" inputmode="decimal" value="{{.Updates.Policy.ObservationSeconds}}" required aria-describedby="update-window-help"><span>秒</span></div>
+                <small id="update-window-help">2 至 600 秒。提交前观察和提交后回退保护各使用这段时间。</small>
+              </div>
+            </div>
+            <p class="np-policy-hint" data-update-policy-launcher {{if .Updates.Policy.LauncherAppliesWindow}}hidden{{end}}>运行支持更新策略的 <code>newpress run</code> 后，自定义观察时长生效。</p>
+            <p class="np-policy-conflict" data-update-policy-conflict hidden>另一处已保存新策略。<button type="button" class="np-update-text-button" data-update-policy-reload>载入最新策略</button></p>
+            <div class="np-policy-actions">
+              <button type="button" class="np-update-text-button" data-update-policy-defaults {{if not .Updates.Policy.Customized}}hidden{{end}}>恢复部署默认</button>
+              {{template "admin-savebar" (dict "FormID" "update-policy-form" "ReadOnly" .Admin.ReadOnly "Label" "保存策略")}}
+            </div>
+          </fieldset>
+        </form>
+      </section>
+      <section class="np-update-progress-panel" aria-label="更新进度">
+        <div class="np-update-section-label"><span>02 / 更新进度</span><span class="np-update-connection" data-update-connection><i></i>实时同步</span></div>
+        <div class="np-update-progress-title"><div><h2 data-update-phase>准备就绪</h2><p data-update-detail>配置更新源，然后检查可用版本。</p></div><div class="np-update-percent"><b data-update-percent>0</b><span>%</span></div></div>
+        <progress class="np-update-meter" max="100" value="0" aria-label="更新完成进度" data-update-meter></progress>
+        <div class="np-update-transfer"><span data-update-bytes>等待下载</span><span data-update-speed></span><span data-update-elapsed>尚未开始</span></div>
+        <ol class="np-update-steps" aria-label="更新阶段"><li data-step="0"><b>01</b><span>下载</span></li><li data-step="1"><b>02</b><span>校验</span></li><li data-step="2"><b>03</b><span>准备</span></li><li data-step="3"><b>04</b><span>切换</span></li><li data-step="4"><b>05</b><span>就绪</span></li></ol>
+        <div class="np-update-progress-footer"><span role="status" aria-live="polite" data-update-announcement>任务结果会保留，刷新页面后仍可查看。</span><button type="button" class="np-update-text-button" data-update-cancel hidden>取消下载</button><a href="/admin/login/?next=%2Fadmin%2Fupdates%2F" data-update-login hidden>重新登录 {{template "icon" "chevron-right"}}</a></div>
+      </section>
+      <section class="np-update-console" aria-label="更新日志">
+        <div class="np-update-console-header"><h2>{{template "icon" "terminal"}}运行日志 <span data-update-log-count>0</span></h2><div>{{template "admin-switch" (dict "UpdateFollow" true "Checked" true "Label" "自动滚动")}}<button type="button" data-update-export>导出日志</button></div></div>
+        <div class="np-update-logs" role="log" aria-label="按时间排列的更新日志" tabindex="0" data-update-logs><p class="np-update-log-empty">暂无更新任务。</p></div>
+        <div class="np-update-console-foot"><span><i></i>更新服务</span><span>最多保留 200 条</span></div>
+      </section>
+    </div>
+    <aside class="np-update-config">
+      <div class="np-update-section-label"><span>更新源</span>{{template "icon" "lock-keyhole"}}</div>
+      <h2>更新源</h2><p>默认使用 GitHub / Gitee 官方公开测试版通道，无需令牌。私有发布源的访问令牌仅保存在服务端，不会回显。</p>
+      <form id="update-source-form" data-update-source autocomplete="off">
+        <fieldset {{if .Admin.ReadOnly}}disabled{{end}} data-update-fields>
+          <label class="np-update-clear-token"><input name="official" type="checkbox" {{if .Updates.Source.Official}}checked{{end}}>使用官方公开双源（无需令牌）</label>
+          <label>所属空间<input name="owner" required maxlength="100" value="{{.Updates.Source.Owner}}" placeholder="例如：my-team" spellcheck="false" autocomplete="username"></label>
+          <label>仓库名称<input name="repo" required maxlength="100" value="{{.Updates.Source.Repo}}" placeholder="例如：newpress-releases" spellcheck="false"></label>
+          <label>分支 / 标签<input name="ref" required maxlength="128" value="{{.Updates.Source.Ref}}" placeholder="releases" spellcheck="false"></label>
+          <label>更新清单路径<input name="manifest" required maxlength="240" value="{{.Updates.Source.Manifest}}" placeholder="updates/stable.json" spellcheck="false"></label>
+          <label>访问令牌 <span data-update-token-status>{{if .Updates.EnvironmentToken}}由环境配置{{else if .Updates.TokenSet}}已保存{{else}}未配置{{end}}</span><input type="password" name="token" maxlength="512" autocomplete="new-password" placeholder="留空保留现有令牌" {{if .Updates.EnvironmentToken}}disabled{{end}}></label>
+          <label class="np-update-clear-token"><input name="clear_token" type="checkbox" {{if .Updates.EnvironmentToken}}disabled{{end}}>清除已保存的令牌</label>
+          {{template "admin-savebar" (dict "FormID" "update-source-form" "ReadOnly" .Admin.ReadOnly "Label" "保存更新源")}}
+        </fieldset>
+      </form>
+      
+      <a class="np-update-help" href="/admin/tools/">{{template "icon" "settings-2"}}备份与恢复工具 </a>
+    </aside>
+  </div>
+</section>
+{{end}}

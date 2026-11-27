@@ -1,0 +1,57 @@
+{{define "content"}}
+{{if index .ThemeValues "reading_progress"}}<div class="reading-progress" data-reading-progress></div>{{end}}
+<article class="article shell" {{if not .IsPreview}}data-post-id="{{.Post.ID}}"{{end}}>
+  <header class="article-header">
+    <div class="article-topline">
+      <a class="back-link" href="/">{{template "icon" "arrow-left"}}返回内容流</a>
+      {{if or .Post.Categories .Post.Tags}}<div class="article-term-line">{{range .Post.Categories}}{{if $.IsPreview}}<span class="article-category">{{.Name}}</span>{{else}}<a class="article-category" href="/categories/{{.Slug}}/">{{.Name}}</a>{{end}}{{end}}{{range .Post.Tags}}{{if $.IsPreview}}<span class="article-tag">#{{.Name}}</span>{{else}}<a class="article-tag" href="/tags/{{.Slug}}/">#{{.Name}}</a>{{end}}{{end}}</div>{{end}}
+    </div>
+    {{template "article-badge-inline" .Post.ArticleBadge}}
+    <h1>{{.Post.Title}}</h1>
+    {{if .Post.Excerpt}}<p class="article-deck">{{.Post.Excerpt}}</p>{{end}}
+    <div class="article-byline">
+      <span class="author-avatar" aria-hidden="true">{{template "icon" "user-round"}}</span>
+      <div class="article-author-info"><div class="article-author-name"><b>{{if .IsPreview}}{{.Post.AuthorName}}{{else}}<a href="{{.Post.AuthorURL}}">{{.Post.AuthorName}}</a>{{end}}</b>{{template "identity-badges" .Recognition.AuthorBadges}}</div><small class="article-dates"><span>发布于 {{dateIn .Post.PublishedAt .Site.Timezone}}</span>{{if ne (dateIn .Post.PublishedAt .Site.Timezone) (dateIn .Post.UpdatedAt .Site.Timezone)}}<span>更新于 {{dateIn .Post.UpdatedAt .Site.Timezone}}</span>{{end}}</small></div>
+      <span class="article-reading-time" data-article-reading-time hidden>{{template "icon" "clock-3"}}<span></span></span>
+    </div>
+  </header>
+  {{if .Post.CoverURL}}<figure class="article-cover"><img {{with index .Images .Post.CoverURL}}src="{{.CardSrc}}" srcset="{{.CardSrcSet}}" sizes="(max-width: 800px) 100vw, 1000px"{{else}}src="{{.Post.CoverURL}}"{{end}} alt="" fetchpriority="high" width="1200" height="650"></figure>{{end}}
+  {{range .PluginFragments}}<aside class="plugin-article-note" data-tone="{{.Tone}}" aria-label="{{.Name}}"><strong>{{.Title}}</strong><p>{{.Text}}</p></aside>{{end}}
+  <div class="article-grid">
+    <aside class="article-rail" data-reader-rail aria-label="阅读导航">
+      <h2 class="reader-heading">{{template "icon" "list"}}阅读导航</h2>
+      <div class="reader-summary" data-reader-summary hidden><b data-reader-time></b><small>留一点时间，读点好内容</small></div>
+      <details class="reader-directory" open><summary><span>文章目录</span><small data-reader-chapters></small>{{template "icon" "chevron-down"}}</summary><nav data-reader-toc aria-label="文章章节"><a href="#article-body">正文</a></nav></details>
+      <div class="reader-settings" data-reader-settings hidden>
+        <div class="reader-size" role="group" aria-label="正文字号"><button type="button" data-reader-size="-1" aria-label="缩小正文字号">A−</button><output data-reader-size-label aria-live="polite">标准</output><button type="button" data-reader-size="1" aria-label="放大正文字号">A+</button></div>
+        <button class="reader-focus" type="button" data-reader-focus aria-pressed="false">{{template "icon" "eye"}}<span>专注阅读</span></button>
+        <div class="reader-status"><span>正文进度</span><output data-reader-percent aria-live="off">0%</output></div>
+        <div class="reader-meter" aria-hidden="true"><i data-reader-meter></i></div>
+      </div>
+      <a class="reader-next" href="#next">更多文章 {{template "icon" "arrow-down"}}</a>
+    </aside>
+    <div class="article-content">
+      <div id="article-body" class="prose">{{responsiveHTML .Post.ContentHTML .BodyImages}}</div>
+      <div class="article-extras">
+        {{template "article-recognition" .}}
+        {{if not .IsPreview}}{{template "series-reading" .}}{{end}}
+        <section class="article-action-bar surface" aria-label="文章操作">
+          <div>{{range .Post.Categories}}{{if $.IsPreview}}<span class="ui-badge badge-blue">{{.Name}}</span>{{else}}<a class="ui-badge badge-blue" href="/categories/{{.Slug}}/">{{.Name}}</a>{{end}}{{end}}{{range .Post.Tags}}{{if $.IsPreview}}<span class="ui-badge badge-violet">#{{.Name}}</span>{{else}}<a class="ui-badge badge-violet" href="/tags/{{.Slug}}/">#{{.Name}}</a>{{end}}{{end}}</div>
+          <div><button type="button" data-favorite aria-pressed="false">{{template "icon" "heart"}}<span>收藏</span></button><button type="button" data-share>{{template "icon" "share-2"}}<span>分享</span></button></div>
+        </section>
+        {{if index .ThemeValues "article_author_box"}}<section class="article-author-card surface{{if not (.ModuleEnabled "messaging")}} messaging-disabled{{end}}">
+          <span class="profile-avatar avatar-b">作</span>
+          <div><small>本文作者</small><h2>{{.Post.AuthorName}}</h2><p>查看作者已公开的其他文章。</p><a class="icon-text" href="{{.Post.AuthorURL}}">查看作者内容 {{template "icon" "chevron-right"}}</a></div>
+          <button class="ui-button ui-button-primary ui-button-small" type="button" data-follow="{{.Post.AuthorName}}" data-follow-user="{{.Post.AuthorID}}">{{template "icon" "plus"}}关注</button>{{if $.ModuleEnabled "messaging"}}<button class="ui-button ui-button-secondary ui-button-small" type="button" {{if gt .Post.AuthorID 0}}data-message-user="{{.Post.AuthorID}}"{{else}}data-message-to="{{.Post.AuthorName}}"{{end}}>{{template "icon" "message-square"}}私信</button>{{end}}
+        </section>{{end}}
+        {{if and (.ModuleEnabled "comments") (not .IsPreview)}}{{template "public-comments" .}}{{end}}
+      </div>
+      <footer id="next" class="article-footer">
+        <div><h2>接着读点什么？</h2><p>回到发现页，找找下一篇感兴趣的文章。</p></div>
+        <a class="ui-button ui-button-primary" href="/explore/">继续发现 {{template "icon" "arrow-right"}}</a>
+      </footer>
+    </div>
+  </div>
+</article>
+<script src="{{asset "js/chunnel-reader.js"}}?v={{.Site.ThemeVersion}}" defer></script>
+{{end}}

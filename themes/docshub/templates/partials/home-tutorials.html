@@ -1,0 +1,7 @@
+{{define "home-tutorials"}}
+<section class="tutorials" id="tutorials" aria-labelledby="tutorials-title">
+  <div class="section-heading"><div><h2 id="tutorials-title">{{if index .Settings "tutorials_title"}}{{index .Settings "tutorials_title"}}{{else}}教程推荐{{end}}</h2>{{with index .Settings "tutorials_description"}}<p class="section-description">{{.}}</p>{{end}}</div>{{if and (index .Settings "tutorials_more_label") (index .Settings "tutorials_more_link")}}<a href="{{index .Settings "tutorials_more_link"}}">{{index .Settings "tutorials_more_label"}} {{template "icon" "arrow"}}</a>{{end}}</div>
+  {{$posts := .Posts}}{{if .Featured}}{{$posts = .Featured}}{{end}}{{$visible := index .Settings "tutorials_count"}}{{if lt (len $posts) $visible}}{{$visible = len $posts}}{{end}}
+  <div class="tutorial-grid tutorial-grid-count-{{$visible}}">{{range $i, $post := $posts}}{{if lt $i (index $.Settings "tutorials_count")}}{{template "tutorial-card" (dict "Post" $post "Index" $i "Images" $.Images "Settings" $.Settings)}}{{end}}{{else}}<div class="empty-state"><span class="empty-icon">{{template "icon" "book"}}</span><h3>暂无教程</h3><p>教程发布后会显示在这里。</p><a href="/explore/" class="text-link">浏览文档 {{template "icon" "arrow"}}</a></div>{{end}}</div>
+</section>
+{{end}}

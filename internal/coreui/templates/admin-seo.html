@@ -1,0 +1,34 @@
+{{define "content"}}
+<section class="seo-workspace">
+  <header class="seo-heading"><div><h1>搜索与链接</h1><p>管理旧地址，检查内容中的站内引用。</p></div><a class="admin-button admin-button-quiet" href="/admin/content/">在编辑器预览搜索与分享 {{template "icon" "chevron-right"}}</a></header>
+  <div class="seo-policy-strip" aria-label="搜索引擎策略"><span>搜索引擎索引 <strong>{{if .Redirects.Visible}}允许{{else}}已关闭{{end}}</strong></span><span>站点地图 <strong>{{if .Redirects.Sitemap}}已开启{{else}}已关闭{{end}}</strong></span><a href="/admin/settings/#seo">{{template "icon" "settings-2"}}调整站点策略</a></div>
+  {{if .Admin.Notice}}<div class="seo-notice {{if eq .Admin.NoticeTone "error"}}is-error{{end}}" role="status">{{.Admin.Notice}}</div>{{end}}
+  <div class="seo-task-workspace" data-seo-workspace data-seo-editing="{{.Redirects.Editing}}">
+  <nav class="seo-task-nav" aria-label="搜索与链接工具"><a href="#redirects" data-seo-task="redirects">旧链接规则</a><a href="#link-check" data-seo-task="link-check">引用检查</a></nav>
+  <section class="seo-section" id="redirects" data-seo-panel aria-labelledby="redirect-title">
+    <header class="seo-section-heading"><div><h2 id="redirect-title">旧地址跳转</h2><p>已公开文章改名时自动保留旧链接。也可手动补上迁站前的地址。</p></div>{{if not .Redirects.Editing}}{{if .Admin.CanWrite "settings:manage"}}<a class="admin-button admin-button-primary" href="/admin/seo/?edit=new#redirects">{{template "icon" "plus"}} 添加旧链接</a>{{end}}{{else}}<a class="admin-button" href="/admin/seo/#redirects">返回规则列表</a>{{end}}</header>
+    {{if .Redirects.Editing}}
+    <div class="seo-rule-editor">
+      <form id="seo-rule-form" method="post" action="/admin/seo/" class="seo-rule-form" data-admin-native-save data-admin-allow-clean>
+        <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><input type="hidden" name="action" value="save"><input type="hidden" name="id" value="{{.Redirects.Current.ID}}"><input type="hidden" name="version" value="{{.Redirects.Current.Version}}">
+        <fieldset {{if .Admin.ReadOnly}}disabled{{end}}><legend>{{if .Redirects.Current.ID}}编辑跳转规则{{else}}添加一条永久重定向{{end}}</legend>
+          <label for="seo-old-path">从这个旧地址<input id="seo-old-path" name="path" value="{{.Redirects.Current.Path}}" maxlength="2048" required placeholder="/2024/11/my-old-article/" spellcheck="false" autocomplete="off"><small>{{if index .Admin.FieldErrors "path"}}{{index .Admin.FieldErrors "path"}}{{else}}只填写站内路径；不要填写域名、查询参数或片段。{{end}}</small></label>
+          <div class="seo-direction" aria-hidden="true">↓ <span>301 · 永久重定向</span></div>
+          <label for="seo-target-id">抵达这篇内容<input id="seo-target-id" name="post_id" type="number" min="1" step="1" value="{{if .Redirects.Current.PostID}}{{.Redirects.Current.PostID}}{{end}}" required inputmode="numeric" placeholder="文章或页面编号"><small>{{if index .Admin.FieldErrors "post_id"}}{{index .Admin.FieldErrors "post_id"}}{{else}}填写内容编号，或通过目标内容搜索选择。以后再次改名时会自动跟随。{{end}}</small></label>
+          <p class="seo-selected-target" data-seo-selected-target role="status"></p>
+          <div class="seo-form-actions">{{template "admin-savebar" (dict "FormID" "seo-rule-form" "ReadOnly" .Admin.ReadOnly "Label" "保存规则")}}{{if .Redirects.Current.ID}}<a href="/admin/seo/?edit={{.Redirects.Current.ID}}#redirects">重新载入当前版本</a>{{end}}</div>
+        </fieldset>
+      </form>
+      <aside class="seo-target-picker" data-seo-target-picker data-read-only="{{.Admin.ReadOnly}}"><h3>找到目的地</h3><form data-seo-source-search role="search"><label class="sr-only" for="seo-source-q">搜索目标内容</label><input id="seo-source-q" type="search" name="q" maxlength="100" placeholder="按标题或正文查找"><button class="admin-button" type="submit">查找</button></form><p data-seo-source-status role="status">选择后将自动填写目标内容编号。</p><div data-seo-source-results class="seo-source-results"></div><nav class="seo-picker-pages" aria-label="目标内容分页"><button type="button" class="admin-button" data-seo-source-prev hidden>上一页</button><button type="button" class="admin-button" data-seo-source-next hidden>下一页</button></nav></aside>
+    </div>
+    {{else}}
+    <form class="seo-rule-search" role="search" action="/admin/seo/"><label class="sr-only" for="seo-path-query">搜索旧路径</label><input id="seo-path-query" type="search" name="q" value="{{.Redirects.Search}}" maxlength="100" placeholder="查找一段旧路径"><button class="admin-button" type="submit">筛选</button><span>{{.Redirects.Total}} 条规则</span></form>
+    <div class="seo-rule-list">{{range .Redirects.Items}}<article class="seo-rule-row"><div><small>{{if .Automatic}}改名时保留{{else}}手动添加{{end}} · #{{.ID}} · v{{.Version}}</small><code>{{.Path}}</code><span class="seo-route-destination">↳ {{.Target}}</span></div><div class="seo-target-copy"><strong>{{.Title}}</strong><span class="seo-target-state {{if not .Public}}is-paused{{end}}">{{if .Public}}目标公开 · 跳转生效{{else}}目标未公开 · 当前返回 404{{end}}</span></div><nav aria-label="管理旧链接 {{.Path}}"><a class="admin-button" href="/admin/seo/?edit={{.ID}}#redirects">编辑</a>{{if $.Admin.CanWrite "settings:manage"}}<form method="post" action="/admin/seo/"><input type="hidden" name="csrf_token" value="{{$.Admin.CSRFToken}}"><input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="{{.ID}}"><input type="hidden" name="version" value="{{.Version}}"><button class="seo-remove" type="submit" data-confirm-action="删除这条旧链接规则？内容本身会保留。">删除</button></form>{{end}}</nav></article>{{else}}<div class="seo-empty"><span>↳</span><h3>{{if .Redirects.Search}}没有匹配的旧路径{{else}}还没有旧链接规则{{end}}</h3><p>{{if .Redirects.Search}}换一段路径搜索，或查看全部规则。{{else}}公开文章改名后，规则会自动出现在这里。迁站时也可以手动添加。{{end}}</p>{{if .Redirects.Search}}<a href="/admin/seo/">查看全部规则 {{template "icon" "chevron-right"}}</a>{{end}}</div>{{end}}</div>
+    {{if gt .Redirects.Pages 1}}<nav class="seo-pagination" aria-label="规则分页">{{if gt .Redirects.Page 1}}<a href="{{.Redirects.PreviousURL}}#redirects">← 上一页</a>{{end}}<span>{{.Redirects.Page}} / {{.Redirects.Pages}}</span>{{if lt .Redirects.Page .Redirects.Pages}}<a href="{{.Redirects.NextURL}}#redirects">下一页 →</a>{{end}}</nav>{{end}}
+    {{end}}
+    <p class="seo-caption">当前内容地址优先。目标撤回公开后，旧链接也停止跳转；再次公开后恢复。规则只承接网页的 GET / HEAD 请求，不转发查询参数。</p>
+  </section>
+  <section class="seo-section seo-link-check" id="link-check" data-seo-panel data-seo-link-check aria-labelledby="seo-check-heading"><header class="seo-section-heading"><div><h2 id="seo-check-heading">检查一篇内容的引用</h2><p>检查已保存正文和封面的站内链接，标出需要更新或修复的地方。</p></div></header><div class="seo-check-controls"><label for="seo-check-id">内容编号<input type="number" min="1" step="1" id="seo-check-id" data-seo-check-id inputmode="numeric" placeholder="例如 14"></label><button type="button" class="admin-button admin-button-primary" data-seo-check-run>检查链接</button></div><p class="seo-check-status" data-seo-check-status role="status">单次最多检查 200 个不同链接。外链、锚点和动态查询会标为未检查。</p><div class="seo-check-summary" data-seo-check-summary></div><div class="seo-check-results" data-seo-check-results></div></section>
+  </div>
+</section>
+{{end}}

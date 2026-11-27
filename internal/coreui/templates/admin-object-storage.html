@@ -1,0 +1,124 @@
+{{define "content"}}
+<section class="admin-page admin-settings-page storage-admin" data-storage-admin data-storage-state="{{.ObjectStorage.StateJSON}}" data-readonly="{{.Admin.ReadOnly}}" data-user-id="{{.Admin.Principal.UserID}}" data-csrf="{{.Admin.CSRFToken}}">
+  <header class="admin-page-heading">
+    <div><h1>对象存储</h1><p class="storage-intro">为站点媒体建立云端副本，按需启用云端访问。</p></div>
+    <a class="admin-button admin-button-quiet" href="/admin/plugins/">返回插件</a>
+  </header>
+  <div class="storage-overview" aria-label="同步概况">
+    <div class="storage-overview-state"><span class="storage-status-dot" aria-hidden="true"></span><b data-storage-enabled>读取状态</b><span data-storage-current>尚未选择当前存储</span></div>
+    <dl><div><dt>已同步对象</dt><dd data-storage-count="synced">0</dd></div><div><dt>待处理</dt><dd data-storage-count="pending">0</dd></div><div><dt>失败</dt><dd data-storage-count="failed">0</dd></div><div><dt>云端副本容量</dt><dd data-storage-bytes>0 B</dd></div></dl>
+  </div>
+  <p class="admin-inline-notice" data-storage-disabled-note hidden>插件已停用。可以保存配置和测试连接；启用后开始处理同步任务。<a href="/admin/plugins/">管理插件</a></p>
+  <noscript><p class="admin-inline-notice">此配置页需要启用 JavaScript 才能管理存储连接。原有媒体仍可正常使用。</p></noscript>
+  <div class="admin-settings-layout" data-settings-layout>
+    {{template "admin-settings-nav" (dict "Groups" .ObjectStorage.Groups "Prefix" "storage-")}}
+    <div class="storage-main">
+      <form id="object-storage-form" class="admin-settings-form" data-storage-form novalidate autocomplete="off">
+        <fieldset class="storage-form-fieldset" {{if .Admin.ReadOnly}}disabled{{end}}>
+          <section id="storage-connections" class="admin-setting-section" data-settings-section aria-labelledby="storage-connections-title">
+            <header><div><h2 id="storage-connections-title">存储连接</h2><p>最多保存 8 套配置，可分别同步，也可以切换当前存储。</p></div><button class="admin-button admin-button-secondary" type="button" data-storage-add {{if .Admin.ReadOnly}}disabled{{end}}>添加存储</button></header>
+            <div class="storage-connections-grid">
+              <nav class="storage-profile-list" aria-label="存储配置" data-storage-profiles></nav>
+              <div class="storage-empty" data-storage-empty><span aria-hidden="true">{{template "icon" "database"}}</span><h3>连接第一个存储</h3><p>选择服务商，填写存储桶和访问凭据。先测试连接，再开始同步。</p></div>
+              <fieldset class="storage-profile-editor" data-storage-editor hidden>
+                <legend class="storage-profile-heading" data-storage-profile-heading>存储配置</legend>
+                <p class="storage-provider-note" data-storage-provider-note></p>
+                <div class="storage-field-grid">
+                  <label class="storage-field">配置名称<input type="text" name="profile_name" data-profile-field="name" maxlength="80" required placeholder="例如：网站媒体主存储"></label>
+                  <label class="storage-field">服务商<select name="profile_provider" data-profile-field="provider"><option value="s3">Amazon S3</option><option value="r2">Cloudflare R2</option><option value="cos">腾讯云 COS</option><option value="oss">阿里云 OSS</option><option value="qiniu">七牛云 Kodo</option><option value="s3-compatible">其他 S3 兼容存储</option><option value="cloudreve">Cloudreve</option><option value="webdav">其他 WebDAV</option></select></label>
+                  <label class="storage-field storage-field-wide">服务地址 / Endpoint<input type="url" name="profile_endpoint" data-profile-field="endpoint" maxlength="2048" spellcheck="false" placeholder="https://s3.us-east-1.amazonaws.com"><small data-storage-endpoint-help>可留空，按区域使用标准服务地址；不包含存储桶名称。</small></label>
+                  <label class="storage-field" data-storage-cloud-field>区域 / Region<input type="text" name="profile_region" data-profile-field="region" maxlength="40" spellcheck="false" placeholder="us-east-1"><small data-storage-region-help>填写存储桶所在区域。</small></label>
+                  <label class="storage-field" data-storage-cloud-field><span data-storage-bucket-label>存储桶 / Bucket</span><input type="text" name="profile_bucket" data-profile-field="bucket" maxlength="63" spellcheck="false" required placeholder="site-media"><small data-storage-bucket-help>仅填写桶名，不包含地址或目录。</small></label>
+                  <label class="storage-field" data-storage-cloud-field>Access Key / SecretId<input type="text" name="profile_access_key" data-profile-field="access_key" maxlength="8192" spellcheck="false" required autocomplete="off"></label>
+                  <label class="storage-field" data-storage-cloud-field>Secret Key / SecretKey<input type="password" name="profile_secret_key" data-profile-field="secret_key" maxlength="8192" autocomplete="new-password"><small data-storage-secret-help>凭据只保存在服务端，保存后不再显示。</small></label>
+                  <label class="storage-field" data-storage-dav-field hidden>WebDAV 用户名<input type="text" name="profile_username" data-profile-field="username" maxlength="8192" autocomplete="off"><small>Cloudreve 通常使用账号邮箱。</small></label>
+                  <label class="storage-field" data-storage-dav-field hidden>WebDAV 独立密码<input type="password" name="profile_password" data-profile-field="password" maxlength="8192" autocomplete="new-password"><small data-storage-password-help>使用 WebDAV 账号密码，不是网页登录密码。</small></label>
+                  <label class="storage-field">目录前缀<input type="text" name="profile_prefix" data-profile-field="prefix" maxlength="200" spellcheck="false" placeholder="media"><small>可留空；系统会追加本站独立目录。</small></label>
+                  <label class="storage-field">请求超时（秒）<input type="number" name="profile_timeout" data-profile-field="timeout_seconds" min="10" max="600" step="1" required></label>
+                  <label class="storage-field storage-field-wide">公开下载域名 / CDN（可选）<input type="url" name="profile_public_url" data-profile-field="public_url" maxlength="2048" spellcheck="false" placeholder="https://media.example.com"><small>填写映射到存储根目录的 HTTPS 地址。启用云端加速时使用；不包含签名参数。</small></label>
+                </div>
+                <details class="storage-advanced"><summary>高级连接设置</summary><div class="storage-field-grid">
+                  <label class="storage-field storage-field-wide" data-storage-cloud-field>临时安全令牌 / Session Token（可选）<input type="password" name="profile_session_token" data-profile-field="session_token" maxlength="8192" autocomplete="new-password"><small data-storage-token-help>使用长期密钥时留空。</small></label>
+                  <label class="storage-check storage-field-wide" data-storage-cloud-field><input type="checkbox" data-storage-clear-token>清除已保存的临时安全令牌</label>
+                  <label class="storage-check storage-field-wide" data-storage-path-style><input type="checkbox" name="profile_path_style" data-profile-field="path_style">使用路径式桶地址 <small>部分 S3 兼容服务需要；腾讯 COS 使用虚拟主机方式。</small></label>
+                  <label class="storage-check storage-field-wide"><input type="checkbox" name="profile_allow_private" data-profile-field="allow_private">允许访问已配置服务的私有网络地址 <small>仅在连接自建存储或内网 Endpoint 时开启。</small></label>
+                  <label class="storage-check storage-field-wide"><input type="checkbox" name="profile_allow_http" data-profile-field="allow_http">允许 HTTP 连接 <small>默认使用 HTTPS；HTTP 连接不会加密凭据和媒体内容。</small></label>
+                  <label class="storage-field storage-field-wide">配置标识<input type="text" name="profile_id" data-profile-field="id" maxlength="40" pattern="[a-z0-9][a-z0-9-]{0,39}" required spellcheck="false" readonly><small>自动生成，用于绑定同步记录。已有记录时，更换桶或目录请添加新配置。</small></label>
+                </div></details>
+                <div class="storage-profile-actions"><button type="button" class="admin-button admin-button-secondary" data-storage-test>测试连接</button><button type="button" class="admin-button admin-button-quiet storage-danger" data-storage-remove>移除配置</button></div>
+                <button type="button" class="admin-button admin-button-quiet" data-storage-copy>复制为新连接</button>
+                <div class="storage-probe" data-storage-probe hidden role="status" aria-live="polite"><b data-storage-probe-title></b><ol data-storage-probe-stages></ol><p data-storage-probe-detail></p></div>
+              </fieldset>
+            </div>
+          </section>
+          <section id="storage-policy" class="admin-setting-section" data-settings-section aria-labelledby="storage-policy-title">
+            <header><div><h2 id="storage-policy-title">同步与访问</h2><p>上传先保存到本地，后台再处理云端副本。原有文章地址保持可用。</p></div></header>
+            <div class="storage-field-grid storage-section-content">
+              <label class="storage-field">默认存储<select name="active_profile" data-setting-field="active_profile" data-storage-active><option value="">暂不选择</option></select><small>未单独指定目标的上传入口使用这一配置。</small></label>
+              <label class="storage-field">媒体访问方式<select name="mode" data-setting-field="mode"><option value="mirror">本地读取 · 云端保存副本</option><option value="redirect">云端加速 · 已同步对象跳转云端</option></select><small>云端加速只对校验通过的对象生效。本地副本继续保留。</small></label>
+              <label class="storage-check storage-field-wide"><input type="checkbox" name="auto_sync" data-setting-field="auto_sync">自动同步当前媒体库与后续上传 <small>包括原图、缩略图和 WebP。</small></label>
+              <label class="storage-check storage-field-wide"><input type="checkbox" name="verify_download" data-setting-field="verify_download">同步后下载校验 SHA-256 <small>推荐开启；完整验证云端内容，会增加读取流量。</small></label>
+              <label class="storage-check storage-field-wide"><input type="checkbox" name="paused" data-setting-field="paused">暂停后台任务 <small>保留任务，取消暂停后继续处理。</small></label>
+              <details class="storage-advanced storage-field-wide"><summary>高级任务参数</summary><div class="storage-field-grid">
+              <label class="storage-field">并发任务数<input type="number" name="workers" data-setting-field="workers" min="1" max="4" step="1" required><small>低配服务器建议 1–2，最多 4。</small></label>
+              <label class="storage-field">自动扫描间隔（秒）<input type="number" name="scan_seconds" data-setting-field="scan_seconds" min="30" max="3600" step="1" required></label>
+              <label class="storage-field">任务最大尝试次数<input type="number" name="max_attempts" data-setting-field="max_attempts" min="1" max="10" step="1" required><small>临时失败按递增间隔重试。</small></label>
+              <label class="storage-field">临时下载链接有效期（秒）<input type="number" name="signed_url_seconds" data-setting-field="signed_url_seconds" min="60" max="3600" step="1" required><small>未设置公开下载域名时，支持签名的存储使用临时链接。</small></label>
+              </div></details>
+            </div>
+          </section>
+          <section id="storage-routes" class="admin-setting-section" data-settings-section aria-labelledby="storage-routes-title">
+            <header><div><h2 id="storage-routes-title">上传入口路由</h2><p>每个入口可独立选择仅本地或指定云存储，并设置访问方式。原图和衍生图片使用相同路由。</p></div></header>
+            <div class="storage-section-content">
+              <div class="storage-task-actions"><button type="button" class="admin-button admin-button-secondary" data-storage-routes-local>全部设为本地</button><button type="button" class="admin-button admin-button-quiet" data-storage-routes-reset>恢复默认路由</button></div>
+              <p class="storage-help">路由同时作用于该入口已有文件与新上传。改为本地会停止新同步和云端访问，已有云端副本保留；切换云存储后按自动同步设置复制。云端同步完成前或插件停用时使用本地副本。圈子附件默认本地，选择云端后仍由本站校验成员权限并代理读取，请为其使用私有存储桶。</p>
+              <div class="storage-field-grid" data-storage-routes></div>
+              <p class="storage-help">配置、导航和内容导入文件在解析后写入对应业务数据；主题、插件包解包安装到本地运行目录。这些入口不是媒体文件，不参与云端分发。</p>
+            </div>
+          </section>
+        </fieldset>
+      </form>
+      <section id="storage-operations" class="admin-setting-section" data-settings-section aria-labelledby="storage-operations-title">
+        <header><div><h2 id="storage-operations-title">同步任务</h2><p>手动操作使用已保存的配置。先保存更改，再测试或同步。</p></div></header>
+        <div class="storage-section-content">
+          <label class="storage-field storage-action-select">操作的存储<select data-storage-action-profile aria-label="操作的存储"><option value="">请选择</option></select></label>
+          <p class="storage-help" data-storage-profile-summary aria-live="polite"></p>
+          <div class="storage-task-actions"><button class="admin-button admin-button-secondary" type="button" data-storage-action="sync">同步媒体库</button><button class="admin-button admin-button-secondary" type="button" data-storage-action="retry">重试失败任务</button><button class="admin-button admin-button-secondary" type="button" data-storage-action="verify">校验云端副本</button><button class="admin-button admin-button-quiet storage-danger" type="button" data-storage-action="cleanup">清理待清理副本</button></div>
+          <p class="storage-help">清理仅处理本站记录中已移入回收站或已移除的对象。其他目录、其他站点和未记录的文件不会进入清理任务。</p>
+          <p class="admin-inline-notice" data-storage-action-status hidden role="status" aria-live="polite"></p>
+        </div>
+      </section>
+      <section id="storage-migration" class="admin-setting-section" data-settings-section aria-labelledby="storage-migration-title">
+        <header><div><h2 id="storage-migration-title">存储位置迁移</h2><p>更换服务商、存储桶或目录时，先添加并保存目标连接，再迁移关联入口。</p></div></header>
+        <div class="storage-section-content">
+          <div class="storage-field-grid"><label class="storage-field">来源存储<select data-migration-source></select></label><label class="storage-field">目标存储<select data-migration-target></select></label></div>
+          <p class="storage-help">从本地原件复制到目标，统一切换默认存储和指向来源的上传入口。未同步文件从本地读取，旧云端副本保留。任务支持暂停、重试和重启恢复。</p>
+          <div class="storage-task-actions"><button type="button" class="admin-button admin-button-secondary" data-migration-preview>预览迁移范围</button><button type="button" class="admin-button" data-migration-apply disabled>开始迁移</button></div>
+          <p data-migration-summary role="status" aria-live="polite">选择来源和目标后预览迁移范围。</p>
+        </div>
+      </section>
+      <section id="storage-files" class="admin-setting-section" data-settings-section aria-labelledby="storage-files-title">
+        <header><div><h2 id="storage-files-title">云端文件</h2><p>实时浏览连接目录，上传、下载、复制和移动文件。</p></div></header>
+        <div class="storage-section-content">
+          <div class="storage-field-grid"><label class="storage-field">存储<select data-cloud-profile></select></label><label class="storage-field">目录路径<input data-cloud-path placeholder="留空打开配置根目录" maxlength="1024"></label></div>
+          <div class="storage-task-actions"><button type="button" class="admin-button admin-button-secondary" data-cloud-open>打开 / 刷新</button><button type="button" class="admin-button admin-button-quiet" data-cloud-up>上级目录</button><label class="admin-button admin-button-secondary">上传文件<input type="file" multiple data-cloud-upload></label><button type="button" class="admin-button admin-button-quiet" data-cloud-next disabled>下一页</button></div>
+          <p class="storage-help">目录以已配置前缀为根。支持多文件上传和跨连接复制，单文件最大 64 MiB。同步目录内的本站媒体可下载、复制；删除与位置调整请使用媒体库或存储迁移。</p>
+          <p data-cloud-status role="status" aria-live="polite">选择存储后打开目录。</p>
+          <div class="storage-record-table-wrap"><table class="storage-record-table"><thead><tr><th>文件 / 目录</th><th>大小</th><th>管理方式</th><th>操作</th></tr></thead><tbody data-cloud-files></tbody></table></div>
+        </div>
+      </section>
+      <dialog class="storage-confirm" data-cloud-dialog><form method="dialog"><h2 data-cloud-dialog-title>复制文件</h2><label class="storage-field">目标存储<select data-cloud-target-profile></select></label><label class="storage-field">完整目标路径<input data-cloud-target maxlength="1024" required></label><p class="storage-help">目标文件须不存在；移动会在复制并校验成功后删除原文件。</p><div class="storage-confirm-actions"><button class="admin-button admin-button-secondary" value="cancel" formnovalidate>取消</button><button class="admin-button" value="confirm">执行</button></div></form></dialog>
+      <section id="storage-records" class="admin-setting-section" data-settings-section aria-labelledby="storage-records-title">
+        <header><div><h2 id="storage-records-title">运行记录</h2><p data-storage-records-subtitle>显示最近更新的 100 条记录。</p></div><button class="admin-button admin-button-quiet" type="button" data-storage-refresh>刷新状态</button></header>
+        <p class="admin-inline-notice storage-record-error" data-storage-last-error hidden role="alert"></p>
+        <div class="storage-record-toolbar"><label>存储<select data-record-profile><option value="">全部存储</option></select></label><label>搜索<input type="search" data-record-search maxlength="200" placeholder="文件名或远端路径"></label><button type="button" class="admin-button admin-button-secondary" data-record-search-button>查询</button><button type="button" class="admin-button admin-button-quiet" data-record-export>导出当前页 JSON</button></div>
+        <div class="storage-record-toolbar"><label>状态<select data-select-ui="soft" data-storage-record-filter><option value="">全部状态</option><option value="pending">待处理</option><option value="syncing">处理中</option><option value="synced">已同步</option><option value="failed">失败</option><option value="orphaned">待清理</option><option value="removed">已清理</option></select></label><span data-storage-refreshed aria-live="polite"></span></div>
+        <div class="storage-record-table-wrap"><table class="storage-record-table"><caption class="storage-visually-hidden">对象同步运行记录</caption><thead><tr><th scope="col">文件</th><th scope="col">存储</th><th scope="col">状态</th><th scope="col">大小</th><th scope="col">最近更新</th></tr></thead><tbody data-storage-records><tr><td colspan="5">尚无同步记录。</td></tr></tbody></table></div>
+        <div class="storage-record-toolbar"><button type="button" class="admin-button admin-button-quiet" data-record-prev>上一页</button><span data-record-page aria-live="polite"></span><button type="button" class="admin-button admin-button-quiet" data-record-next>下一页</button></div>
+      </section>
+      {{template "admin-savebar" (dict "FormID" "object-storage-form" "ReadOnly" .Admin.ReadOnly)}}
+    </div>
+  </div>
+  <dialog class="storage-confirm" data-storage-confirm aria-labelledby="storage-confirm-title" aria-describedby="storage-confirm-copy"><form method="dialog"><h2 id="storage-confirm-title">清理云端副本</h2><p id="storage-confirm-copy" data-storage-confirm-copy></p><p class="storage-help">仅删除此配置下本站记录的待清理云端对象，本地回收站不变。</p><div class="storage-confirm-actions"><button class="admin-button admin-button-secondary" value="cancel" autofocus>取消</button><button class="admin-button storage-danger-button" value="confirm">确认清理</button></div></form></dialog>
+</section>
+{{end}}

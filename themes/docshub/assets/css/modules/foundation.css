@@ -1,0 +1,156 @@
+:root {
+  color-scheme: light;
+  --accent:#4c82ff;
+  --ink:#12152c;
+  --muted:#68708e;
+  --subtle:#8e94aa;
+  --page:#fff;
+  --panel:#f6f7fc;
+  --line:#edf0f7;
+  --sidebar:218px;
+  --shadow:0 8px 28px #495b8d09;
+  --sans:"PingFang SC","Microsoft YaHei UI","Microsoft YaHei","Noto Sans SC",sans-serif;
+}
+* {
+  box-sizing: border-box;
+}
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 100px;
+}
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--page);
+  font: 14px/1.65 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+button,
+input,
+textarea {
+  font: inherit;
+}
+button,
+a,
+input,
+textarea,
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: wait;
+}
+button,
+input,
+textarea {
+  color: inherit;
+}
+button {
+  border: 0;
+}
+img {
+  max-width: 100%;
+  display: block;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+button,
+summary,
+a,
+input,
+textarea {
+  outline-offset: 5px;
+}
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+}
+[hidden] {
+  display: none !important;
+}
+.icon {
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.skip-link {
+  position: fixed;
+  top: -80px;
+  left: 240px;
+  z-index: 200;
+  background: var(--ink);
+  color: var(--page);
+  padding: 8px 16px;
+  border-radius: 8px;
+}
+.skip-link:focus {
+  top: 12px;
+}
+:root {
+  --accent-soft: var(--panel);
+  --accent-line: var(--accent);
+  --focus-ring: var(--accent);
+  --radius: 12px;
+  --topbar-height: 83px;
+}
+@supports (color: color-mix(in srgb, red, white)) {
+  :root {
+    --accent-soft: color-mix(in srgb, var(--accent) 12%, var(--page));
+    --accent-line: color-mix(in srgb, var(--accent) 36%, var(--page));
+    --focus-ring: color-mix(in srgb, var(--accent) 85%, var(--ink));
+  }
+}
+::selection {
+  background: var(--accent-line);
+  color: var(--ink);
+}
+select {
+  font: inherit;
+  color: inherit;
+}
+button,
+a,
+input,
+textarea,
+summary,
+select {
+  touch-action: manipulation;
+}
+:where(a, button, summary, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 4px;
+}
+:where(h1, h2, h3, p, a) {
+  overflow-wrap: anywhere;
+}
+main:focus {
+  outline: none;
+}
+body {
+  text-rendering: optimizeLegibility;
+}

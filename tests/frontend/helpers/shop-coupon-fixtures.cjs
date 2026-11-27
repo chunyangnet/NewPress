@@ -1,0 +1,6 @@
+const zero = '0001-01-01T00:00:00Z';
+const coupon = (patch = {}) => ({ code: 'PHOTO-5', title: '摄影优惠券', kind: 'fixed', value: '500', minimum: '1000', maximum_discount: '0', currency: 'CNY', kinds: null, modes: null, products: ['digital'], categories: null, levels: null, memberships: null, starts_at: '2026-11-25T00:00:00Z', ends_at: '2026-11-27T00:00:00Z', created_at: '2026-11-25T00:00:00Z', claim_limit: 10, use_limit: 10, per_user_limit: 3, enabled: true, home: true, claimed: false, can_claim: true, user_claim_count: 0, available_count: 0, claim_count: 0, remaining: 10, ...patch });
+const currencies = () => [{ key: 'CNY', name: '人民币', symbol: '¥', precision: 2, enabled: true }, { key: 'wallet:main', name: '积分', symbol: '分', precision: 1, enabled: true, balance: '9007199254740993' }];
+const session = (patch = {}) => ({ user_id: '2', csrf_token: 'shop-csrf', currencies: currencies(), coupons: [coupon()], raffle_quotas: {}, ...patch });
+const claim = (patch = {}) => ({ claim: { id: 'sc_0123456789abcdef0123456789ab', code: 'PHOTO-5', user_id: '2', status: 'available', claimed_at: '2026-11-26T00:00:00Z', used_at: zero, ...patch } });
+module.exports = { coupon, currencies, session, claim, zero };

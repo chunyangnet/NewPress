@@ -1,0 +1,124 @@
+{{define "content"}}
+<section class="admin-page device-mockup" data-device-mockup data-csrf="{{.Admin.CSRFToken}}">
+  <svg width="0" height="0" class="dm-sprite" aria-hidden="true"><defs>
+    <symbol id="dm-i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><ellipse cx="12" cy="12" rx="3.6" ry="8.5"/><path d="M4 9h16M4 15h16"/></symbol>
+    <symbol id="dm-i-spark" viewBox="0 0 24 24"><path d="m12 3 2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4L12 3ZM20 3v4m-2-2h4"/></symbol>
+    <symbol id="dm-i-download" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M4 16v4h16v-4"/></symbol>
+    <symbol id="dm-i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.4 9a2.6 2.6 0 1 1 4.4 1.9c-1.2.8-1.8 1.2-1.8 2.7M12 17h.01"/></symbol>
+    <symbol id="dm-i-monitor" viewBox="0 0 24 24"><rect x="2.5" y="3.5" width="19" height="13" rx="1.8"/><path d="M9 21h6m-3-4.5V21"/></symbol>
+    <symbol id="dm-i-laptop" viewBox="0 0 24 24"><path d="M4 17V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v12M2 17h20l-1.5 3h-17L2 17Z"/></symbol>
+    <symbol id="dm-i-tablet" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M11 19h2"/></symbol>
+    <symbol id="dm-i-phone" viewBox="0 0 24 24"><rect x="6.5" y="2" width="11" height="20" rx="2.5"/><path d="M10.5 5h3m-3 14h3"/></symbol>
+    <symbol id="dm-i-frame" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 8h18M8 8v13"/></symbol>
+    <symbol id="dm-i-expand" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></symbol>
+    <symbol id="dm-i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="dm-i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" stroke-width="3"/></symbol>
+    <symbol id="dm-i-play" viewBox="0 0 24 24"><path d="m8 4 12 8-12 8Z"/></symbol>
+    <symbol id="dm-i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+  </defs></svg>
+  <nav class="portal-breadcrumb" aria-label="面包屑"><a href="/admin/tools/">工具与备份</a><span>/</span><span aria-current="page">宣传截图</span></nav>
+  <header class="dm-heading"><div><div class="dm-eyebrow">网站宣传素材</div><h1>宣传截图</h1><p>展示网站在四种屏幕下的效果，制作主题展示、文章配图与宣传海报。</p></div><div class="dm-top-actions"><div class="dm-service" id="serviceState" role="status"><i class="dm-service-dot"></i><span id="serviceText">连接中</span></div><button class="dm-text-button" id="helpButton" type="button" aria-label="使用指南"><svg class="dm-icon" aria-hidden="true"><use href="#dm-i-help"/></svg>使用指南</button></div></header>
+  <div class="dm-notice" id="serviceNotice" role="status" hidden>截图服务暂未连接。你可以先调整画布并导出示例，稍后再试。</div>
+    <div class="dm-workspace">
+      <aside class="dm-controls" aria-label="截图与样式设置">
+        <section class="dm-control-section dm-source-section">
+          <h2 class="dm-section-caption"><span class="dm-number">01</span>网站来源</h2>
+          <form class="dm-capture-form" id="captureForm"><label class="dm-field-label" for="siteUrl">网站地址</label><div class="dm-url-field fluent-input-group"><svg class="dm-icon" aria-hidden="true"><use href="#dm-i-globe"/></svg><input id="siteUrl" type="text" inputmode="url" autocomplete="url" spellcheck="false" placeholder="https://your-website.com" maxlength="2048" required></div><button class="dm-button dm-button-accent" id="renderButton" type="submit"><svg class="dm-icon" aria-hidden="true"><use href="#dm-i-spark"/></svg><span id="renderButtonText">开启实时预览</span></button><p class="dm-field-note">四种尺寸独立加载，画面约每秒更新。暂停后可导出当前画面。</p></form>
+          <div class="dm-small-row"><label for="loadDelay">首屏稳定等待</label><select class="dm-small-select" id="loadDelay"><option value="0">0 秒</option><option value="2" selected>2 秒</option><option value="3">3 秒</option><option value="5">5 秒</option></select></div>
+        </section>
+        <section class="dm-control-section dm-style-section">
+          <h2 class="dm-section-caption"><span class="dm-number">02</span>画布样式</h2>
+          <div class="dm-style-fields"><div><div class="dm-control-label">画布背景<span id="backgroundName">暖砂</span></div><div class="dm-swatches" id="backgroundPicker" role="group" aria-label="画布背景"><button class="dm-swatch" type="button" data-color="#f4f1ec" data-name="暖砂" aria-label="暖砂背景" aria-pressed="true"></button><button class="dm-swatch" type="button" data-color="#ffffff" data-name="纯白" aria-label="纯白背景" aria-pressed="false"></button><button class="dm-swatch" type="button" data-color="#eaf0f1" data-name="雾蓝" aria-label="雾蓝背景" aria-pressed="false"></button><button class="dm-swatch" type="button" data-color="#eaf0e9" data-name="鼠尾草" aria-label="鼠尾草背景" aria-pressed="false"></button><button class="dm-swatch" type="button" data-color="#292d32" data-name="深灰" aria-label="深灰背景" aria-pressed="false"></button><label class="dm-color-custom" title="自定义背景色"><svg class="dm-icon" aria-hidden="true"><use href="#dm-i-plus"/></svg><input id="customColor" type="color" value="#f4f1ec" aria-label="自定义背景色"></label></div></div>
+          <div class="dm-setting-gap"><div class="dm-control-label">设备质感<span>金属边框</span></div><div class="dm-segmented" id="finishPicker" role="group" aria-label="设备边框颜色"><button type="button" data-finish="graphite" aria-pressed="true"><i class="dm-finish-dot"></i>石墨黑</button><button type="button" data-finish="silver" aria-pressed="false"><i class="dm-finish-dot dm-silver"></i>钛银色</button></div></div></div>
+        </section>
+        <section class="dm-control-section dm-export-section">
+          <h2 class="dm-section-caption"><span class="dm-number">03</span>导出作品</h2>
+          <div class="dm-quality-field"><strong>PNG</strong><select id="exportScale" aria-label="导出清晰度"><option value="1">标准 · 1×</option><option value="2" selected>高清 · 2×</option><option value="3">超清 · 3×</option></select></div>
+          <label class="dm-check-label"><input id="includeFrame" type="checkbox" checked>单台截图也保留设备外壳</label>
+          <button class="dm-button dm-button-dark" id="saveCompositeButton" type="button" disabled><svg class="dm-icon" aria-hidden="true"><use href="#dm-i-download"/></svg><span>导出合成图</span></button><p class="dm-export-note" id="exportDimensions">3200 × 2000 px · 无水印</p>
+        </section>
+      </aside>
+      <section class="dm-preview-column" aria-label="设备合成预览">
+        <div class="dm-preview-card">
+          <div class="dm-preview-toolbar"><div class="dm-preview-heading"><svg class="dm-icon" aria-hidden="true"><use href="#dm-i-frame"/></svg>四端合成预览<span class="dm-badge" id="previewBadge">示例画面</span></div><div class="dm-canvas-tools"><span class="dm-canvas-size">16 : 10</span><button class="dm-live-toggle" id="pauseLiveButton" type="button" aria-label="暂停实时预览" aria-pressed="false" hidden><svg class="dm-icon" aria-hidden="true"><use id="pauseLiveIcon" href="#dm-i-pause"/></svg><span id="pauseLiveText">暂停</span></button><button class="dm-icon-button" id="stopLiveButton" type="button" aria-label="结束实时预览并保留画面" title="结束预览，保留画面" hidden><svg class="dm-icon" aria-hidden="true"><use href="#dm-i-stop"/></svg></button><button class="dm-icon-button" id="zoomButton" type="button" aria-label="放大画布" aria-pressed="false" title="放大画布"><svg class="dm-icon" aria-hidden="true"><use href="#dm-i-expand"/></svg></button></div></div>
+          <div class="dm-stage-viewport" id="stageViewport">
+            <svg class="dm-composition" id="composition" viewBox="0 0 1600 1000" role="img" aria-label="显示器居后，笔记本在左前，平板在右侧，手机在前方的四端设备组合" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="rim" x1="0" y1="0" x2="1" y2=".65"><stop stop-color="#b3b7b8"/><stop offset=".16" stop-color="#6f7476"/><stop offset=".5" stop-color="#b4b8b9"/><stop offset=".73" stop-color="#555b5e"/><stop offset="1" stop-color="#a3a9aa"/></linearGradient>
+                <linearGradient id="frameMetal" x1="0" y1="0" x2="1" y2=".3"><stop stop-color="#4c5154"/><stop offset=".18" stop-color="#232629"/><stop offset=".55" stop-color="#444a4d"/><stop offset="1" stop-color="#22272a"/></linearGradient>
+                <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#161a1d"/><stop offset=".6" stop-color="#07090b"/><stop offset="1" stop-color="#161a1c"/></linearGradient>
+                <linearGradient id="stand" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#8c9398"/><stop offset=".08" stop-color="#cad0d3"/><stop offset=".4" stop-color="#e2e5e7"/><stop offset=".73" stop-color="#bbc1c5"/><stop offset="1" stop-color="#727a80"/></linearGradient>
+                <linearGradient id="standLight" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#171b20" stop-opacity=".3"/><stop offset=".4" stop-color="#fff" stop-opacity="0"/><stop offset=".88" stop-color="#fff" stop-opacity=".72"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+                <linearGradient id="base" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#f4f5f6"/><stop offset=".2" stop-color="#e3e6e8"/><stop offset=".43" stop-color="#b4bbc0"/><stop offset=".8" stop-color="#838c93"/><stop offset="1" stop-color="#b9c0c5"/></linearGradient>
+                <linearGradient id="baseEdge" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#5e6971"/><stop offset=".03" stop-color="#d4d9dc"/><stop offset=".23" stop-color="#f2f4f5"/><stop offset=".5" stop-color="#c2c9ce"/><stop offset=".8" stop-color="#f1f3f5"/><stop offset=".98" stop-color="#a1aab2"/><stop offset="1" stop-color="#5b666e"/></linearGradient>
+                <radialGradient id="lens"><stop stop-color="#385269"/><stop offset=".45" stop-color="#121e29"/><stop offset="1" stop-color="#030608"/></radialGradient>
+                <filter id="deviceShadow" x="-.16" y="-.15" width="1.32" height="1.4"><feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#242627" flood-opacity=".18"/></filter>
+                <filter id="contactShadow" x="-.2" y="-1.5" width="1.4" height="4"><feGaussianBlur stdDeviation="9"/></filter>
+                <clipPath id="desktopClip"><rect x="414" y="108" width="872" height="490.5" rx="6"/></clipPath>
+                <clipPath id="laptopClip"><rect x="115" y="455" width="660" height="412.5" rx="5"/></clipPath>
+                <clipPath id="tabletClip"><rect x="1116" y="366" width="380" height="506.6667" rx="17"/></clipPath>
+                <clipPath id="phoneClip"><rect x="971" y="547" width="158" height="341.9282" rx="23"/></clipPath>
+              </defs>
+              <rect id="stageBackground" width="1600" height="1000" fill="#f4f1ec"/>
+              <g id="desktopDevice">
+                <ellipse cx="850" cy="872" rx="176" ry="9" fill="#34383b" opacity=".2" filter="url(#contactShadow)"/>
+                <path d="M804 599h92c-3 104-2 176 25 238H779c27-62 28-134 25-238Z" fill="url(#stand)" stroke="#9ba3a9" stroke-width="1"/>
+                <path d="M804 599h92c-3 104-2 176 25 238H779c27-62 28-134 25-238Z" fill="url(#standLight)"/>
+                <path d="M780 832c-8 9-28 17-55 21l-42 7c-4 1-5 5 1 7h333c6-2 5-6 1-7l-42-7c-27-4-47-12-55-21Z" fill="url(#base)" stroke="#aab1b6" stroke-width="1"/>
+                <path d="M690 861h320" stroke="#f7f8f9" stroke-width="1.5" opacity=".7"/>
+                <rect x="399" y="90" width="902" height="526" rx="19" fill="url(#rim)" filter="url(#deviceShadow)"/>
+                <rect x="402" y="93" width="896" height="520" rx="16" fill="url(#glass)" stroke="#020406" stroke-width="1.2"/>
+                <rect x="414" y="108" width="872" height="490.5" rx="6" fill="#e7e6df"/>
+                <image id="image-desktop" x="414" y="108" width="872" height="490.5" preserveAspectRatio="none" clip-path="url(#desktopClip)"/>
+                <circle cx="850" cy="100" r="2.1" fill="#020507"/><circle cx="850" cy="100" r="1.3" fill="url(#lens)"/>
+                <path d="M424 94h852q19 0 19 19" stroke="#ffffff" stroke-opacity=".12" fill="none"/>
+              </g>
+              <g id="laptopDevice">
+                <ellipse cx="445" cy="908" rx="373" ry="8" fill="#30353b" opacity=".23" filter="url(#contactShadow)"/>
+                <rect x="101" y="440" width="688" height="439" rx="17" fill="url(#rim)" filter="url(#deviceShadow)"/>
+                <rect x="103.5" y="442.5" width="683" height="434" rx="15" fill="url(#glass)" stroke="#05090c" stroke-width=".8"/>
+                <rect x="115" y="455" width="660" height="412.5" rx="5" fill="#e7e6df"/>
+                <image id="image-laptop" x="115" y="455" width="660" height="412.5" preserveAspectRatio="none" clip-path="url(#laptopClip)"/>
+                <circle cx="445" cy="449" r="1.9" fill="url(#lens)"/>
+                <path d="M114 444h662" fill="none" stroke="#fff" stroke-opacity=".12"/>
+                <path d="M51 878h788v10c-23 11-43 15-72 15H123c-29 0-49-4-72-15Z" fill="url(#baseEdge)" stroke="#949da4" stroke-width=".7"/>
+                <path d="M51 878h788v5H51Z" fill="url(#base)"/>
+                <path d="M385 878h120c-3 6-5 8-13 8h-94c-8 0-10-2-13-8Z" fill="#919ba3"/>
+                <path d="M385 879h120c-3 4-5 5-13 5h-94c-8 0-10-1-13-5Z" fill="#d2d8dc"/>
+                <path d="M80 895c14 5 28 6 43 6h644c15 0 29-1 43-6" fill="none" stroke="#737e87" stroke-width="1" opacity=".5"/>
+              </g>
+              <g id="tabletDevice">
+                <ellipse cx="1306" cy="898" rx="197" ry="8" fill="#30353b" opacity=".19" filter="url(#contactShadow)"/>
+                <rect x="1101" y="350" width="410" height="538" rx="29" fill="url(#rim)" filter="url(#deviceShadow)"/>
+                <rect x="1103.5" y="352.5" width="405" height="533" rx="26.5" fill="url(#frameMetal)"/>
+                <rect x="1106" y="355" width="400" height="528" rx="24" fill="url(#glass)"/>
+                <rect x="1116" y="366" width="380" height="506.6667" rx="17" fill="#e7e6df"/>
+                <image id="image-tablet" x="1116" y="366" width="380" height="506.6667" preserveAspectRatio="none" clip-path="url(#tabletClip)"/>
+                <circle cx="1306" cy="359" r="2.1" fill="url(#lens)"/><circle cx="1320" cy="359" r="1.1" fill="#2b3239"/>
+                <rect x="1156" y="348.5" width="33" height="2" rx="1" fill="#646d74"/><rect x="1510" y="404" width="2" height="37" rx="1" fill="#757e86"/>
+              </g>
+              <g id="phoneDevice">
+                <ellipse cx="1050" cy="920" rx="87" ry="6" fill="#272b2e" opacity=".27" filter="url(#contactShadow)"/>
+                <rect x="956" y="581" width="3" height="18" rx="1.5" fill="#656e76"/><rect x="956" y="611" width="3" height="30" rx="1.5" fill="#818990"/><rect x="956" y="652" width="3" height="30" rx="1.5" fill="#818990"/><rect x="1141" y="612" width="3" height="46" rx="1.5" fill="#818990"/>
+                <rect x="959" y="535" width="182" height="368" rx="32" fill="url(#rim)" filter="url(#deviceShadow)"/>
+                <rect x="961.5" y="537.5" width="177" height="363" rx="29.5" fill="url(#frameMetal)"/>
+                <rect x="965" y="541" width="170" height="356" rx="27" fill="#080b0e"/>
+                <rect x="971" y="547" width="158" height="341.9282" rx="23" fill="#e7e6df"/>
+                <image id="image-phone" x="971" y="547" width="158" height="341.9282" preserveAspectRatio="none" clip-path="url(#phoneClip)"/>
+                <rect x="1023" y="553" width="54" height="14" rx="7" fill="#080b0e"/><circle cx="1068" cy="560" r="3" fill="#10161c"/><circle cx="1068" cy="560" r="1.7" fill="url(#lens)"/>
+                <path d="M963 572v-3c0-17 12-29 29-29" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width=".8"/>
+              </g>
+            </svg>
+            <div class="dm-stage-loading" id="stageLoading" hidden><div class="dm-loading-pill" role="status"><span class="dm-spinner"></span><span id="loadingText">正在打开网站…</span></div></div>
+          </div>
+          <div class="dm-preview-footer"><div class="dm-capture-copy"><span class="dm-capture-dot"></span><strong id="captureTitle">这是示例画面，输入网址生成你的作品</strong><small id="captureDetail"></small></div><span class="dm-canvas-format">DESKTOP · LAPTOP · TABLET · MOBILE</span></div>
+        </div>
+        <div class="dm-devices-heading"><span>设备与视口</span><small id="outputSummary">生成后可单独下载</small></div>
+        <div class="dm-device-list" id="deviceList" aria-live="polite"></div>
+        <p class="dm-message" id="renderMessage" role="status" hidden></p>
+      </section>
+    </div>
+
+  <dialog class="dm-help-dialog" id="helpDialog"><h2>使用指南</h2><ol><li>输入网站地址，开启四种尺寸的实时预览。</li><li>选择背景、设备边框和导出清晰度。</li><li>暂停在喜欢的画面，导出合成图或单台设备。</li></ol><p>画面约每秒更新；切换浏览器标签时暂缓传输，返回后自动继续。结束预览会保留最后一帧，重新连接会重新打开网站。</p><p>支持 HTTP 和 HTTPS 公开网站。工具展示各设备首屏；登录页或访问验证会显示网站实际返回的内容。</p><button class="dm-button dm-button-dark" id="closeHelpButton" type="button">开始创作</button></dialog>
+</section>
+{{end}}

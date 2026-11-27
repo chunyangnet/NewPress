@@ -1,0 +1,13 @@
+# Official public updates need no repository token. Prepare the operator-owned
+# update-recovery directory and a verified backup.json receipt first; see README.
+services:
+  app:
+    environment:
+      NEWPRESS_UPDATE_BACKUP_RECEIPT_FILE: /run/update-recovery/backup.json
+    volumes:
+      - type: bind
+        source: ${NEWPRESS_SECRETS_DIR:-./.secrets}/update-recovery
+        target: /run/update-recovery
+        read_only: true
+        bind:
+          create_host_path: false

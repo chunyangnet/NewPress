@@ -1,0 +1,23 @@
+{{define "content"}}
+<section class="interior-hero section-shell">
+  {{if ne .Settings.show_breadcrumbs false}}<nav class="breadcrumbs" aria-label="当前位置"><a href="/">首页</a><span aria-hidden="true">/</span>{{if or .Archive.Name .Author.Name}}<a href="/explore/">{{template "listing-title" .}}</a><span aria-hidden="true">/</span><span aria-current="page">{{if .Archive.Name}}{{.Archive.Name}}{{else}}{{.Author.Name}}{{end}}</span>{{else}}<span aria-current="page">{{template "listing-title" .}}</span>{{end}}</nav>{{end}}
+  {{if .Author.Name}}<div class="author-heading">{{if .Author.AvatarURL}}<img class="author-avatar" src="{{.Author.AvatarURL}}" alt="" width="72" height="72">{{else if .Author.Initial}}<span class="author-avatar author-initial" aria-hidden="true">{{.Author.Initial}}</span>{{end}}<div><h1>{{.Author.Name}}</h1><p class="author-caption">作者文章{{if .Author.Joined}} · 加入于 {{.Author.Joined}}{{end}}</p></div></div>{{else}}<h1>{{if .Archive.Name}}{{.Archive.Name}}{{else if .SearchQuery}}搜索结果{{else}}{{template "listing-title" .}}{{end}}</h1>{{end}}
+  <p>{{if .Archive.Description}}{{.Archive.Description}}{{else if .Author.Description}}{{.Author.Description}}{{else if .Archive.Name}}浏览归入“{{.Archive.Name}}”的公开文章。{{else if .SearchQuery}}查找与“{{.SearchQuery}}”相关的新闻与文章。{{else if .Settings.listing_description}}{{.Settings.listing_description}}{{else}}查看企业新闻、产品更新和技术文章。{{end}}</p>
+</section>
+<section class="listing-section section-shell" aria-label="{{template "listing-title" .}}">
+  <div class="listing-toolbar">
+    <nav class="category-links" aria-label="{{if .Archive.Name}}浏览分类{{else}}文章分类筛选{{end}}">
+      <a href="{{if .Archive.Name}}/explore/{{else}}?{{if .SearchQuery}}q={{urlquery .SearchQuery}}{{end}}{{end}}"{{if and (not .Archive.Name) (not .CategorySlug)}} aria-current="page"{{end}}>{{if .Author.Name}}全部文章{{else}}全部动态{{end}}</a>
+      {{if .Archive.Name}}<a href="{{.Archive.URL}}" aria-current="page">{{.Archive.Name}}</a>{{end}}
+      {{range .Categories}}{{if ne $.Archive.URL .URL}}<a href="{{if $.Archive.Name}}{{.URL}}{{else}}?category={{urlquery .Slug}}{{if $.SearchQuery}}&amp;q={{urlquery $.SearchQuery}}{{end}}{{end}}"{{if and (not $.Archive.Name) (eq $.CategorySlug .Slug)}} aria-current="page"{{end}}>{{.Name}}</a>{{end}}{{end}}
+    </nav>
+    <form action="{{if not .Author.Name}}/explore/{{end}}" method="get" role="search" class="inline-search">
+      {{if and (not .Archive.Name) .CategorySlug}}<input type="hidden" name="category" value="{{.CategorySlug}}">{{end}}
+      <label class="sr-only" for="list-query">{{if .Author.Name}}搜索这位作者的文章{{else if .Archive.Name}}搜索全站新闻与文章{{else}}搜索新闻与文章{{end}}</label><input id="list-query" name="q" type="search" value="{{.SearchQuery}}" maxlength="80" placeholder="{{if .Author.Name}}搜索这位作者的文章{{else if .Archive.Name}}搜索全站新闻与文章{{else}}搜索新闻与文章{{end}}"><button type="submit" class="icon-button" aria-label="搜索">{{template "icon-search" .}}</button>
+    </form>
+  </div>
+  <div class="listing-summary"><p>{{if .SearchQuery}}“{{.SearchQuery}}”{{if .Category}} · {{.Category}}{{end}} · 找到 {{.Pagination.Total}} 篇文章{{else}}{{if .Archive.Name}}{{.Archive.Name}} · {{else if .Category}}{{.Category}} · {{end}}共 {{.Pagination.Total}} 篇文章{{end}}</p><div class="listing-summary-actions">{{if .SearchQuery}}<a class="text-link" href="?{{if .CategorySlug}}category={{urlquery .CategorySlug}}{{end}}">清除关键词{{template "icon-close" .}}</a>{{end}}{{if and .CategorySlug (not .Archive.Name)}}<a class="text-link" href="?{{if .SearchQuery}}q={{urlquery .SearchQuery}}{{end}}">清除分类{{template "icon-close" .}}</a>{{end}}{{if and (index .Modules "series") (not .Author.Name)}}<a class="text-link" href="/series/">{{template "series-title" .}}{{template "icon-arrow" .}}</a>{{end}}</div></div>
+  <div class="news-grid{{if eq .Settings.listing_layout "list"}} news-list{{else if eq .Settings.listing_columns "2"}} news-columns-two{{else if eq .Settings.listing_columns "4"}} news-columns-four{{end}}">{{range .Posts}}{{template "news-card" (dict "Post" . "Page" $)}}{{else}}<div class="empty-news"><h2>{{if .SearchQuery}}暂未找到相关内容{{else if .Author.Name}}这位作者暂无公开文章{{else if .Archive.Name}}此归档下暂无文章{{else if .CategorySlug}}此分类下暂无文章{{else}}暂无企业动态{{end}}</h2><p>{{if .SearchQuery}}尝试更简短的关键词，或清除筛选后继续浏览。{{else if .Author.Name}}作者发布的公开文章会显示在这里。{{else}}发布的新闻与文章会显示在这里。{{end}}</p><a class="text-link" href="{{if and .Author.Name (or .SearchQuery .CategorySlug)}}?{{else}}/explore/{{end}}">{{if and .Author.Name (or .SearchQuery .CategorySlug)}}查看作者全部文章{{else}}浏览全部动态{{end}}{{template "icon-arrow" .}}</a></div>{{end}}</div>
+  {{template "pagination" .}}
+</section>
+{{end}}

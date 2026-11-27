@@ -1,0 +1,310 @@
+html[data-style] body.admin-workbench {
+  --admin-canvas: color-mix(in srgb, var(--paper) 75%, #eff1f4);
+  --admin-paper: #ffffff;
+  --admin-paper-2: #f8fafc;
+  --admin-line: #e3e8ef;
+  --admin-line-dark: #d1dae5;
+  --admin-radius: 14px;
+  --workspace-surface: var(--admin-paper);
+  --workspace-soft: var(--admin-paper-2);
+  --workspace-nav: var(--admin-paper);
+  --workspace-accent: color-mix(in srgb, var(--admin-blue) 7%, #ffffff);
+  --workspace-border: var(--admin-line);
+  --workspace-shadow: 0 2px 8px rgb(23 37 61 / 2%), 0 10px 28px rgb(23 37 61 / 2%);
+  --fluent-fill: var(--admin-paper);
+  --fluent-hover: var(--workspace-soft);
+  --fluent-edge: var(--admin-line);
+  --fluent-baseline: var(--admin-line-dark);
+  background: var(--admin-canvas);
+  font-family: var(--admin-font);
+}
+
+html body.admin-workbench :is(button, input, textarea, select) {
+  font-family: var(--admin-font);
+}
+
+html body.admin-workbench .admin-main h1 {
+  font-family: var(--admin-font);
+  font-size: clamp(25px, 2.3vw, 30px);
+  font-weight: 700;
+  letter-spacing: -.02em;
+  line-height: 1.4;
+}
+
+html body.admin-workbench :is(.admin-panel-heading h2, .admin-settings-section h2, .admin-flight-deck h2) {
+  font-family: var(--admin-font);
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+
+html body.admin-workbench .admin-sidebar {
+  border-color: var(--workspace-border);
+  border-radius: 16px;
+  background: var(--workspace-surface);
+  box-shadow: 0 6px 24px rgb(23 37 61 / 3%);
+}
+
+html body.admin-workbench .admin-brand {
+  min-height: 88px;
+  padding: 20px 18px;
+}
+
+html body.admin-workbench .admin-brand strong {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -.025em;
+}
+
+html body.admin-workbench .admin-nav h2 {
+  margin: 14px 12px 8px;
+  color: var(--admin-muted);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .08em;
+}
+
+html body.admin-workbench .admin-nav a {
+  min-height: 42px;
+  margin-block: 3px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  color: var(--admin-text);
+  font-size: 13px;
+  transition: background-color .16s ease, color .16s ease;
+}
+
+html body.admin-workbench .admin-nav a:hover {
+  color: var(--tone-accent, var(--admin-cyan-dark));
+  background: var(--workspace-soft);
+}
+
+html body.admin-workbench .admin-nav a.is-active {
+  border-color: transparent;
+  color: var(--tone-accent, var(--admin-cyan-dark));
+  background: var(--workspace-accent);
+  box-shadow: inset 2px 0 var(--admin-blue);
+  font-weight: 700;
+}
+
+html body.admin-workbench .admin-nav a.is-active > :is(.icon:first-child, b) {
+  color: inherit;
+}
+
+html body.admin-workbench .admin-nav a.is-active > b {
+  background: color-mix(in srgb, var(--admin-blue) 10%, var(--tone-surface, #ffffff));
+}
+
+html body.admin-workbench .admin-brand-mark {
+  border-radius: 8px;
+  background: var(--claude-ink);
+  box-shadow: 0 3px 9px rgb(23 37 61 / 10%);
+}
+
+html body.admin-workbench :is(.admin-panel, .admin-metric, .admin-flight-deck, .admin-settings-section, .admin-settings-nav, .admin-theme-preview, .admin-editor-panel, .admin-publish-panel, .analytics-panel, .plugin-section, .plugin-card, .feature-section) {
+  border-color: var(--workspace-border);
+  border-radius: var(--admin-radius);
+  background: var(--workspace-surface);
+  box-shadow: var(--workspace-shadow);
+}
+
+html body.admin-workbench :is(.admin-panel-heading, .admin-flight-deck > header) {
+  min-height: 64px;
+  padding: 18px 22px;
+  border-color: var(--admin-line);
+  background: transparent;
+}
+
+html body.admin-workbench .admin-topbar {
+  min-height: 66px;
+  padding-inline: 22px;
+  border: 1px solid var(--admin-line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--admin-paper) 96%, transparent);
+  box-shadow: 0 2px 8px rgb(23 37 61 / 2%);
+}
+
+html body.admin-workbench .admin-command {
+  height: 38px;
+  border: 1px solid var(--admin-line);
+  border-radius: 9px;
+  background: var(--workspace-soft);
+}
+
+html body.admin-workbench .admin-command:focus-within {
+  border-color: var(--admin-blue);
+  box-shadow: 0 0 0 3px var(--workspace-accent);
+}
+
+html body.admin-workbench :is(.admin-top-action, .admin-nav-open) {
+  width: 40px;
+  height: 40px;
+  border-color: transparent;
+  background: transparent;
+}
+
+html body.admin-workbench :is(.admin-top-action, .admin-nav-open):hover {
+  color: var(--tone-accent, var(--admin-cyan-dark));
+  background: var(--workspace-accent);
+}
+
+html body.admin-workbench .admin-account > button > span:first-child {
+  color: var(--tone-accent, var(--admin-cyan-dark));
+  background: var(--workspace-accent);
+}
+
+html body.admin-workbench .admin-button {
+  border-radius: 9px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+html body.admin-workbench .admin-button-primary {
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--admin-blue) 16%, transparent);
+}
+
+html body.admin-workbench .admin-metric {
+  min-height: 138px;
+  padding: 22px;
+}
+
+html body.admin-workbench .admin-metric strong {
+  margin-block: 8px;
+  font-family: var(--admin-metric);
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+html body.admin-workbench .admin-metric:not(.admin-metric-orange) .admin-metric-icon {
+  border-color: transparent;
+  color: var(--tone-accent, var(--admin-cyan-dark));
+  background: var(--workspace-accent);
+}
+
+html body.admin-workbench .admin-content-table th {
+  background: var(--workspace-soft);
+  color: var(--admin-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+html body.admin-workbench .admin-content-table td {
+  border-color: var(--admin-line);
+}
+
+html body.admin-workbench .admin-content-table tbody tr:hover {
+  background: color-mix(in srgb, var(--admin-blue) 2%, var(--tone-surface, #ffffff));
+}
+
+html body.admin-workbench .admin-content-overview a.is-active {
+  border-color: var(--selection-line);
+  background: var(--selection-bg);
+}
+
+html body.admin-workbench .admin-settings-meta {
+  border-color: var(--admin-line);
+  border-radius: 10px;
+  color: var(--admin-muted);
+  background: transparent;
+}
+
+html body.admin-workbench .admin-settings-nav nav button {
+  border-color: transparent;
+  border-radius: 9px;
+  box-shadow: none;
+}
+
+html body.admin-workbench .admin-settings-nav nav button.is-active {
+  color: var(--tone-accent, var(--admin-cyan-dark));
+  background: var(--workspace-accent);
+}
+
+html body.admin-workbench .admin-savebar {
+  border-color: var(--admin-line);
+  border-radius: 12px;
+  background: var(--workspace-surface);
+  box-shadow: 0 -4px 24px rgb(23 37 61 / 4%), 0 4px 16px rgb(23 37 61 / 3%);
+}
+
+html body.admin-workbench .admin-tools-action.is-primary:hover {
+  background: var(--admin-cyan-dark);
+}
+
+html body.is-admin-login .admin-login-panel {
+  background: var(--admin-canvas);
+}
+
+html body.is-admin-login .admin-login-photo img {
+  filter: grayscale(1);
+}
+
+html body.is-admin-login .admin-login-story::after {
+  background: linear-gradient(180deg, rgb(16 28 50 / 12%), color-mix(in srgb, var(--primary) 20%, transparent) 40%, rgb(16 28 50 / 90%));
+}
+
+html body.is-admin-login .admin-login-form-wrap h1 {
+  font-family: var(--admin-font);
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+
+html body.is-admin-login .admin-login-submit {
+  min-height: 50px;
+  border-radius: 10px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--admin-blue) 18%, transparent);
+}
+
+html body.is-admin-login .admin-login-form > label > div {
+  border-color: var(--admin-line-dark);
+  border-radius: 10px;
+  background: var(--workspace-surface);
+}
+
+html body.is-admin-login .admin-login-form > label > div:focus-within {
+  border-color: var(--admin-blue);
+  box-shadow: 0 0 0 3px var(--workspace-accent);
+}
+
+@media (min-width: 1051px) {
+  html[data-style] body.admin-workbench { --admin-sidebar: 228px; }
+  html body.admin-workbench .admin-app { gap: 20px; padding: 16px; }
+  html body.admin-workbench .admin-sidebar { top: 16px; height: calc(100vh - 32px); height: calc(100dvh - 32px); }
+  html body.admin-workbench .admin-topbar { top: 16px; }
+  html body.admin-workbench .admin-main { padding: 28px 4px 56px; }
+}
+
+@media (max-width: 1050px) {
+  html body.admin-workbench .admin-topbar { top: 0; border-width: 0 0 1px; border-radius: 0; }
+}
+
+@media (max-width: 600px) {
+  html body.admin-workbench .admin-topbar { gap: 8px; padding: 10px 14px; }
+  html body.admin-workbench .admin-main { padding: 24px 16px 40px; }
+  html body.admin-workbench .admin-main h1 { font-size: 25px; }
+  html body.admin-workbench .admin-metric { min-height: 138px; padding: 16px; }
+  html body.admin-workbench .admin-metric strong { font-size: 30px; }
+  html body.admin-workbench :is(.admin-panel-heading, .admin-flight-deck > header) { padding: 16px; }
+}
+
+@media (pointer: coarse) {
+  html body.admin-workbench :is(.admin-top-action, .admin-nav-open) { width: 44px; height: 44px; }
+  html body.admin-workbench .admin-nav a { min-height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html body.admin-workbench .admin-nav a { transition: none; }
+}
+
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  html body.admin-workbench .admin-topbar { background: var(--workspace-surface); backdrop-filter: none; }
+}
+
+@media (forced-colors: active) {
+  html[data-style] body.admin-workbench { --admin-canvas: Canvas; --admin-paper: Canvas; --admin-paper-2: Canvas; --admin-line: CanvasText; --admin-line-dark: CanvasText; --workspace-accent: Canvas; }
+  html body.admin-workbench .admin-nav a.is-active { color: HighlightText; background: Highlight; border-color: Highlight; box-shadow: none; }
+  html body.admin-workbench .admin-nav a.is-active > b { color: HighlightText; background: Highlight; }
+  html body.admin-workbench .admin-settings-nav nav button.is-active { color: HighlightText; background: Highlight; }
+  html body.is-admin-login .admin-login-story::after { display: none; }
+}

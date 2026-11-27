@@ -1,0 +1,6 @@
+{
+  "source_sha256": "c87f4dcc8dc7e33e8314fea529dbc54b96055d4bec60bf33732cbb7d050afc4b",
+  "wasm_sha256": "abf5d0540d9679ffaa7722b3db38d3f9e52a8c064eba9328f19ef85d95154dd6",
+  "compiler": "Zig 0.16.0",
+  "command": "zig cc -target wasm32-freestanding -O2 -nostdlib -Wl,--no-entry -Wl,--export-memory -Wl,-z,stack-size=65536 -Wl,--initial-memory=262144 -Wl,--max-memory=33554432 -o background-reader.wasm examples/plugins/background-reader/plugin.c"
+}

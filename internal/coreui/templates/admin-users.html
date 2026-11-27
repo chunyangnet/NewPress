@@ -1,0 +1,131 @@
+{{define "content"}}
+<section class="admin-page admin-users-page" data-user-id="{{.Admin.Principal.UserID}}" data-csrf="{{.Admin.CSRFToken}}" data-read-only="{{.Admin.ReadOnly}}">
+  <header class="admin-page-heading admin-users-heading"><div><h1>用户与权限</h1><p>管理账户资料、会员权益与积分资产</p></div>{{if .Users.CanManage}}<a class="ui-button ui-button-primary" href="/admin/users/?create=1" data-user-create>{{template "icon" "plus"}}创建用户</a>{{end}}</header>
+
+  {{if and .Users.CanManage (not .Admin.ReadOnly)}}
+  <section class="admin-invitations" data-invitations data-user-id="{{.Admin.Principal.UserID}}" data-csrf="{{.Admin.CSRFToken}}"><header><div><h2>邀请新用户</h2><p>邀请绑定收件邮箱，有效期七天。新账号成为订阅者，由对方自己设置密码。</p></div><a href="/admin/settings/#accounts">{{template "icon" "settings-2"}}注册设置 </a></header><form><label>收件邮箱<input type="email" name="email" required maxlength="320" placeholder="reader@example.com" autocomplete="off"></label><button class="ui-button ui-button-primary" type="submit" disabled>发送邀请 {{template "icon" "send"}}</button></form><p data-invitation-status role="status" aria-live="polite">正在载入…</p><div data-invitation-list></div><button class="ui-button ui-button-secondary ui-button-small" type="button" data-invitation-refresh>刷新邀请</button></section>
+  <script src="{{asset "js/chunnel-invitations.js"}}?v={{.UIAssetVersion}}" defer></script>
+  {{end}}
+
+  {{if .Admin.ReadOnly}}<div class="admin-callout admin-callout-warning" role="status"><span>{{template "icon" "triangle-alert"}}</span><div><strong>当前是只读身份预览</strong><p>配置首位管理员后才能创建账号、调整角色、停用用户或轮换密码。</p></div></div>{{end}}
+  {{if and (not .Admin.ReadOnly) (not .Users.CanManage)}}<div class="admin-callout admin-callout-warning" role="status"><span>{{template "icon" "info"}}</span><div><strong>当前角色只能查看用户目录</strong><p>账号资料、角色和密码操作需要 <code>users:manage</code> 能力。</p></div></div>{{end}}
+  {{if .Admin.Notice}}<div class="admin-content-notice admin-content-notice-{{.Admin.NoticeTone}}" role="status"><span>{{if eq .Admin.NoticeTone "success"}}{{template "icon" "check-circle"}}{{else}}{{template "icon" "triangle-alert"}}{{end}}</span><div><strong>{{if eq .Admin.NoticeTone "success"}}用户列表已更新{{else}}请处理以下问题{{end}}</strong><p>{{.Admin.Notice}}</p></div></div>{{end}}
+
+  <details class="admin-role-details"><summary>角色权限说明</summary><section class="admin-role-strip" aria-label="角色能力模板">
+    {{range .Users.Roles}}<article class="role-{{.Slug}}">
+      <span>{{if eq .Slug "administrator"}}{{template "icon" "badge-check"}}{{else if eq .Slug "editor"}}{{template "icon" "pen-line"}}{{else if eq .Slug "author"}}{{template "icon" "newspaper"}}{{else}}{{template "icon" "user-round"}}{{end}}</span>
+      <div><h2>{{.Name}}</h2><p>{{.Description}}</p></div>
+      <b>{{.UserCount}} 人</b>
+    </article>{{end}}
+  </section></details>
+
+  <div class="admin-users-layout">
+    <dialog class="admin-user-dialog" data-user-dialog data-auto-open="{{.Users.OpenEditor}}" data-user-id="{{.Users.Form.ID}}" data-username="{{.Users.Form.Username}}" data-csrf="{{.Admin.CSRFToken}}" data-assets="{{.Users.CanManageAssets}}" aria-labelledby="admin-user-dialog-title" aria-describedby="admin-user-dialog-description">
+      <div class="admin-user-dialog-shell">
+        <header class="admin-user-dialog-heading"><div><h2 id="admin-user-dialog-title">{{if .Users.Form.ID}}编辑账号 · {{.Users.Form.DisplayName}}{{else}}创建用户{{end}}</h2><p id="admin-user-dialog-description">{{if .Users.Form.ID}}@{{.Users.Form.Username}} · ID {{.Users.Form.ID}}{{else}}填写资料并设置初始登录密码{{end}}</p></div><button type="button" class="admin-user-close" data-user-close aria-label="关闭用户编辑">{{template "icon" "x"}}</button></header>
+        <nav class="admin-user-tabs" aria-label="账户编辑分组" role="tablist">
+          <button type="button" role="tab" id="user-tab-profile" aria-controls="user-panel-profile" aria-selected="true" data-user-tab="profile">{{template "icon" "user-round"}}账户资料</button>
+          {{if .Users.Form.ID}}<button type="button" role="tab" id="user-tab-membership" aria-controls="user-panel-membership" aria-selected="false" tabindex="-1" data-user-tab="membership">{{template "icon" "badge-check"}}会员与经验</button><button type="button" role="tab" id="user-tab-wallets" aria-controls="user-panel-wallets" aria-selected="false" tabindex="-1" data-user-tab="wallets">{{template "icon" "wallet"}}积分与余额</button><button type="button" role="tab" id="user-tab-recognition" aria-controls="user-panel-recognition" aria-selected="false" tabindex="-1" data-user-tab="recognition">{{template "icon" "award"}}头衔与认证</button><button type="button" role="tab" id="user-tab-security" aria-controls="user-panel-security" aria-selected="false" tabindex="-1" data-user-tab="security">{{template "icon" "shield-check"}}安全信息</button>{{end}}
+        </nav>
+        <div class="admin-user-dialog-body">
+        <div class="admin-user-feedback" data-user-feedback role="status" aria-live="polite">{{if .Admin.FieldErrors}}{{.Admin.Notice}}{{range .Admin.FieldErrors}} · {{.}}{{end}}{{end}}</div>
+        <div class="admin-user-discard" data-user-discard hidden><p>还有未保存的修改，关闭后将放弃这些内容。</p><button type="button" class="ui-button ui-button-secondary" data-user-keep>继续编辑</button><button type="button" class="ui-button ui-button-danger" data-user-discard-close>放弃修改并关闭</button></div>
+        <section id="user-panel-profile" role="tabpanel" aria-labelledby="user-tab-profile" data-user-panel="profile">
+      <form id="admin-user-form" class="admin-user-details-form" action="/admin/users/" method="post" autocomplete="off" data-user-native>
+        <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}">
+        <input type="hidden" name="account_details" value="1">
+        {{if .Users.Form.ID}}<input type="hidden" name="id" value="{{.Users.Form.ID}}"><input type="hidden" name="version" value="{{.Users.Form.Version}}">{{end}}
+        <fieldset {{if not .Users.CanManage}}disabled{{end}} class="admin-user-fields">
+        <legend class="sr-only">账户资料与权限</legend>
+        {{if .Users.Form.IsCurrent}}<div class="admin-user-self-note"><span>{{template "icon" "badge-check"}}</span><p><b>这是你的当前账号</b><small>不能停用自己或移除自己的管理员角色。</small></p></div>{{end}}
+        <label class="{{if index .Admin.FieldErrors "username"}}has-error{{end}}"><span class="admin-field-label">用户名 <em>*</em></span>
+          <input type="text" name="username" value="{{.Users.Form.Username}}" required minlength="3" maxlength="80" autocomplete="off" spellcheck="false" placeholder="editor-name" {{if not .Users.CanManage}}disabled{{end}}>
+          <small>{{if index .Admin.FieldErrors "username"}}{{index .Admin.FieldErrors "username"}}{{else}}用于登录和审计记录；保存时统一转换为小写。{{end}}</small>
+        </label>
+        <label class="{{if index .Admin.FieldErrors "email"}}has-error{{end}}"><span class="admin-field-label">邮箱地址</span>
+          <input type="email" name="email" value="{{.Users.Form.Email}}" maxlength="320" autocomplete="off" placeholder="name@example.com" {{if not .Users.CanManage}}disabled{{end}}>
+          <small>{{if index .Admin.FieldErrors "email"}}{{index .Admin.FieldErrors "email"}}{{else}}也可作为登录凭据；全站大小写不敏感唯一。{{end}}</small>
+        </label>
+        <label class="{{if index .Admin.FieldErrors "display_name"}}has-error{{end}}"><span class="admin-field-label">显示名称 <em>*</em></span>
+          <input type="text" name="display_name" value="{{.Users.Form.DisplayName}}" required maxlength="160" autocomplete="off" placeholder="内容编辑" {{if not .Users.CanManage}}disabled{{end}}>
+          <small>{{if index .Admin.FieldErrors "display_name"}}{{index .Admin.FieldErrors "display_name"}}{{else}}用于后台问候、作者署名和操作记录。{{end}}</small>
+        </label>
+        <label class="{{if index .Admin.FieldErrors "phone"}}has-error{{end}}"><span class="admin-field-label">手机号</span><input type="tel" name="phone" value="{{.Users.Form.Phone}}" maxlength="16" placeholder="+8613800138000"><small>{{if index .Admin.FieldErrors "phone"}}{{index .Admin.FieldErrors "phone"}}{{else}}包含国家区号；留空可解除手机号绑定。{{end}}</small></label>
+        <label class="{{if index .Admin.FieldErrors "email_verified"}}has-error{{end}}">邮箱验证<select name="email_verified"><option value="false" {{if not .Users.Form.EmailVerified}}selected{{end}}>未验证</option><option value="true" {{if .Users.Form.EmailVerified}}selected{{end}}>已验证</option></select><small>{{index .Admin.FieldErrors "email_verified"}}</small></label>
+        <label class="{{if index .Admin.FieldErrors "phone_verified"}}has-error{{end}}">手机验证<select name="phone_verified"><option value="false" {{if not .Users.Form.PhoneVerified}}selected{{end}}>未验证</option><option value="true" {{if .Users.Form.PhoneVerified}}selected{{end}}>已验证</option></select><small>{{index .Admin.FieldErrors "phone_verified"}}</small></label>
+        <div class="admin-user-role-options admin-user-wide {{if index .Admin.FieldErrors "role"}}has-error{{end}}"><span class="admin-field-label">账户角色 <em>*</em></span><div>{{range .Users.Roles}}<label><input type="checkbox" name="role" value="{{.Slug}}" {{if $.Users.Form.HasRole .Slug}}checked{{end}}><span>{{.Name}}</span></label>{{end}}</div><small>{{if index .Admin.FieldErrors "role"}}{{index .Admin.FieldErrors "role"}}{{else}}可选择多个角色，至少保留一个。{{end}}</small></div>
+          <label class="{{if index .Admin.FieldErrors "status"}}has-error{{end}}"><span class="admin-field-label">账号状态 <em>*</em></span>
+            <select name="status" {{if not .Users.CanManage}}disabled{{end}}><option value="active" {{if eq .Users.Form.Status "active"}}selected{{end}}>已启用</option><option value="suspended" {{if eq .Users.Form.Status "suspended"}}selected{{end}}>已停用</option></select>
+            <small>{{if index .Admin.FieldErrors "status"}}{{index .Admin.FieldErrors "status"}}{{else}}停用后现有会话立即失效。{{end}}</small>
+          </label>
+        <label class="{{if index .Admin.FieldErrors "locale"}}has-error{{end}}">后台语言
+          <input type="text" name="locale" value="{{.Users.Form.Locale}}" maxlength="35" autocomplete="off" spellcheck="false" placeholder="zh-CN" {{if not .Users.CanManage}}disabled{{end}}>
+          <small>{{if index .Admin.FieldErrors "locale"}}{{index .Admin.FieldErrors "locale"}}{{else}}例如 zh-CN、en-US。{{end}}</small>
+        </label>
+        <label class="admin-user-wide {{if index .Admin.FieldErrors "bio"}}has-error{{end}}">个人简介<textarea name="bio" rows="3" maxlength="280" placeholder="介绍这位用户的创作领域或个人信息">{{.Users.Form.Bio}}</textarea><small>{{if index .Admin.FieldErrors "bio"}}{{index .Admin.FieldErrors "bio"}}{{else}}最多 280 字，展示在用户主页。{{end}}</small></label>
+        <div class="admin-user-wide admin-user-avatar-control {{if index .Admin.FieldErrors "avatar_media_id"}}has-error{{end}}"><span>账户头像</span><div class="admin-user-avatar-field" data-user-avatar><span data-user-avatar-preview>{{if .Users.Form.AvatarURL}}<img src="{{.Users.Form.AvatarURL}}" alt="当前头像" width="48" height="48">{{else}}<span class="admin-user-avatar">{{template "icon" "user-round"}}</span>{{end}}</span><input type="hidden" name="avatar_media_id" value="{{.Users.Form.AvatarMediaID}}" data-user-value><button class="ui-button ui-button-secondary" type="button" data-user-avatar-choose aria-haspopup="dialog">选择或上传头像</button><button class="ui-button ui-button-secondary" type="button" data-user-avatar-remove>移除头像</button></div><small>{{if index .Admin.FieldErrors "avatar_media_id"}}{{index .Admin.FieldErrors "avatar_media_id"}}{{else}}支持从媒体库选择或上传新图片，保存资料后生效。{{end}}</small></div>
+        {{if not .Users.Form.ID}}
+        <label class="{{if index .Admin.FieldErrors "password"}}has-error{{end}}"><span class="admin-field-label">初始密码 <em>*</em></span>
+          <input type="password" name="password" minlength="12" maxlength="1024" autocomplete="new-password" {{if not .Users.CanManage}}disabled{{end}}>
+          <small>{{if index .Admin.FieldErrors "password"}}{{index .Admin.FieldErrors "password"}}{{else}}至少 12 个字符，请使用难以猜测的密码。{{end}}</small>
+        </label>
+        <label class="{{if index .Admin.FieldErrors "password_confirm"}}has-error{{end}}"><span class="admin-field-label">确认密码 <em>*</em></span>
+          <input type="password" name="password_confirm" minlength="12" maxlength="1024" autocomplete="new-password" {{if not .Users.CanManage}}disabled{{end}}>
+          <small>{{if index .Admin.FieldErrors "password_confirm"}}{{index .Admin.FieldErrors "password_confirm"}}{{else}}再次输入，避免创建无法登录的账号。{{end}}</small>
+        </label>
+        {{end}}
+        </fieldset>
+        <footer class="admin-user-form-footer"><span data-user-save-state>资料、权限和联系方式一起保存</span><button class="ui-button ui-button-primary" type="submit" name="action" value="{{if .Users.Form.ID}}update{{else}}create{{end}}" {{if not .Users.CanManage}}disabled{{end}}>{{template "icon" "check"}}{{if .Users.Form.ID}}保存账户资料{{else}}创建用户{{end}}</button></footer>
+      </form>
+      </section>
+
+      {{if .Users.Form.ID}}
+      <section id="user-panel-membership" role="tabpanel" aria-labelledby="user-tab-membership" data-user-panel="membership" hidden><div data-user-membership></div></section>
+      <section id="user-panel-wallets" role="tabpanel" aria-labelledby="user-tab-wallets" data-user-panel="wallets" hidden><div data-user-wallets></div></section>
+      <section id="user-panel-recognition" role="tabpanel" aria-labelledby="user-tab-recognition" data-user-panel="recognition" hidden><div data-user-recognition></div></section>
+      <section id="user-panel-security" role="tabpanel" aria-labelledby="user-tab-security" data-user-panel="security" hidden>
+      <section class="admin-password-rotation"><h2>第三方平台绑定</h2><p>解除绑定后撤销该账号当前实例的全部会话。账号须保留密码或至少一个第三方身份。</p>
+      {{range .Users.Form.OAuthProviders}}<form action="/admin/users/" method="post"><input type="hidden" name="csrf_token" value="{{$.Admin.CSRFToken}}"><input type="hidden" name="action" value="oauth-remove"><input type="hidden" name="id" value="{{$.Users.Form.ID}}"><input type="hidden" name="version" value="{{$.Users.Form.Version}}"><input type="hidden" name="provider" value="{{.ID}}"><p><strong>{{.Name}}</strong> · 已绑定</p>{{if $.Users.CanManage}}<button type="submit" class="ui-button ui-button-danger">解除 {{.Name}} 绑定</button>{{end}}</form>{{else}}<p>未绑定第三方平台。</p>{{end}}</section>
+      <dl class="admin-user-facts"><div><dt>注册时间</dt><dd>{{.Users.Form.CreatedLabel}}</dd></div><div><dt>最近登录</dt><dd>{{.Users.Form.LastLoginLabel}}</dd></div><div><dt>密码登录</dt><dd>{{if .Users.Form.PasswordLogin}}已设置密码{{else}}尚未设置密码{{end}}</dd></div><div><dt>账户编号</dt><dd>{{.Users.Form.ID}}</dd></div></dl>
+      <form id="admin-user-password" class="admin-password-rotation" action="/admin/users/" method="post" autocomplete="off" data-user-native>
+        <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><input type="hidden" name="id" value="{{.Users.Form.ID}}"><input type="hidden" name="version" value="{{.Users.Form.Version}}">
+        <input class="sr-only" type="text" name="username" value="{{.Users.Form.Username}}" autocomplete="username" tabindex="-1" aria-hidden="true"><input type="hidden" name="email" value="{{.Users.Form.Email}}"><input type="hidden" name="display_name" value="{{.Users.Form.DisplayName}}">{{range .Users.Form.RoleSlugs}}<input type="hidden" name="role" value="{{.}}">{{end}}<input type="hidden" name="status" value="{{.Users.Form.Status}}"><input type="hidden" name="locale" value="{{.Users.Form.Locale}}">
+        <header><span>{{template "icon" "refresh-cw"}}</span><div><h2>轮换密码</h2></div></header>
+        <p>保存成功后撤销该账号的全部会话；若修改当前账号，会立即签发一条使用新密码验证的新会话。</p>
+        <label class="{{if index .Admin.FieldErrors "password"}}has-error{{end}}"><span class="admin-field-label">新密码 <em>*</em></span><input type="password" name="password" minlength="12" maxlength="1024" autocomplete="new-password" {{if not .Users.CanManage}}disabled{{end}}><small>{{if index .Admin.FieldErrors "password"}}{{index .Admin.FieldErrors "password"}}{{else}}不要重复使用已有密码。{{end}}</small></label>
+        <label class="{{if index .Admin.FieldErrors "password_confirm"}}has-error{{end}}"><span class="admin-field-label">确认新密码 <em>*</em></span><input type="password" name="password_confirm" minlength="12" maxlength="1024" autocomplete="new-password" {{if not .Users.CanManage}}disabled{{end}}><small>{{if index .Admin.FieldErrors "password_confirm"}}{{index .Admin.FieldErrors "password_confirm"}}{{else}}两次输入必须一致。{{end}}</small></label>
+        <footer class="admin-user-form-footer"><span>至少 12 个字符</span><button class="ui-button ui-button-primary" type="submit" name="action" value="password" {{if not .Users.CanManage}}disabled{{end}}>{{template "icon" "refresh-cw"}}保存新密码</button></footer>
+      </form></section>{{end}}
+      </div></div>
+    </dialog>
+
+    <div class="admin-users-index">
+      <header>
+        <div><h2>账号目录</h2><p>共 {{.Users.Total}} 个账号 · 第 {{.Users.Page}} / {{.Users.Pages}} 页</p></div>
+        <form class="admin-users-search" action="/admin/users/" method="get" role="search" aria-label="用户检索">{{template "icon" "search"}}<input type="search" name="q" value="{{.Users.Search}}" maxlength="100" placeholder="用户名、邮箱或显示名称" aria-label="搜索用户"><input type="hidden" name="status" value="{{.Users.Status}}"><input type="hidden" name="role" value="{{.Users.Role}}"><select name="oauth" aria-label="第三方平台绑定筛选"><option value="">全部登录方式</option><option value="bound" {{if eq .Users.OAuthProvider "bound"}}selected{{end}}>已绑定第三方</option><option value="unbound" {{if eq .Users.OAuthProvider "unbound"}}selected{{end}}>未绑定第三方</option>{{range .Users.OAuthProviders}}<option value="{{.ID}}" {{if eq $.Users.OAuthProvider .ID}}selected{{end}}>{{.Name}}</option>{{end}}</select><button type="submit">检索</button></form>
+      </header>
+      <nav class="admin-user-filters" aria-label="用户筛选">
+        <a class="{{if and (not .Users.Status) (not .Users.Role)}}is-active{{end}}" href="/admin/users/">全部 <b>{{.Users.Total}}</b></a>
+        <a class="{{if eq .Users.Status "active"}}is-active{{end}}" href="/admin/users/?status=active">已启用 <b>{{.Users.ActiveCount}}</b></a>
+        <a class="{{if eq .Users.Status "suspended"}}is-active{{end}}" href="/admin/users/?status=suspended">已停用 <b>{{.Users.SuspendedCount}}</b></a>
+        {{range .Users.Roles}}<a class="{{if eq $.Users.Role .Slug}}is-active{{end}}" href="/admin/users/?role={{.Slug}}">{{.Name}} <b>{{.UserCount}}</b></a>{{end}}
+      </nav>
+      {{if or .Users.Search .Users.Status .Users.Role}}<div class="admin-taxonomy-query"><span>{{template "icon" "filter"}}</span><p>当前筛选 {{if .Users.Search}}<b>“{{.Users.Search}}”</b>{{end}} {{if .Users.Status}}· {{.Users.Status}}{{end}} {{if .Users.Role}}· {{.Users.Role}}{{end}}</p><a href="/admin/users/">清除</a></div>{{end}}
+
+      <div class="admin-users-table" role="table" aria-label="用户列表">
+        <div class="admin-users-table-head" role="row"><span role="columnheader">用户</span><span role="columnheader">角色</span><span role="columnheader">状态</span><span role="columnheader">最近登录</span><span role="columnheader">修改</span><span role="columnheader">操作</span></div>
+        {{range .Users.Rows}}<div class="admin-user-row" role="row">
+          <div role="cell"><span class="admin-user-avatar">{{template "icon" "user-round"}}</span><p><b>{{.User.DisplayName}}{{if .IsCurrent}} <em>当前</em>{{end}}</b><small>@{{.User.Username}} · {{.User.Email}}</small></p></div>
+          <div role="cell"><b>{{.RoleLabel}}</b><small>{{.RoleSlugs}}</small><small>{{.OAuthLabel}}</small></div>
+          <span class="admin-user-state is-{{.StatusTone}}" role="cell"><i></i>{{.StatusLabel}}</span>
+          <time role="cell">{{.LastLoginLabel}}</time>
+          <time role="cell">{{.UpdatedLabel}}<small>v{{.User.Version}}</small></time>
+          <div role="cell"><a href="{{.EditURL}}" data-user-edit aria-haspopup="dialog">{{if $.Users.CanManage}}编辑账号{{else}}查看资料{{end}}</a></div>
+        </div>{{else}}<div class="admin-taxonomy-empty"><span>{{template "icon" "users"}}</span><strong>没有匹配的账号</strong><p>清除筛选条件，或创建第一位协作者。</p></div>{{end}}
+      </div>
+      <footer class="admin-taxonomy-pagination"><span>{{.Users.Total}} 个账号 · 第 {{.Users.Page}} 页</span><nav aria-label="用户分页">{{if .Users.HasPrevious}}<a href="{{.Users.PreviousURL}}">{{template "icon" "arrow-left"}}上一页</a>{{else}}<span>{{template "icon" "arrow-left"}}上一页</span>{{end}}{{if .Users.HasNext}}<a href="{{.Users.NextURL}}">下一页{{template "icon" "arrow-right"}}</a>{{else}}<span>下一页{{template "icon" "arrow-right"}}</span>{{end}}</nav></footer>
+    </div>
+  </div>
+</section>
+<script src="{{asset "js/chunnel-users.js"}}?v={{.UIAssetVersion}}" defer></script>
+{{end}}

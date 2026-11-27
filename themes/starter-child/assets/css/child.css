@@ -1,0 +1,3 @@
+/* Additional child styles; base layout remains inherited from Starter. */
+#site-footer { border-top: 3px solid var(--accent, #0f766e); }
+.child-theme-note { font-size: .875rem; opacity: .8; }

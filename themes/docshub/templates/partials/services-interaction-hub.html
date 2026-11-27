@@ -1,0 +1,104 @@
+{{define "interaction-hub"}}
+{{if index .Settings "show_mobile_navigation"}}
+<dialog class="ui-modal quick-actions" id="quick-actions" hidden data-modal aria-labelledby="quick-actions-title">
+  <div class="modal-backdrop" data-modal-close></div>
+  <section>
+    <button class="modal-close" type="button" data-modal-close aria-label="关闭快捷操作">{{template "service-icon" "x"}}</button>
+    <h2 id="quick-actions-title">快捷操作</h2><p>常用功能入口。</p>
+    <div class="quick-actions-grid">
+      <a href="/admin/content/new/" data-quick-publish data-account-publish hidden>{{template "service-icon" "pen-line"}}<span><b>写文章</b><small>把想法整理成篇</small></span></a>
+      <button type="button" data-saved-open>{{template "service-icon" "bookmark"}}<span><b>我的收藏</b><small>回到你收藏的内容</small></span></button>
+      {{if index $.Modules "messaging"}}<button type="button" data-drawer-open="message-drawer" data-quick-member hidden>{{template "service-icon" "message-square"}}<span><b>私信</b><small>继续一段对话</small></span></button>{{end}}
+      <a href="/account/" data-quick-member hidden>{{template "service-icon" "user-round"}}<span><b>个人中心</b><small>管理内容和互动</small></span></a>
+      <a href="/explore/">{{template "service-icon" "scan-search"}}<span><b>查找文档</b><small>搜索教程与参考资料</small></span></a>
+      <button type="button" data-account-login>{{template "service-icon" "user-round"}}<span><b>登录账号</b><small>参与讨论与交流</small></span></button>
+    </div>
+  </section>
+</dialog>
+{{end}}
+<dialog class="ui-drawer interaction-drawer" id="notification-drawer" hidden data-drawer aria-labelledby="notification-drawer-title">
+  <div class="drawer-backdrop" data-drawer-close></div>
+  <section>
+    <header>
+      <div><h2 id="notification-drawer-title">通知中心 <small data-notification-summary></small></h2></div>
+      <button type="button" aria-label="关闭通知中心" data-drawer-close>{{template "service-icon" "x"}}</button>
+    </header>
+    <nav class="filter-tabs interaction-tabs" aria-label="通知类型" data-notification-tabs>
+      <button class="is-active" type="button" data-notification-filter="all" aria-pressed="true">全部</button>
+      {{if index $.Modules "messaging"}}<button type="button" data-notification-filter="interaction" aria-pressed="false">私信</button>{{end}}
+      <button type="button" data-notification-filter="activity" aria-pressed="false">动态</button>
+      <button type="button" data-notification-filter="unread" aria-pressed="false">未读</button>
+    </nav>
+    <div class="interaction-connection" data-social-connection role="status" hidden></div>
+    <a class="notification-settings-link" href="/account/?view=notifications">{{template "service-icon" "sliders-horizontal"}}管理提醒与邮件订阅 </a>
+    <div class="drawer-notices interaction-notices" data-notification-list></div>
+    <button class="interaction-load-more" type="button" data-notification-more hidden>加载更早通知</button>
+    <footer class="interaction-drawer-footer"><button type="button" class="text-button" data-notification-read-all disabled>全部标为已读</button><button type="button" class="text-button is-danger" data-notification-clear disabled>清空通知</button></footer>
+  </section>
+</dialog>
+
+{{if index $.Modules "messaging"}}
+<dialog class="ui-drawer interaction-drawer message-drawer" id="message-drawer" hidden data-drawer aria-labelledby="message-drawer-title">
+  <div class="drawer-backdrop" data-drawer-close></div>
+  <section>
+    <header>
+      <div><h2 id="message-drawer-title">私信 <small data-message-summary></small></h2></div>
+      <button type="button" aria-label="关闭私信" data-drawer-close>{{template "service-icon" "x"}}</button>
+    </header>
+    <div class="interaction-connection" data-social-connection role="status" hidden></div>
+    <div class="message-layout">
+      <aside class="conversation-sidebar"><div class="conversation-toolbar"><b>最近会话</b><button type="button" class="icon-button" data-new-conversation aria-label="新建私信" title="新建私信">{{template "service-icon" "pen-line"}}</button></div><div class="contact-search" hidden data-contact-search><div><input type="search" maxlength="80" placeholder="搜索用户名或昵称" aria-label="搜索联系人" data-contact-query><button type="button" data-contact-close aria-label="关闭联系人搜索">{{template "service-icon" "x"}}</button></div><div data-contact-results aria-live="polite"></div><button type="button" class="interaction-load-more" data-contact-more hidden>更多联系人</button></div><div class="conversation-list" data-conversation-list role="group" aria-label="会话列表"></div><button type="button" class="interaction-load-more" data-conversation-more hidden>更早的会话</button></aside>
+      <div class="message-thread" data-message-thread>
+        <div class="message-empty"><span>{{template "service-icon" "message-square"}}</span><b>选择一个会话</b><p>选择一个会话后继续聊天。</p></div>
+      </div>
+    </div>
+  </section>
+</dialog>
+{{end}}
+
+
+<dialog class="ui-modal interaction-login" id="account-login-modal" hidden data-modal aria-labelledby="account-login-title">
+  <div class="modal-backdrop" data-modal-close></div>
+  <section><button class="modal-close" type="button" data-modal-close aria-label="关闭登录">{{template "service-icon" "x"}}</button><span class="modal-icon">{{template "service-icon" "user-round"}}</span><h2 id="account-login-title">登录 {{.Site.Title}}</h2><p class="login-description">登录后，收藏文章、关注作者{{if index $.Modules "messaging"}}，也可以收发私信{{end}}。</p><form data-social-login><label>用户名 / 邮箱 / 手机号<input name="username" autocomplete="username" required maxlength="320" autofocus placeholder="输入用户名、邮箱或手机号"></label><label>密码<span class="password-input"><input name="password" type="password" autocomplete="current-password" required maxlength="1024" placeholder="输入密码"><button type="button" data-password-toggle aria-label="显示密码" title="显示密码">{{template "service-icon" "eye"}}</button></span></label><p class="interaction-error" data-login-error role="alert" hidden></p><button type="submit" class="ui-button ui-button-primary">登录</button><small class="login-actions"><a class="login-register" href="/account/access/" data-account-register>注册账号</a><span class="login-secondary">{{if .CodeLoginEnabled}}<a href="/account/access/?flow=login" data-account-register="login">验证码登录</a>{{end}}<a href="/account/access/?flow=recover" data-account-register="recover">忘记密码</a></span></small></form>{{template "oauth-providers" .}}</section>
+</dialog>
+
+<dialog class="ui-modal interaction-register" id="account-register-modal" hidden data-modal aria-labelledby="account-register-title" {{if eq .BodyClass "is-home"}}data-choice-style="/core-assets/css/chunnel-selects.css" data-choice-script="/core-assets/js/chunnel-selects.js" {{end}}data-registration-script="/core-assets/js/chunnel-registration.js?v={{.Site.ThemeVersion}}" data-registration-style="/core-assets/css/chunnel-access.css?v={{.Site.ThemeVersion}}">
+  <div class="modal-backdrop" data-modal-close></div>
+  <section class="access-card"><button class="modal-close" type="button" data-modal-close aria-label="关闭注册">{{template "service-icon" "x"}}</button><div data-registration-loading><h2 id="account-register-title" tabindex="-1">创建账号</h2><p role="status" data-registration-loading-status>正在准备注册表单…</p><p><button type="button" class="ui-button ui-button-outline" data-registration-reload hidden>重新加载</button> <a href="/account/access/">打开注册页面</a></p></div></section>
+</dialog>
+
+<dialog class="ui-modal interaction-info" id="interaction-info" hidden data-modal aria-labelledby="interaction-info-title">
+  <div class="modal-backdrop" data-modal-close></div><section><button class="modal-close" type="button" data-modal-close aria-label="关闭提示">{{template "service-icon" "x"}}</button><span class="modal-icon">{{template "service-icon" "info"}}</span><h2 id="interaction-info-title"></h2><p data-info-description></p><div><button class="ui-button ui-button-primary" type="button" data-modal-close autofocus>知道了</button></div></section>
+</dialog>
+
+<dialog class="ui-drawer interaction-drawer" id="saved-drawer" hidden data-drawer aria-labelledby="saved-drawer-title">
+  <div class="drawer-backdrop" data-drawer-close></div><section><header><div><h2 id="saved-drawer-title">本机收藏</h2></div><button type="button" data-drawer-close aria-label="关闭收藏">{{template "service-icon" "x"}}</button></header><p class="saved-note">保存在当前浏览器，随时回来查看。</p>
+    <div class="saved-controls">
+      <label class="saved-search fluent-input-group">{{template "service-icon" "search"}}<input type="search" placeholder="查找收藏的内容" aria-label="查找收藏" maxlength="240" data-saved-query></label>
+      <div class="saved-filters" role="group" aria-label="收藏类型"><button type="button" data-saved-filter="all" aria-pressed="true">全部</button><button type="button" data-saved-filter="post" aria-pressed="false">文章</button></div>
+      <span class="saved-count" data-saved-count role="status" aria-live="polite"></span>
+    </div>
+    <div data-saved-list></div>
+    <div class="saved-undo" data-saved-undo hidden><span data-saved-undo-label role="status"></span><button type="button" data-saved-restore>撤销</button></div>
+  </section>
+</dialog>
+
+<div class="sr-only" role="status" aria-live="polite" data-interaction-status></div>
+
+<dialog class="ui-modal" id="interaction-confirm" hidden data-modal aria-labelledby="interaction-confirm-title">
+  <div class="modal-backdrop" data-modal-close></div><section><h2 id="interaction-confirm-title">清空通知？</h2><p>当前通知将被移除{{if index $.Modules "messaging"}}，私信记录仍可在会话中查看{{end}}。</p><div><button class="ui-button ui-button-outline" type="button" data-modal-close autofocus>取消</button><button class="ui-button ui-button-danger" type="button" data-confirm-notification-clear>清空通知</button></div></section>
+</dialog>
+
+<div class="emoji-popover" data-emoji-popover hidden role="dialog" aria-label="NewPress 表情">
+  <div class="emoji-popover-head"><b>表情</b><span class="emoji-ai-label">AI 生成</span><button type="button" data-emoji-close aria-label="关闭表情面板">{{template "service-icon" "x"}}</button></div>
+  <div class="emoji-grid" data-emoji-grid></div>
+</div>
+{{end}}
+
+{{define "oauth-providers"}}{{if .LoginProviders}}
+<div class="oauth-login" data-oauth-login>
+  <div class="oauth-divider"><span>快捷登录</span></div>
+  <nav class="oauth-providers" aria-label="第三方登录">
+    {{range .LoginProviders}}<a class="oauth-provider" data-provider="{{.ID}}" href="/auth/{{.ID}}/start" aria-label="使用 {{.Name}} 登录" title="使用 {{.Name}} 登录">{{template "oauth-logo" .ID}}</a>{{end}}
+  </nav>
+</div>{{end}}{{end}}

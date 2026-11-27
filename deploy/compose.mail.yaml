@@ -1,0 +1,16 @@
+# Optional SMTP delivery. Create the secret before adding this override.
+# docker compose -f compose.yaml -f deploy/compose.mail.yaml up -d
+services:
+  app:
+    environment:
+      NEWPRESS_SMTP_ADDR: ${NEWPRESS_SMTP_ADDR:?Set NEWPRESS_SMTP_ADDR}
+      NEWPRESS_SMTP_FROM: ${NEWPRESS_SMTP_FROM:?Set NEWPRESS_SMTP_FROM}
+      NEWPRESS_SMTP_MODE: ${NEWPRESS_SMTP_MODE:-starttls}
+      NEWPRESS_SMTP_USERNAME: ${NEWPRESS_SMTP_USERNAME:?Set NEWPRESS_SMTP_USERNAME}
+      NEWPRESS_SMTP_PASSWORD_FILE: /run/secrets/smtp_password
+    secrets:
+      - smtp_password
+
+secrets:
+  smtp_password:
+    file: ${NEWPRESS_SECRETS_DIR:-./.secrets}/smtp_password

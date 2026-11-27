@@ -1,0 +1,73 @@
+/* A quiet editorial entrance. Photography belongs to the shared Paper & Light set. */
+.admin-login-main { min-height: 100vh; min-height: 100svh; }
+.is-admin-login::before { display: none; }
+.admin-login-shell { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(420px, .9fr); min-height: 100vh; min-height: 100svh; }
+.admin-login-story { position: relative; isolation: isolate; display: flex; flex-direction: column; justify-content: flex-end; min-height: 720px; overflow: hidden; padding: 48px clamp(36px, 5vw, 80px) 32px; color: #fff; background: var(--shade-ink-soft, var(--ink-soft)); }
+.admin-login-photo { position: absolute; z-index: -2; inset: 0; }
+.admin-login-photo img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 58%; }
+.admin-login-story::after { content: ""; position: absolute; z-index: -1; inset: 0; background: linear-gradient(180deg, #19232224 0%, transparent 34%, #161e1b42 58%, #111c19bd 100%); }
+.admin-login-edition { position: absolute; top: 44px; right: 36px; left: clamp(36px, 5vw, 80px); display: flex; align-items: center; gap: 14px; font-size: 12px; letter-spacing: .13em; }
+.admin-login-edition i { width: 24px; height: 1px; background: #ffffff70; }
+.admin-login-story-copy { max-width: 540px; padding-top: 280px; }
+.admin-login-story-copy > span { color: #ffffffe0; font-size: 14px; letter-spacing: .12em; }
+.admin-login-story-copy h2 { margin: 18px 0 20px; font: 500 clamp(40px, 4.2vw, 64px)/1.3 var(--admin-display); letter-spacing: .03em; text-wrap: balance; }
+.admin-login-story-copy p { margin: 0; color: #ffffffe0; font-size: 14px; line-height: 1.8; }
+.admin-login-caption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 44px; padding-top: 18px; border-top: 1px solid #ffffff40; color: #ffffffe0; font-size: 12px; }
+.admin-login-panel { display: flex; flex-direction: column; gap: 48px; min-width: 0; min-height: 720px; padding: 38px clamp(32px, 5vw, 76px) 28px; background: var(--paper); }
+.admin-login-brand { align-self: flex-start; max-width: 100%; }
+.admin-login-brand > span:last-child { min-width: 0; }
+.admin-login-brand strong { display: block; overflow-wrap: anywhere; color: var(--admin-ink); font-weight: 700; }
+.admin-login-brand small { color: var(--admin-muted); font-size: 12px; letter-spacing: .12em; }
+.admin-login-form-wrap { width: min(380px, 100%); margin: auto; padding-block: 28px; }
+.admin-login-kicker { color: var(--admin-muted); font-size: 13px; letter-spacing: .08em; }
+.admin-login-form-wrap h1 { margin: 12px 0; color: var(--admin-ink); font: 600 clamp(28px, 2.6vw, 36px)/1.4 var(--admin-display); }
+.admin-login-form-wrap > p { margin: 0 0 32px; color: var(--admin-muted); font-size: 14px; line-height: 1.8; }
+.admin-login-error { display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: start; gap: 10px; margin-bottom: 20px; padding: 12px; border: 1px solid color-mix(in srgb, var(--control-danger) 26%, var(--line)); border-radius: 8px; color: var(--tone-red, #9b3036); background: var(--control-danger-soft); }
+.admin-login-error > .icon { margin-top: 3px; font-size: 18px; }
+.admin-login-error span { display: grid; gap: 3px; overflow-wrap: anywhere; font-size: 14px; }
+.admin-login-error b { font-weight: 700; }
+.admin-login-form { display: grid; gap: 22px; }
+.admin-login-form > label { display: grid; gap: 9px; }
+.admin-login-form > label > span { color: var(--admin-text); font-size: 14px; font-weight: 500; }
+.admin-login-form > label > div { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: center; gap: 8px; height: 52px; padding: 0 8px 0 14px; border: 1px solid var(--admin-line-dark); border-radius: 8px; background: var(--tone-surface, #fff); transition: border-color var(--motion-fast), box-shadow var(--motion-fast); }
+.admin-login-form > label > div:focus-within { border-color: var(--admin-blue); box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-blue) 10%, transparent); }
+.admin-login-form > label .icon { color: var(--admin-muted); font-size: 17px; }
+.admin-login-form input { min-width: 0; width: 100%; height: 100%; border: 0; outline: 0; background: transparent; font-size: 16px; }
+.admin-login-form input::placeholder { color: var(--tone-muted, #7b817d); }
+.admin-login-form label button { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 6px; color: var(--admin-muted); background: transparent; }
+.admin-login-form label button:hover { background: var(--tone-soft, #eff1ed); }
+.admin-login-form label button[aria-pressed="true"] { color: var(--tone-accent, var(--admin-blue)); background: color-mix(in srgb, var(--admin-blue) 8%, var(--tone-surface, #fff)); }
+.admin-login-submit { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 50px; margin-top: 4px; padding: 12px 18px; border: 1px solid transparent; border-radius: var(--control-radius, 8px); color: #fff; background: var(--admin-blue); font-size: 15px; font-weight: 700; transition: background-color var(--motion-fast), transform var(--motion-slow) var(--motion-ease); }
+.admin-login-submit .icon { color: inherit; font-size: 18px; }
+.admin-login-submit:hover:not(:disabled) { background: var(--admin-cyan-dark); }
+.admin-login-submit:active:not(:disabled) { transform: scale(.985); }
+.admin-login-submit:disabled { opacity: .65; cursor: progress; transform: none; }
+.admin-login-submit[data-submit-state="pending"] { justify-content: center; cursor: wait; opacity: .75; transform: none; }
+.admin-login-submit[data-submit-state="pending"]::before { content: ''; width: 16px; height: 16px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: admin-submit-spin .8s linear infinite; }
+@keyframes admin-submit-spin { to { transform: rotate(360deg); } }
+.admin-login-form-wrap > .admin-login-note { margin: 22px 0 0; font-size: 12px; }
+.admin-login-panel > footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding-top: 20px; border-top: 1px solid var(--admin-line); color: var(--admin-muted); font-size: 12px; }
+.admin-login-panel > footer a { display: inline-flex; align-items: center; min-height: 44px; }
+.admin-login-panel > footer a:hover { color: var(--tone-accent, var(--admin-blue)); }
+.admin-login-form input:focus-visible { outline: none !important; }
+.admin-login-form > label > div:has(input:focus-visible) { outline: 3px solid var(--admin-blue); outline-offset: 3px; box-shadow: none; }
+@media (min-width: 781px) and (max-height: 760px) {
+  .admin-login-story, .admin-login-panel { min-height: 640px; }
+  .admin-login-panel { gap: 24px; padding-top: 26px; padding-bottom: 18px; }
+  .admin-login-form-wrap { padding-block: 12px; }
+  .admin-login-caption { margin-top: 28px; }
+}
+@media (max-width: 780px) {
+  .admin-login-shell { grid-template-columns: minmax(0, 1fr); }
+  .admin-login-story { display: none; }
+  .admin-login-panel { gap: 30px; min-height: 100vh; min-height: 100svh; padding: max(24px, env(safe-area-inset-top)) clamp(24px, 7vw, 56px) max(16px, env(safe-area-inset-bottom)); }
+  .admin-login-form-wrap { padding-block: 18px; }
+}
+@media (prefers-reduced-motion: reduce) { .admin-login-submit { transition: none; } .admin-login-submit::before { animation: none !important; } }
+.theme-motion-minimal .admin-login-submit::before, .theme-force-reduced-motion .admin-login-submit::before { animation: none !important; }
+@media (forced-colors: active) {
+  .admin-login-story { background: Canvas; color: CanvasText; }
+  .admin-login-photo, .admin-login-story::after { display: none; }
+  .admin-login-edition, .admin-login-story-copy > span, .admin-login-story-copy p, .admin-login-caption { color: CanvasText; }
+  .admin-login-submit, .admin-login-form label button { border: 1px solid ButtonText; }
+}

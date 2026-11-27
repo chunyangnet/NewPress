@@ -1,0 +1,11 @@
+.community-quick-filters,.community-compose-tools{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:16px 0;min-width:0}
+.community-quick-filters a{display:inline-flex;align-items:center;min-height:44px;padding:8px 14px;border:1px solid var(--line);border-radius:8px;color:var(--ink);text-decoration:none}
+.community-quick-filters [aria-current]{color:var(--primary-readable);border-color:currentColor;background:var(--paper);font-weight:600}
+.community-compose-tools span{flex-basis:100%;color:var(--muted);font-size:13px;line-height:1.6}
+.community-compose-tools small{margin-inline-start:auto;color:var(--muted)}
+.community-writing-guide{border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin-block:12px;min-width:0}
+.community-writing-guide summary{cursor:pointer;min-height:32px;line-height:32px;font-size:14px;font-weight:600}
+.community-writing-guide .ui-button{margin:8px 8px 0 0}.community-writing-guide p{color:var(--muted);line-height:1.7;overflow-wrap:anywhere}
+.community-writing-guide .circle-editor-tools{flex-wrap:wrap}.community-writing-guide input[type=file]{max-width:100%}
+.community-quick-filters a:focus-visible,.community-writing-guide summary:focus-visible{outline:2px solid var(--primary-readable);outline-offset:3px}
+@media(pointer:coarse){.community-writing-guide summary{min-height:44px;line-height:44px}}

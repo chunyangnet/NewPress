@@ -1,0 +1,235 @@
+{{define "content"}}
+<section class="admin-page admin-editor-page">
+  <header class="admin-editor-heading">
+    <div>
+      <a href="/admin/content/">{{template "icon" "arrow-left"}}返回内容列表</a>
+      <span data-editor-identity>{{if .Editor.IsNew}}新建内容{{else}}{{if eq .Editor.Post.Type "page"}}页面{{else}}文章{{end}} #{{.Editor.Post.ID}} · 版本 {{.Editor.Post.Version}}{{end}}</span>
+      <h1 data-editor-heading>{{if .Editor.IsNew}}{{if eq .Editor.Input.Type "page"}}新建页面{{else}}撰写文章{{end}}{{else}}编辑内容{{end}}</h1>
+    </div>
+    <div>{{if and (not .Editor.IsNew) (not .Admin.ReadOnly)}}<button class="admin-button admin-button-preview" type="button" data-editor-preview title="建立恢复点并打开预览（{{.Editor.PreviewMinutes}} 分钟有效）">{{template "icon" "scan-search"}}预览草稿</button>{{end}}{{if .Editor.IsPublic}}<a class="admin-button admin-button-quiet" href="{{.Editor.PublicURL}}" target="_blank" rel="noopener">{{template "icon" "eye"}}查看公开页</a>{{end}}<span data-editor-canonical-state class="admin-editor-state admin-editor-state-{{.Editor.Input.Status}}"><i></i>{{if eq .Editor.Input.Status "publish"}}已发布{{else if eq .Editor.Input.Status "future"}}等待定时{{else if eq .Editor.Input.Status "pending"}}等待审核{{else if eq .Editor.Input.Status "private"}}私密内容{{else if eq .Editor.Input.Status "trash"}}回收站{{else}}草稿{{end}}</span></div>
+  </header>
+  {{template "admin-feature-status-editor-alert" .}}
+
+  {{if and (.ModuleEnabled "wechat") (not .Editor.IsNew) (not .Admin.ReadOnly) (eq .Editor.Post.Type "post") (.Admin.Can "settings:manage") (.Admin.Can "content:write")}}
+  <aside class="admin-callout"><span>{{template "icon" "send"}}</span><div><strong>同步到微信公众号</strong><p>使用这篇文章正式保存的版本；先保存修改，再前往公众号工作区核对和同步。</p><a class="admin-button admin-button-quiet" href="/admin/wechat/?post={{.Editor.Post.ID}}" target="_blank" rel="noopener">打开公众号工作区 {{template "icon" "external-link"}}</a></div></aside>
+  {{end}}
+
+  {{if .Admin.ReadOnly}}<div class="admin-callout admin-callout-warning" role="status"><span>{{template "icon" "triangle-alert"}}</span><div><strong>当前编辑器不会接受保存</strong><p>部署尚未引导管理员，或当前角色没有此对象的写入能力；服务端会拒绝发布、回收站与修订恢复。</p></div></div>{{end}}
+  {{if .Admin.Notice}}<div class="admin-content-notice admin-content-notice-{{.Admin.NoticeTone}}" role="status"><span>{{if .Editor.Prefilled}}{{template "icon" "pen-line"}}{{else if eq .Admin.NoticeTone "success"}}{{template "icon" "check-circle"}}{{else}}{{template "icon" "triangle-alert"}}{{end}}</span><div><strong>{{if .Editor.Prefilled}}待审草稿{{else if .Editor.Conflict}}检测到并发编辑{{else if eq .Admin.NoticeTone "success"}}保存完成{{else}}请处理以下问题{{end}}</strong><p>{{.Admin.Notice}}</p></div></div>{{end}}
+
+  {{if .Editor.Recovery.Available}}<div class="admin-autosave-recovery" role="status">
+    <span>{{template "icon" "clock-3"}}</span>
+    <div><h2>发现尚未写入正式版本的恢复点</h2><p>{{.Editor.Recovery.UpdatedLabel}} 由当前身份自动保存，基于 v{{.Editor.Recovery.SourceVersion}}；预计 {{.Editor.Recovery.ExpiresLabel}} 过期。</p></div>
+    <div><a class="admin-button admin-button-primary" href="{{.Editor.Recovery.RecoveryURL}}">{{template "icon" "refresh-cw"}}载入恢复点</a><form action="{{.Editor.Recovery.DiscardURL}}" method="post"><input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><input type="hidden" name="version" value="{{.Editor.Post.Version}}"><button class="admin-button admin-button-quiet" type="submit" name="action" value="discard" data-confirm-action="放弃这个自动保存恢复点？正式版本不会改变。">放弃</button></form></div>
+  </div>{{end}}
+
+  {{if and .Editor.BrowserRecoveryEnabled (not .Admin.ReadOnly)}}<details class="admin-browser-recovery" data-browser-recovery hidden>
+    <summary><span>{{template "icon" "database"}}本机编辑副本</span><small data-browser-recovery-count>可选开启</small></summary>
+    <div class="admin-browser-recovery-body">
+      <p>在这台设备上找回刷新或关闭前的编辑。正文以明文保留在当前浏览器，恢复时限 {{if gt .Editor.AutosaveRetention 144}}144{{else}}{{.Editor.AutosaveRetention}}{{end}} 小时，过期后下次打开编辑页清理；共用设备请勿开启。正式保存后清除当前副本。</p>
+      {{template "admin-switch" (dict "Recovery" true "Label" "在此浏览器保留我的编辑副本")}}
+      <p class="admin-browser-recovery-status" role="status" aria-live="polite" data-browser-recovery-status>尚未开启；输入仅保留在当前页面。</p>
+      <ul data-browser-recovery-list aria-label="当前内容的本机编辑副本"></ul>
+      <button class="admin-button admin-button-quiet" type="button" data-browser-recovery-clear>关闭并清除我的所有本机副本</button>
+    </div>
+  </details>{{end}}
+
+  <form class="admin-editor-form" action="{{.Editor.FormAction}}" method="post" data-content-editor data-post-permalink="{{.Editor.PostPermalink}}" data-page-permalink="{{.Editor.PagePermalink}}" data-slug-mode="{{.Editor.SlugMode}}" data-permalink-date="{{.Editor.PermalinkDate}}" data-permalink-id="{{.Editor.Post.ID}}" data-document-editor data-editor-canonical-status="{{if .Editor.IsNew}}draft{{else}}{{.Editor.Post.Status}}{{end}}" data-editor-user-id="{{.Admin.Principal.UserID}}" data-editor-login="{{.Admin.Login}}" data-editor-new="{{.Editor.IsNew}}" data-editor-force-dirty="{{or .Editor.Prefilled .Editor.Recovered .Editor.Conflict .Admin.FieldErrors}}" data-browser-recovery-enabled="{{.Editor.BrowserRecoveryEnabled}}" data-autosave-url="{{.Editor.AutosaveURL}}" data-autosave-enabled="{{.Editor.AutosaveEnabled}}" data-autosave-interval="{{.Editor.AutosaveInterval}}" data-autosave-retention="{{.Editor.AutosaveRetention}}">
+    <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}">
+    <input type="hidden" name="published_timezone" value="{{.Site.Timezone}}">
+    <input type="hidden" name="published_source" value="{{.Editor.PublishedSource}}">
+    {{if not .Editor.IsNew}}<input type="hidden" name="version" value="{{.Editor.Post.Version}}">{{end}}
+    <header class="admin-editor-savebar" data-editor-savebar>
+      <a class="editor-back" href="/admin/content/" aria-label="返回内容列表" title="返回内容列表">{{template "icon" "arrow-left"}}</a>
+      <div><span></span><div class="admin-editor-save-copy"><p role="status" aria-live="polite" aria-atomic="true"><b data-editor-save-state>{{if .Editor.Conflict}}版本冲突，输入尚未写入{{else if .Admin.FieldErrors}}保存失败，输入尚未写入{{else if .Editor.Prefilled}}生成结果尚未保存{{else if .Editor.Recovered}}恢复点已载入，等待正式保存{{else}}所有更改已保存{{end}}</b><small data-editor-autosave-detail>{{if .Editor.IsNew}}首次保存后可预览与恢复版本{{else if .Editor.AutosaveEnabled}}自动保存开启 · 空闲与最小间隔 {{.Editor.AutosaveInterval}} 秒 · 正式版本 v{{.Editor.Post.Version}}{{else}}自动保存关闭 · 手动预览仍会建立临时恢复点 · 正式版本 v{{.Editor.Post.Version}}{{end}}</small></p>
+        {{if .AIProMax.Enabled}}{{if not .Editor.IsNew}}<a class="aipm-text-link" href="/admin/plugins/ai-pro-max/articles/{{.Editor.Post.ID}}/topics/" target="_blank" rel="noopener">管理相关话题</a>{{end}}<label>发布时的 AI 处理<select name="ai_pro_max"><option value="inherit">跟随站点规则</option><option value="on" {{if eq .Editor.Input.AIPolicy "on"}}selected{{end}}>运行补全规则</option><option value="off" {{if eq .Editor.Input.AIPolicy "off"}}selected{{end}}>跳过这篇内容</option></select></label>{{end}}
+        <ul class="admin-editor-submit-errors" data-editor-submit-errors aria-label="需要检查的字段" hidden></ul>
+        <nav class="admin-editor-recovery-actions" data-editor-recovery-actions aria-label="恢复编辑" hidden><button type="button" data-editor-retry>{{if .Editor.IsNew}}重新检查登录{{else}}重试恢复点{{end}}</button><a href="/admin/login/?next=/admin/" target="_blank" rel="noopener" data-editor-login-link hidden>重新登录（新窗口）</a><a href="{{if .Editor.IsNew}}/admin/content/{{else}}/admin/content/{{.Editor.Post.ID}}/edit/{{end}}" target="_blank" rel="noopener" data-editor-current-link hidden>核对正式版本（新窗口）</a></nav>
+      </div></div>
+      <div class="editor-primary-actions">
+        {{if .ModuleEnabled "ai"}}<button type="button" class="admin-button editor-ai-launch" data-ai-open aria-haspopup="dialog" aria-expanded="false" {{if .Admin.ReadOnly}}disabled{{end}}>{{template "icon" "sparkles"}}<span>AI 编辑器</span></button>{{end}}
+        <button type="button" class="admin-button admin-button-quiet" data-editor-settings-toggle aria-controls="editor-settings" aria-expanded="true" hidden aria-label="文章设置" title="文章设置">{{template "icon" "panel-right"}}<span>文章设置</span></button>
+        <button type="button" class="admin-button admin-button-quiet" data-editor-focus aria-pressed="false" hidden title="专注写作">{{template "icon" "monitor"}}<span>专注</span></button>
+        <details class="editor-more editor-page-more"><summary aria-label="更多文章操作" title="更多">{{template "icon" "ellipsis"}}</summary><div class="editor-more-menu"><button type="button" data-editor-open-history>版本与恢复</button>{{if and (not .Editor.IsNew) (not .Admin.ReadOnly) (ne .Editor.Post.Status "trash")}}<button type="button" data-snippet-draft-open data-post="{{.Editor.Post.ID}}" aria-haspopup="dialog" aria-expanded="false">生成独立草稿</button>{{end}}<button type="button" data-editor-mobile-focus>专注写作</button>{{if not .Editor.IsNew}}{{if eq .Editor.Post.Status "trash"}}<button class="admin-button admin-button-quiet" type="submit" name="action" value="restore" {{if .Admin.ReadOnly}}disabled{{end}}>{{template "icon" "refresh-cw"}}恢复为草稿</button>{{else}}<button class="admin-button admin-button-danger" type="submit" name="action" value="trash" data-confirm-action="将这项内容移入回收站？公开地址会立即停止提供。" {{if .Admin.ReadOnly}}disabled{{end}}>{{template "icon" "x"}}移入回收站</button>{{end}}{{end}}</div></details>
+        {{if and (ne .Editor.Post.Status "publish") (ne .Editor.Post.Status "trash")}}<button class="admin-button admin-button-primary" type="button" data-editor-publish hidden {{if .Admin.ReadOnly}}disabled{{end}}>发布…</button>{{end}}
+        <button class="admin-button {{if eq .Editor.Post.Status "publish"}}admin-button-primary{{else}}admin-button-quiet{{end}}" type="submit" name="action" value="save" {{if .Admin.ReadOnly}}disabled{{end}}>{{template "icon" "check"}}<span data-editor-save-label>{{if eq .Editor.Input.Status "publish"}}更新{{else}}保存草稿{{end}}</span></button>
+      </div>
+    </header>
+    <div class="admin-editor-layout">
+      <div class="admin-editor-canvas">
+        <section class="admin-editor-title-block {{if index .Admin.FieldErrors "title"}}has-error{{end}}">
+          <label for="content-title">标题</label>
+          <textarea id="content-title" name="title" rows="1" maxlength="200" placeholder="输入内容标题" data-count-input="title" {{if .Admin.ReadOnly}}disabled{{end}}>{{.Editor.Input.Title}}</textarea>
+          <footer><span>{{if index .Admin.FieldErrors "title"}}{{template "icon" "triangle-alert"}}{{index .Admin.FieldErrors "title"}}{{else}}标题会显示在内容列表和搜索结果中。{{end}}</span><b><i data-count-output="title">0</i>/200</b></footer>
+        </section>
+
+
+        <section class="admin-editor-body {{if index .Admin.FieldErrors "content_source"}}has-error{{end}}">
+          <header><div><h2>正文</h2></div><p>连续编辑正文，也可切换 HTML 源码。{{if (.Admin.CanWrite "media:write")}}截图可直接粘贴或拖入。{{end}}</p></header>
+          <div class="admin-composer-toolbar" data-composer-toolbar hidden>
+            <div class="document-format-controls" data-document-visual-only>
+              <label class="sr-only" for="document-style">正文格式</label><select id="document-style" data-document-style data-select-native aria-label="正文格式"><option value="paragraph">正文</option><option value="h2">标题</option><option value="h3">小标题</option><option value="code-block">代码块</option></select>
+              <button type="button" data-document-command="bold" aria-label="粗体" title="粗体 · Ctrl/⌘ B" aria-pressed="false"><b>B</b></button>
+              <button type="button" data-document-command="italic" aria-label="斜体" title="斜体 · Ctrl/⌘ I" aria-pressed="false"><i>I</i></button>
+              <button type="button" data-document-link aria-label="链接" title="链接 · Ctrl/⌘ K">{{template "icon" "link"}}</button>
+              <button type="button" data-document-command="list" aria-label="列表" title="列表">{{template "icon" "list"}}</button>
+            </div>
+            <div class="editor-insert-slot"></div>
+            <div class="document-history-controls"><button type="button" data-composer-undo disabled aria-label="撤销" title="撤销 · Ctrl/⌘ Z">{{template "icon" "undo-2"}}</button><button type="button" data-composer-redo disabled aria-label="重做" title="重做 · Ctrl/⌘ Shift Z">{{template "icon" "redo-2"}}</button></div>
+            <details class="editor-more document-block-menu"><summary aria-label="更多编辑工具" title="更多编辑工具">{{template "icon" "ellipsis"}}</summary><div class="editor-more-menu">
+              <div class="admin-composer-modes" role="group" aria-label="正文编辑方式"><button type="button" data-composer-mode="blocks" aria-pressed="false">可视编辑</button><button type="button" data-composer-mode="source" aria-pressed="true">HTML 源码</button></div>
+              <button type="button" data-document-command="italic" data-document-visual-only>斜体</button><button type="button" data-document-command="quote" data-document-visual-only>引用</button><button type="button" data-document-command="ordered" data-document-visual-only>有序列表</button><button type="button" data-document-command="code" data-document-visual-only>行内代码</button><button type="button" data-document-command="lift" data-document-visual-only>取消嵌套</button>
+              <div class="document-block-operations" data-document-visual-only><button type="button" data-document-move-up>上移内容块</button><button type="button" data-document-move-down>下移内容块</button><button type="button" data-document-copy>复制内容块</button><button type="button" data-document-delete>删除内容块</button></div>
+            </div>
+            {{if .ModuleEnabled "ai"}}<details class="editor-more editor-assistant-menu"><summary aria-label="写作助手" title="写作助手">{{template "icon" "sparkles"}}<span>助手</span></summary><div class="editor-more-menu">
+              {{if .AIProMax.Enabled}}<button type="button" data-editor-open-assistant>优化选中文字</button>{{end}}
+              <button class="ai-editor-launch" type="button" data-ai-open aria-haspopup="dialog" aria-expanded="false" {{if .Admin.ReadOnly}}disabled{{end}}>起草整篇文章</button>
+              {{if and (.Admin.CanWrite "media:write") (.Admin.Can "media:read")}}<button type="button" data-ai-image-open="body" aria-haspopup="dialog">生成图片</button>{{end}}
+            </div></details>{{end}}
+          </div>
+          <div class="document-table-tools" data-document-table-tools hidden><span>表格</span><button type="button" data-document-command="row-add">加行</button><button type="button" data-document-command="column-add">加列</button><button type="button" data-document-command="row-delete">删行</button><button type="button" data-document-command="column-delete">删列</button><button type="button" data-document-command="table-delete">删除表格</button></div>
+          <div data-composer-source-pane>
+          <div class="admin-editor-tools" role="group" aria-label="正文格式">
+            <button type="button" data-source-format="p" aria-label="段落" title="段落" {{if .Admin.ReadOnly}}disabled{{end}}>{{template "icon" "pen-line"}}</button>
+            <button type="button" data-source-format="strong" aria-label="粗体" title="粗体" {{if .Admin.ReadOnly}}disabled{{end}}><b aria-hidden="true">B</b></button>
+            <button type="button" data-source-format="h2" aria-label="二级标题" title="二级标题" {{if .Admin.ReadOnly}}disabled{{end}}><b aria-hidden="true">H2</b></button>
+            <button type="button" data-source-format="code" aria-label="行内代码" title="行内代码" {{if .Admin.ReadOnly}}disabled{{end}}>{{template "icon" "code-2"}}</button>
+            {{if (.Admin.Can "media:read")}}<button type="button" data-editor-media-open="body" aria-label="插入图片" title="插入图片" aria-haspopup="dialog" {{if .Admin.ReadOnly}}disabled{{end}}>{{template "icon" "image"}}</button>{{end}}
+            <button type="button" data-emoji-trigger data-emoji-target="content-source" aria-label="添加表情" title="表情" aria-haspopup="dialog" aria-expanded="false" {{if .Admin.ReadOnly}}disabled{{end}}>{{template "icon" "smile"}}</button>
+            <em>HTML</em>
+          </div>
+          <textarea id="content-source" name="content_source" rows="24" maxlength="2097152" placeholder="从这里开始写作……" data-content-source aria-label="正文" {{if .Admin.ReadOnly}}disabled{{end}}>{{.Editor.Input.ContentSource}}</textarea>
+          </div>
+          <div class="admin-composer" data-composer hidden>
+            <div class="admin-composer-outline"><span><b data-composer-count>0</b> 个内容块</span><small>输入 / 插入内容</small></div>
+            <div class="admin-composer-list" data-composer-list></div>
+            <details class="editor-insert-menu"><summary aria-label="插入内容">{{template "icon" "plus"}}<span>插入</span></summary><div class="editor-insert-popover"><input type="search" data-insert-search aria-label="查找内容类型" placeholder="查找图片、表格、组件…"><div class="admin-composer-inserter" role="group" aria-label="添加内容块">
+              <button type="button" data-block-add="paragraph">段落</button><button type="button" data-block-add="h2">标题</button><button type="button" data-block-add="quote">引用</button><button type="button" data-block-add="code">代码</button><button type="button" data-block-add="table">表格</button><button type="button" data-block-add="callout">提示</button><button type="button" data-block-add="list">列表</button>
+              {{if (.Admin.Can "media:read")}}<button type="button" data-editor-media-open="body" aria-haspopup="dialog" {{if .Admin.ReadOnly}}disabled{{end}}>图片</button>{{end}}
+
+              <button type="button" data-block-add="html">HTML</button>
+              <button type="button" data-component-library-open aria-haspopup="dialog" {{if .Admin.ReadOnly}}disabled{{end}}>组件库</button><button type="button" data-editor-widget-open aria-haspopup="dialog" aria-expanded="false" {{if .Admin.ReadOnly}}disabled{{end}}>文章卡片</button><button type="button" data-editor-reuse-open aria-haspopup="dialog" {{if .Admin.ReadOnly}}disabled{{end}}>复用片段</button><button type="button" data-editor-snippets-open aria-haspopup="dialog" aria-expanded="false" {{if .Admin.ReadOnly}}disabled{{end}}>共享片段</button>
+            </div><p data-insert-empty hidden>没有匹配的内容类型</p></div></details>
+            <button class="document-insert-line" type="button" data-document-insert hidden>{{template "icon" "plus"}} 插入内容</button>
+          </div>
+
+          <p class="admin-composer-feedback" role="status" aria-live="polite" data-composer-feedback hidden></p>
+          <footer><span>{{if index .Admin.FieldErrors "content_source"}}{{template "icon" "triangle-alert"}}{{index .Admin.FieldErrors "content_source"}}{{else}}支持粘贴图片；修改后请保存。{{end}}</span><b data-editor-word-count>0 字</b></footer>
+        </section>
+        <section class="editor-below" aria-label="文章增强设置">
+          <header class="editor-below-heading"><div><h2>完善这篇文章</h2><p>资源、分享与智能辅助，在正文下方集中处理。</p></div></header>
+          <div class="editor-below-grid"><details class="editor-settings-group editor-wide-settings" data-editor-wide="seo"><summary>搜索与分享</summary>{{template "seo-editor" .}}</details>
+<details class="editor-settings-group editor-wide-settings" data-editor-wide="resources"><summary>资源与访问权限</summary>{{template "resource-editor" .}}</details>
+<details class="editor-settings-group editor-wide-settings" data-editor-wide="badge"><summary>文章角标</summary>{{template "article-badge-editor" .}}</details>
+{{if not .Editor.IsNew}}
+        <details class="admin-editor-panel admin-revision-panel editor-settings-group" id="revision-history" data-editor-wide="history" data-editor-revisions><summary>版本历史</summary>
+          <header><span>{{template "icon" "refresh-cw"}}</span><div><h2>修订时间线</h2></div><b>{{len .Editor.Revisions}}</b></header>
+          <div class="admin-revision-list">
+            {{range .Editor.Revisions}}<article class="{{if .Current}}is-current{{end}}"><i></i><div><b>v{{.Version}} · {{.Title}}</b><small>{{.CreatedLabel}} · {{.Actor}}</small></div>{{if not .Current}}<nav><a href="{{.CompareURL}}">比较</a><button type="submit" name="action" value="restore_revision-{{.ID}}" data-confirm-action="恢复 v{{.Version}} 的编辑内容？当前发布状态会保留。" {{if $.Admin.ReadOnly}}disabled{{end}}>恢复</button></nav>{{else}}<em>当前</em>{{end}}</article>{{else}}<p>尚无修订记录。</p>{{end}}
+          </div>
+        </details>
+        {{end}}</div>
+          {{if .ModuleEnabled "ai"}}<section class="editor-assistant-workspace" aria-labelledby="editor-assistant-title"><header><div><h2 id="editor-assistant-title">{{template "icon" "sparkles"}}智能辅助</h2><p>起草文章、优化选区，或补全摘要与英文别名。</p></div><button type="button" class="admin-button editor-ai-launch" data-ai-open aria-haspopup="dialog" aria-expanded="false" {{if .Admin.ReadOnly}}disabled{{end}}>打开 AI 编辑器 {{template "icon" "arrow-up-right"}}</button></header><div id="editor-assistant-panel">          {{if .AIProMax.Enabled}}<details open class="aipm-paragraph" data-ai-paragraph><summary>选区优化</summary><label>模型<select data-pro-model><option value="">使用站点规则</option>{{range .AIProMax.Queue.Models}}<option value="{{.Value}}">{{.Label}}</option>{{end}}</select></label><label>写作方式<select data-paragraph-mode><option value="polish">润色</option><option value="expand">扩写</option><option value="shorten">精简</option><option value="translate">翻译</option></select></label><label>语言<select data-paragraph-lang>{{range $.AILanguages}}<option value="{{.Code}}">{{.Name}}</option>{{end}}</select></label><button class="admin-button admin-button-quiet" type="button" data-paragraph-generate>优化所选文字</button><p role="status" data-paragraph-status>在源码或段落块中选中文字。</p><label hidden data-paragraph-preview>修改建议<textarea rows="4" data-paragraph-result></textarea></label><button type="button" class="admin-button admin-button-primary" data-paragraph-apply hidden>替换选区</button></details>{{end}}        {{if .AIProMax.Enabled}}<details open class="aipm-paragraph" data-pro-metadata><summary>AI 元数据补全</summary><fieldset><legend>选择要生成的字段</legend><label><input type="checkbox" data-pro-field="excerpt" checked> 摘要</label><label><input type="checkbox" data-pro-field="slug" checked> 英文别名</label>{{if ne .Editor.Input.Type "page"}}<label><input type="checkbox" data-pro-field="tags" checked> 标签</label><label><input type="checkbox" data-pro-field="categoryID" checked> 分类</label>{{end}}</fieldset><label>模型<select data-pro-model><option value="">使用站点规则</option>{{range .AIProMax.Queue.Models}}<option value="{{.Value}}">{{.Label}}</option>{{end}}</select></label><label>语言<select data-pro-language>{{range $.AILanguages}}<option value="{{.Code}}">{{.Name}}</option>{{end}}</select></label><button type="button" class="admin-button admin-button-quiet" data-pro-preview>预览建议</button><p role="status" data-pro-status></p><div data-pro-results></div><button type="button" class="admin-button admin-button-primary" data-pro-apply hidden>填入所选字段</button></details>{{end}}</div></section>{{end}}
+        </section>
+
+      </div>
+
+      <aside class="admin-editor-sidebar" id="editor-settings" aria-label="文章设置">
+        <div class="editor-settings-heading"><h2>文章设置</h2><button type="button" data-editor-settings-close aria-label="关闭文章设置" title="关闭">{{template "icon" "x"}}</button></div>
+        <nav class="editor-settings-tabs" aria-label="文章设置分类"><button type="button" data-editor-settings-tab="article" aria-pressed="true" aria-controls="editor-article-panel">文章</button><button type="button" data-editor-settings-tab="publication" aria-pressed="false" aria-controls="editor-publication-panel">发布设置</button></nav>
+        <div id="editor-article-panel" data-editor-settings-panel="article">
+
+        <section class="admin-editor-panel admin-classification-panel" data-classification-panel {{if eq .Editor.Input.Type "page"}}hidden{{end}}>
+          <header><span>{{template "icon" "tags"}}</span><div><h2>分类与标签</h2></div>{{if (.Admin.Can "taxonomy:manage")}}<a href="/admin/taxonomy/" target="_blank" rel="noopener" aria-label="管理分类与标签">{{template "icon" "external-link"}}</a>{{else}}<em title="分类法由编辑或管理员维护">由编辑维护</em>{{end}}</header>
+          <div class="admin-category-field {{if index .Admin.FieldErrors "category_ids"}}has-error{{end}}">
+            {{if .Editor.FallbackCategory}}<input type="hidden" name="category" value="{{.Editor.FallbackCategory}}">{{end}}
+            <div><b>分类目录</b><small>{{len .Editor.Categories}} 个可用 · 最多选择 8 项</small></div>
+            <input type="search" data-editor-category-search aria-label="查找分类" placeholder="查找分类"><div class="admin-category-checklist">
+              {{if .Editor.FallbackCategory}}<label class="is-provisional"><input type="checkbox" checked disabled><span><i>{{template "icon" "plus"}}</i><b>{{.Editor.FallbackCategory}}</b><small>首次保存时创建</small></span></label>{{end}}
+              {{range .Editor.Categories}}<label class="depth-{{.Depth}}"><input type="checkbox" name="category_ids" value="{{.ID}}" {{if index $.Editor.SelectedCategory .ID}}checked{{end}} {{if $.Admin.ReadOnly}}disabled{{end}}><span><i>{{template "icon" "check"}}</i><b>{{.Name}}</b>{{if .ParentName}}<small>{{.ParentName}} / 子级</small>{{else if .System}}<small>系统默认</small>{{else}}<small>{{.Count}} 篇内容</small>{{end}}</span></label>{{else}}{{if ($.Admin.Can "taxonomy:manage")}}<a href="/admin/taxonomy/">先创建一个分类目录</a>{{else}}<span>暂无可选分类，保存时使用系统默认分类。</span>{{end}}{{end}}
+            </div>
+            <p>{{if index .Admin.FieldErrors "category_ids"}}{{template "icon" "triangle-alert"}}{{index .Admin.FieldErrors "category_ids"}}{{else}}至少选择一个分类。{{end}}</p>
+          </div>
+          <label class="admin-tag-field {{if index .Admin.FieldErrors "tags"}}has-error{{end}}">文章标签
+            <input type="text" name="tags" value="{{.Editor.TagValue}}" maxlength="1620" list="editor-tag-options" placeholder="性能, Go, 迁移" autocomplete="off" data-tag-input {{if .Admin.ReadOnly}}disabled{{end}}>
+            <datalist id="editor-tag-options">{{range .Editor.AvailableTags}}<option value="{{.Name}}">{{.Count}} 篇内容</option>{{end}}</datalist>
+            <small>{{if index .Admin.FieldErrors "tags"}}{{index .Admin.FieldErrors "tags"}}{{else}}使用中文或英文逗号分隔，最多 20 个；同名标签会自动复用。{{end}}</small>
+          </label>
+          {{if .Editor.AvailableTags}}<div class="admin-tag-suggestions"><span>常用标签</span><div>{{range .Editor.AvailableTags}}<button type="button" data-tag-suggestion="{{.Name}}" {{if $.Admin.ReadOnly}}disabled{{end}}>#{{.Name}} <small>{{.Count}}</small></button>{{end}}</div></div>{{end}}
+        </section>
+
+        <section class="admin-editor-panel">
+          <header><span>{{template "icon" "image"}}</span><div><h2>封面</h2></div></header>
+          {{if (.Admin.Can "media:read")}}<button class="admin-button admin-button-quiet" type="button" data-editor-media-open="cover" aria-haspopup="dialog" {{if .Admin.ReadOnly}}disabled{{end}}>{{template "icon" "image"}}选择封面图片</button>{{end}}
+          {{if and (.ModuleEnabled "ai") (.Admin.CanWrite "media:write") (.Admin.Can "media:read")}}<button class="admin-button admin-button-quiet" type="button" data-ai-image-open="cover" aria-haspopup="dialog" aria-expanded="false">{{template "icon" "cpu"}}AI 生成封面</button>{{end}}
+          <label class="{{if index .Admin.FieldErrors "cover_url"}}has-error{{end}}">封面 URL<input type="text" inputmode="url" name="cover_url" value="{{.Editor.Input.CoverURL}}" maxlength="2048" placeholder="/theme-assets/images/editorial/cover-notes.webp" autocapitalize="none" autocomplete="off" spellcheck="false" {{if .Admin.ReadOnly}}disabled{{end}}><small>{{if index .Admin.FieldErrors "cover_url"}}{{index .Admin.FieldErrors "cover_url"}}{{else}}从媒体库选择封面，或填写已上传图片的地址。{{end}}</small></label>
+          {{if .Editor.Media}}<div class="admin-editor-media-picker"><div><span>最近上传</span><a href="/admin/media/" target="_blank" rel="noopener">打开媒体库 {{template "icon" "external-link"}}</a></div><div>{{range .Editor.Media}}<button type="button" data-cover-media="{{.Item.PublicURL}}" aria-label="使用《{{.Item.Title}}》作为封面" title="{{.Item.Title}} · {{.SizeLabel}}"><img src="{{.Item.PublicURL}}" alt="" loading="lazy" width="{{.Item.Width}}" height="{{.Item.Height}}"><span>{{template "icon" "check"}}</span></button>{{end}}</div></div>{{else}}<a class="admin-editor-media-empty" href="/admin/media/" target="_blank" rel="noopener">{{if (.Admin.CanWrite "media:write")}}{{template "icon" "upload-cloud"}}上传封面图片{{else}}{{template "icon" "image"}}打开媒体库选择已有图片{{end}}</a>{{end}}
+          <div class="admin-cover-preview">{{if and .Editor.Input.CoverURL (not (index .Admin.FieldErrors "cover_url"))}}<img src="{{.Editor.Input.CoverURL}}" alt="封面预览">{{else}}<span>{{template "icon" "image"}}</span><p>{{if index .Admin.FieldErrors "cover_url"}}修正地址后显示预览{{else}}尚未设置封面{{end}}</p>{{end}}</div>
+        </section>
+
+        <details class="editor-settings-group"><summary>摘要与公开地址</summary>        <section class="admin-editor-excerpt {{if index .Admin.FieldErrors "excerpt"}}has-error{{end}}">
+          <header><div><h2 id="editor-excerpt-label">摘要</h2></div><b><i data-count-output="excerpt">0</i>/500</b></header>
+          <textarea name="excerpt" rows="4" maxlength="500" aria-labelledby="editor-excerpt-label" placeholder="留空时会从正文自动生成" data-count-input="excerpt" {{if index .Admin.FieldErrors "excerpt"}}aria-invalid="true" aria-describedby="editor-excerpt-error"{{end}} {{if .Admin.ReadOnly}}disabled{{end}}>{{.Editor.Input.Excerpt}}</textarea>
+          {{if index .Admin.FieldErrors "excerpt"}}<p id="editor-excerpt-error">{{template "icon" "triangle-alert"}}{{index .Admin.FieldErrors "excerpt"}}</p>{{end}}
+        </section>
+
+        <section class="admin-editor-slug {{if index .Admin.FieldErrors "slug"}}has-error{{end}}">
+          <div class="editor-slug-heading"><label for="content-slug">英文别名</label><button type="button" data-slug-generate {{if .Admin.ReadOnly}}disabled{{end}}>{{template "icon" "sparkles"}}智能生成</button></div><div class="fluent-input-group"><span>{{if eq .Editor.Input.Type "page"}}/pages/{{else}}/posts/{{end}}</span><input id="content-slug" type="text" name="slug" value="{{.Editor.Input.Slug}}" maxlength="128" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="auto-generated-slug" data-slug-input {{if .Admin.ReadOnly}}disabled{{end}}></div>
+          <p class="editor-permalink-preview" data-permalink-preview></p><p class="editor-slug-status" data-slug-status role="status">中文标题可自动生成英文别名，手动填写的别名会保留。</p>{{if .Admin.Can "settings:manage"}}<a class="editor-permalink-settings" href="/admin/settings/#site-settings-permalinks" target="_blank" rel="noopener">配置固定链接 {{template "icon" "arrow-up-right"}}</a>{{end}}
+          {{if index .Admin.FieldErrors "slug"}}<p>{{template "icon" "triangle-alert"}}{{index .Admin.FieldErrors "slug"}}</p>{{end}}
+        </section>
+</details>
+        </div>
+        <details id="editor-publication-panel" data-editor-settings-panel="publication" class="admin-editor-panel admin-publish-panel editor-settings-group" open><summary>发布设置</summary>
+          <header><span>{{template "icon" "rocket"}}</span><div><h2>发布控制</h2></div></header>
+          <label>内容状态<select data-select-ui="outline" name="status" data-content-status {{if .Admin.ReadOnly}}disabled{{end}}><option value="draft" {{if eq .Editor.Input.Status "draft"}}selected{{end}}>草稿</option><option value="pending" {{if eq .Editor.Input.Status "pending"}}selected{{end}}>等待审核</option><option value="publish" {{if eq .Editor.Input.Status "publish"}}selected{{end}}>立即发布</option><option value="future" {{if eq .Editor.Input.Status "future"}}selected{{end}}>定时发布</option><option value="private" {{if eq .Editor.Input.Status "private"}}selected{{end}}>私密</option>{{if eq .Editor.Input.Status "trash"}}<option value="trash" selected>回收站</option>{{end}}</select></label>
+          <label class="{{if index .Admin.FieldErrors "published_at"}}has-error{{end}}" data-schedule-field>发布时间 · <span data-published-timezone-label>{{.Site.Timezone}}</span><input type="datetime-local" name="published_at" value="{{.Editor.PublishedAtLocal}}" {{if .Admin.ReadOnly}}disabled{{end}}><small>{{if index .Admin.FieldErrors "published_at"}}{{index .Admin.FieldErrors "published_at"}}{{if .Editor.PublishedAtLocal}}（原输入：{{.Editor.PublishedAtLocal}}）{{end}}{{else}}按 <span data-published-timezone-label>{{.Site.Timezone}}</span> 解释；跳时中不存在或回拨中重复的新时间不能提交。{{end}}</small></label>
+          <div data-published-timezone-review hidden><p>发布时间来源需要重新核对。请检查当前 <span data-published-timezone-label>{{.Site.Timezone}}</span> 下的日期和时刻；确认不会自动换算原输入。</p><button type="button" class="admin-button admin-button-quiet" data-published-timezone-confirm>已核对，按 <span data-published-timezone-label>{{.Site.Timezone}}</span> 解释</button></div>
+          <label>内容类型<select name="type" data-content-type {{if .Admin.ReadOnly}}disabled{{end}}><option value="post" {{if eq .Editor.Input.Type "post"}}selected{{end}}>文章</option><option value="page" {{if eq .Editor.Input.Type "page"}}selected{{end}}>页面</option></select></label>
+          <label id="article-pin-control" data-article-pin-control {{if ne .Editor.Input.Type "post"}}hidden{{end}}>文章置顶<select name="pinned" {{if .Admin.ReadOnly}}disabled{{end}}><option value="false" {{if not .Editor.Pinned}}selected{{end}}>不置顶</option><option value="true" {{if .Editor.Pinned}}selected{{end}}>置顶</option></select><small>{{if index .Admin.FieldErrors "pinned"}}{{index .Admin.FieldErrors "pinned"}}{{else}}公开后优先显示于默认文章列表，并自动显示置顶角标。取消置顶恢复原角标。{{end}}</small></label>
+          <label>评论<select name="comment_status" {{if .Admin.ReadOnly}}disabled{{end}}><option value="open" {{if eq .Editor.Input.CommentStatus "open"}}selected{{end}}>允许评论</option><option value="closed" {{if eq .Editor.Input.CommentStatus "closed"}}selected{{end}}>关闭评论</option></select></label>
+          {{template "admin-feature-status" .}}
+          {{if not .Editor.IsNew}}<dl><div><dt>当前版本</dt><dd data-editor-version>v{{.Editor.Post.Version}}</dd></div><div><dt>创建时间</dt><dd>{{dateIn .Editor.Post.CreatedAt .Site.Timezone}}</dd></div><div data-editor-modified><dt>最近修改</dt><dd>{{dateIn .Editor.Post.UpdatedAt .Site.Timezone}}</dd></div></dl>{{end}}
+        </details>
+
+
+
+
+      </aside>
+    </div>
+
+
+  </form>
+  {{template "article-widget-editor" .}}
+  {{template "component-library" .}}
+  <dialog class="admin-reuse-dialog admin-snippet-draft-dialog" data-snippet-draft-dialog aria-labelledby="snippet-draft-title">
+    <header><h2 id="snippet-draft-title">共享片段 → 独立草稿</h2><button class="admin-media-icon-button" type="button" data-snippet-draft-close aria-label="关闭独立草稿预览">{{template "icon" "x"}}</button></header>
+    <p>复制保存版本的标题、摘要、封面和展开后的静态正文。新草稿归当前账号所有，评论关闭；分类、标签和其他设置请在草稿中补充。</p>
+    <p data-snippet-draft-status role="status" aria-live="polite"></p>
+    <button class="admin-button" type="button" data-snippet-draft-preview>预览保存版本</button>
+    <div data-snippet-draft-content hidden>
+      <h3 data-snippet-draft-title></h3><p data-snippet-draft-details></p><ul data-snippet-draft-references aria-label="复制的片段版本"></ul>
+      <p>下方显示文字与结构；图片等外部资源请在生成后的草稿中核对。</p>
+      <iframe title="独立草稿静态正文预览" data-snippet-draft-frame sandbox="" referrerpolicy="no-referrer" width="100%" height="300"></iframe>
+      <details><summary>查看将复制的 HTML</summary><pre data-snippet-draft-source></pre></details>
+    </div>
+    <label><input type="checkbox" data-snippet-draft-consent disabled>我已核对预览，知道新草稿中的片段正文是独立副本，来源以后更新或撤回不会改变副本。</label>
+    <footer><button class="admin-button admin-button-primary" type="button" data-snippet-draft-confirm disabled>确认生成独立草稿</button><a class="admin-button" data-snippet-draft-result target="_blank" rel="noopener" hidden>打开独立草稿</a></footer>
+  </dialog>
+  <dialog class="admin-reuse-dialog" data-editor-snippets-dialog aria-labelledby="editor-snippets-title">
+    <header><h2 id="editor-snippets-title">插入共享片段</h2><button class="admin-media-icon-button" type="button" data-snippet-picker-close aria-label="关闭共享片段">{{template "icon" "x"}}</button></header>
+    <p>固定到所选版本，来源更新后由编辑明确更新引用。<a href="/admin/snippets/" target="_blank" rel="noopener">管理共享片段</a></p>
+    <p data-snippet-picker-status role="status" aria-live="polite"></p><div class="admin-reuse-results" data-snippet-picker-list></div>
+    <footer><span data-snippet-picker-page></span><nav aria-label="共享片段分页"><button class="admin-button" type="button" data-snippet-picker-prev disabled>上一页</button><button class="admin-button" type="button" data-snippet-picker-next disabled>下一页</button></nav></footer>
+  </dialog>
+  <dialog class="admin-reuse-dialog" data-editor-reuse-dialog aria-labelledby="editor-reuse-title">
+    <header><div><h2 id="editor-reuse-title">复用已有正文</h2></div><button class="admin-media-icon-button" type="button" data-editor-reuse-close aria-label="关闭内容复用">{{template "icon" "x"}}</button></header>
+    <p>把常用片段保存为草稿，就可以在这里重复插入。插入的是独立副本，之后可以单独修改。</p>
+    <form data-editor-reuse-search role="search"><input type="search" name="q" maxlength="100" placeholder="按标题或正文查找" aria-label="搜索可复用内容"><select name="status" aria-label="内容状态"><option value="draft">草稿</option><option value="publish">已发布</option><option value="private">私密</option><option value="pending">待审核</option><option value="future">定时</option></select><button class="admin-button admin-button-primary" type="submit">查找</button></form>
+    <p class="admin-reuse-status" data-editor-reuse-status role="status"></p>
+    <div class="admin-reuse-results" data-editor-reuse-results></div>
+    <footer><span data-editor-reuse-page></span><nav aria-label="可复用内容分页"><button class="admin-button admin-button-quiet" type="button" data-editor-reuse-previous disabled>上一页</button><button class="admin-button admin-button-quiet" type="button" data-editor-reuse-next disabled>下一页</button></nav></footer>
+  </dialog>
+  {{if .ModuleEnabled "ai"}}{{template "ai-editor" .}}{{template "ai-images" .}}{{end}}
+</section>
+{{end}}

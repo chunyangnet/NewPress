@@ -1,0 +1,32 @@
+{{define "content"}}
+{{if ne .Settings.show_hero false}}{{template "home-hero" .}}{{else}}{{template "home-intro" .}}{{end}}
+{{if eq .Settings.home_sequence "business-first"}}
+{{if ne .Settings.show_business false}}{{template "home-business" .}}{{end}}
+{{if ne .Settings.show_strengths false}}{{template "home-strengths" .}}{{end}}
+{{if ne .Settings.show_about false}}{{template "home-about" .}}{{end}}
+{{template "home-facts" .}}
+{{if ne .Settings.show_innovation false}}{{template "home-innovation" .}}{{end}}
+{{if ne .Settings.show_news false}}{{template "home-news" .}}{{end}}
+{{else if eq .Settings.home_sequence "news-first"}}
+{{if ne .Settings.show_news false}}{{template "home-news" .}}{{end}}
+{{if ne .Settings.show_about false}}{{template "home-about" .}}{{end}}
+{{template "home-facts" .}}
+{{if ne .Settings.show_strengths false}}{{template "home-strengths" .}}{{end}}
+{{if ne .Settings.show_innovation false}}{{template "home-innovation" .}}{{end}}
+{{if ne .Settings.show_business false}}{{template "home-business" .}}{{end}}
+{{else}}
+{{if ne .Settings.show_about false}}{{template "home-about" .}}{{end}}
+{{template "home-facts" .}}
+{{if ne .Settings.show_strengths false}}{{template "home-strengths" .}}{{end}}
+{{if ne .Settings.show_innovation false}}{{template "home-innovation" .}}{{end}}
+{{if ne .Settings.show_business false}}{{template "home-business" .}}{{end}}
+{{if ne .Settings.show_news false}}{{template "home-news" .}}{{end}}
+{{end}}
+{{template "home-partners" .}}
+{{template "home-cases" .}}
+{{template "home-process" .}}
+{{template "home-resources" .}}
+{{if ne .Settings.show_careers false}}{{template "home-careers" .}}{{end}}
+{{template "home-faq" .}}
+{{if ne .Settings.show_contact false}}{{template "home-contact" .}}{{end}}
+{{end}}

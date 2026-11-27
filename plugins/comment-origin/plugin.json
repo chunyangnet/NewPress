@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "slug": "comment-origin",
+  "name": "评论来源",
+  "version": "1.0.0",
+  "description": "为评论展示城市归属地与设备信息，按作者角色独立控制显示。",
+  "author": "NewPress 官方",
+  "license": "Apache-2.0",
+  "newpress": "builtin/comment-origin-v1",
+  "runtime": "builtin/comment-origin-v1",
+  "entry": "builtin.json",
+  "capabilities": [
+    "settings.read",
+    "settings.write",
+    "http.outbound",
+    "render.fragment"
+  ],
+  "outbound_hosts": [
+    "ipwho.is",
+    "restapi.amap.com",
+    "api.map.baidu.com"
+  ]
+}

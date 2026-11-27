@@ -1,0 +1,962 @@
+{
+  "icons": [
+    {
+      "key": "file-down",
+      "title": "订单交付"
+    },
+    {
+      "key": "download",
+      "title": "下载"
+    },
+    {
+      "key": "wallet",
+      "title": "钱包"
+    },
+    {
+      "key": "rotate-ccw",
+      "title": "售后"
+    },
+    {
+      "key": "shopping-bag",
+      "title": "商品"
+    },
+    {
+      "key": "boxes",
+      "title": "包裹"
+    },
+    {
+      "key": "route",
+      "title": "物流"
+    },
+    {
+      "key": "clock-3",
+      "title": "时间"
+    },
+    {
+      "key": "calendar-check",
+      "title": "日期"
+    },
+    {
+      "key": "users",
+      "title": "团队"
+    },
+    {
+      "key": "user-round",
+      "title": "个人"
+    },
+    {
+      "key": "key-round",
+      "title": "卡密"
+    },
+    {
+      "key": "coins",
+      "title": "积分"
+    },
+    {
+      "key": "tags",
+      "title": "优惠"
+    },
+    {
+      "key": "heart",
+      "title": "捐赠"
+    },
+    {
+      "key": "award",
+      "title": "奖品"
+    },
+    {
+      "key": "star",
+      "title": "评价"
+    },
+    {
+      "key": "shield-check",
+      "title": "保障"
+    },
+    {
+      "key": "shield-alert",
+      "title": "提醒"
+    },
+    {
+      "key": "badge-check",
+      "title": "授权"
+    },
+    {
+      "key": "lock-keyhole",
+      "title": "安全"
+    },
+    {
+      "key": "mail",
+      "title": "邮件"
+    },
+    {
+      "key": "message-circle",
+      "title": "咨询"
+    },
+    {
+      "key": "message-square",
+      "title": "反馈"
+    },
+    {
+      "key": "folder-open",
+      "title": "文件"
+    },
+    {
+      "key": "library",
+      "title": "说明"
+    },
+    {
+      "key": "list",
+      "title": "清单"
+    },
+    {
+      "key": "laptop",
+      "title": "电脑"
+    },
+    {
+      "key": "monitor",
+      "title": "显示器"
+    },
+    {
+      "key": "smartphone",
+      "title": "手机"
+    },
+    {
+      "key": "globe-2",
+      "title": "网络"
+    },
+    {
+      "key": "zap",
+      "title": "即时"
+    },
+    {
+      "key": "refresh-cw",
+      "title": "更新"
+    },
+    {
+      "key": "share-2",
+      "title": "分享"
+    },
+    {
+      "key": "check-circle",
+      "title": "完成"
+    },
+    {
+      "key": "store",
+      "title": "店铺"
+    },
+    {
+      "key": "info",
+      "title": "信息"
+    },
+    {
+      "key": "circle-help",
+      "title": "帮助"
+    },
+    {
+      "key": "bell",
+      "title": "通知"
+    },
+    {
+      "key": "history",
+      "title": "记录"
+    },
+    {
+      "key": "activity",
+      "title": "进度"
+    },
+    {
+      "key": "chart-no-axes-column",
+      "title": "统计"
+    },
+    {
+      "key": "settings-2",
+      "title": "设置"
+    },
+    {
+      "key": "undo-2",
+      "title": "退回"
+    },
+    {
+      "key": "diamond",
+      "title": "会员"
+    },
+    {
+      "key": "eye",
+      "title": "查看"
+    },
+    {
+      "key": "compass",
+      "title": "用途"
+    }
+  ],
+  "templates": [
+    {
+      "template": "order-delivery",
+      "category": "交付与下载",
+      "icon": "file-down",
+      "title": "订单交付",
+      "description": "付清后查看专属内容",
+      "link": "/shop/orders/"
+    },
+    {
+      "template": "file-download",
+      "category": "交付与下载",
+      "icon": "download",
+      "title": "文件下载",
+      "description": "在订单内获取文件与下载说明",
+      "link": "/shop/orders/"
+    },
+    {
+      "template": "auto-delivery",
+      "category": "交付与下载",
+      "icon": "zap",
+      "title": "自动交付",
+      "description": "付款成功后自动生成交付记录",
+      "link": "/shop/orders/"
+    },
+    {
+      "template": "manual-delivery",
+      "category": "交付与下载",
+      "icon": "user-round",
+      "title": "人工交付",
+      "description": "由商家核对订单后安排交付",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "cloud-download",
+      "category": "交付与下载",
+      "icon": "folder-open",
+      "title": "网盘领取",
+      "description": "下载地址与提取方式见订单",
+      "link": "/shop/orders/"
+    },
+    {
+      "template": "email-delivery",
+      "category": "交付与下载",
+      "icon": "mail",
+      "title": "邮件交付",
+      "description": "请按商品说明核对接收邮箱",
+      "link": "#shop-product-description"
+    },
+    {
+      "template": "usage-guide",
+      "category": "交付与下载",
+      "icon": "library",
+      "title": "使用说明",
+      "description": "下载前可先阅读操作说明",
+      "link": "#shop-product-description"
+    },
+    {
+      "template": "content-updates",
+      "category": "交付与下载",
+      "icon": "refresh-cw",
+      "title": "内容更新",
+      "description": "更新范围与获取方式见商品介绍",
+      "link": "#shop-product-description"
+    },
+    {
+      "template": "physical-shipping",
+      "category": "实物与物流",
+      "icon": "shopping-bag",
+      "title": "实物配送",
+      "description": "付清后按商品说明安排发货",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "shipping-fee",
+      "category": "实物与物流",
+      "icon": "wallet",
+      "title": "运费说明",
+      "description": "每单运费 {运费}，以结算为准",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "tracking",
+      "category": "实物与物流",
+      "icon": "route",
+      "title": "物流查询",
+      "description": "发货后可在订单查看运单",
+      "link": "/shop/orders/"
+    },
+    {
+      "template": "dispatch-time",
+      "category": "实物与物流",
+      "icon": "clock-3",
+      "title": "发货时间",
+      "description": "具体发货安排见购买须知",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "confirm-receipt",
+      "category": "实物与物流",
+      "icon": "check-circle",
+      "title": "确认收货",
+      "description": "收到商品并核对后确认收货",
+      "link": "/shop/orders/"
+    },
+    {
+      "template": "local-pickup",
+      "category": "实物与物流",
+      "icon": "store",
+      "title": "到店自取",
+      "description": "自取地点和时间请查看商品说明",
+      "link": "#shop-product-description"
+    },
+    {
+      "template": "packaging",
+      "category": "实物与物流",
+      "icon": "boxes",
+      "title": "包装说明",
+      "description": "包装方式与配件清单见商品详情",
+      "link": "#shop-product-description"
+    },
+    {
+      "template": "split-shipping",
+      "category": "实物与物流",
+      "icon": "boxes",
+      "title": "分批发货",
+      "description": "多个包裹的交付情况以订单为准",
+      "link": "/shop/orders/"
+    },
+    {
+      "template": "currency",
+      "category": "付款与优惠",
+      "icon": "wallet",
+      "title": "{结算货币}结算",
+      "description": "下单前核对付款金额",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "balance",
+      "category": "付款与优惠",
+      "icon": "wallet",
+      "title": "余额支付",
+      "description": "可用余额及支付方式以下单页为准",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "points",
+      "category": "付款与优惠",
+      "icon": "coins",
+      "title": "积分兑换",
+      "description": "兑换数量与可用积分以下单页为准",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "coupon",
+      "category": "付款与优惠",
+      "icon": "tags",
+      "title": "优惠券",
+      "description": "领券后在下单时核对适用优惠",
+      "link": "/shop/?coupons=1"
+    },
+    {
+      "template": "coupon-threshold",
+      "category": "付款与优惠",
+      "icon": "tags",
+      "title": "优惠门槛",
+      "description": "优惠范围、门槛与有效期见券说明",
+      "link": "/shop/?coupons=1"
+    },
+    {
+      "template": "invoice",
+      "category": "付款与优惠",
+      "icon": "file-down",
+      "title": "开票说明",
+      "description": "发票类型与申请方式请查看说明",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "payment-record",
+      "category": "付款与优惠",
+      "icon": "history",
+      "title": "付款记录",
+      "description": "已付金额与支付记录在订单内查看",
+      "link": "/shop/orders/"
+    },
+    {
+      "template": "payment-check",
+      "category": "付款与优惠",
+      "icon": "shield-check",
+      "title": "付款核对",
+      "description": "支付结果以订单到账记录为准",
+      "link": "/shop/orders/"
+    },
+    {
+      "template": "refund",
+      "category": "退款与售后",
+      "icon": "rotate-ccw",
+      "title": "退款与售后",
+      "description": "查看购买与退款规则",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "return-process",
+      "category": "退款与售后",
+      "icon": "undo-2",
+      "title": "退换流程",
+      "description": "退换条件与处理方式见售后说明",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "damage-report",
+      "category": "退款与售后",
+      "icon": "shield-alert",
+      "title": "破损反馈",
+      "description": "收到异常商品时请保留照片与包装",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "replacement",
+      "category": "退款与售后",
+      "icon": "boxes",
+      "title": "补发处理",
+      "description": "缺件或交付异常请按售后说明反馈",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "maintenance",
+      "category": "退款与售后",
+      "icon": "settings-2",
+      "title": "维修说明",
+      "description": "服务范围和送修方式见商品说明",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "consultation",
+      "category": "退款与售后",
+      "icon": "message-circle",
+      "title": "售前咨询",
+      "description": "规格与使用问题可先咨询商家",
+      "link": "#shop-product-description"
+    },
+    {
+      "template": "feedback",
+      "category": "退款与售后",
+      "icon": "message-square",
+      "title": "问题反馈",
+      "description": "反馈时请提供订单号与具体情况",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "service-hours",
+      "category": "退款与售后",
+      "icon": "clock-3",
+      "title": "客服时间",
+      "description": "响应时间以商家公布的服务时间为准",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "personal-license",
+      "category": "授权与使用",
+      "icon": "user-round",
+      "title": "个人授权",
+      "description": "个人使用范围与限制见授权说明",
+      "link": "#shop-product-description"
+    },
+    {
+      "template": "studio-license",
+      "category": "授权与使用",
+      "icon": "users",
+      "title": "团队授权",
+      "description": "团队人数与使用范围见商品说明",
+      "link": "#shop-product-description"
+    },
+    {
+      "template": "commercial-license",
+      "category": "授权与使用",
+      "icon": "badge-check",
+      "title": "商用授权",
+      "description": "商用范围请以商品授权条款为准",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "devices",
+      "category": "授权与使用",
+      "icon": "laptop",
+      "title": "设备范围",
+      "description": "支持设备与数量见商品参数",
+      "link": "#shop-product-specifications"
+    },
+    {
+      "template": "compatibility",
+      "category": "授权与使用",
+      "icon": "monitor",
+      "title": "兼容说明",
+      "description": "购买前核对系统与软件版本",
+      "link": "#shop-product-specifications"
+    },
+    {
+      "template": "activation",
+      "category": "授权与使用",
+      "icon": "key-round",
+      "title": "激活说明",
+      "description": "激活步骤与注意事项见订单内容",
+      "link": "/shop/orders/"
+    },
+    {
+      "template": "license-expiry",
+      "category": "授权与使用",
+      "icon": "calendar-check",
+      "title": "授权期限",
+      "description": "起止时间与续期方式见授权说明",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "account-binding",
+      "category": "授权与使用",
+      "icon": "lock-keyhole",
+      "title": "账号绑定",
+      "description": "使用前核对需要绑定的账号",
+      "link": "#shop-product-description"
+    },
+    {
+      "template": "presale",
+      "category": "预售与定金",
+      "icon": "calendar-check",
+      "title": "预售商品",
+      "description": "商品按约定时间安排交付",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "release",
+      "category": "预售与定金",
+      "icon": "clock-3",
+      "title": "预计交付",
+      "description": "计划时间：{发售时间}",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "deposit",
+      "category": "预售与定金",
+      "icon": "wallet",
+      "title": "定金说明",
+      "description": "定金、尾款金额与规则以下单页为准",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "balance-due",
+      "category": "预售与定金",
+      "icon": "calendar-check",
+      "title": "尾款截止",
+      "description": "请于 {尾款截止} 前付清尾款",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "presale-schedule",
+      "category": "预售与定金",
+      "icon": "route",
+      "title": "预售进度",
+      "description": "生产与发货安排见商品更新说明",
+      "link": "#shop-product-description"
+    },
+    {
+      "template": "presale-change",
+      "category": "预售与定金",
+      "icon": "bell",
+      "title": "变更通知",
+      "description": "交付安排变化请留意商品说明",
+      "link": "#shop-product-description"
+    },
+    {
+      "template": "presale-cancel",
+      "category": "预售与定金",
+      "icon": "rotate-ccw",
+      "title": "预售取消",
+      "description": "取消条件与退款规则见购买须知",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "stock-reservation",
+      "category": "预售与定金",
+      "icon": "boxes",
+      "title": "库存预留",
+      "description": "未付款订单的预留时间见订单",
+      "link": "/shop/orders/"
+    },
+    {
+      "template": "installments",
+      "category": "分期与费用",
+      "icon": "wallet",
+      "title": "分期付款",
+      "description": "下单前查看完整付款计划",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "installment-periods",
+      "category": "分期与费用",
+      "icon": "list",
+      "title": "可选期数",
+      "description": "支持 {分期期数} 期，以下单页为准",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "installment-interval",
+      "category": "分期与费用",
+      "icon": "calendar-check",
+      "title": "付款间隔",
+      "description": "每 {付款间隔} 天支付一期",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "installment-interest",
+      "category": "分期与费用",
+      "icon": "coins",
+      "title": "分期费用",
+      "description": "每期费率 {每期费率}，以下单明细为准",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "installment-due",
+      "category": "分期与费用",
+      "icon": "clock-3",
+      "title": "到期付款",
+      "description": "请按订单计划完成各期付款",
+      "link": "/shop/orders/"
+    },
+    {
+      "template": "installment-delivery",
+      "category": "分期与费用",
+      "icon": "file-down",
+      "title": "付清交付",
+      "description": "交付时间与条件见商品购买规则",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "installment-overdue",
+      "category": "分期与费用",
+      "icon": "bell",
+      "title": "逾期说明",
+      "description": "未按期付款的处理方式见购买须知",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "installment-record",
+      "category": "分期与费用",
+      "icon": "history",
+      "title": "分期记录",
+      "description": "查看已付期次、剩余金额与到期日",
+      "link": "/shop/orders/"
+    },
+    {
+      "template": "group-buy",
+      "category": "拼团与组合",
+      "icon": "users",
+      "title": "拼团购买",
+      "description": "可发起新团或使用团号参团",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "group-size",
+      "category": "拼团与组合",
+      "icon": "users",
+      "title": "{成团人数} 人成团",
+      "description": "按订单所选方案完成拼团",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "group-time",
+      "category": "拼团与组合",
+      "icon": "clock-3",
+      "title": "拼团时限",
+      "description": "开团后 {拼团时限} 小时内成团",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "join-group",
+      "category": "拼团与组合",
+      "icon": "share-2",
+      "title": "邀请参团",
+      "description": "分享商品链接与团号邀请朋友",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "group-progress",
+      "category": "拼团与组合",
+      "icon": "activity",
+      "title": "成团进度",
+      "description": "在订单中查看当前拼团状态",
+      "link": "/shop/orders/"
+    },
+    {
+      "template": "group-failed",
+      "category": "拼团与组合",
+      "icon": "rotate-ccw",
+      "title": "未成团处理",
+      "description": "到期未成团按购买规则处理",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "bundle",
+      "category": "拼团与组合",
+      "icon": "boxes",
+      "title": "组合商品",
+      "description": "套装包含内容见商品详细介绍",
+      "link": "#shop-product-description"
+    },
+    {
+      "template": "bundle-delivery",
+      "category": "拼团与组合",
+      "icon": "list",
+      "title": "组合交付",
+      "description": "各子商品的交付内容分别记录",
+      "link": "/shop/orders/"
+    },
+    {
+      "template": "instant-raffle",
+      "category": "抽奖与奖品",
+      "icon": "zap",
+      "title": "即时开奖",
+      "description": "付款成功后查看本次抽奖结果",
+      "link": "/shop/orders/"
+    },
+    {
+      "template": "scheduled-raffle",
+      "category": "抽奖与奖品",
+      "icon": "calendar-check",
+      "title": "定时开奖",
+      "description": "按公布时间对有效抽奖码开奖",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "draw-time",
+      "category": "抽奖与奖品",
+      "icon": "clock-3",
+      "title": "开奖时间",
+      "description": "本轮计划：{开奖时间}",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "win-rate",
+      "category": "抽奖与奖品",
+      "icon": "chart-no-axes-column",
+      "title": "中奖概率",
+      "description": "每个抽奖码中奖概率 {中奖概率}",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "winner-count",
+      "category": "抽奖与奖品",
+      "icon": "award",
+      "title": "中奖名额",
+      "description": "本轮计划抽取 {中奖名额} 个中奖码",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "raffle-result",
+      "category": "抽奖与奖品",
+      "icon": "eye",
+      "title": "开奖结果",
+      "description": "抽奖码及开奖结果保存在订单中",
+      "link": "/shop/orders/"
+    },
+    {
+      "template": "prize-claim",
+      "category": "抽奖与奖品",
+      "icon": "key-round",
+      "title": "奖品领取",
+      "description": "中奖后按订单说明领取奖品",
+      "link": "/shop/orders/"
+    },
+    {
+      "template": "prize-delivery",
+      "category": "抽奖与奖品",
+      "icon": "shopping-bag",
+      "title": "奖品交付",
+      "description": "奖品内容与物流记录见订单详情",
+      "link": "/shop/orders/"
+    },
+    {
+      "template": "membership",
+      "category": "会员与权益",
+      "icon": "diamond",
+      "title": "会员权益",
+      "description": "可用权益与适用条件见商品说明",
+      "link": "#shop-product-description"
+    },
+    {
+      "template": "member-type",
+      "category": "会员与权益",
+      "icon": "badge-check",
+      "title": "会员类型",
+      "description": "购买前核对适用的会员类型",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "member-level",
+      "category": "会员与权益",
+      "icon": "award",
+      "title": "等级条件",
+      "description": "等级要求与购买限制见商品说明",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "benefit-duration",
+      "category": "会员与权益",
+      "icon": "calendar-check",
+      "title": "权益期限",
+      "description": "生效时间与有效期见购买说明",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "renewal",
+      "category": "会员与权益",
+      "icon": "refresh-cw",
+      "title": "续期说明",
+      "description": "续期方式与叠加规则见商品介绍",
+      "link": "#shop-product-description"
+    },
+    {
+      "template": "benefit-list",
+      "category": "会员与权益",
+      "icon": "list",
+      "title": "权益清单",
+      "description": "逐项查看包含的服务与使用范围",
+      "link": "#shop-product-description"
+    },
+    {
+      "template": "points-rules",
+      "category": "会员与权益",
+      "icon": "coins",
+      "title": "积分规则",
+      "description": "获取、使用与有效期以积分规则为准",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "benefit-exclusions",
+      "category": "会员与权益",
+      "icon": "info",
+      "title": "适用范围",
+      "description": "使用限制与不包含内容见购买须知",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "donation",
+      "category": "捐赠与支持",
+      "icon": "heart",
+      "title": "捐赠支持",
+      "description": "确认用途与说明后自愿参与",
+      "link": "#shop-product-description"
+    },
+    {
+      "template": "donation-amount",
+      "category": "捐赠与支持",
+      "icon": "coins",
+      "title": "自选金额",
+      "description": "在商品允许范围内选择捐赠金额",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "donation-record",
+      "category": "捐赠与支持",
+      "icon": "history",
+      "title": "捐赠记录",
+      "description": "付款后可在订单中查看记录",
+      "link": "/shop/orders/"
+    },
+    {
+      "template": "donation-purpose",
+      "category": "捐赠与支持",
+      "icon": "compass",
+      "title": "用途说明",
+      "description": "捐赠用途与相关说明见商品详情",
+      "link": "#shop-product-description"
+    },
+    {
+      "template": "donation-receipt",
+      "category": "捐赠与支持",
+      "icon": "file-down",
+      "title": "凭证说明",
+      "description": "凭证形式与获取方式见购买须知",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "acknowledgement",
+      "category": "捐赠与支持",
+      "icon": "heart",
+      "title": "致谢说明",
+      "description": "署名与致谢方式按说明执行",
+      "link": "#shop-product-description"
+    },
+    {
+      "template": "donation-progress",
+      "category": "捐赠与支持",
+      "icon": "activity",
+      "title": "项目进展",
+      "description": "进展记录与内容更新见项目介绍",
+      "link": "#shop-product-description"
+    },
+    {
+      "template": "donation-contact",
+      "category": "捐赠与支持",
+      "icon": "message-circle",
+      "title": "联系说明",
+      "description": "有关捐赠的问题可按说明联系",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "product-details",
+      "category": "商品与帮助",
+      "icon": "library",
+      "title": "商品详情",
+      "description": "查看完整介绍、图片与使用说明",
+      "link": "#shop-product-description"
+    },
+    {
+      "template": "product-specs",
+      "category": "商品与帮助",
+      "icon": "list",
+      "title": "商品参数",
+      "description": "购买前核对规格与适用条件",
+      "link": "#shop-product-specifications"
+    },
+    {
+      "template": "buyer-reviews",
+      "category": "商品与帮助",
+      "icon": "star",
+      "title": "买家评价",
+      "description": "查看已购用户的评分与反馈",
+      "link": "#shop-product-reviews"
+    },
+    {
+      "template": "my-orders",
+      "category": "商品与帮助",
+      "icon": "shopping-bag",
+      "title": "我的订单",
+      "description": "付款、交付与售后记录集中查看",
+      "link": "/shop/orders/"
+    },
+    {
+      "template": "faq",
+      "category": "商品与帮助",
+      "icon": "circle-help",
+      "title": "常见问题",
+      "description": "常见使用问题见商品详细介绍",
+      "link": "#shop-product-description"
+    },
+    {
+      "template": "purchase-notice",
+      "category": "商品与帮助",
+      "icon": "info",
+      "title": "购买须知",
+      "description": "下单前阅读交付与购买规则",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "account-security",
+      "category": "商品与帮助",
+      "icon": "shield-check",
+      "title": "账号安全",
+      "description": "请妥善保管账号与交付凭证",
+      "link": "#shop-product-rules"
+    },
+    {
+      "template": "privacy",
+      "category": "商品与帮助",
+      "icon": "lock-keyhole",
+      "title": "隐私说明",
+      "description": "个人信息的使用范围见相关说明",
+      "link": "#shop-product-rules"
+    }
+  ]
+}

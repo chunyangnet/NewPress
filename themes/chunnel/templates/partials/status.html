@@ -1,0 +1,21 @@
+{{define "status-page"}}
+<div class="shell np-status-shell">
+  <section class="np-status" aria-labelledby="status-title" data-status-code="{{.Status.Code}}" data-status-kind="{{.Status.Kind}}">
+    <div class="np-status-art" aria-hidden="true">
+      <div class="np-status-tunnel"><span></span><span></span><span></span><i>{{if .Status.Icon}}{{template "icon" .Status.Icon}}{{else}}{{template "icon" "search"}}{{end}}</i></div>
+      <span class="np-status-code">{{if .Status.Code}}{{.Status.Code}}{{else}}404{{end}}</span>
+    </div>
+    <div class="np-status-copy">
+      <p class="np-status-context">{{if eq .Status.Kind "maintenance"}}暂别片刻{{else if eq .Status.Kind "disabled"}}服务未开放{{else if .Status.Service}}服务状态{{else}}访问提示{{end}}</p>
+      <h1 id="status-title">{{if .Status.Title}}{{.Status.Title}}{{else}}页面没有找到{{end}}</h1>
+      <p class="np-status-message">{{if .Status.Message}}{{.Status.Message}}{{else if .Description}}{{.Description}}{{else}}链接可能已失效，或内容已被移走。{{end}}</p>
+      {{if eq .Status.Code 404}}{{if not .Status.Service}}<p class="np-status-hint">检查一下链接，或从首页重新出发。</p>{{end}}{{end}}
+      <div class="np-status-actions">
+        <a class="ui-button ui-button-primary" href="/">{{if eq .Status.Kind "maintenance"}}{{template "icon" "refresh-cw"}} 刷新重试{{else}}{{template "icon" "house"}} 返回首页{{end}}</a>
+        {{if ne .Status.Kind "maintenance"}}<a class="ui-button ui-button-secondary" href="/explore/">{{template "icon" "search"}} 发现内容</a>{{end}}
+      </div>
+      <p class="np-status-footnote">{{if eq .Status.Kind "maintenance"}}维护完成后即可恢复访问，请稍后再来。{{else if eq .Status.Kind "disabled"}}服务开放后，即可在这里继续使用。{{else}}你仍可以从其他入口继续浏览。{{end}}</p>
+    </div>
+  </section>
+</div>
+{{end}}

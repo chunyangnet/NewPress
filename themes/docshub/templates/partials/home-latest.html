@@ -1,0 +1,6 @@
+{{define "home-latest"}}
+<section class="latest" aria-labelledby="latest-title">
+  <div class="section-heading"><div><h2 id="latest-title">{{index .Settings "latest_title"}}</h2>{{with index .Settings "latest_description"}}<p class="section-description">{{.}}</p>{{end}}</div>{{if and (index .Settings "latest_more_label") (index .Settings "latest_more_link")}}<a href="{{index .Settings "latest_more_link"}}">{{index .Settings "latest_more_label"}} {{template "icon" "arrow"}}</a>{{end}}</div>
+  <div class="document-list">{{range $i, $post := .Posts}}{{if lt $i (index $.Settings "latest_count")}}<a class="document-row row-{{$i}}" href="{{$post.URL}}"><span class="document-icon">{{if eq $i 0}}{{template "icon" "file"}}{{else if eq $i 1}}{{template "icon" "code"}}{{else if eq $i 2}}{{template "icon" "box"}}{{else}}{{template "icon" "bolt"}}{{end}}</span><div><h3>{{$post.Title}}</h3>{{if and (index $.Settings "show_latest_excerpt") $post.Excerpt}}<p>{{$post.Excerpt}}</p>{{end}}</div>{{if index $.Settings "show_latest_date"}}<time datetime="{{$post.PublishedAt.Format "2006-01-02T15:04:05Z07:00"}}"{{if index $.Settings "relative_dates"}} data-relative-time{{end}}>{{date $post.PublishedAt}}</time><span class="document-dot" aria-hidden="true"></span>{{end}}</a>{{end}}{{else}}<div class="empty-state compact"><p>暂无已发布的文档。</p></div>{{end}}</div>
+</section>
+{{end}}

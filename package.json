@@ -1,0 +1,43 @@
+{
+  "name": "newpress-frontend-tools",
+  "license": "Apache-2.0",
+  "private": true,
+  "scripts": {
+    "install:china": "node scripts/install_frontend.mjs china",
+    "install:official": "node scripts/install_frontend.mjs official",
+    "build:frontend": "node scripts/build_frontend.mjs",
+    "check:frontend": "node scripts/build_frontend.mjs --check",
+    "typecheck:frontend": "tsc --noEmit -p tsconfig.frontend.json",
+    "inventory:frontend": "node scripts/frontend_inventory.mjs",
+    "test:frontend": "node --test tests/frontend/*.test.cjs",
+    "test:security:browser": "node --test tests/integration/device-mockup-browser.test.cjs",
+    "tool:mockup": "node scripts/device_mockup_server.mjs",
+    "build:theme": "node scripts/build_theme.mjs",
+    "check:theme": "go run ./cmd/themecheck"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.1",
+    "@types/react-dom": "19.3.0",
+    "echarts": "6.1.0",
+    "esbuild": "0.28.2",
+    "highlight.js": "11.12.0",
+    "playwright": "^1.65.1",
+    "postcss": "^8.5.32",
+    "postcss-selector-parser": "^7.1.7",
+    "prosemirror-commands": "1.7.2",
+    "prosemirror-history": "1.5.2",
+    "prosemirror-inputrules": "1.7.0",
+    "prosemirror-keymap": "1.2.3",
+    "prosemirror-model": "1.25.13",
+    "prosemirror-schema-basic": "1.2.5",
+    "prosemirror-schema-list": "1.6.1",
+    "prosemirror-state": "1.4.4",
+    "prosemirror-tables": "1.8.5",
+    "prosemirror-view": "1.44.0",
+    "purgecss": "8.0.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "terser": "5.51.4",
+    "typescript": "7.0.2"
+  }
+}

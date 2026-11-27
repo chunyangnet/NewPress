@@ -1,0 +1,67 @@
+{{define "content"}}
+<section class="admin-page admin-sessions-page">
+  <header class="admin-page-heading admin-sessions-heading">
+    <div class="admin-sessions-hero-copy">
+      <h1>登录与设备</h1>
+      
+      <nav aria-label="会话范围">
+        <a class="{{if eq .Sessions.Scope "mine"}}is-active{{end}}" href="{{.Sessions.MineURL}}"><span>{{template "icon" "user-round"}}</span><b>我的设备</b><small>{{.Sessions.MineCount}} 个活动会话</small></a>
+        {{if .Sessions.CanViewAll}}<a class="{{if eq .Sessions.Scope "all"}}is-active{{end}}" href="{{.Sessions.AllURL}}"><span>{{template "icon" "globe-2"}}</span><b>全部会话</b></a>{{end}}
+      </nav>
+    </div>
+  </header>
+
+  {{if .Admin.ReadOnly}}<div class="admin-callout admin-callout-warning" role="status"><span>{{template "icon" "triangle-alert"}}</span><div><strong>当前是本机只读预览</strong></div></div>{{end}}
+  {{if .Admin.Notice}}<div class="admin-session-notice is-{{.Admin.NoticeTone}}" role="status"><span>{{if eq .Admin.NoticeTone "success"}}{{template "icon" "check-circle"}}{{else}}{{template "icon" "triangle-alert"}}{{end}}</span><div><strong>{{if eq .Admin.NoticeTone "success"}}会话列表已更新{{else}}会话操作未完成{{end}}</strong><p>{{.Admin.Notice}}</p></div></div>{{end}}
+
+
+
+  <div class="admin-sessions-layout">
+    <div class="admin-session-inventory">
+      <header>
+        <div><h2>{{if eq .Sessions.Scope "all"}}全站登录会话{{else}}我的登录设备{{end}}</h2><p>按当前设备优先、最后活动时间倒序排列。</p></div>
+        <small>更新于<br><b>{{.Sessions.GeneratedAtLabel}}</b></small>
+      </header>
+      <div class="admin-session-list">
+        {{range .Sessions.Rows}}
+        <article class="admin-session-card {{if .Session.Current}}is-current{{end}} is-{{.IdleTone}}">
+          <div class="admin-session-client">
+            <span class="device-{{.DeviceKind}}">{{if eq .DeviceKind "mobile"}}{{template "icon" "smartphone"}}{{else if eq .DeviceKind "tablet"}}{{template "icon" "tablet"}}{{else if eq .DeviceKind "terminal"}}{{template "icon" "terminal"}}{{else if eq .DeviceKind "bot"}}{{template "icon" "bot"}}{{else}}{{template "icon" "laptop"}}{{end}}<i></i></span>
+            <div><b>{{.ClientName}}</b><small>{{.PlatformName}} · {{.IPAddress}}</small></div>
+            <div class="admin-session-badges">{{if .Session.Current}}<em class="is-current">当前设备</em>{{end}}{{if not .IsMine}}<em class="is-foreign">其他身份</em>{{end}}<em class="is-role">{{.Session.RoleName}}</em></div>
+          </div>
+          <div class="admin-session-identity">
+            <span>{{.UserInitial}}</span><p><b>{{.Session.DisplayName}}</b><small>@{{.Session.Username}}{{if .Session.UserID}} · UID {{.Session.UserID}}{{end}}</small></p>
+          </div>
+          <dl class="admin-session-timeline">
+            <div><dt>最后活动</dt><dd>{{.LastSeenRelative}}<small>{{.LastSeenLabel}}</small></dd></div>
+            <div class="is-{{.IdleTone}}"><dt>空闲窗口</dt><dd>{{.IdleRemaining}}<small>{{.IdleExpiresLabel}}</small></dd></div>
+            <div><dt>绝对期限</dt><dd>{{.AbsoluteRemain}}<small>{{.AbsoluteLabel}}</small></dd></div>
+            <div><dt>建立时间</dt><dd>{{.CreatedLabel}}</dd></div>
+          </dl>
+          <footer>
+            <code title="不可逆 SHA-256 会话摘要">{{template "icon" "fingerprint"}}{{.Fingerprint}}</code>
+            {{if .CanRevoke}}<form action="/admin/sessions/" method="post" data-confirm="确认立即撤销这个设备的会话？目标浏览器的下一次请求将要求重新登录。"><input type="hidden" name="csrf_token" value="{{$.Admin.CSRFToken}}"><input type="hidden" name="action" value="revoke"><input type="hidden" name="scope" value="{{$.Sessions.Scope}}"><input type="hidden" name="session_id" value="{{.Session.ID}}"><button type="submit">{{template "icon" "log-out"}}撤销会话</button></form>{{else if .Session.Current}}<a href="#current-session-contract">{{template "icon" "shield-check"}}由退出登录结束</a>{{else}}<span>{{template "icon" "shield-check"}}受角色权限保护</span>{{end}}
+          </footer>
+          <details><summary>查看客户端原始标识</summary><p>{{if .Session.UserAgent}}{{.Session.UserAgent}}{{else}}登录请求未提供 User-Agent{{end}}</p></details>
+        </article>
+        {{else}}
+        <div class="admin-session-empty"><span>{{template "icon" "radar"}}</span><strong>当前范围没有活动会话</strong><p>{{if .Admin.ReadOnly}}配置首位管理员并完成登录后，登录设备会显示在这里。{{else}}会话可能已经自然过期或被其他安全操作撤销。{{end}}</p></div>
+        {{end}}
+      </div>
+    </div>
+
+    <aside class="admin-session-sidebar">
+      <section class="admin-session-danger" id="current-session-contract">
+        <h2>注销其他设备</h2>
+        <p>注销 <b>@{{.Admin.Login}}</b> 的其他设备，当前设备保持登录。</p>
+        {{if .Sessions.CanRevokeOthers}}<form action="/admin/sessions/" method="post" data-confirm="确认注销当前账号的全部其他设备？这项操作不会结束当前设备。"><input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><input type="hidden" name="action" value="revoke_others"><input type="hidden" name="scope" value="{{.Sessions.Scope}}"><button type="submit">{{template "icon" "log-out"}}注销 {{.Sessions.OtherCount}} 个其他设备</button></form>{{else}}<button type="button" disabled>{{template "icon" "shield-check"}}{{if .Admin.ReadOnly}}只读预览不可操作{{else}}没有可注销的其他设备{{end}}</button>{{end}}
+        <small>当前设备可通过账号菜单退出登录。</small>
+      </section>
+
+
+      <a class="admin-button admin-button-quiet" href="/api/v1/admin/sessions?scope={{.Sessions.Scope}}" target="_blank" rel="noopener">查看 JSON 数据</a>
+    </aside>
+  </div>
+</section>
+{{end}}

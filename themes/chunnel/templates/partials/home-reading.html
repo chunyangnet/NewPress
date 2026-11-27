@@ -1,0 +1,10 @@
+{{define "home-reading-guide"}}
+<div class="home-panel home-guide">
+  <header class="home-guide-heading"><h2>{{index .ThemeValues "home_guide_title"}}</h2>{{with index .ThemeValues "home_guide_description"}}<p>{{.}}</p>{{end}}</header>
+  <nav class="home-guide-links" aria-label="入门导读">{{range .Home.GuideLinks}}<a href="{{.URL}}"><span><b>{{.Title}}</b>{{with .Description}}<small>{{.}}</small>{{end}}</span>{{template "icon" "chevron-right"}}</a>{{end}}</nav>
+</div>
+{{end}}
+
+{{define "home-updated"}}
+<div class="home-panel home-widget home-updated"><header class="home-widget-heading"><h2>最近更新</h2><a class="home-more" href="/explore/?sort=updated" aria-label="查看所有最近更新的文章">全部 {{template "icon" "chevron-right"}}</a></header><ul class="home-updated-list">{{range .Home.Updated}}<li><a href="{{.URL}}"><span class="home-updated-meta"><time datetime="{{dateIn .UpdatedAt $.Site.Timezone}}">{{dateIn .UpdatedAt $.Site.Timezone}}</time>{{with .Category}}<span>{{.}}</span>{{end}}</span><h3>{{.Title}}</h3>{{with .Excerpt}}<p>{{.}}</p>{{end}}</a></li>{{end}}</ul></div>
+{{end}}

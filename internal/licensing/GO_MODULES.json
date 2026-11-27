@@ -1,0 +1,526 @@
+{
+  "schema": 1,
+  "generator": "scripts/collect_licenses.py",
+  "normalization": "UTF-8/LF; sha256_lf hashes normalized source text",
+  "scope": "Full go list -m all graph, including dependency test fixtures; no license classification inferred",
+  "modules": [
+    {
+      "path": "github.com/HugoSmits86/nativewebp",
+      "version": "v1.3.0",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "c991f2fb57a8be578efdd78ef403a7ac878982e4d5acfb3695923851e4df2e92"
+        }
+      ]
+    },
+    {
+      "path": "github.com/aliyun/alibabacloud-oss-go-sdk-v2",
+      "version": "v1.6.1",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        }
+      ]
+    },
+    {
+      "path": "github.com/aws/aws-sdk-go-v2",
+      "version": "v1.48.0",
+      "licenses": [
+        {
+          "path": ".github/workflows/license-check.yml",
+          "sha256_lf": "f19d6aac3a063b4ea43196472248ff68e277b7c2a9e0a193799134677d496cda"
+        },
+        {
+          "path": "LICENSE.txt",
+          "sha256_lf": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "path": "NOTICE.txt",
+          "sha256_lf": "a6e830174d62dafad3a718384772ea1f4c0e27989f050932dc442a5e3ddad080"
+        },
+        {
+          "path": "internal/sync/singleflight/LICENSE",
+          "sha256_lf": "f5122de47ce62d57dcd3e57cdf778ceacc3a847645de3332fea58903def93ecb"
+        }
+      ]
+    },
+    {
+      "path": "github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream",
+      "version": "v1.7.27",
+      "licenses": [
+        {
+          "path": "LICENSE.txt",
+          "sha256_lf": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        }
+      ]
+    },
+    {
+      "path": "github.com/aws/aws-sdk-go-v2/internal/configsources",
+      "version": "v1.5.12",
+      "licenses": [
+        {
+          "path": "LICENSE.txt",
+          "sha256_lf": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        }
+      ]
+    },
+    {
+      "path": "github.com/aws/aws-sdk-go-v2/internal/endpoints/v2",
+      "version": "v2.8.12",
+      "licenses": [
+        {
+          "path": "LICENSE.txt",
+          "sha256_lf": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        }
+      ]
+    },
+    {
+      "path": "github.com/aws/aws-sdk-go-v2/internal/v4a",
+      "version": "v1.5.12",
+      "licenses": [
+        {
+          "path": "LICENSE.txt",
+          "sha256_lf": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        }
+      ]
+    },
+    {
+      "path": "github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding",
+      "version": "v1.13.25",
+      "licenses": [
+        {
+          "path": "LICENSE.txt",
+          "sha256_lf": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        }
+      ]
+    },
+    {
+      "path": "github.com/aws/aws-sdk-go-v2/service/internal/checksum",
+      "version": "v1.11.13",
+      "licenses": [
+        {
+          "path": "LICENSE.txt",
+          "sha256_lf": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        }
+      ]
+    },
+    {
+      "path": "github.com/aws/aws-sdk-go-v2/service/internal/presigned-url",
+      "version": "v1.14.12",
+      "licenses": [
+        {
+          "path": "LICENSE.txt",
+          "sha256_lf": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        }
+      ]
+    },
+    {
+      "path": "github.com/aws/aws-sdk-go-v2/service/internal/s3shared",
+      "version": "v1.20.12",
+      "licenses": [
+        {
+          "path": "LICENSE.txt",
+          "sha256_lf": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        }
+      ]
+    },
+    {
+      "path": "github.com/aws/aws-sdk-go-v2/service/s3",
+      "version": "v1.114.10",
+      "licenses": [
+        {
+          "path": "LICENSE.txt",
+          "sha256_lf": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        }
+      ]
+    },
+    {
+      "path": "github.com/aws/smithy-go",
+      "version": "v1.28.9",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "09e8a9bcec8067104652c168685ab0931e7868f9c8284b66f5ae6edae5f1130b"
+        },
+        {
+          "path": "NOTICE",
+          "sha256_lf": "d4290ed64c2edd0fce1d84e3f9dfb2881240fe534def76b8cd29ed6af683e287"
+        },
+        {
+          "path": "internal/sync/singleflight/LICENSE",
+          "sha256_lf": "f5122de47ce62d57dcd3e57cdf778ceacc3a847645de3332fea58903def93ecb"
+        },
+        {
+          "path": "transport/http/protocol/internal/json/internal/stdlib/LICENSE",
+          "sha256_lf": "2d36597f7117c38b006835ae7f537487207d8ec407aa9d9980794b2030cbc067"
+        }
+      ]
+    },
+    {
+      "path": "github.com/aymerick/douceur",
+      "version": "v0.2.0",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "a91ec19456c4efb3d9fc22dc9c1ec60ec3701a9e8f4be511ebcf908c04288ffb"
+        }
+      ]
+    },
+    {
+      "path": "github.com/davecgh/go-spew",
+      "version": "v1.1.1",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "1b93a317849ee09d3d7e4f1d20c2b78ddb230b4becb12d7c224c927b9d470251"
+        }
+      ]
+    },
+    {
+      "path": "github.com/gorilla/css",
+      "version": "v1.0.1",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "af11d643d903cb178a641d7512879285287844f7a6c0611e2d0c6b131e50188b"
+        }
+      ]
+    },
+    {
+      "path": "github.com/jackc/pgpassfile",
+      "version": "v1.0.0",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "adb1663fda031df8f4344aa68f299fd87d80353e31339406742ded21dae65702"
+        }
+      ]
+    },
+    {
+      "path": "github.com/jackc/pgservicefile",
+      "version": "v0.0.0-20240606120523-5a60cdf6a761",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "fc505773403fe869ed64cc2235cdd13988a427bb7e3a7e7004a3f4b27420f8fc"
+        }
+      ]
+    },
+    {
+      "path": "github.com/jackc/pgx/v5",
+      "version": "v5.10.0",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "467f95e074fe23079a5623ed652619682692041b8551da27e3c2ddb9659a1507"
+        }
+      ]
+    },
+    {
+      "path": "github.com/jackc/puddle/v2",
+      "version": "v2.2.2",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "2d50e98a4900b4d6457a38d39c1432fdc156fc2f7b365f2e33ec9344acbb0057"
+        }
+      ]
+    },
+    {
+      "path": "github.com/kr/pretty",
+      "version": "v0.3.0",
+      "licenses": [
+        {
+          "path": "License",
+          "sha256_lf": "283c28b781bc7487bd7bcaf453cbd811f5ee8d7ce625cfcf8dcacae6ba1f4bb5"
+        }
+      ]
+    },
+    {
+      "path": "github.com/microcosm-cc/bluemonday",
+      "version": "v1.0.27",
+      "licenses": [
+        {
+          "path": "LICENSE.md",
+          "sha256_lf": "a8e8489f1168b5f3e0ebb43d7fe1c78a2fd7db9939c1a6cb555940a4b631f8d2"
+        }
+      ]
+    },
+    {
+      "path": "github.com/pmezard/go-difflib",
+      "version": "v1.0.0",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "2eb550be6801c1ea434feba53bf6d12e7c71c90253e0a9de4a4f46cf88b56477"
+        }
+      ]
+    },
+    {
+      "path": "github.com/skip2/go-qrcode",
+      "version": "v0.0.0-20200617195104-da1b6568686e",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "4cdab772de606bdf53e174b2f5d6a2c398156380ca1f763122198cece531d02c"
+        }
+      ]
+    },
+    {
+      "path": "github.com/stretchr/objx",
+      "version": "v0.1.0",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "b2663894033a05fd80261176cd8da1d72546e25842d5c1abcc852ca23b6b61b0"
+        }
+      ]
+    },
+    {
+      "path": "github.com/stretchr/testify",
+      "version": "v1.11.1",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "f8e536c1c7b695810427095dc85f5f80d44ff7c10535e8a9486cf393e2599189"
+        }
+      ]
+    },
+    {
+      "path": "github.com/tetratelabs/wazero",
+      "version": "v1.12.0",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "c46f033d017a5af71a1de0105ec56c41bd47f81a0bbdf779fffe316336dc7c1f"
+        },
+        {
+          "path": "NOTICE",
+          "sha256_lf": "e6f0c5c151a3ff1eba8f5930a31ec084ca6d7adda43c8675ab81f7d36af50b4f"
+        }
+      ]
+    },
+    {
+      "path": "github.com/yuin/goldmark",
+      "version": "v1.8.7",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "c1d6f653c38c80294dc7994647ba0dcc508ce64a86996303c804efa2f7982bff"
+        }
+      ]
+    },
+    {
+      "path": "go.yaml.in/yaml/v3",
+      "version": "v3.0.6",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "d18f6323b71b0b768bb5e9616e36da390fbd39369a81807cca352de4e4e6aa0b"
+        },
+        {
+          "path": "NOTICE",
+          "sha256_lf": "f6c2dd3a67b576eafb89b80200b8b1627230bf3821a0c14cb99a22ac19107d00"
+        }
+      ]
+    },
+    {
+      "path": "golang.org/x/crypto",
+      "version": "v0.58.0",
+      "replace": {
+        "path": "./third_party/xcrypto",
+        "version": ""
+      },
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+        }
+      ]
+    },
+    {
+      "path": "golang.org/x/image",
+      "version": "v0.47.0",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+        }
+      ]
+    },
+    {
+      "path": "golang.org/x/mod",
+      "version": "v0.41.0",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+        }
+      ]
+    },
+    {
+      "path": "golang.org/x/net",
+      "version": "v0.62.0",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+        }
+      ]
+    },
+    {
+      "path": "golang.org/x/sync",
+      "version": "v0.24.0",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+        }
+      ]
+    },
+    {
+      "path": "golang.org/x/sys",
+      "version": "v0.49.0",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+        }
+      ]
+    },
+    {
+      "path": "golang.org/x/term",
+      "version": "v0.47.0",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+        }
+      ]
+    },
+    {
+      "path": "golang.org/x/text",
+      "version": "v0.43.0",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+        }
+      ]
+    },
+    {
+      "path": "golang.org/x/time",
+      "version": "v0.4.0",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "2d36597f7117c38b006835ae7f537487207d8ec407aa9d9980794b2030cbc067"
+        }
+      ]
+    },
+    {
+      "path": "golang.org/x/tools",
+      "version": "v0.51.0",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+        }
+      ]
+    },
+    {
+      "path": "gopkg.in/check.v1",
+      "version": "v1.0.0-20201130134442-10cb98267c6c",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "69ce77f2b1c9c608d27f2d749b0e7d0c13960ed3b0dc07b973ac940e362e5d9c"
+        }
+      ]
+    },
+    {
+      "path": "gopkg.in/yaml.v3",
+      "version": "v3.0.1",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "d18f6323b71b0b768bb5e9616e36da390fbd39369a81807cca352de4e4e6aa0b"
+        },
+        {
+          "path": "NOTICE",
+          "sha256_lf": "f6c2dd3a67b576eafb89b80200b8b1627230bf3821a0c14cb99a22ac19107d00"
+        }
+      ]
+    }
+  ],
+  "additional_components": [
+    {
+      "name": "Go standard library",
+      "version": "go1.26.11",
+      "licenses": [
+        {
+          "path": "LICENSE",
+          "sha256_lf": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+        },
+        {
+          "path": "PATENTS",
+          "sha256_lf": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc"
+        }
+      ]
+    },
+    {
+      "name": "NewPress core UI third-party notices",
+      "version": "in-tree",
+      "licenses": [
+        {
+          "path": "internal/coreui/THIRD_PARTY_NOTICES.md",
+          "sha256_lf": "e8410c2f57eddf3ac7c0a5e6e346e156fba1fbed64285c8345ba55d669379a9b"
+        }
+      ]
+    },
+    {
+      "name": "Inter and Barlow Semi Condensed",
+      "version": "pinned; see fonts-manifest.json",
+      "licenses": [
+        {
+          "path": "internal/coreui/assets/fonts/inter-OFL.txt",
+          "sha256_lf": "5b9321a4298cfeb6b34354164a1c3afc3db114569984c502b9b35d988fd58c57"
+        },
+        {
+          "path": "internal/coreui/assets/fonts/barlowsemicondensed-OFL.txt",
+          "sha256_lf": "186d750eb496a4c17a76385f82be6aea2ac1cf2de074a811d63786cf374ea73f"
+        }
+      ]
+    },
+    {
+      "name": "flag-icons",
+      "version": "v7.5.0",
+      "licenses": [
+        {
+          "path": "internal/commentorigin/flags/LICENSE",
+          "sha256_lf": "8f1195d55a2fd315a07d812328470ca9ba2abb78c8d317ff19619d5125e00cea"
+        },
+        {
+          "path": "internal/commentorigin/flags/README.md",
+          "sha256_lf": "3f9e7575e141e793d50f6ec1d0517d298f1826b356a4d9aaeaf1b3ae7b49391d"
+        }
+      ]
+    },
+    {
+      "name": "NewPress GPT stickers",
+      "version": "CC-BY-4.0",
+      "licenses": [
+        {
+          "path": "third_party/licenses/emoji-NOTICE.txt",
+          "sha256_lf": "28c948ae925c8bb12a44446addaa0ed93a9bf98d0b45692dc016b5492293f998"
+        },
+        {
+          "path": "third_party/licenses/CC-BY-4.0.txt",
+          "sha256_lf": "d557539df68e771cc1eedcc91d13f70fca930e508d11eedcafa4b15db49e3744"
+        }
+      ]
+    }
+  ]
+}

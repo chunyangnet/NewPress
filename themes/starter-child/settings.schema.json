@@ -1,0 +1,5 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": { "accent": { "default": "#0f766e" } }
+}

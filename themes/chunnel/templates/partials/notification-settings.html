@@ -1,0 +1,22 @@
+{{define "notification-settings"}}
+<section class="notification-settings" data-notification-settings hidden aria-label="通知与订阅设置">
+  <div class="notification-settings-intro"><span>{{template "icon" "bell-ring"}}</span><div><h3>提醒设置</h3><p>选择接收哪些站内通知和邮件。</p></div><button type="button" class="ui-button ui-button-secondary ui-button-small" data-drawer-open="notification-drawer">打开通知中心</button></div>
+  <form data-notification-settings-form>
+    <fieldset class="switch-stack" disabled><legend>站内提醒 <small>仅在事件发生时通知</small></legend>
+      <label class="notification-preference"><span><strong id="notification-reply-label">回复与采纳</strong><small>评论收到回复、参与的圈子话题有新回应，或回答被采纳。</small></span><input type="checkbox" role="switch" name="reply" aria-labelledby="notification-reply-label"><i aria-hidden="true"></i></label>
+      <label class="notification-preference"><span><strong id="notification-mention-label">提到了我</strong><small>有人在评论或你可阅读的圈子内容中使用 @用户名 提到了你。</small></span><input type="checkbox" role="switch" name="mention" aria-labelledby="notification-mention-label"><i aria-hidden="true"></i></label>
+      <label class="notification-preference"><span><strong id="notification-publication-label">作者与圈子更新</strong><small>关注的作者发布新文章，或已加入的圈子发布新话题。</small></span><input type="checkbox" role="switch" name="publication" aria-labelledby="notification-publication-label"><i aria-hidden="true"></i></label>
+      <label class="notification-preference"><span><strong id="notification-moderation-label">审核与圈子管理</strong><small>文章、评论、入圈申请、成员身份和举报处理有了新结果。</small></span><input type="checkbox" role="switch" name="moderation" aria-labelledby="notification-moderation-label"><i aria-hidden="true"></i></label>
+    </fieldset>
+    <fieldset class="switch-stack" disabled><legend>寄到收件箱 <small>随时可以退订</small></legend>
+      <p class="notification-mail-hint" data-notification-email-hint></p>
+      <label class="notification-preference"><span><strong id="notification-email-label">通知邮件</strong><small>把上方已开启的提醒，同时发送到已验证邮箱。</small></span><input type="checkbox" role="switch" name="email" aria-labelledby="notification-email-label"><i aria-hidden="true"></i></label>
+      <label class="notification-preference"><span><strong id="notification-weekly-label">每周精选</strong><small data-notification-weekly-hint>每周一上午九点，回顾上一周最新的十篇公开文章。没有新文章时不发信。</small></span><input type="checkbox" role="switch" name="weekly" aria-labelledby="notification-weekly-label"><i aria-hidden="true"></i></label>
+    </fieldset>
+    <p class="notification-unsaved" data-notification-unsaved hidden>有未保存的修改。切换个人中心栏目或刷新状态会保留这些选择。</p>
+    <div class="notification-settings-actions"><button type="submit" class="ui-button ui-button-primary" disabled>保存通知偏好 {{template "icon" "check"}}</button><button type="button" class="ui-button ui-button-secondary" data-notification-settings-refresh>刷新状态</button><button type="button" class="ui-button ui-button-outline" data-notification-settings-discard hidden>放弃修改并重新载入</button></div>
+    <p role="status" aria-live="polite" data-notification-settings-result></p>
+  </form>
+  <aside class="notification-delivery" aria-label="邮件投递状态"><h3>最近投递</h3><p data-notification-delivery-status>正在读取…</p><button type="button" class="text-button" data-notification-mail-retry hidden>重试发送失败的邮件</button><p class="notification-delivery-note" data-notification-uncertain hidden>部分邮件的送达回执未收到，可能已到达收件箱。为避免重复，这些邮件不会自动重发。</p></aside>
+</section>
+{{end}}

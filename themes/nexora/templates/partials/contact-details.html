@@ -1,0 +1,18 @@
+{{define "contact-details"}}
+{{$s := .Settings}}
+{{$social := or (and $s.social_1_label $s.social_1_url) (and $s.social_2_label $s.social_2_url) (and $s.social_3_label $s.social_3_url)}}
+{{if or $s.contact_email $s.contact_phone $s.contact_address $s.contact_hours $s.contact_qr_image $social}}
+<section class="contact-details" aria-label="企业联系方式">
+  <div class="contact-information">
+    <dl class="contact-details-list">
+      {{if $s.contact_email}}<div><dt>电子邮箱</dt><dd><a href="mailto:{{$s.contact_email}}">{{$s.contact_email}}</a></dd></div>{{end}}
+      {{if $s.contact_phone}}<div><dt>联系电话</dt><dd><a href="tel:{{$s.contact_phone}}">{{$s.contact_phone}}</a></dd></div>{{end}}
+      {{if $s.contact_address}}<div><dt>联系地址</dt><dd>{{if $s.contact_map_url}}<a href="{{$s.contact_map_url}}" target="_blank" rel="noopener noreferrer">{{$s.contact_address}}<span class="sr-only">（在新窗口查看地图）</span></a>{{else}}{{$s.contact_address}}{{end}}</dd></div>{{end}}
+      {{if $s.contact_hours}}<div><dt>服务时间</dt><dd>{{$s.contact_hours}}</dd></div>{{end}}
+    </dl>
+    {{if $social}}<nav class="contact-social" aria-label="企业外部渠道">{{if and $s.social_1_label $s.social_1_url}}<a href="{{$s.social_1_url}}" target="_blank" rel="noopener noreferrer">{{$s.social_1_label}}{{template "icon-arrow" .}}<span class="sr-only">（新窗口）</span></a>{{end}}{{if and $s.social_2_label $s.social_2_url}}<a href="{{$s.social_2_url}}" target="_blank" rel="noopener noreferrer">{{$s.social_2_label}}{{template "icon-arrow" .}}<span class="sr-only">（新窗口）</span></a>{{end}}{{if and $s.social_3_label $s.social_3_url}}<a href="{{$s.social_3_url}}" target="_blank" rel="noopener noreferrer">{{$s.social_3_label}}{{template "icon-arrow" .}}<span class="sr-only">（新窗口）</span></a>{{end}}</nav>{{end}}
+  </div>
+  {{if $s.contact_qr_image}}<figure class="contact-qr"><img src="{{$s.contact_qr_image}}" alt="{{if $s.contact_qr_label}}{{$s.contact_qr_label}}{{else}}企业联系二维码{{end}}" width="112" height="112" loading="lazy">{{if $s.contact_qr_label}}<figcaption>{{$s.contact_qr_label}}</figcaption>{{end}}</figure>{{end}}
+</section>
+{{end}}
+{{end}}

@@ -1,0 +1,14 @@
+{{define "resource-editor"}}
+<details class="admin-editor-panel" data-resource-panel data-resource-css="{{asset "css/newpress-resource-editor.css"}}" data-resource-script="{{asset "js/newpress-resource-editor.js"}}" {{with .Editor.Input.Resources}}{{if .Items}}open{{end}}{{end}}>
+<summary>资源与隐藏内容 <small>下载、正文与解锁条件</small></summary>
+<section class="npre" data-resource-editor data-post="{{.Editor.Post.ID}}" aria-labelledby="npre-heading">
+  <header class="npre-heading"><div><h2 id="npre-heading">资源与隐藏内容</h2><p>添加内容，再选择读者的解锁方式。</p></div></header>
+  {{with index .Admin.FieldErrors "resources"}}<p class="npre-error" role="alert">{{.}}</p>{{end}}
+  <input type="hidden" name="resources" value="{{.Editor.Input.ResourcesJSON}}" data-resource-config>
+  <fieldset class="npre-fieldset" {{if .Admin.ReadOnly}}disabled{{end}}><legend class="sr-only">资源设置</legend><div data-resource-workspace></div></fieldset>
+  <p class="npre-save">随文章保存与自动保存。未指定正文位置时，资源显示在文末。</p>
+  <p data-resource-editor-status role="status" aria-live="polite"></p>
+</section>
+</details>
+<script src="{{asset "js/newpress-resource-loader.js"}}" defer></script>
+{{end}}

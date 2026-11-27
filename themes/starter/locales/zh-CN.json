@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "locale": "zh-CN",
+  "messages": {
+    "starter.latest": "最新文章",
+    "starter.discover": "发现内容",
+    "starter.empty": "暂时没有内容。"
+  }
+}

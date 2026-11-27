@@ -1,0 +1,89 @@
+{{define "content"}}
+<section class="admin-page shop-admin" data-shop-admin data-user-id="{{.Admin.Principal.UserID}}" data-csrf="{{.Admin.CSRFToken}}" data-read-only="{{.Admin.ReadOnly}}">
+  <header class="admin-page-heading"><div><h1>商城管理</h1><p>管理商品、购买方案与订单交付。</p></div><div class="sa-actions"><a class="admin-button admin-button-secondary" href="/admin/payments/">支付渠道</a><a class="admin-button admin-button-secondary" href="/shop/">查看商城 {{template "icon" "chevron-right"}}</a></div></header>
+  <p class="sa-status" data-shop-status role="status" aria-live="polite">正在读取商城…</p>
+  <noscript><p class="sa-note">请启用 JavaScript 后管理商品和订单。</p></noscript>
+  {{if .Admin.ReadOnly}}<p class="sa-note">当前为只读预览，登录具有站点设置权限的账号后可管理商城。</p>{{end}}
+  <div data-shop-workspace hidden>
+    <div class="sa-overview" aria-label="商城概况"><div><span>在售商品</span><strong data-shop-stat="products">0</strong></div><div><span>待发货</span><strong data-shop-stat="shipping">0</strong></div><div><span>需处理退款</span><strong data-shop-stat="refunds">0</strong></div><div><span>订单总数</span><strong data-shop-stat="orders">0</strong></div></div>
+    <nav class="sa-tabs" aria-label="商城工作区"><button type="button" data-shop-tab="products" aria-controls="shop-products" aria-current="page">商品管理</button><button type="button" data-shop-tab="orders" aria-controls="shop-orders">订单与售后</button><button type="button" data-shop-tab="reviews" aria-controls="shop-reviews">商品评价</button><button type="button" data-shop-tab="coupons" aria-controls="shop-coupons">优惠券</button><button type="button" data-shop-tab="settings" aria-controls="shop-settings">商城设置</button></nav>
+    <section id="shop-reviews" class="sa-panel" data-shop-panel="reviews" hidden><header class="sa-panel-heading"><div><h2>商品评价</h2><p>评价来自已完成的订单。隐藏后不计入商品评分，买家仍可在订单中查看评价和处理原因。</p></div><button type="button" class="admin-button admin-button-secondary" data-shop-review-refresh>刷新评价</button></header><form class="sa-filter" data-shop-review-search><label class="sa-search">{{template "icon" "search"}}<input type="search" name="q" maxlength="100" placeholder="搜索商品、评价内容或订单号" aria-label="搜索评价"></label><button type="submit" class="admin-button admin-button-secondary">搜索</button></form><div class="sa-review-filters" role="group" aria-label="评价状态"><button type="button" data-shop-review-status="" aria-pressed="true">全部评价</button><button type="button" data-shop-review-status="unreplied" aria-pressed="false">待回复</button><button type="button" data-shop-review-status="public" aria-pressed="false">公开</button><button type="button" data-shop-review-status="hidden" aria-pressed="false">已隐藏</button></div><div class="sa-review-filters" role="group" aria-label="评价星级"><button type="button" data-shop-review-rating="0" aria-pressed="true">全部星级</button><button type="button" data-shop-review-rating="5" aria-pressed="false">5 星</button><button type="button" data-shop-review-rating="4" aria-pressed="false">4 星</button><button type="button" data-shop-review-rating="3" aria-pressed="false">3 星</button><button type="button" data-shop-review-rating="2" aria-pressed="false">2 星</button><button type="button" data-shop-review-rating="1" aria-pressed="false">1 星</button></div><p class="sa-note" data-shop-review-count role="status"></p><div class="sa-reviews" data-shop-reviews></div><div class="sa-review-pagination" data-shop-review-pagination></div></section>
+    <section id="shop-products" class="sa-panel" data-shop-panel="products">
+      <header class="sa-panel-heading"><div><h2>商品目录</h2><p>交付类型和购买方案分别配置，按商品组合使用。</p></div><button class="admin-button admin-button-primary" type="button" data-shop-add {{if .Admin.ReadOnly}}disabled{{end}}>{{template "icon" "plus"}} 添加商品</button></header>
+      <div class="sa-filter"><label class="sa-search">{{template "icon" "search"}}<input type="search" data-shop-search placeholder="搜索商品名称或编号" aria-label="搜索商品"></label><label><span class="sr-only">按交付类型筛选</span><select data-select-ui="soft" data-shop-kind-filter><option value="">全部类型</option><option value="virtual">虚拟商品</option><option value="physical">实物商品</option><option value="cdk">CDK 卡密</option><option value="donation">捐赠</option><option value="raffle">抽奖码</option><option value="bundle">捆绑包</option></select></label><button type="button" class="admin-button admin-button-secondary" data-shop-reload>重新读取商品</button></div>
+      <div class="sa-products" data-shop-products></div>
+    </section>
+    <section id="shop-orders" class="sa-panel" data-shop-panel="orders" hidden>
+      <header class="sa-panel-heading"><div><h2>订单与发货</h2><p>查看付款进度、交付内容、物流及开奖结果。</p></div><div class="sa-actions"><button class="admin-button admin-button-secondary" type="button" data-shop-advance {{if .Admin.ReadOnly}}disabled{{end}}>更新到期任务</button><button class="admin-button admin-button-secondary" type="button" data-shop-refresh-orders>刷新订单</button></div></header>
+      <div class="sa-filter"><label class="sa-search">{{template "icon" "search"}}<input type="search" data-shop-order-search placeholder="搜索订单号、商品或用户编号" aria-label="搜索订单"></label><label><span class="sr-only">按订单状态筛选</span><select data-select-ui="soft" data-shop-order-filter><option value="">全部订单</option><option value="pending">待付款</option><option value="awaiting_shipment">待发货</option><option value="partially_paid">待付尾款或分期</option><option value="awaiting_group">待成团</option><option value="awaiting_draw">待开奖</option><option value="completed">已完成</option><option value="refund_requested">待审核退款</option><option value="refund_required">需处理退款</option><option value="refunded">已完成退款</option><option value="cancelled">已取消</option></select></label></div>
+      <div data-shop-orders></div>
+    </section>
+    <section id="shop-coupons" class="sa-panel" data-shop-panel="coupons" hidden>
+      <header class="sa-panel-heading"><div><h2>优惠券</h2><p>设置折扣、适用范围、会员条件、领取上限和有效时间；首页展示需要单独开启。</p></div><button class="admin-button admin-button-secondary" type="button" data-shop-coupon-new {{if .Admin.ReadOnly}}disabled{{end}}>新建优惠券</button></header>
+      <form class="sa-coupon-form" data-shop-coupon-form hidden><fieldset {{if .Admin.ReadOnly}}disabled{{end}}>
+        <div class="sa-grid">
+          <label class="sa-field"><span>优惠码</span><input name="code" maxlength="40" required pattern="[A-Za-z0-9_\x2d]{3,40}" autocomplete="off"></label>
+          <label class="sa-field"><span>券名称</span><input name="title" maxlength="80" required></label>
+          <label class="sa-field"><span>优惠方式</span><select name="kind"><option value="fixed">立减金额</option><option value="percent">按比例折扣</option></select></label>
+          <label class="sa-field"><span>优惠数值</span><input name="value" inputmode="decimal" required><small data-shop-coupon-value-hint>按所选货币输入金额。</small></label>
+          <label class="sa-field"><span>支付货币</span><select name="currency" data-shop-coupon-currency></select><small>按比例折扣可不限定货币；立减券必须指定货币。</small></label>
+          <label class="sa-field"><span>最低商品金额</span><input name="minimum" inputmode="decimal" value="0" required></label>
+          <label class="sa-field"><span>最高优惠金额</span><input name="maximum_discount" inputmode="decimal" value="0" required><small>按比例折扣的金额上限；0 表示不单独设上限。</small></label>
+          <label class="sa-field"><span>开始时间</span><input name="starts_at" type="datetime-local" required></label>
+          <label class="sa-field"><span>结束时间</span><input name="ends_at" type="datetime-local" required></label>
+          <label class="sa-field"><span>最多领取人数</span><input name="claim_limit" type="number" min="0" max="1000000" value="0" required><small>0 表示不限人数。</small></label>
+          <label class="sa-field"><span>最多核销次数</span><input name="use_limit" type="number" min="0" max="1000000" value="0" required><small>已占用和已使用的券都会计入。</small></label>
+          <label class="sa-field"><span>每位用户可领取张数</span><input name="per_user_limit" type="number" min="1" max="100" value="1" required></label>
+          <label class="sa-field"><span>商品类型限制</span><input name="kinds" placeholder="留空表示不限；多个值用逗号分隔"><small>虚拟、实物、卡密、捐赠、抽奖码、组合套装。</small></label>
+          <label class="sa-field"><span>购买方案限制</span><input name="modes" placeholder="direct, group, installment 等"></label>
+          <label class="sa-field"><span>指定商品编号</span><input name="products" placeholder="多个编号用逗号分隔"></label>
+          <label class="sa-field"><span>商品分类</span><input name="categories" placeholder="多个分类用逗号分隔"></label>
+          <label class="sa-field"><span>等级编号</span><input name="levels" placeholder="多个等级编号用逗号分隔"></label>
+          <label class="sa-field"><span>会员方案编号</span><input name="memberships" placeholder="多个方案编号用逗号分隔"></label>
+          <label class="sa-switch sa-wide"><input type="checkbox" name="home"><span>在首页优惠券模块展示</span></label>
+          <label class="sa-switch sa-wide"><input type="checkbox" name="enabled" checked><span>启用优惠券</span></label>
+        </div>
+        <div class="sa-form-footer"><p class="sa-editor-status" data-shop-coupon-status role="status" aria-live="polite"></p><button type="button" class="admin-button admin-button-secondary" data-shop-coupon-cancel>取消</button><button type="submit" class="admin-button admin-button-primary">保存优惠券</button></div>
+      </fieldset></form>
+      <div class="sa-coupon-list" data-shop-coupons></div>
+    </section>
+    <section id="shop-settings" class="sa-panel" data-shop-panel="settings" hidden>
+      <header class="sa-panel-heading"><div><h2>商城设置</h2><p>关闭商城后停止接受新订单，已有订单仍可查询和处理。</p></div></header>
+      <form data-shop-settings><fieldset {{if .Admin.ReadOnly}}disabled{{end}}><label class="sa-switch"><input type="checkbox" name="enabled"><span>开放商城购买</span></label><label class="sa-field"><span>订单保留时间（分钟）</span><input name="order_minutes" type="number" min="5" max="1440" value="30" required><small>未付款订单到期后释放预留库存。</small></label><label class="sa-field"><span>购买须知</span><textarea name="terms" rows="4" maxlength="4000" placeholder="说明商品交付、预售尾款与分期付款约定。"></textarea></label><label class="sa-field"><span>退款与售后说明</span><textarea name="refund_policy" rows="4" maxlength="4000" placeholder="说明退款申请、审核和处理方式。"></textarea></label><section class="sa-campaign-settings" aria-labelledby="shop-campaign-heading">
+        <h3 id="shop-campaign-heading">抽奖活动与共享额度</h3><p class="sa-hint">同一活动的商品共用券码总量和每人额度。填 0 表示此项不限。保存后，在商品的「抽奖规则」中选择活动。</p>
+        <div data-shop-campaigns></div><button type="button" class="admin-button admin-button-secondary sa-inline-add" data-shop-add-campaign>添加抽奖活动</button>
+      </section><div class="sa-form-footer"><span data-shop-version></span><button class="admin-button admin-button-primary" type="submit">保存商城设置</button></div></fieldset></form>
+    </section>
+  </div>
+  <dialog class="sa-dialog" data-shop-editor aria-labelledby="shop-editor-title"><form data-shop-product-form data-content-editor data-component-validate-url="/api/v1/admin/shop/components/validate" data-article-widgets-url="/api/v1/admin/shop/article-widgets" autocomplete="off"><input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><header class="sa-dialog-heading"><div><h2 id="shop-editor-title">添加商品</h2></div><button class="sa-close" type="button" data-shop-close aria-label="关闭商品编辑">{{template "icon" "x"}}</button></header><nav class="sa-editor-tabs" aria-label="商品编辑分区"><button type="button" data-shop-editor-tab="settings" aria-pressed="true" aria-controls="shop-product-settings">商品设置</button><button type="button" data-shop-editor-tab="services" aria-pressed="false" aria-controls="shop-product-services-editor">服务说明</button><button type="button" data-shop-editor-tab="description" aria-pressed="false" aria-controls="shop-product-description-editor">详细介绍</button></nav><fieldset id="shop-product-settings" data-shop-product-fields></fieldset>
+    <fieldset id="shop-product-services-editor" class="sa-services-editor" data-shop-services-fields hidden {{if .Admin.ReadOnly}}disabled{{end}}>
+      <header class="sa-services-heading"><h3>服务说明</h3><p>显示在商品购买区域下方。可勾选模板，再按商品实际服务修改。</p></header>
+      <div class="sa-service-modes" role="group" aria-label="服务说明显示方式"><button type="button" data-service-mode="auto" aria-pressed="true">自动匹配</button><button type="button" data-service-mode="custom" aria-pressed="false">自行配置</button><button type="button" data-service-mode="hidden" aria-pressed="false">不显示</button></div>
+      <section class="sa-service-preview-section" aria-label="服务说明预览"><div class="sa-services-caption"><h4>显示预览</h4><span data-service-preview-count></span></div><div class="sa-service-preview" data-service-preview></div></section>
+      <div data-service-custom hidden>
+        <section class="sa-service-library" aria-labelledby="shop-service-library-title"><div class="sa-services-caption"><h4 id="shop-service-library-title">模块模板</h4><span data-service-library-count></span></div><label class="sa-service-search">{{template "icon" "search"}}<span class="sr-only">搜索服务说明模板</span><input type="search" data-service-search maxlength="80" placeholder="搜索交付、结算、售后等模板" autocomplete="off"></label><div class="sa-service-categories" data-service-categories role="group" aria-label="服务模板分类"></div><div class="sa-service-templates" data-service-templates></div></section>
+        <section class="sa-service-selection" aria-labelledby="shop-service-selected-title"><div class="sa-services-caption"><h4 id="shop-service-selected-title">已选模块 <span data-service-selected-count></span></h4><button type="button" class="admin-button admin-button-secondary" data-service-add>{{template "icon" "plus"}}自定义添加</button></div><p class="sa-hint">按下方顺序展示。展开模块可修改图标、文字和跳转位置。</p><div class="sa-service-selected" data-service-selected></div><p class="sa-service-feedback" data-service-feedback role="status" aria-live="polite"></p></section>
+      </div>
+    </fieldset>
+    <fieldset id="shop-product-description-editor" class="sa-description-editor" data-shop-description-fields hidden {{if .Admin.ReadOnly}}disabled{{end}}>
+      <section class="admin-editor-body" aria-labelledby="shop-description-title">
+        <header class="sa-description-heading"><div><h3 id="shop-description-title">商品详细介绍</h3><p>支持段落、图片、表格、文章卡片及文章组件。选中内容块后可调整顺序或再次编辑。</p></div></header>
+        <div class="admin-composer-toolbar" data-composer-toolbar hidden>
+          <div class="admin-composer-modes" role="group" aria-label="详情编辑方式"><button type="button" data-composer-mode="blocks" aria-pressed="false">内容块</button><button type="button" data-composer-mode="source" aria-pressed="true">HTML 源码</button></div>
+          <div class="admin-composer-actions"><button type="button" data-composer-undo disabled>撤销</button><button type="button" data-composer-redo disabled>重做</button><button type="button" data-component-library-open aria-haspopup="dialog">组件库</button><button type="button" data-editor-widget-open aria-haspopup="dialog" aria-expanded="false">文章卡片</button></div>
+        </div>
+        <div data-composer-source-pane><textarea id="shop-description-source" name="description_source" rows="12" maxlength="262144" data-content-source data-max-bytes="262144" aria-label="商品详情源码" placeholder="填写商品详细介绍" {{if .Admin.ReadOnly}}readonly{{end}}></textarea></div>
+        <div class="admin-composer" data-composer hidden>
+          <div class="admin-composer-outline"><span>内容顺序 <b data-composer-count>0</b></span><small>新内容插入选中块的下方</small></div>
+          <div class="admin-composer-list" data-composer-list></div>
+          <div class="admin-composer-inserter" role="group" aria-label="添加详情内容块"><button type="button" data-block-add="paragraph">+ 段落</button><button type="button" data-block-add="h2">标题</button><button type="button" data-block-add="quote">引用</button><button type="button" data-block-add="table">表格</button><button type="button" data-block-add="list">列表</button><button type="button" data-block-add="code">代码</button><button type="button" data-component-library-open aria-haspopup="dialog">组件库</button><button type="button" data-editor-widget-open aria-haspopup="dialog" aria-expanded="false">文章卡片</button><button type="button" data-block-add="html">HTML</button></div>
+        </div>
+        <p class="admin-composer-feedback" data-composer-feedback role="status" aria-live="polite" hidden></p>
+        <p class="sa-description-note">组件库内可预览效果；保存商品后会更新到详情页。详细介绍最多 256 KiB。</p>
+      </section>
+    </fieldset><footer class="sa-dialog-footer"><p class="sa-editor-status" data-shop-editor-status role="status" aria-live="polite"></p><button class="admin-button admin-button-secondary" type="button" data-shop-close>取消</button><button class="admin-button admin-button-primary" type="submit" data-shop-product-save>保存商品</button></footer></form></dialog>
+  <dialog class="sa-dialog sa-order-dialog" data-shop-order-dialog aria-labelledby="shop-order-title"><header class="sa-dialog-heading"><div><h2 id="shop-order-title">订单详情</h2></div><button class="sa-close" type="button" data-shop-order-close aria-label="关闭订单详情">{{template "icon" "x"}}</button></header><div class="sa-order-detail" data-shop-order-detail></div><form class="sa-shipment" data-shop-shipment hidden><h3>填写物流</h3><fieldset {{if .Admin.ReadOnly}}disabled{{end}}><div class="sa-grid"><label class="sa-field"><span>物流公司</span><input name="carrier" maxlength="80" required placeholder="如顺丰速运"></label><label class="sa-field"><span>运单编号</span><input name="tracking" maxlength="120" required autocomplete="off"></label></div><p class="sa-editor-status" data-shop-shipment-status role="status" aria-live="polite"></p><button class="admin-button admin-button-primary" type="submit">确认发货</button></fieldset></form></dialog>
+</section>
+{{template "component-library" .}}
+{{template "article-widget-editor" .}}
+{{end}}

@@ -1,0 +1,21 @@
+{{define "footer"}}
+<footer id="site-footer" class="site-footer">
+  <div class="shell footer-grid">
+    <div class="footer-brand-block"><div class="footer-brand"><img class="footer-brand-mark" src="{{asset "images/brand/logo-mark-64.webp"}}?v={{.Site.ThemeVersion}}" alt="" width="28" height="28" loading="lazy">{{.Site.Title}}</div><p>{{.Site.Tagline}}</p><small>{{index .ThemeValues "footer_note"}}</small>{{if and .Site.PublicAPIEnabled (not .IsPreview)}}<p><a href="/feed.xml" type="application/rss+xml">RSS 订阅</a></p>{{end}}</div>
+    {{if .Navigation.FooterConfigured}}{{template "footer-navigation" .}}{{else}}
+      <div class="footer-column"><h2>发现内容</h2><a href="/explore/?sort=updated">全部文章</a>{{if .ModuleEnabled "series"}}<a href="/series/">专题与系列</a>{{end}}<a href="/explore/?sort=updated">最近更新</a><a href="/#latest">最新发布</a></div>
+      {{if and (.ModuleEnabled "community") (index .ThemeValues "community_nav")}}<div class="footer-column"><h2>参与交流</h2><a href="/community/">社区讨论</a><a href="/community/#questions">最新话题</a></div>{{end}}
+    {{end}}
+    {{if .Integrations.FooterHTML}}<div class="footer-custom">{{safeHTML .Integrations.FooterHTML}}</div>{{end}}
+    <div class="footer-meta footer-bottom">
+    <p class="footer-copyright"><span>{{if .Integrations.FooterCopyright}}{{.Integrations.FooterCopyright}}{{else}}© {{.Now.Year}} {{.Site.Title}}{{end}}</span>{{if not .Integrations.FooterHideCredit}}<span class="footer-credit"> · <a href="https://github.com/chunyangnet/newpress" target="_blank" rel="noopener noreferrer">由 NewPress 提供支持</a></span>{{end}}{{if and (not .IsAdmin) (not .IsPreview) (index .ThemeValues "cookie_consent_enabled")}}<button type="button" class="cookie-preferences-link" data-cookie-open aria-haspopup="dialog" aria-controls="cookie-preferences" hidden>Cookie 设置</button>{{end}}</p>
+    {{if or .Integrations.ICPNumber .Integrations.PoliceNumber}}
+    <div class="footer-compliance" aria-label="网站备案信息">
+      {{if .Integrations.ICPNumber}}<a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">{{.Integrations.ICPNumber}}</a>{{end}}
+      {{if .Integrations.PoliceNumber}}<a href="{{.Integrations.PoliceURL}}" target="_blank" rel="noopener noreferrer"><img class="police-record-badge" src="{{asset "images/brand/police-record-badge.png"}}" alt="" width="20" height="20" loading="lazy" aria-hidden="true">{{.Integrations.PoliceNumber}}</a>{{end}}
+    </div>
+    {{end}}
+    </div>
+  </div>
+</footer>
+{{end}}

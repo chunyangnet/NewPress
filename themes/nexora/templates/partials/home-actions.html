@@ -1,0 +1,52 @@
+{{/* Shared CTA presentation. Hidden modules must not leave broken homepage anchors. */}}
+{{define "nexora-action-link"}}
+  {{$url := .URL}}{{$settings := .Page.Settings}}{{$visible := and $url .Label}}
+  {{if and (eq $url "/#cases") (not (and $settings.show_cases (or $settings.case_1_title $settings.case_2_title $settings.case_3_title)))}}{{$visible = false}}{{end}}
+  {{if and (eq $url "/#process") (not (and $settings.show_process (or $settings.process_1_title $settings.process_2_title $settings.process_3_title $settings.process_4_title)))}}{{$visible = false}}{{end}}
+  {{if and (eq $url "/#resources") (not (and $settings.show_resources (or (and $settings.resource_1_title $settings.resource_1_url) (and $settings.resource_2_title $settings.resource_2_url) (and $settings.resource_3_title $settings.resource_3_url))))}}{{$visible = false}}{{end}}
+  {{if and (eq $url "/#hero") (eq $settings.show_hero false)}}{{$visible = false}}{{end}}
+  {{if and (eq $url "/#about") (eq $settings.show_about false)}}{{$visible = false}}{{end}}
+  {{if and (eq $url "/#strengths") (eq $settings.show_strengths false)}}{{$visible = false}}{{end}}
+  {{if and (eq $url "/#innovation") (eq $settings.show_innovation false)}}{{$visible = false}}{{end}}
+  {{if and (eq $url "/#business") (eq $settings.show_business false)}}{{$visible = false}}{{end}}
+  {{if and (eq $url "/#news") (eq $settings.show_news false)}}{{$visible = false}}{{end}}
+  {{if and (eq $url "/#careers") (eq $settings.show_careers false)}}{{$visible = false}}{{end}}
+  {{if and (eq $url "/#facts") (not (and $settings.show_facts (or (and $settings.fact_1_value $settings.fact_1_label) (and $settings.fact_2_value $settings.fact_2_label) (and $settings.fact_3_value $settings.fact_3_label) (and $settings.fact_4_value $settings.fact_4_label))))}}{{$visible = false}}{{end}}
+  {{if and (eq $url "/#partners") (not (and $settings.show_partners (or $settings.partner_1_name $settings.partner_2_name $settings.partner_3_name $settings.partner_4_name $settings.partner_5_name $settings.partner_6_name)))}}{{$visible = false}}{{end}}
+  {{if and (eq $url "/#faq") (not (and $settings.show_faq (or (and $settings.faq_1_question $settings.faq_1_answer) (and $settings.faq_2_question $settings.faq_2_answer) (and $settings.faq_3_question $settings.faq_3_answer) (and $settings.faq_4_question $settings.faq_4_answer))))}}{{$visible = false}}{{end}}
+  {{if $visible}}
+    {{if and (eq $url "/#contact") (eq $settings.show_contact false)}}
+      {{template "nexora-contact-action" .}}
+    {{else}}<a class="{{.Class}}" href="{{$url}}">{{.Label}}{{template "icon-arrow" .Page}}</a>{{end}}
+  {{end}}
+{{end}}
+
+{{define "nexora-contact-action"}}
+  {{$settings := .Page.Settings}}{{$url := $settings.contact_action_url}}{{$label := $settings.contact_action_label}}
+  {{if and (eq $url "/#cases") (not (and $settings.show_cases (or $settings.case_1_title $settings.case_2_title $settings.case_3_title)))}}{{$url = ""}}{{end}}
+  {{if and (eq $url "/#process") (not (and $settings.show_process (or $settings.process_1_title $settings.process_2_title $settings.process_3_title $settings.process_4_title)))}}{{$url = ""}}{{end}}
+  {{if and (eq $url "/#resources") (not (and $settings.show_resources (or (and $settings.resource_1_title $settings.resource_1_url) (and $settings.resource_2_title $settings.resource_2_url) (and $settings.resource_3_title $settings.resource_3_url))))}}{{$url = ""}}{{end}}
+  {{/* A contact CTA cannot point back to itself or to an unavailable module. */}}
+  {{if eq $url "/#contact"}}{{$url = ""}}{{end}}
+  {{if and (eq $url "/#hero") (eq $settings.show_hero false)}}{{$url = ""}}{{end}}
+  {{if and (eq $url "/#about") (eq $settings.show_about false)}}{{$url = ""}}{{end}}
+  {{if and (eq $url "/#strengths") (eq $settings.show_strengths false)}}{{$url = ""}}{{end}}
+  {{if and (eq $url "/#innovation") (eq $settings.show_innovation false)}}{{$url = ""}}{{end}}
+  {{if and (eq $url "/#business") (eq $settings.show_business false)}}{{$url = ""}}{{end}}
+  {{if and (eq $url "/#news") (eq $settings.show_news false)}}{{$url = ""}}{{end}}
+  {{if and (eq $url "/#careers") (eq $settings.show_careers false)}}{{$url = ""}}{{end}}
+  {{if and (eq $url "/#facts") (not (and $settings.show_facts (or (and $settings.fact_1_value $settings.fact_1_label) (and $settings.fact_2_value $settings.fact_2_label) (and $settings.fact_3_value $settings.fact_3_label) (and $settings.fact_4_value $settings.fact_4_label))))}}{{$url = ""}}{{end}}
+  {{if and (eq $url "/#partners") (not (and $settings.show_partners (or $settings.partner_1_name $settings.partner_2_name $settings.partner_3_name $settings.partner_4_name $settings.partner_5_name $settings.partner_6_name)))}}{{$url = ""}}{{end}}
+  {{if and (eq $url "/#faq") (not (and $settings.show_faq (or (and $settings.faq_1_question $settings.faq_1_answer) (and $settings.faq_2_question $settings.faq_2_answer) (and $settings.faq_3_question $settings.faq_3_answer) (and $settings.faq_4_question $settings.faq_4_answer))))}}{{$url = ""}}{{end}}
+  {{if not $url}}{{if $settings.contact_email}}{{$url = printf "mailto:%s" $settings.contact_email}}{{$label = "邮件咨询"}}{{else if $settings.contact_phone}}{{$url = printf "tel:%s" $settings.contact_phone}}{{$label = "电话咨询"}}{{else if index .Page.Modules "feedback"}}{{$url = "/feedback/"}}{{$label = "在线留言"}}{{end}}{{end}}
+  {{if .Label}}{{$label = .Label}}{{else if not $label}}{{$label = "联系我们"}}{{end}}
+  {{if $url}}{{if eq $url (printf "tel:%s" $settings.contact_phone)}}<a class="{{.Class}}" href="tel:{{$settings.contact_phone}}">{{$label}}{{template "icon-arrow" .Page}}</a>{{else}}<a class="{{.Class}}" href="{{$url}}">{{$label}}{{template "icon-arrow" .Page}}</a>{{end}}{{end}}
+{{end}}
+
+{{define "home-intro"}}
+<section class="home-intro interior-hero section-shell" aria-labelledby="home-title">
+  <h1 id="home-title">{{.Site.Title}}</h1>
+  {{if .Site.Tagline}}<p>{{.Site.Tagline}}</p>{{else if .Settings.hero_subtitle}}<p>{{.Settings.hero_subtitle}}</p>{{end}}
+  {{template "nexora-action-link" (dict "Page" . "URL" .Settings.hero_link "Label" .Settings.hero_button "Class" "outline-button dark-button")}}
+</section>
+{{end}}

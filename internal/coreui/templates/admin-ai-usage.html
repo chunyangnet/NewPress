@@ -1,0 +1,37 @@
+{{define "content"}}
+<div class="ai-usage" data-ai-usage data-view="{{.Admin.Current}}" data-user-id="{{.Admin.Principal.UserID}}" data-manage="{{if and (.Admin.Can "settings:manage") (not .Admin.ReadOnly)}}true{{else}}false{{end}}">
+  <header class="aiu-heading"><h1>{{if eq .Admin.Current "ai-requests"}}请求明细{{else}}AI 消耗{{end}}</h1><div class="aiu-actions"><button type="button" class="admin-button admin-button-quiet" data-aiu-refresh>{{template "icon" "refresh-cw"}}刷新</button>{{if .Admin.Can "settings:manage"}}<a class="admin-button admin-button-quiet" href="/admin/settings/#site-settings-ai">{{template "icon" "sliders-horizontal"}}统计设置</a>{{end}}</div></header>
+  {{if .FeatureStatus}}{{template "admin-feature-status" .}}{{end}}
+  <nav class="aiu-tabs" aria-label="运营统计"><a href="/admin/analytics/">访问统计</a><a href="/admin/analytics/ai/" {{if eq .Admin.Current "ai-usage"}}aria-current="page"{{end}}>AI 消耗</a><a href="/admin/analytics/ai/requests/" {{if eq .Admin.Current "ai-requests"}}aria-current="page"{{end}}>请求明细</a></nav>
+  <form class="aiu-filters" data-aiu-filters>
+    <label>时间范围<select data-select-ui="soft" name="range" data-aiu-range><option value="7">近 7 天</option><option value="30" selected>近 30 天</option><option value="90">近 90 天</option><option value="custom">自定义</option></select></label>
+    <label data-aiu-custom hidden>开始日期<input type="date" name="start" data-aiu-start></label><label data-aiu-custom hidden>结束日期<input type="date" name="end" data-aiu-end></label>
+    <label>接口<select data-select-ui="soft" name="provider" data-aiu-provider><option value="">全部接口</option></select></label>
+    <label>模型<input name="model" data-aiu-model list="aiu-models" maxlength="200" placeholder="全部模型" autocomplete="off"><datalist id="aiu-models" data-aiu-models></datalist></label>
+    <label>用途<select data-select-ui="soft" name="kind" data-aiu-kind><option value="">全部用途</option><option value="text">文本写作</option><option value="image">图片生成</option></select></label>
+    <label>状态<select data-select-ui="soft" name="status" data-aiu-status><option value="">全部状态</option><option value="success">成功</option><option value="error">失败</option><option value="timeout">超时</option><option value="cancelled">已取消</option></select></label>
+    <button type="submit" class="admin-button admin-button-primary">筛选</button>
+  </form>
+  <div class="aiu-meta"><span data-aiu-period>正在加载统计…</span><span class="aiu-collection" data-aiu-collection>读取中</span></div>
+  <p class="aiu-notice" data-aiu-notice role="status" hidden></p>
+  <div class="aiu-metrics" data-aiu-metrics>
+    <article><header><span>请求次数</span>{{template "icon" "activity"}}</header><strong data-aiu-count>—</strong><footer data-aiu-success>等待统计</footer></article>
+    <article><header><span>已报告 Token</span>{{template "icon" "cpu"}}</header><strong data-aiu-tokens>—</strong><footer data-aiu-token-detail>接口未报告的用量保持未知</footer></article>
+    <article class="aiu-cost-card"><header><span>估算费用</span>{{template "icon" "wallet"}}</header><strong data-aiu-cost>—</strong><footer data-aiu-cost-detail>按请求发生时的自定义价格</footer></article>
+    <article><header><span>平均响应耗时</span>{{template "icon" "clock-3"}}</header><strong data-aiu-duration>—</strong><footer data-aiu-speed>等待统计</footer></article>
+  </div>
+  <div class="aiu-charts" data-aiu-charts {{if eq .Admin.Current "ai-requests"}}hidden{{end}}>
+    <section class="aiu-panel aiu-trend"><header><div><h2>用量趋势</h2><p data-aiu-chart-description>每日已报告 Token</p></div><label class="aiu-compact-label">指标<select data-aiu-metric><option value="tokens">Token</option><option value="requests">请求次数</option><option value="costs">估算费用</option></select></label><select data-aiu-currency aria-label="费用图表币种" hidden><option>USD</option></select></header><div class="aiu-chart" data-aiu-chart></div><div class="aiu-chart-tooltip" data-aiu-tooltip role="status">选择图中日期查看数值</div></section>
+    <section class="aiu-panel aiu-model-panel"><header><div><h2>模型分布</h2><p>按请求次数排序 · 前 8 名</p></div></header><div class="aiu-model-distribution" data-aiu-distribution></div></section>
+  </div>
+  <section class="aiu-panel aiu-balances" data-aiu-balances hidden><header><div><h2>上游余额</h2><p>手动查询 · 同一接口在缓存期内复用结果</p></div></header><div class="aiu-balance-grid" data-aiu-balance-grid></div></section>
+  <section class="aiu-panel aiu-request-panel"><header><div><h2>{{if eq .Admin.Current "ai-requests"}}请求记录{{else}}最近请求{{end}}</h2><p data-aiu-record-hint>每次生成的状态、Token、费用和延迟。</p></div><details class="aiu-columns"><summary>显示列</summary><div><label><input type="checkbox" data-aiu-column="tokens" checked>Token</label><label><input type="checkbox" data-aiu-column="cost" checked>费用</label><label><input type="checkbox" data-aiu-column="duration" checked>耗时 / TPS</label><label><input type="checkbox" data-aiu-column="user" checked>用户</label></div></details></header>
+    <div class="aiu-table-wrap" tabindex="0" aria-label="AI 请求记录，可横向滚动"><table><thead><tr><th scope="col">时间 / 请求 ID</th><th scope="col">接口 / 模型</th><th scope="col">用途 / 状态</th><th scope="col" data-col="tokens">输入 / 输出 Token</th><th scope="col" data-col="cost">估算费用</th><th scope="col" data-col="duration">耗时 / TPS</th><th scope="col" data-col="user">用户</th><th scope="col"><span class="aiu-sr">详情</span></th></tr></thead><tbody data-aiu-rows></tbody></table></div>
+    <div class="aiu-empty" data-aiu-empty hidden><h3>暂无请求记录</h3><p>可调整筛选条件，或在使用 AI 后查看。</p></div>
+    <footer class="aiu-pagination"><span data-aiu-page-info>每页 25 条</span><div><button type="button" class="admin-button admin-button-quiet" data-aiu-prev disabled>上一页</button><button type="button" class="admin-button admin-button-quiet" data-aiu-next disabled>下一页</button></div></footer>
+  </section>
+  <p class="aiu-footnote">费用为配置价格下的估算，实际扣费以上游账单为准。推理与缓存属于 Token 明细，不重复计入总量；未报告的用量不作补算。TPS 使用输出 Token ÷ 请求总耗时，包含等待。</p>
+  <dialog class="aiu-detail" data-aiu-detail aria-labelledby="aiu-detail-title"><header><h2 id="aiu-detail-title">请求详情</h2><button type="button" class="admin-button admin-button-quiet" data-aiu-close aria-label="关闭请求详情">{{template "icon" "x"}}</button></header><div data-aiu-detail-body></div><footer><button type="button" class="admin-button admin-button-quiet" data-aiu-copy>复制请求 ID</button><span data-aiu-copy-status role="status"></span></footer></dialog>
+  <noscript><p>请启用 JavaScript 查看 AI 消耗统计。</p></noscript>
+</div>
+{{end}}

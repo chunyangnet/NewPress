@@ -1,0 +1,37 @@
+{{define "verification-settings"}}
+<section id="site-settings-captcha" class="admin-setting-section verification-settings" aria-labelledby="site-settings-title-captcha" data-settings-section data-verification-settings data-user-id="{{.Admin.Principal.UserID}}">
+  <header><span>{{template "icon" "shield-check"}}</span><div><h2 id="site-settings-title-captcha">人机验证</h2><p>为评论、注册与账号入口选择合适的验证方式。</p></div></header>
+  <form data-verification-settings-form data-readonly="{{.Admin.ReadOnly}}">
+    <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}">
+    <fieldset data-verification-fields disabled>
+      <div class="verification-master"><div><strong>启用人机验证</strong><p>总开关关闭时，各场景直接沿用原有提交流程。</p></div>{{template "admin-switch" (dict "Name" "enabled" "ID" "verification-enabled" "AccessibleLabel" "启用人机验证")}}<span class="verification-state" data-verification-state>尚未加载</span></div>
+      <div class="verification-section-heading"><div><h3>默认验证服务</h3><p>场景可单独指定服务。选择下方服务后配置密钥。</p></div><span class="verification-caption">7 种方式</span></div>
+      <div class="verification-providers" data-verification-providers role="radiogroup" aria-label="默认验证服务"></div>
+      <div class="verification-provider-detail" data-verification-detail>
+        <div class="verification-provider-intro"><div><h3 data-verification-provider-title></h3><p data-verification-provider-description></p></div><a data-verification-docs target="_blank" rel="noopener noreferrer">接入文档 {{template "icon" "external-link"}}</a></div>
+        <p class="verification-network-note" data-verification-network></p>
+        <div class="verification-credentials" data-verification-credentials>
+          <label><span data-verification-key-label>Site Key</span><input data-verification-field="site_key" autocomplete="off" maxlength="2048" spellcheck="false"><small>公开标识，用于加载浏览器端验证。</small></label>
+          <label><span data-verification-secret-label>Secret Key</span><input data-verification-field="secret" type="password" autocomplete="new-password" maxlength="2048"><small data-verification-secret-state>密钥仅保存在服务端。</small><span class="verification-check"><input type="checkbox" data-verification-field="clear_secret">清除已保存密钥</span></label>
+          <label data-verification-tencent><span>腾讯云 SecretId</span><input data-verification-field="secret_id" autocomplete="off" maxlength="2048" spellcheck="false"><small>云 API 访问标识，需具有验证码校验权限。</small></label>
+          <label data-verification-tencent><span>腾讯云 SecretKey</span><input data-verification-field="api_secret" type="password" autocomplete="new-password" maxlength="2048"><small data-verification-api-secret-state>用于 API 3.0 请求签名。</small><span class="verification-check"><input type="checkbox" data-verification-field="clear_api_secret">清除已保存云密钥</span></label>
+          <label data-verification-google class="verification-check"><input type="checkbox" data-verification-field="recaptcha_net"><span>使用 recaptcha.net 域名<small>同时切换浏览器脚本与服务端校验地址。</small></span></label>
+          <label data-verification-score><span>最低通过分数</span><input type="number" min="0.1" max="0.9" step="0.1" data-verification-field="min_score"><small>默认 0.5；越高越严格，低于阈值将拒绝提交。</small></label>
+        </div>
+        <p class="verification-local-note" data-verification-local>无需密钥。图片由本站生成，2 分钟有效，最多尝试 5 次；可点击「换一张」刷新。</p>
+      </div>
+      <div class="verification-section-heading"><div><h3>按场景控制</h3><p>每个入口独立开启，也可混合使用国内与海外服务。</p></div><span class="verification-caption" data-verification-scene-count></span></div>
+      <div class="verification-scenes" data-verification-scenes></div>
+      <details class="verification-advanced"><summary>显示与连接设置</summary><div class="verification-options">
+        <label>验证外观<select name="theme"><option value="auto">跟随页面</option><option value="light">浅色</option><option value="dark">深色</option></select></label>
+        <label>验证语言<select name="language"><option value="zh-CN">简体中文</option><option value="en">English</option><option value="auto">跟随页面语言</option></select></label>
+        <label>服务端超时（秒）<input name="timeout_seconds" type="number" min="3" max="15" step="1" value="8"></label>
+      </div><p>服务超时或失败时保留输入，要求重试。网络标注为选型参考，请在实际访客网络与服务器上测试。</p></details>
+    </fieldset>
+    <div class="verification-test-row"><div><strong>接入测试</strong><p>使用已保存的所选服务，完成真实前端挑战与服务端校验；总开关关闭时也能测试。</p></div><button type="button" class="admin-button admin-button-outline" data-verification-test disabled>{{template "icon" "shield-check"}}测试所选服务</button></div>
+    <div data-verification-preview></div>
+    <div class="verification-settings-footer"><p data-verification-status role="status" aria-live="polite">正在读取验证设置…</p><div><button type="button" class="admin-button admin-button-quiet" data-verification-reload>重新加载</button><button type="submit" class="admin-button admin-button-primary" data-verification-save disabled>保存验证设置</button></div></div>
+    <p class="verification-storage-note">验证设置独立保存，密钥不会随普通站点设置导出。</p>
+  </form>
+</section>
+{{end}}

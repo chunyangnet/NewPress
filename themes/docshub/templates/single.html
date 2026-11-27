@@ -1,0 +1,31 @@
+{{define "content"}}
+{{if eq .BodyClass "is-page is-announcements"}}{{template "announcement-page" .}}{{else}}
+{{$series := and (index .Modules "series") (index .Settings "show_reading_series") .ReadingSeries}}
+{{$aside := or (index .Settings "show_toc") (index .Settings "show_reading_help") (index .Settings "show_reading_back_to_top") $series}}
+{{if index .Settings "show_reading_progress"}}<progress class="reading-progress" data-docs-reading-progress max="100" value="0" aria-label="阅读进度" hidden></progress>{{end}}
+<div class="reading-layout page-content{{if not $aside}} reading-layout-no-aside{{end}}">
+  <article class="document-article"{{if not .IsPreview}} data-post-id="{{.Post.ID}}"{{end}}><nav class="breadcrumbs" aria-label="当前位置"><a href="/">首页</a>{{template "icon" "chevron"}}<a href="/explore/">文档</a>{{if .Post.Category}}{{template "icon" "chevron"}}<span>{{.Post.Category}}</span>{{end}}</nav>
+    {{if .IsPreview}}<p class="preview-notice">草稿预览 · 此内容尚未公开发布。{{if .Preview.EditorURL}}<a href="{{.Preview.EditorURL}}">返回编辑器</a>{{end}}</p>{{end}}
+    <header class="article-header">
+      <span class="category-badge">{{if .Post.Category}}{{.Post.Category}}{{else}}文档{{end}}</span>{{template "article-badge-inline" .Post.ArticleBadge}}<h1>{{.Post.Title}}</h1>
+      {{if and (index .Settings "show_article_excerpt") .Post.Excerpt}}<p class="article-lead">{{.Post.Excerpt}}</p>{{end}}
+      {{if or (and (index .Settings "show_article_author") .Post.AuthorName) (index .Settings "show_article_date") (index .Settings "show_reading_time") (index .Settings "show_copy_link")}}
+      <div class="article-meta">
+        {{if index .Settings "show_article_author"}}{{if .Post.AuthorURL}}<a href="{{.Post.AuthorURL}}">{{.Post.AuthorName}}</a>{{else if .Post.AuthorName}}<span>{{.Post.AuthorName}}</span>{{end}}{{template "identity-badges" .Recognition.AuthorBadges}}{{end}}
+        {{if index .Settings "show_article_date"}}<span>{{template "icon" "clock"}}<time datetime="{{date .Post.UpdatedAt}}" title="最后更新">{{date .Post.UpdatedAt}}</time></span>{{end}}
+        {{if index .Settings "show_reading_time"}}<span data-reading-time></span>{{end}}
+        {{if index .Settings "show_copy_link"}}<button type="button" data-copy-link>{{template "icon" "copy"}}复制链接</button>{{end}}
+      </div>{{end}}
+    </header>
+    {{template "reading-tools" .}}
+    {{if index .Settings "show_toc"}}{{template "reading-toc-mobile" .}}{{end}}
+    <div class="prose" data-article-body data-toc-depth="{{index .Settings "toc_depth"}}" data-code-copy="{{index .Settings "show_code_copy"}}">{{safeHTML .Post.ContentHTML}}</div>
+    {{if and (index .Settings "show_article_tags") .Post.Tags}}<nav class="article-tags" aria-label="文章标签">{{range .Post.Tags}}<a href="{{.URL}}"># {{.Name}}</a>{{end}}</nav>{{end}}
+    {{if and (index .Modules "series") (or (index .Settings "show_reading_series") (index .Settings "show_series_related"))}}{{template "reading-series" .}}{{end}}
+    {{if not .IsPreview}}{{template "reading-engagement" .}}{{template "article-recognition" .}}{{end}}
+    {{range .PluginFragments}}<aside class="plugin-fragment">{{.Text}}</aside>{{end}}
+    {{if and (eq .Kind "single") (not .IsPreview) (index .Modules "comments")}}{{template "comments" .}}{{end}}
+  </article>
+  {{if $aside}}{{template "reading-aside" .}}{{end}}
+</div>{{end}}
+{{end}}

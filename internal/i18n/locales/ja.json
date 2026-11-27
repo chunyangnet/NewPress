@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "locale": "ja",
+  "messages": {
+    "accessibility.skip_content": "本文へ移動",
+    "navigation.primary": "メインナビゲーション",
+    "navigation.home": "ホーム",
+    "navigation.explore": "記事を探す",
+    "navigation.account": "アカウント",
+    "site.legal": "サイト登録情報",
+    "common.back_home": "ホームに戻る",
+    "search.label": "コンテンツを検索",
+    "search.submit": "検索",
+    "pagination.label": "記事のページ切り替え",
+    "pagination.previous": "前へ",
+    "pagination.next": "次へ",
+    "comments.label": "コメント",
+    "comments.title": "コメント（{count}件）",
+    "comments.author": "お名前",
+    "comments.email": "メールアドレス",
+    "comments.submit": "コメントを投稿",
+    "comments.login": "ログインしてコメント"
+  }
+}

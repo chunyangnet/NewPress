@@ -1,0 +1,28 @@
+{{define "content"}}
+<section class="admin-login-shell">
+  <div class="admin-login-story">
+    <picture class="admin-login-photo"><source media="(max-width: 780px)" srcset="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="><img src="{{asset "images/editorial/cover-community.webp"}}" srcset="{{asset "images/editorial/cover-community-small.webp"}} 640w, {{asset "images/editorial/cover-community.webp"}} 1024w" sizes="55vw" alt="暖阳照在木质织机上，珊瑚色的羊毛线一束束铺开。" width="1024" height="683" fetchpriority="high"></picture>
+    <span class="admin-login-edition">NewPress <i></i> 首次安装</span>
+    <div class="admin-login-story-copy"><span>只需设置一次</span><h2>创建站点的<br>第一位管理员</h2><p>此页面仅在首次设置期间开放，完成后将自动关闭。</p></div>
+  </div>
+  <div class="admin-login-panel">
+    <div class="admin-login-heading"><a class="admin-login-brand" href="/"><span class="admin-brand-mark"><img src="{{asset "images/brand/logo-mark-84.webp"}}?v={{.UIAssetVersion}}" alt="" width="42" height="42"></span><span><strong>{{.Site.Title}}</strong><small>首次管理员设置</small></span></a>{{template "color-mode" .}}</div>
+    <div class="admin-login-form-wrap">
+      <h1>设置管理员账号</h1>
+      <p>输入部署时配置的安装凭据，再创建管理员账号。安装凭据不会显示在地址栏。</p>
+      {{if .Admin.Notice}}<div class="admin-login-error" role="alert">{{template "icon" "triangle-alert"}}<span><b>暂时无法完成</b>{{.Admin.Notice}}</span></div>{{end}}
+      <form class="admin-login-form" action="/install/" method="post" autocomplete="off">
+        <label><span>安装凭据</span><div class="fluent-input-group">{{template "icon" "key-round"}}<input type="password" name="setup_token" autocomplete="new-password" minlength="32" maxlength="512" required autofocus placeholder="粘贴安装凭据"></div></label>
+        <label><span>管理员用户名</span><div class="fluent-input-group">{{template "icon" "user-round"}}<input type="text" name="username" autocomplete="username" minlength="3" maxlength="80" pattern="[A-Za-z0-9._-]+" required placeholder="输入登录用户名"></div></label>
+        <label><span>邮箱（选填）</span><div class="fluent-input-group">{{template "icon" "mail"}}<input type="email" name="email" autocomplete="email" maxlength="320" placeholder="you@example.com"></div></label>
+        <label><span>显示名称</span><div class="fluent-input-group">{{template "icon" "user-round"}}<input type="text" name="display_name" autocomplete="name" maxlength="160" required placeholder="站点管理员"></div></label>
+        <label><span>管理员密码（至少 12 个字符）</span><div class="fluent-input-group">{{template "icon" "diamond"}}<input type="password" name="password" autocomplete="new-password" minlength="12" maxlength="1024" required placeholder="建议使用较长的密码"></div></label>
+        <label><span>再次输入密码</span><div class="fluent-input-group">{{template "icon" "diamond"}}<input type="password" name="confirm_password" autocomplete="new-password" minlength="12" maxlength="1024" required placeholder="再次输入密码"></div></label>
+        <button class="admin-login-submit" type="submit"><span>创建管理员并完成安装</span>{{template "icon" "arrow-right"}}</button>
+      </form>
+      <p class="admin-login-note">提交后请前往登录页面。请妥善保管管理员密码。</p>
+    </div>
+    <footer><a href="/">← 返回站点</a><span>NewPress {{.Version}}</span></footer>
+  </div>
+</section>
+{{end}}

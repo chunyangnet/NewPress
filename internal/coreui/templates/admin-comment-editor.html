@@ -1,0 +1,115 @@
+{{define "comment-editor-return-fields"}}
+<input type="hidden" name="return_status" value="{{.CommentEditor.Item.Comment.Status}}">
+{{end}}
+
+{{define "comment-editor-filter-fields"}}
+<input type="hidden" name="return_status" value="{{.CommentAdmin.Status}}">
+{{end}}
+
+{{define "content"}}
+<section class="admin-page admin-comment-editor-page" data-comment-editor>
+  <header class="admin-page-heading"><h1>编辑评论</h1><a class="admin-button admin-button-quiet" href="{{.CommentEditor.BackURL}}">返回评论</a></header>
+  {{if .FeatureStatus}}{{template "admin-feature-status" .}}{{end}}
+
+  {{if .Admin.ReadOnly}}<div class="admin-callout admin-callout-warning" role="status"><span>{{template "icon" "triangle-alert"}}</span><div><strong>当前为只读模式</strong></div></div>{{end}}
+  {{if .CommentEditor.Notice}}<div class="admin-comment-editor-notice is-{{.CommentEditor.NoticeTone}}" role="status"><span>{{if eq .CommentEditor.NoticeTone "success"}}{{template "icon" "check-circle"}}{{else if eq .CommentEditor.NoticeTone "info"}}{{template "icon" "info"}}{{else}}{{template "icon" "triangle-alert"}}{{end}}</span><div><strong>{{.CommentEditor.NoticeTitle}}</strong><p>{{.CommentEditor.Notice}}</p></div></div>{{end}}
+
+
+
+  <div class="admin-comment-editor-layout">
+    <div class="admin-comment-editor-main">
+      <section class="admin-comment-edit-deck">
+        <header>
+          <div><h2>评论内容</h2></div>
+          
+        </header>
+        <form id="comment-edit-form" action="{{.CommentEditor.EditAction}}" method="post" data-comment-edit-form>
+          <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}">
+          <input type="hidden" name="version" value="{{.CommentEditor.Item.Comment.Version}}">
+          <input type="hidden" name="return_status" value="{{.CommentAdmin.Status}}">
+          <input type="hidden" name="return_q" value="{{.CommentAdmin.Search}}">
+          <input type="hidden" name="return_post" value="{{.CommentAdmin.PostID}}">
+          <input type="hidden" name="return_page" value="{{.CommentAdmin.Page}}">
+
+          <div class="admin-comment-edit-identity">
+            <label class="{{if index .CommentEditor.EditErrors "author_name"}}has-error{{end}}"><span>公开称呼 <em>最多 160 字符</em></span><input name="author_name" value="{{.CommentEditor.EditForm.AuthorName}}" maxlength="160" required {{if not .CommentEditor.CanEdit}}disabled{{end}} data-comment-edit-field="author_name">{{with index .CommentEditor.EditErrors "author_name"}}<small>{{.}}</small>{{end}}</label>
+            <label class="{{if index .CommentEditor.EditErrors "author_email"}}has-error{{end}}"><span>审核邮箱 <em>不会公开</em></span><input type="email" name="author_email" value="{{.CommentEditor.EditForm.AuthorEmail}}" maxlength="320" required {{if not .CommentEditor.CanEdit}}disabled{{end}} data-comment-edit-field="author_email">{{with index .CommentEditor.EditErrors "author_email"}}<small>{{.}}</small>{{end}}</label>
+          </div>
+          <label class="admin-comment-edit-body {{if index .CommentEditor.EditErrors "content_source"}}has-error{{end}}"><span><b>评论正文</b><em><strong data-comment-edit-count>0</strong> / 5000 字符 · 12 KiB</em></span><textarea name="content_source" aria-label="评论正文" rows="13" maxlength="5000" required {{if not .CommentEditor.CanEdit}}disabled{{end}} data-comment-edit-field="content_source" data-comment-edit-source>{{.CommentEditor.EditForm.ContentSource}}</textarea>{{with index .CommentEditor.EditErrors "content_source"}}<small>{{.}}</small>{{end}}</label>
+
+          <section class="admin-comment-safe-preview" aria-label="安全文本预览">
+            <header><span>{{template "icon" "shield-check"}}</span><div><b>预览</b></div><em>纯文本</em></header>
+            <div data-comment-safe-preview>{{safeHTML .CommentEditor.Item.Comment.ContentHTML}}</div>
+          </section>
+
+          {{template "admin-savebar" (dict "FormID" "comment-edit-form" "ReadOnly" (not .CommentEditor.CanEdit) "Label" "保存更改")}}
+        </form>
+      </section>
+
+      <section class="admin-comment-current-record">
+        <header><div><h2>评论记录</h2></div><nav><a href="{{.CommentEditor.APIURL}}" target="_blank" rel="noopener">JSON {{template "icon" "external-link"}}</a>{{if .CommentEditor.Item.PostEditURL}}<a href="{{.CommentEditor.Item.PostEditURL}}">编辑内容</a>{{end}}{{if .CommentEditor.Item.PostPermalink}}<a href="{{.CommentEditor.Item.PostPermalink}}#comment-{{.CommentEditor.Item.Comment.ID}}" target="_blank" rel="noopener">公开线程 {{template "icon" "external-link"}}</a>{{end}}</nav></header>
+        {{if .CommentEditor.Parent}}<aside><span>{{template "icon" "corner-up-left"}}</span><div><small>回复目标 #{{.CommentEditor.Parent.Comment.ID}} · v{{.CommentEditor.Parent.Comment.Version}}</small><b>{{.CommentEditor.Parent.Comment.AuthorName}}</b><p>{{.CommentEditor.Parent.Comment.ContentSource}}</p></div><a href="{{.CommentEditor.Parent.InspectorURL}}">检查父评论</a></aside>{{end}}
+        <dl>
+          <div><dt>创建时间</dt><dd>{{dateIn .CommentEditor.Item.Comment.CreatedAt .Site.Timezone}}</dd></div>
+          <div><dt>更新时间</dt><dd>{{dateIn .CommentEditor.Item.Comment.UpdatedAt .Site.Timezone}}</dd></div>
+          <div><dt>最近编辑</dt><dd>{{if .CommentEditor.Item.Comment.EditedBy}}{{.CommentEditor.Item.Comment.EditedBy}} · {{dateIn .CommentEditor.Item.Comment.EditedAt .Site.Timezone}}{{else}}尚无后台正文修订{{end}}</dd></div>
+          <div><dt>最近审核</dt><dd>{{if .CommentEditor.Item.Comment.ModeratedBy}}{{.CommentEditor.Item.Comment.ModeratedBy}} · {{dateIn .CommentEditor.Item.Comment.ModeratedAt .Site.Timezone}}{{else}}尚无审核者记录{{end}}</dd></div>
+          <div><dt>用户归属</dt><dd>{{if .CommentEditor.Item.Comment.UserID}}用户 #{{.CommentEditor.Item.Comment.UserID}}{{else}}匿名访客{{end}}</dd></div>
+          <div><dt>父评论</dt><dd>{{if .CommentEditor.Item.Comment.ParentID}}#{{.CommentEditor.Item.Comment.ParentID}}{{else}}根评论{{end}}</dd></div>
+        </dl>
+      </section>
+    </div>
+
+    <aside class="admin-comment-editor-side">
+      <section class="admin-comment-reply-deck is-{{.CommentEditor.ReplyStatus}}">
+        <header><span>{{template "icon" "send"}}</span><div><h2>回复</h2><p>{{.CommentEditor.ReplyIdentity}} · {{.CommentEditor.ReplyEmail}}</p></div></header>
+        {{if .CommentEditor.CanReply}}
+        <form action="{{.CommentEditor.ReplyAction}}" method="post" data-comment-reply-form>
+          <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><input type="hidden" name="parent_version" value="{{.CommentEditor.Item.Comment.Version}}">
+          <input type="hidden" name="return_status" value="{{.CommentAdmin.Status}}"><input type="hidden" name="return_q" value="{{.CommentAdmin.Search}}"><input type="hidden" name="return_post" value="{{.CommentAdmin.PostID}}"><input type="hidden" name="return_page" value="{{.CommentAdmin.Page}}">
+          <div class="admin-comment-reply-policy"><span><i></i>回复状态</span><b>{{.CommentEditor.ReplyStatusLabel}}</b></div>
+          {{if .CommentEditor.CanDraftReply}}<div class="admin-comment-ai-reply"><button type="button" data-ai-reply-draft data-ai-reply-url="/api/v1/admin/comments/{{.CommentEditor.Item.Comment.ID}}/reply-draft">{{template "icon" "sparkles"}}生成 AI 草稿</button><span>将文章片段和评论正文发送给默认文本模型。检查并编辑后再发送回复。</span></div>{{end}}
+          <p class="admin-comment-ai-reply-status" role="status" aria-live="polite" data-ai-reply-status hidden></p>
+          <label class="{{if index .CommentEditor.ReplyErrors "content_source"}}has-error{{end}}"><span class="sr-only">站方回复正文</span><textarea name="content_source" rows="8" maxlength="{{.CommentEditor.MaxReplyLength}}" required placeholder="输入回复内容" data-comment-reply-source>{{.CommentEditor.ReplyContent}}</textarea>{{with index .CommentEditor.ReplyErrors "content_source"}}<small>{{.}}</small>{{end}}</label>
+          <footer><span><b data-comment-reply-count>0</b> / {{.CommentEditor.MaxReplyLength}}</span><button type="submit" data-comment-reply-submit>{{template "icon" "send"}}发送回复</button></footer>
+        </form>
+        {{else}}
+        <div class="admin-comment-reply-locked"><span>{{template "icon" "lock-keyhole"}}</span><div><b>当前记录不能继续回复</b><p>{{if ge .CommentEditor.Depth 5}}评论层级已达到五层上限。{{else if or (eq .CommentEditor.Item.Comment.Status "spam") (eq .CommentEditor.Item.Comment.Status "trash")}}垃圾评论与回收站记录必须先恢复到待审或公开状态。{{else}}当前身份为只读。{{end}}</p></div></div>
+        {{end}}
+      </section>
+
+      <section class="admin-comment-moderation-deck">
+        <header><div><h2>审核</h2></div><code>v{{.CommentEditor.Item.Comment.Version}}</code></header>
+        {{if .CommentEditor.CanEdit}}<div class="admin-comment-editor-actions">
+          <form action="/admin/comments/" method="post"><input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><input type="hidden" name="id" value="{{.CommentEditor.Item.Comment.ID}}"><input type="hidden" name="version" value="{{.CommentEditor.Item.Comment.Version}}"><input type="hidden" name="return_status" value="{{.CommentAdmin.Status}}"><input type="hidden" name="return_q" value="{{.CommentAdmin.Search}}"><input type="hidden" name="return_post" value="{{.CommentAdmin.PostID}}"><input type="hidden" name="return_page" value="{{.CommentAdmin.Page}}">
+            {{if ne .CommentEditor.Item.Comment.Status "approved"}}<button class="is-approve" name="action" value="approved">{{template "icon" "check"}}批准</button>{{end}}
+            {{if and (ne .CommentEditor.Item.Comment.Status "pending") (ne .CommentEditor.Item.Comment.Status "trash")}}<button name="action" value="pending">{{template "icon" "clock-3"}}待审</button>{{end}}
+            {{if ne .CommentEditor.Item.Comment.Status "spam"}}<button class="is-spam" name="action" value="spam">{{template "icon" "shield-alert"}}垃圾</button>{{end}}
+            {{if eq .CommentEditor.Item.Comment.Status "trash"}}<button name="action" value="restore">{{template "icon" "rotate-ccw"}}恢复</button>{{else}}<button class="is-trash" name="action" value="trash">{{template "icon" "trash-2"}}回收站</button>{{end}}
+          </form>
+          {{if .CommentEditor.Item.CanDelete}}<form action="/admin/comments/" method="post" data-confirm="永久删除这条评论及其全部回复和正文修订？此操作无法撤销。"><input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><input type="hidden" name="id" value="{{.CommentEditor.Item.Comment.ID}}"><input type="hidden" name="version" value="{{.CommentEditor.Item.Comment.Version}}"><input type="hidden" name="action" value="delete"><input type="hidden" name="return_status" value="{{.CommentAdmin.Status}}"><input type="hidden" name="return_q" value="{{.CommentAdmin.Search}}"><input type="hidden" name="return_post" value="{{.CommentAdmin.PostID}}"><input type="hidden" name="return_page" value="{{.CommentAdmin.Page}}"><button class="is-delete">永久删除</button></form>{{end}}
+        </div>{{end}}
+      </section>
+
+      <section class="admin-comment-revision-ledger" id="comment-revision-ledger">
+        <header><div><h2>修订记录</h2></div><a href="{{.CommentEditor.APIURL}}/revisions" target="_blank" rel="noopener">JSON</a></header>
+        <div class="admin-comment-revision-current"><i></i><div><span><b>v{{.CommentEditor.Item.Comment.Version}}</b> 当前</span><strong>{{.CommentEditor.Item.Comment.AuthorName}}</strong><small>{{if .CommentEditor.Item.Comment.EditedBy}}{{.CommentEditor.Item.Comment.EditedBy}} · {{dateIn .CommentEditor.Item.Comment.EditedAt .Site.Timezone}}{{else}}当前版本{{end}}</small></div></div>
+        <div class="admin-comment-revision-list">
+          {{range .CommentEditor.Revisions}}<details>
+            <summary><i></i><div><span><b>v{{.Revision.Version}}</b>{{range .ChangeLabels}}<em>{{.}}</em>{{end}}</span><strong>{{.Revision.Actor}}</strong><small>{{dateIn .Revision.CreatedAt $.Site.Timezone}} · {{.ChangeCount}} 项变化</small></div>{{template "icon" "chevron-down"}}</summary>
+            <div class="admin-comment-revision-snapshot">
+              <p><small>当时称呼</small><b>{{.Revision.AuthorName}}</b><a href="mailto:{{.Revision.AuthorEmail}}">{{.Revision.AuthorEmail}}</a></p>
+              <blockquote>{{.Revision.ContentSource}}</blockquote>
+              <aside class="admin-comment-revision-restore">
+                <div><span>恢复范围</span><b>把 v{{.Revision.Version}} 恢复为新版本</b><p>只恢复称呼、私有邮箱和纯文本正文；历史状态“{{.StatusLabel}}”不会覆盖当前“{{$.CommentEditor.Item.StatusLabel}}”。</p></div>
+                {{if $.CommentEditor.CanEdit}}{{if .MatchesCurrent}}<button type="button" disabled>{{template "icon" "check-circle"}}当前内容已一致</button>{{else}}<form action="{{.RestoreAction}}" method="post" data-comment-revision-restore data-confirm="恢复 v{{.Revision.Version}} 的称呼、邮箱与正文并生成下一版本？当前审核状态将保持为“{{$.CommentEditor.Item.StatusLabel}}”。"><input type="hidden" name="csrf_token" value="{{$.Admin.CSRFToken}}"><input type="hidden" name="version" value="{{$.CommentEditor.Item.Comment.Version}}"><input type="hidden" name="return_status" value="{{$.CommentAdmin.Status}}"><input type="hidden" name="return_q" value="{{$.CommentAdmin.Search}}"><input type="hidden" name="return_post" value="{{$.CommentAdmin.PostID}}"><input type="hidden" name="return_page" value="{{$.CommentAdmin.Page}}"><button type="submit">{{template "icon" "refresh-cw"}}恢复为下一版本</button></form>{{end}}{{else}}<button type="button" disabled>{{template "icon" "lock-keyhole"}}只读</button>{{end}}
+              </aside>
+            </div>
+          </details>{{else}}<div class="admin-comment-revision-empty"><span>{{template "icon" "git-compare"}}</span><b>暂无修订记录</b></div>{{end}}
+        </div>
+        {{if .CommentEditor.RevisionTruncated}}<p class="admin-comment-revision-warning">显示最近 {{len .CommentEditor.Revisions}} 次修订。</p>{{end}}
+      </section>
+    </aside>
+  </div>
+</section>
+{{end}}

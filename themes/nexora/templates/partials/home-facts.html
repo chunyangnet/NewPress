@@ -1,0 +1,15 @@
+{{define "home-facts"}}
+{{$s := .Settings}}
+{{if and $s.show_facts (or (and $s.fact_1_value $s.fact_1_label) (and $s.fact_2_value $s.fact_2_label) (and $s.fact_3_value $s.fact_3_label) (and $s.fact_4_value $s.fact_4_label))}}
+<section class="facts-section section-shell" id="facts" data-home-section="facts" aria-labelledby="facts-title">
+  <div class="section-heading"><div><h2 id="facts-title">{{if $s.facts_title}}{{$s.facts_title}}{{else}}企业事实{{end}}</h2>{{if $s.facts_description}}<p class="rich-description">{{$s.facts_description}}</p>{{end}}</div></div>
+  <dl class="facts-grid">
+    {{template "home-fact" (dict "Value" $s.fact_1_value "Label" $s.fact_1_label)}}
+    {{template "home-fact" (dict "Value" $s.fact_2_value "Label" $s.fact_2_label)}}
+    {{template "home-fact" (dict "Value" $s.fact_3_value "Label" $s.fact_3_label)}}
+    {{template "home-fact" (dict "Value" $s.fact_4_value "Label" $s.fact_4_label)}}
+  </dl>
+</section>
+{{end}}
+{{end}}
+{{define "home-fact"}}{{if and .Value .Label}}<div class="fact-item"><dt>{{.Label}}</dt><dd>{{.Value}}</dd></div>{{end}}{{end}}

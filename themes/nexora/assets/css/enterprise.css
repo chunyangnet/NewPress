@@ -1,0 +1,33 @@
+/* Enterprise conversion sections share the theme's configurable tokens. */
+.enterprise-section{padding-block:72px;border-top:1px solid var(--line);background:var(--paper)}
+.enterprise-section h2{font-size:clamp(28px,3vw,38px)}
+.enterprise-eyebrow{color:var(--accent);font-size:11px;letter-spacing:.16em;margin:0 0 16px}
+.enterprise-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin-top:36px}
+.enterprise-card{min-width:0;background:var(--surface);border:1px solid var(--line)}
+.enterprise-card>img{display:block;width:100%;height:auto;aspect-ratio:8/5;object-fit:cover}
+.enterprise-card-body{padding:28px;display:flex;flex-direction:column;align-items:flex-start;gap:16px}
+.enterprise-card h3,.process-grid h3{font-size:21px;line-height:1.5;margin:0}
+.enterprise-card p,.process-grid p,.enterprise-job-body p{white-space:pre-line;overflow-wrap:anywhere;color:var(--muted);line-height:1.9;margin:0}
+.enterprise-card .text-link{margin-top:auto;padding-top:12px}
+.process-section{background:var(--surface)}
+.process-grid{list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:32px;padding:0;margin:40px 0 0}
+.process-grid li{min-width:0;border-top:2px solid var(--accent);padding-top:24px}
+.process-grid h3{margin:18px 0 12px}
+.nexora .careers-section{display:block}
+.careers-heading{display:flex;align-items:center;justify-content:space-between;gap:32px}
+.enterprise-jobs{margin-top:32px;border-top:1px solid var(--line)}
+.enterprise-job{border-bottom:1px solid var(--line)}
+.enterprise-job summary{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:24px 0;cursor:pointer;list-style:none}
+.enterprise-job summary::-webkit-details-marker{display:none}
+.enterprise-job strong{font-size:20px;font-weight:500}
+.enterprise-job small{display:block;margin-top:8px;color:var(--muted);line-height:1.7}
+.enterprise-job[open] summary{color:var(--accent)}
+.enterprise-job-body{padding:0 0 28px;max-width:850px}
+.enterprise-job-body .text-link{margin-top:20px}
+.enterprise-page-contact{padding:32px;margin-top:40px;border:1px solid var(--line);background:var(--surface)}
+.enterprise-page-contact h2{font-size:26px;margin:0 0 12px}
+.enterprise-page-contact p{color:var(--muted);line-height:1.8;margin-bottom:20px}
+.enterprise-section,.enterprise-job,.enterprise-page-contact{overflow-wrap:anywhere}
+@media(max-width:960px){.enterprise-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.process-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.enterprise-section{padding-block:42px}.enterprise-grid{grid-template-columns:1fr;gap:18px;margin-top:26px}.enterprise-card-body{padding:22px}.careers-heading{align-items:flex-start;flex-direction:column;gap:20px}.process-grid{gap:24px}.enterprise-page-contact{padding:22px}}
+@media print{.enterprise-card,.enterprise-job,.process-grid li{break-inside:avoid}.enterprise-job::details-content{content-visibility:visible}.enterprise-job-body{display:block!important}}

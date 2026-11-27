@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "locale": "en",
+  "messages": {
+    "accessibility.skip_content": "Skip to content",
+    "navigation.primary": "Main navigation",
+    "navigation.home": "Home",
+    "navigation.explore": "Explore",
+    "navigation.account": "Account",
+    "site.legal": "Site registration information",
+    "common.back_home": "Back to home",
+    "search.label": "Search content",
+    "search.submit": "Search",
+    "pagination.label": "Post pagination",
+    "pagination.previous": "Previous",
+    "pagination.next": "Next",
+    "comments.label": "Comments",
+    "comments.title": "Comments ({count})",
+    "comments.author": "Name",
+    "comments.email": "Email",
+    "comments.submit": "Submit comment",
+    "comments.login": "Sign in to comment"
+  }
+}

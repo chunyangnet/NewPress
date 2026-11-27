@@ -1,0 +1,22 @@
+{{define "currency-wallet"}}
+<section class="account-wallet" data-currency-wallet hidden>
+  <div class="wallet-currency-picker"><label for="wallet-currency">钱包货币<select id="wallet-currency" data-wallet-currency disabled><option value="main">正在读取货币…</option></select></label><span data-wallet-currency-caption>各币种独立记账</span></div>
+  <div class="wallet-balance-sheet">
+    <div class="wallet-balance-top"><span>{{template "icon" "coins"}} <span data-wallet-name>我的钱包</span></span><button type="button" class="wallet-refresh" data-wallet-refresh aria-label="刷新钱包">{{template "icon" "refresh-cw"}}</button></div>
+    <span class="wallet-balance-label">当前余额</span><p class="wallet-balance"><output data-wallet-balance>—</output><span data-wallet-symbol></span></p>
+    <div class="wallet-balance-foot"><span data-wallet-state>正在读取…</span><a class="wallet-billing-link" href="/billing/">充值、兑换与订单 →</a></div>
+  </div>
+  <div class="wallet-totals"><div><span>近 24 小时转出</span><strong data-wallet-transferred>—</strong></div><div><span>近 24 小时奖励</span><strong data-wallet-rewarded>—</strong></div><div><span>剩余转出额度</span><strong data-wallet-remaining>—</strong></div></div>
+  <p class="currency-message" data-wallet-message role="status" aria-live="polite" hidden></p>
+  <section class="wallet-rewards" aria-labelledby="wallet-rewards-heading"><header><h3 id="wallet-rewards-heading">社区奖励</h3><p data-wallet-reward-help>奖励按站点规则发放。</p></header><div class="wallet-reward-grid">
+    <article><span class="wallet-rule-index">每日签到</span><strong data-wallet-check-in-reward>—</strong><p data-wallet-check-in-description>查看签到规则</p><button class="ui-button ui-button-primary ui-button-small" type="button" data-wallet-check-in disabled>签到领取</button></article>
+    <article><span class="wallet-rule-index">注册奖励</span><strong data-wallet-registration-reward>—</strong><p data-wallet-registration-description>新账号注册奖励</p><span class="wallet-rule-state" data-wallet-registration-state>读取中</span></article>
+    <article><span class="wallet-rule-index">创作奖励</span><strong data-wallet-publication-reward>—</strong><p data-wallet-publication-description>符合条件的文章发布奖励</p><span class="wallet-rule-state" data-wallet-publication-state>读取中</span></article>
+  </div></section>
+  <section class="wallet-transfer"><header><h3>转给另一位读者</h3><p data-wallet-transfer-rule>请先确认收款用户名和金额。</p></header>
+    <form data-wallet-transfer><fieldset disabled><div class="currency-fields"><label>收款用户名<input name="recipient" type="text" maxlength="80" required placeholder="输入完整用户名" autocomplete="off" autocapitalize="none" spellcheck="false"></label><label>转账金额<input name="amount" type="text" inputmode="decimal" maxlength="27" required placeholder="0"><small data-wallet-transfer-unit></small></label></div><button class="ui-button ui-button-secondary" type="submit" data-wallet-transfer-submit>核对转账 {{template "icon" "arrow-right"}}</button></fieldset><p class="currency-message" data-wallet-transfer-result role="status" aria-live="polite" hidden></p></form>
+  </section>
+  <section class="wallet-ledger" id="wallet-ledger"><header><h3>收支记录</h3><span>最近的记录在前</span></header><div class="currency-history" data-wallet-history><p class="currency-empty">正在读取收支记录…</p></div><button type="button" class="ui-button ui-button-secondary ui-button-small" data-wallet-more hidden>更早的流水 {{template "icon" "arrow-down"}}</button></section>
+  <dialog class="wallet-confirm" data-wallet-confirm aria-labelledby="wallet-confirm-title"><form method="dialog"><h3 id="wallet-confirm-title">确认这笔转账</h3><p class="wallet-confirm-amount" data-wallet-confirm-amount></p><dl><dt>收款账号</dt><dd data-wallet-confirm-recipient></dd></dl><p>请核对收款账号。确认后，这笔金额将记入双方的收支记录。</p><div><button type="button" class="ui-button ui-button-secondary" data-wallet-cancel>返回修改</button><button type="button" class="ui-button ui-button-primary" data-wallet-confirm-send>确认转账</button></div><p data-wallet-confirm-status role="status"></p></form></dialog>
+</section>
+{{end}}

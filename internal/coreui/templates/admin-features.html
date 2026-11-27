@@ -1,0 +1,84 @@
+{{define "content"}}
+<div class="feature-workspace" data-feature-admin data-slug="{{.Features.Current.Slug}}" data-version="{{.Features.Current.Version}}" data-csrf="{{.Admin.CSRFToken}}" data-user-id="{{.Admin.Principal.UserID}}">
+  <header class="feature-heading"><div><h1>{{if .Features.Editing}}{{if .Features.Creating}}创建建议板块{{else}}配置 {{.Features.Current.Settings.Name}}{{end}}{{else}}功能页面{{end}}</h1></div>{{if .Features.Editing}}<a class="admin-button admin-button-secondary" href="/admin/features/">{{template "icon" "arrow-left"}}返回功能页面</a>{{else}}<a class="admin-button admin-button-secondary" href="/admin/navigation/">{{template "icon" "route"}}编排导航</a>{{end}}</header>
+  {{if .FeatureStatus}}{{template "admin-feature-status" .}}{{end}}
+  <p class="feedback-message" role="status" aria-live="polite" data-feedback-status hidden></p>
+  <div class="feedback-conflict" data-feedback-conflict hidden><strong>另一个操作已更新内容</strong><p>输入仍保留在此页。请在新标签页核对最新内容后，将需要的修改复制到新版本。</p><a href="" target="_blank" rel="noopener" data-feedback-latest>打开最新版本 {{template "icon" "external-link"}}</a></div>
+  {{if .Features.Editing}}
+  <noscript><p class="feedback-message">配置页面需要启用 JavaScript 才能保存。</p></noscript>
+  {{if not .Features.Available}}<p class="feedback-message">{{.Features.UnavailableReason}}。上方生效状态列出了处理步骤；已保存的内容会继续保留。</p>{{end}}
+  <div class="feature-editor-layout admin-settings-layout">
+    <aside class="admin-settings-nav"><nav aria-label="设置分组">{{template "admin-settings-nav-item" (dict "Target" "feature-basics" "Title" "页面信息")}}{{template "admin-settings-nav-item" (dict "Target" "feature-interactions" "Title" "内容与互动")}}{{template "admin-settings-nav-item" (dict "Target" "feature-permissions" "Title" "参与权限")}}</nav><button class="admin-button admin-button-quiet" type="button" data-settings-preview-open>预览</button></aside>
+    <form id="feature-settings-form" class="feature-settings admin-settings-form" data-feedback-form="{{if .Features.Creating}}create{{else}}configure{{end}}">
+      <fieldset class="feature-fields" {{if .Admin.ReadOnly}}disabled{{end}}>
+      <section class="feature-section admin-setting-section" id="feature-basics" data-settings-section><div class="feature-section-heading"><div><h2>页面信息</h2></div></div>
+        <div class="feature-form-grid">
+          <label>页面名称<input name="name" value="{{.Features.Current.Settings.Name}}" maxlength="60" required data-preview-name></label>
+          <label>访问别名<input name="slug" value="{{.Features.Current.Slug}}" placeholder="feedback" pattern="[a-z0-9][a-z0-9\-]{0,63}" maxlength="64" required {{if not .Features.Creating}}readonly{{end}} aria-describedby="feature-slug-help"><small id="feature-slug-help">/feedback/<span data-preview-slug>{{if .Features.Current.Slug}}{{.Features.Current.Slug}}{{else}}feedback{{end}}</span>/ · 创建后固定</small></label>
+          <label class="feature-wide">页面介绍<textarea name="description" maxlength="300" rows="2" data-preview-description>{{.Features.Current.Settings.Description}}</textarea></label>
+          <label class="feature-wide">提交须知<textarea name="guidelines" maxlength="3000" rows="3">{{.Features.Current.Settings.Guidelines}}</textarea></label>
+        </div>
+        <h3 class="feature-subheading">展示方式</h3>
+        <div class="feature-form-grid">
+          <label>提交按钮文字<input name="submit_label" value="{{.Features.Current.Settings.SubmitLabel}}" maxlength="24" required data-preview-submit></label>
+          <label>主题强调色<select name="accent" data-preview-accent><option value="blue" {{if eq .Features.Current.Settings.Accent "blue"}}selected{{end}}>靛蓝</option><option value="teal" {{if eq .Features.Current.Settings.Accent "teal"}}selected{{end}}>青绿</option><option value="amber" {{if eq .Features.Current.Settings.Accent "amber"}}selected{{end}}>赭石</option></select></label>
+          <label>默认视图<select name="default_view"><option value="list" {{if eq .Features.Current.Settings.DefaultView "list"}}selected{{end}}>反馈列表</option><option value="roadmap" {{if eq .Features.Current.Settings.DefaultView "roadmap"}}selected{{end}}>进度看板</option></select></label>
+          <label>每页反馈数<select name="page_size"><option value="10" {{if eq .Features.Current.Settings.PageSize 10}}selected{{end}}>10 条</option><option value="20" {{if eq .Features.Current.Settings.PageSize 20}}selected{{end}}>20 条</option><option value="40" {{if eq .Features.Current.Settings.PageSize 40}}selected{{end}}>40 条</option></select></label>
+        </div>
+      </section>
+      <section class="feature-section admin-setting-section" id="feature-interactions" data-settings-section><div class="feature-section-heading"><div><h2>内容与互动</h2></div></div>
+        <fieldset class="feature-kind-picker"><legend>接受哪些类型的反馈</legend>{{range .Features.Kinds}}<label><input type="checkbox" name="kinds" value="{{.Value}}" {{if .Selected}}checked{{end}}>{{.Label}}</label>{{end}}</fieldset>
+        <label class="feature-category-label">反馈分类<small>每行一项，最多 12 项；留空时不显示分类选项。</small><textarea name="categories" rows="3" maxlength="400">{{.Features.CategoryText}}</textarea></label>
+        <div class="feature-toggle-groups">
+          <section class="feature-toggle-group"><h3>开放状态</h3><div class="feature-toggles">{{range slice .Features.Toggles 0 2}}{{template "feature-toggle" .}}{{end}}</div></section>
+          <section class="feature-toggle-group"><h3>互动与进度</h3><div class="feature-toggles">{{range slice .Features.Toggles 2 7}}{{template "feature-toggle" .}}{{end}}</div></section>
+          <section class="feature-toggle-group"><h3>审核与隐私</h3><div class="feature-toggles">{{range slice .Features.Toggles 7}}{{template "feature-toggle" .}}{{end}}</div></section>
+        </div>
+      </section>
+      <section class="feature-section admin-setting-section" id="feature-permissions" data-settings-section><div class="feature-section-heading"><div><h2>谁可以参与</h2><p>多角色账号合并权限。板块管理者可审核、回复、改状态和导出；站点管理员保留管理权。</p></div></div>
+        <div class="feature-permissions" tabindex="0" role="region" aria-label="角色权限表，可横向滚动"><table><caption class="sr-only">为每个角色选择建议板块权限</caption><thead><tr><th scope="col">角色</th><th scope="col">浏览</th><th scope="col">提交</th><th scope="col">投票</th><th scope="col">评论</th><th scope="col">管理</th></tr></thead><tbody>{{range .Features.Roles}}<tr data-grant-role="{{.Role}}"><th scope="row">{{.Label}}</th><td><label class="feature-permission-hit"><input type="checkbox" data-grant="read" aria-label="{{.Label}}：浏览" {{if .Read}}checked{{end}}></label></td>{{if .Guest}}<td colspan="4"><span class="feature-guest-note">登录后才能参与互动</span></td>{{else}}<td><label class="feature-permission-hit"><input type="checkbox" data-grant="submit" aria-label="{{.Label}}：提交" {{if .Submit}}checked{{end}}></label></td><td><label class="feature-permission-hit"><input type="checkbox" data-grant="vote" aria-label="{{.Label}}：投票" {{if .Vote}}checked{{end}}></label></td><td><label class="feature-permission-hit"><input type="checkbox" data-grant="comment" aria-label="{{.Label}}：评论" {{if .Comment}}checked{{end}}></label></td><td><label class="feature-permission-hit"><input type="checkbox" data-grant="moderate" aria-label="{{.Label}}：管理" {{if .Moderate}}checked{{end}}></label></td>{{end}}</tr>{{end}}</tbody></table></div>
+        <p class="feature-help">私密反馈仅作者与管理者可见；普通访客不会获得投票人名单。功能开关关闭时，即使角色有权限也不能操作。</p>
+      </section>
+      {{template "admin-savebar" (dict "FormID" "feature-settings-form" "ReadOnly" .Admin.ReadOnly "Label" (and .Features.Creating "创建页面"))}}
+      </fieldset>
+    </form>
+  </div>
+  <dialog class="admin-preview-dialog" data-settings-preview-dialog aria-label="页面预览"><button class="admin-button admin-preview-close" type="button" data-settings-preview-close>关闭预览</button><div class="feature-preview-paper" data-accent="{{.Features.Current.Settings.Accent}}"><span class="feedback-preview-mark">{{template "icon" "message-circle"}}</span><h2 data-live-name>{{.Features.Current.Settings.Name}}</h2><p data-live-description>{{.Features.Current.Settings.Description}}</p><span class="feature-preview-button" data-live-submit>{{.Features.Current.Settings.SubmitLabel}}</span><div class="feature-preview-row"><i></i><span>示例反馈</span><b>待评估</b></div><small data-live-features>投票 · 讨论 · 进度看板</small></div></dialog>
+  {{else}}
+  <section class="feature-templates" aria-labelledby="feature-templates-title">
+    <header class="feature-hub-section-head"><div><h2 id="feature-templates-title">选择页面模板</h2></div></header>
+    <div class="feature-template-grid">
+      <article class="feature-template" data-feature-kind="feedback">
+        <header><span class="feature-template-mark">{{template "icon" "message-circle"}}</span><div><h3>建议板块</h3><p>收集建议并跟进处理</p></div></header>
+        <ul class="feature-template-details"><li>{{template "icon" "message-square"}}投票与讨论</li><li>{{template "icon" "layout-grid"}}进度看板</li><li>{{template "icon" "shield-check"}}角色权限</li></ul>
+        <footer><span>{{if .Features.Available}}已创建 <b>{{len .Features.Boards}}</b> 个{{else}}{{.Features.UnavailableReason}}{{end}}</span>{{if .Features.Available}}<a class="admin-button admin-button-secondary" href="/admin/features/?edit=new" aria-label="创建建议板块">{{template "icon" "plus"}}创建页面</a>{{end}}</footer>
+      </article>
+      <article class="feature-template" data-feature-kind="links">
+        <header><span class="feature-template-mark">{{template "icon" "globe-2"}}</span><div><h3>友链页面</h3><p>整理常用站点与资源</p></div></header>
+        <ul class="feature-template-details"><li>{{template "icon" "scan-search"}}自动提取信息</li><li>{{template "icon" "panels-top-left"}}三种样式</li><li>{{template "icon" "tags"}}分类与推荐</li></ul>
+        <footer><span>{{if .Features.LinksAvailable}}已创建 <b>{{.Features.LinkCount}}</b> 个{{else}}{{.Features.LinksUnavailableReason}}{{end}}</span>{{if .Features.LinksAvailable}}<a class="admin-button admin-button-secondary" href="/admin/features/links/?edit=new" aria-label="创建友链页面">{{template "icon" "plus"}}创建页面</a>{{end}}</footer>
+      </article>
+    </div>
+  </section>
+  <section class="feature-pages" aria-labelledby="feature-pages-title">
+    <header class="feature-hub-section-head"><div><h2 id="feature-pages-title">已创建的页面 <span class="feature-page-count">{{len .Features.Pages}}</span></h2></div></header>
+    {{if .Features.Pages}}
+    <div class="feature-page-list">
+      <div class="feature-page-columns" aria-hidden="true"><span>页面</span><span>模板类型</span><span>状态</span><span>操作</span></div>
+      <ul>{{range .Features.Pages}}
+        <li class="feature-page-row" data-feature-kind="{{.Kind}}">
+          <div class="feature-page-identity"><span class="feature-page-mark">{{template "icon" .Icon}}</span><div><h3><a href="{{.EditURL}}">{{.Name}}</a></h3><code>{{.URL}}</code>{{if .Description}}<p>{{.Description}}</p>{{end}}</div></div>
+          <span class="feature-page-type">{{.KindLabel}}</span>
+          <span class="feature-page-state" data-state="{{if not .Available}}unavailable{{else if .Enabled}}enabled{{else}}disabled{{end}}">{{if not .Available}}{{.UnavailableReason}}{{else if .Enabled}}已开放{{else}}已停用{{end}}</span>
+          <div class="feature-page-actions"><a class="feature-manage-link" href="{{.EditURL}}" aria-label="管理 {{.Name}}">{{template "icon" "sliders-horizontal"}}管理</a>{{if .Available}}<a class="feature-visit-link" href="{{.URL}}" target="_blank" rel="noopener" aria-label="{{if .Enabled}}访问{{else}}预览{{end}} {{.Name}}（新窗口）">{{if .Enabled}}访问{{else}}预览{{end}}{{template "icon" "external-link"}}</a>{{end}}</div>
+        </li>
+      {{end}}</ul>
+    </div>
+    {{else}}
+    <div class="feature-page-empty"><span>{{template "icon" "panels-top-left"}}</span><h3>还没有功能页面</h3><p>从上方选择一个模板，创建你的第一个页面。</p><a class="feature-manage-link" href="#feature-templates-title">选择模板{{template "icon" "arrow-up"}}</a></div>
+    {{end}}
+  </section>
+  {{end}}
+</div>
+{{end}}
+{{define "feature-toggle"}}{{template "admin-switch" (dict "Name" .Name "Label" .Label "Help" .Help "Checked" .Enabled)}}{{end}}

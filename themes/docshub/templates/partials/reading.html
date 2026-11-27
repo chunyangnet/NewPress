@@ -1,0 +1,29 @@
+{{define "reading-toc-mobile"}}
+<details class="mobile-toc" data-mobile-toc hidden><summary><span>本页目录 <small data-current-section></small></span>{{template "icon" "down"}}</summary><nav aria-label="本页目录"><ol data-mobile-toc-list></ol></nav></details>
+{{end}}
+
+{{define "reading-aside"}}
+<aside class="article-aside">
+  {{if index .Settings "show_toc"}}<nav class="table-of-contents" aria-label="本页目录" data-toc hidden><p>本页目录</p><ol data-toc-list></ol></nav>{{end}}
+  {{if and (index .Modules "series") (index .Settings "show_reading_series")}}{{range .ReadingSeries}}<div class="reading-series-summary"><span>正在阅读</span><a href="{{.Series.URL}}">{{.Series.Title}}</a><small>第 {{.Position}} / {{.Series.Count}} 篇</small></div>{{end}}{{end}}
+  {{if and (index .Settings "show_reading_help") (or (index .Modules "community") (ne .Settings.community_link "/community/"))}}<a class="reading-help" href="{{index .Settings "community_link"}}">{{template "icon" "chat"}}{{index .Settings "reading_help_label"}} {{template "icon" "arrow"}}</a>{{end}}
+  {{if index .Settings "show_reading_back_to_top"}}<a class="back-top" href="#main">返回顶部 ↑</a>{{end}}
+</aside>
+{{end}}
+
+{{define "reading-series"}}
+{{range .ReadingSeries}}
+{{if index $.Settings "show_reading_series"}}
+<section class="series-reading" aria-label="系列阅读">
+  <a href="{{.Series.URL}}">{{template "icon" "layers"}}{{.Series.Title}} <span>第 {{.Position}} / {{.Series.Count}} 篇</span></a>
+  <nav aria-label="系列上下篇">
+    {{if gt .Previous.ID 0}}<a rel="prev" href="{{.Previous.URL}}"><small>上一篇</small><strong>{{.Previous.Title}}</strong></a>{{else}}<a href="{{.Series.URL}}"><small>从这里开始</small><strong>查看系列目录</strong></a>{{end}}
+    {{if gt .Next.ID 0}}<a rel="next" class="next-chapter" href="{{.Next.URL}}"><small>下一篇</small><strong>{{.Next.Title}}</strong>{{template "icon" "arrow"}}</a>{{else}}<a class="next-chapter" href="{{.Series.URL}}"><small>已到本系列最后一篇</small><strong>回顾全部章节</strong>{{template "icon" "arrow"}}</a>{{end}}
+  </nav>
+</section>
+{{end}}
+{{if and (index $.Settings "show_series_related") .Related}}
+<section class="related-reading" aria-label="同系列文档"><div class="section-heading"><h2>继续阅读</h2><a href="{{.Series.URL}}">{{.Series.Title}} {{template "icon" "arrow"}}</a></div><ul>{{range .Related}}<li><a href="{{.URL}}"><span>{{.Title}}</span>{{template "icon" "arrow"}}</a></li>{{end}}</ul></section>
+{{end}}
+{{end}}
+{{end}}

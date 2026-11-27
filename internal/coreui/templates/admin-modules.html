@@ -1,0 +1,22 @@
+{{define "content"}}
+<section class="admin-page design-workspace" data-module-center>
+  <header class="admin-page-heading"><div><h1>模块中心</h1><p>统一管理站点能力。开关保存启用意图，卡片状态显示实际可用情况；「待配置」模块请按提示完成服务器配置。评论开关统一在此管理，单篇文章可单独关闭评论。</p></div><div class="admin-heading-actions"><a class="admin-button admin-button-primary" href="/admin/appearance/layout/">{{template "icon" "panels-top-left"}}可视化布局</a><a class="admin-button admin-button-quiet" href="/admin/settings/export/">{{template "icon" "download"}}导出配置</a></div></header>
+  {{if .Admin.ReadOnly}}<p class="admin-callout admin-callout-warning">当前为只读预览，登录后可保存模块设置。</p>{{end}}
+  {{template "admin-notice" (dict "Message" .Admin.Notice "Tone" .Admin.NoticeTone)}}
+  <div class="design-toolbar"><label class="design-search">{{template "icon" "search"}}<input type="search" placeholder="查找模块" aria-label="查找模块" data-module-search></label><div class="design-filters" role="group" aria-label="模块类型"><button type="button" data-module-filter="all" aria-pressed="true">全部</button><button type="button" data-module-filter="switch" aria-pressed="false">可独立启停</button><button type="button" data-module-filter="reserved" aria-pressed="false">预留能力</button></div><span class="design-count" data-module-count>{{len .Modules.Items}} 个模块 · {{.Modules.Reserved}} 项预留</span></div>
+  <form id="module-settings-form" action="/admin/modules/" method="post" data-module-form data-admin-native-save>
+    <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><input type="hidden" name="revision" value="{{.Modules.Revision}}">
+    <fieldset class="module-catalog" {{if .Admin.ReadOnly}}disabled{{end}}>
+    {{range .Modules.Items}}<article id="module-card-{{.ID}}" class="module-card" data-module-card data-module-id="{{.ID}}" data-module-control="{{.Control}}" data-module-state="{{.State}}">
+      <header><span class="module-category">{{.Group}}</span><span class="module-state is-{{.State}}">{{.Status}}</span></header><h2>{{.Title}}</h2><p>{{.Description}}</p>
+      {{if .Reason}}<p class="module-reason">{{.Reason}}</p>{{end}}
+      {{with index $.Admin.FieldErrors (printf "module.%s" .ID)}}<p class="admin-field-error">{{.}}</p>{{end}}
+      <footer>{{if eq .Control "switch"}}{{template "admin-switch" (dict "ID" (printf "module-%s" .ID) "Name" (printf "module.%s" .ID) "Checked" .Enabled "Label" "启用模块")}}{{else if eq .Control "reserved"}}<span class="module-reserved-label">接口预留 · 尚未实现</span>{{else}}<span class="module-reserved-label">{{if eq .Control "native"}}使用独立配置{{else}}基础依赖{{end}}</span>{{end}}{{if .ConfigURL}}<a href="{{.ConfigURL}}" class="module-config">{{template "icon" "settings-2"}}配置 </a>{{end}}</footer>
+      <details class="module-contract"><summary>依赖与路径 <span>{{len .Routes}}</span></summary>{{if .DependsOn}}<p>依赖：{{range $i,$dep := .DependsOn}}{{if $i}}、{{end}}{{$dep}}{{end}}</p>{{end}}{{if .Contract}}<p>{{.Contract}}</p>{{end}}<ul>{{range .Routes}}<li><code>{{.}}</code></li>{{end}}</ul></details>
+    </article>{{end}}
+    </fieldset>
+  </form>
+  <p class="design-empty" data-module-empty hidden>没有匹配的模块，请调整搜索条件。</p>
+  {{template "admin-savebar" (dict "FormID" "module-settings-form" "ReadOnly" .Admin.ReadOnly "Notice" .Admin.Notice "Tone" .Admin.NoticeTone)}}
+</section>
+{{end}}

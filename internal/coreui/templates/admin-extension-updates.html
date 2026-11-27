@@ -1,0 +1,70 @@
+{{define "content"}}
+{{$view := .ExtensionUpdates}}
+<section class="extension-workspace" data-extension-workspace data-kind="{{$view.Kind}}" data-channel="{{$view.Channel}}" data-csrf="{{.Admin.CSRFToken}}" data-user-id="{{.Admin.Principal.UserID}}" data-readonly="{{.Admin.ReadOnly}}" data-busy="{{$view.Job.Busy}}">
+  <header class="extension-heading">
+    <div><h1>{{$view.Title}}</h1></div>
+    <div class="extension-heading-actions"><a class="admin-button admin-button-quiet" href="{{$view.BackURL}}">{{template "icon" "arrow-left"}}返回{{if eq $view.Kind "plugin"}}插件{{else}}主题市场{{end}}</a><button class="admin-button admin-button-primary" type="button" data-extension-check {{if or .Admin.ReadOnly (not $view.Market.Configured)}}disabled{{end}}>{{template "icon" "refresh-cw"}}检查更新</button></div>
+  </header>
+  {{if .Admin.ReadOnly}}<p class="extension-notice" role="status">当前为只读预览。登录管理员账号后可以检查、更新或回退版本。</p>{{end}}
+  <noscript><p class="extension-notice">在线更新需要启用 JavaScript；版本与历史记录仍可在下方查看。</p></noscript>
+  <div class="extension-overview" aria-label="版本概况">
+    <div><span>已安装</span><strong>{{$view.Installed}}<small> 个{{if eq $view.Kind "plugin"}}插件{{else}}主题{{end}}</small></strong></div>
+    <div class="extension-update-count"><span>可在线更新</span><strong>{{$view.Updates}}<small> 个新版本</small></strong></div>
+    <div><span>当前 NewPress</span><strong class="extension-core">{{$view.Core}}</strong></div>
+  </div>
+  <section class="extension-job" data-extension-job data-phase="{{$view.Job.Phase}}" {{if or (eq $view.Job.Phase "idle") (eq $view.Job.Phase "")}}hidden{{end}} aria-label="更新任务">
+    <div class="extension-job-heading"><div><span class="extension-job-dot" aria-hidden="true"></span><strong data-job-message role="status" aria-live="polite">{{$view.Job.Message}}</strong></div><button type="button" class="admin-button admin-button-quiet" data-extension-cancel hidden>取消任务</button></div>
+    <progress data-job-progress aria-label="下载进度" hidden></progress>
+    <div class="extension-job-detail"><span data-job-detail></span><button type="button" data-extension-reconnect hidden>重新连接</button></div>
+  </section>
+  <p class="extension-notice extension-error" data-extension-error role="alert" hidden></p>
+  <div class="extension-layout">
+    <div class="extension-main">
+      <div class="extension-toolbar"><h2>发行版本 <span>{{len $view.Cards}}</span></h2><nav class="extension-channels" aria-label="更新通道"><a href="?channel=stable" {{if eq $view.Channel "stable"}}aria-current="page"{{end}}>稳定版</a><a href="?channel=preview" {{if eq $view.Channel "preview"}}aria-current="page"{{end}}>含预览版</a></nav></div>
+      {{if eq $view.Channel "preview"}}<p class="extension-channel-note">预览版本用于提前体验，可能仍有调整；正式站点建议使用稳定版。</p>{{end}}
+      <div class="extension-cards">
+        {{range $view.Cards}}
+        {{$card := .}}
+        <article id="extension-{{.Slug}}" class="extension-card {{if .HasUpdate}}has-update{{end}}" data-extension-card="{{.Slug}}">
+          <header><span class="extension-icon">{{if eq $view.Kind "plugin"}}{{template "icon" "code-2"}}{{else}}{{template "icon" "diamond"}}{{end}}</span><div><h3>{{.Name}}</h3><p>{{.Slug}}{{if .Builtin}} · 随核心提供{{end}}</p></div><span class="extension-badge">{{if .Error}}需检查{{else if .Active}}当前主题{{else if .Installed}}{{if eq $view.Kind "plugin"}}{{if .Enabled}}已启用{{else}}已停用{{end}}{{else}}已安装{{end}}{{else}}未安装{{end}}</span></header>
+          <p class="extension-description">{{.Description}}</p>
+          <div class="extension-versions"><div><span>当前版本</span><b>{{if .Current}}{{.Current}}{{else}}—{{end}}</b></div><span class="extension-version-arrow" aria-hidden="true">{{template "icon" "arrow-right"}}</span><div><span>{{if eq $view.Channel "preview"}}最新发行{{else}}最新稳定版{{end}}</span><b>{{if .Latest}}{{.Latest}}{{else}}待检查{{end}}</b></div>{{if .HasUpdate}}<span class="extension-new">可更新</span>{{end}}</div>
+          {{if eq $view.Kind "theme"}}
+          {{if .Dependency.Parent}}<p class="extension-description">父主题：{{if .Dependency.InstalledVersion}}<a href="#extension-{{.Dependency.Parent}}">{{.Dependency.Parent}} {{.Dependency.InstalledVersion}}</a>{{else}}{{.Dependency.Parent}}（尚未安装）{{end}} · 要求 {{.Dependency.Requires}}</p>{{end}}
+          {{if .Dependency.Dependents}}<p class="extension-description" data-dependency-impact>受影响子主题：{{range $i, $slug := .Dependency.Dependents}}{{if $i}}、{{end}}<a href="#extension-{{$slug}}">{{$slug}}</a>{{end}}。更新或回退会重新校验全部依赖（包括非活动子主题），不兼容则不切换。主题设置保留，不覆盖子主题文件；此列表仅表示影响范围，不代表候选版本已通过兼容性验证。</p>{{end}}
+          {{end}}
+          {{if .Error}}<p class="extension-inline-warning">{{.Error}}</p>{{end}}
+          {{if .State.ReviewRequired}}<p class="extension-inline-warning">新版本已安装，请先<a href="{{.ConfigURL}}">重新确认配置与权限</a>，再启用插件。</p>{{end}}
+          {{if .Releases}}
+          <details class="extension-releases" {{if .HasUpdate}}open{{end}}><summary><span>发行说明与可用版本</span><span>{{len .Releases}} 个版本 {{template "icon" "chevron-down"}}</span></summary>
+            <div class="extension-release-list">
+              {{range .Releases}}
+              <section class="extension-release">
+                <div class="extension-release-title"><h4>{{.Version}}</h4>{{if .Release}}<span>{{if eq .Release.Channel "preview"}}预览版{{else}}稳定版{{end}}</span><time datetime="{{.Release.PublishedAt.Format "2006-01-02T15:04:05Z07:00"}}">{{dateIn .Release.PublishedAt $.Site.Timezone}}</time>{{end}}</div>
+                <p class="extension-release-notes">{{if .Notes}}{{.Notes}}{{else}}发布者未提供说明。{{end}}</p>
+                {{if or .AddedGrants .AddedHosts .SettingsChange}}<div class="extension-permission-note"><strong>更新后需重新确认配置与权限</strong>{{if .AddedGrants}}<p>新增权限：{{range $i, $grant := .AddedGrants}}{{if $i}}、{{end}}{{$grant}}{{end}}</p>{{end}}{{if .AddedHosts}}<p>新增外部服务：{{range $i, $host := .AddedHosts}}{{if $i}}、{{end}}{{$host}}{{end}}</p>{{end}}{{if .SettingsChange}}<p>配置项有变化，已有值会按兼容规则保留。</p>{{end}}</div>{{end}}
+                <footer><span>{{if .Requires}}需要 NewPress {{.Requires}}{{else}}适用于当前 NewPress{{end}}<small data-package-bytes="{{.Size}}"></small></span>{{if .Allowed}}<button class="admin-button admin-button-primary" type="button" data-extension-action="{{.Action}}" data-slug="{{$card.Slug}}" data-name="{{$card.Name}}" data-version="{{.Version}}" data-digest="{{.Digest}}" data-current="{{$card.Current}}" data-revision="{{$card.State.Revision}}" {{if $.Admin.ReadOnly}}disabled{{end}}>{{if eq .Action "install"}}安装此版本{{else}}更新到 {{.Version}}{{end}}</button>{{else}}<span class="extension-release-reason">{{.Reason}}</span>{{end}}</footer>
+              </section>
+              {{end}}
+            </div>
+          </details>
+          {{else}}<p class="extension-empty-release">{{if .Builtin}}内置功能跟随 NewPress 版本发布。{{else if $view.Market.Checked.IsZero}}点击“检查更新”，获取官方发行信息。{{else}}当前目录尚未发布此{{if eq $view.Kind "plugin"}}插件{{else}}主题{{end}}的版本。{{end}}</p>{{end}}
+          <footer class="extension-card-footer">
+            {{if .ConfigURL}}<a href="{{.ConfigURL}}">{{template "icon" "sliders-horizontal"}}{{if eq $view.Kind "plugin"}}配置与权限{{else}}主题设置{{end}}</a>{{else}}<span></span>{{end}}
+            {{if .State.Previous}}<button class="extension-rollback" type="button" data-extension-action="rollback" data-slug="{{.Slug}}" data-name="{{.Name}}" data-version="{{.State.Previous}}" data-current="{{.Current}}" data-revision="{{.State.Revision}}" {{if or $.Admin.ReadOnly .Error}}disabled{{end}}>{{template "icon" "rotate-ccw"}}回退到 {{.State.Previous}}</button>{{end}}
+          </footer>
+          {{if .State.History}}<details class="extension-history"><summary>版本记录 <span>{{len .State.History}} 次</span></summary><ol>{{range .State.History}}<li><span>{{if eq .Action "rollback"}}回退{{else}}更新{{end}}</span><b>{{.From}} → {{.To}}</b><time>{{dateIn .At $.Site.Timezone}}</time></li>{{end}}</ol></details>{{end}}
+        </article>
+        {{else}}<div class="extension-empty"><span>{{template "icon" "file-archive"}}</span><h3>暂无可用版本</h3><p>检查官方目录后，可在这里查看和安装可用版本。</p></div>{{end}}
+      </div>
+    </div>
+    <aside class="extension-aside">
+      <section class="extension-source"><span class="extension-aside-label">更新来源</span><h2>官方发行目录</h2>{{if $view.Market.Configured}}<p>由服务器连接仓库，校验发行信息后选择可用来源。</p><ul>{{range $view.Market.Sources}}<li><span><i data-available="{{.Available}}"></i>{{.Name}}</span><b>{{if .Selected}}当前来源{{else if .Available}}可用 · {{.LatencyMS}} ms{{else if .Error}}暂不可用{{else}}待检查{{end}}</b>{{if .Error}}<small>{{.Error}}</small>{{end}}</li>{{end}}</ul>{{if not $view.Market.Checked.IsZero}}<p class="extension-source-date">上次检查 {{dateIn $view.Market.Checked $.Site.Timezone}}<br>目录序号 {{$view.Market.Sequence}}</p>{{end}}{{if $view.Market.Error}}<p class="extension-inline-warning">{{$view.Market.Error}}</p>{{end}}{{else}}<p>更新来源尚未配置，请联系站点运维设置官方目录与验证公钥。</p>{{end}}</section>
+      <section class="extension-explainer"><span class="extension-aside-label">更新与恢复</span><h2>保留数据，按需回退</h2><ol><li><b>先校验</b><p>核对签名、下载完整性和版本要求，再准备安装。</p></li><li><b>保留设置</b><p>{{if eq $view.Kind "plugin"}}插件数据与已有配置保留；新增权限需重新确认。{{else}}主题设置保留，活动主题验证通过后直接生效。{{end}}</p></li><li><b>留一个旧版本</b><p>保留上次代码，可按需回退。回退不会还原业务数据。</p></li></ol><p class="extension-footnote">本地代码改动会进入旧版本快照。涉及数据迁移的版本应先备份，再离线升级。</p></section>
+    </aside>
+  </div>
+  <dialog class="extension-dialog" data-extension-dialog aria-labelledby="extension-confirm-title">
+    <form method="dialog"><header><span class="extension-aside-label">确认版本操作</span><button class="extension-dialog-close" value="cancel" aria-label="关闭">{{template "icon" "x"}}</button></header><h2 id="extension-confirm-title" data-confirm-title>更新扩展</h2><p class="extension-confirm-versions" data-confirm-versions></p><p data-confirm-detail></p><p class="extension-notice extension-error" data-confirm-error role="alert" hidden></p><footer><button class="admin-button admin-button-secondary" value="cancel">暂不操作</button><button class="admin-button admin-button-primary" type="button" data-extension-confirm>确认更新</button></footer></form>
+  </dialog>
+</section>
+{{end}}

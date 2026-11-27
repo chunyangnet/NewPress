@@ -1,0 +1,37 @@
+{{define "home-cases"}}
+{{$s := .Settings}}
+{{if and $s.show_cases (or $s.case_1_title $s.case_2_title $s.case_3_title)}}
+<section class="enterprise-section section-shell" id="cases" data-home-section="cases" aria-labelledby="cases-title">
+<div class="section-heading"><div><p class="enterprise-eyebrow">CUSTOMER STORIES</p><h2 id="cases-title">{{$s.cases_title}}</h2></div><p class="section-intro">{{$s.cases_description}}</p></div>
+<div class="enterprise-grid">
+{{range $i, $_ := dict "1" true "2" true "3" true}}
+{{$title := index $s (printf "case_%s_title" $i)}}{{if $title}}
+<article class="enterprise-card">{{with index $s (printf "case_%s_image" $i)}}<img src="{{.}}" alt="" width="720" height="450" loading="lazy" decoding="async">{{end}}
+<div class="enterprise-card-body"><h3>{{$title}}</h3><p>{{index $s (printf "case_%s_text" $i)}}</p>
+{{template "nexora-action-link" (dict "Page" $ "URL" (index $s (printf "case_%s_url" $i)) "Label" "查看案例" "Class" "text-link")}}</div></article>
+{{end}}{{end}}</div></section>{{end}}{{end}}
+
+{{define "home-process"}}
+{{$s := .Settings}}
+{{if and $s.show_process (or $s.process_1_title $s.process_2_title $s.process_3_title $s.process_4_title)}}
+<section class="enterprise-section process-section section-shell" id="process" data-home-section="process" aria-labelledby="process-title">
+<div class="section-heading"><div><p class="enterprise-eyebrow">HOW WE WORK</p><h2 id="process-title">{{$s.process_title}}</h2></div>{{template "nexora-contact-action" (dict "Page" . "Label" "沟通项目需求" "Class" "text-link")}}</div>
+<ol class="process-grid">{{range $i, $_ := dict "1" true "2" true "3" true "4" true}}
+{{with index $s (printf "process_%s_title" $i)}}<li><span class="business-number" aria-hidden="true">0{{$i}}</span><h3>{{.}}</h3><p>{{index $s (printf "process_%s_text" $i)}}</p></li>{{end}}
+{{end}}</ol></section>{{end}}{{end}}
+
+{{define "home-resources"}}
+{{$s := .Settings}}
+{{if and $s.show_resources (or (and $s.resource_1_title $s.resource_1_url) (and $s.resource_2_title $s.resource_2_url) (and $s.resource_3_title $s.resource_3_url))}}
+<section class="enterprise-section section-shell" id="resources" data-home-section="resources" aria-labelledby="resources-title"><div class="section-heading"><div><p class="enterprise-eyebrow">RESOURCE CENTER</p><h2 id="resources-title">{{$s.resources_title}}</h2></div><p class="section-intro">{{$s.resources_description}}</p></div>
+<div class="enterprise-grid">{{range $i, $_ := dict "1" true "2" true "3" true}}
+{{$title := index $s (printf "resource_%s_title" $i)}}{{$url := index $s (printf "resource_%s_url" $i)}}{{if and $title $url}}
+<article class="enterprise-card enterprise-card-body"><span class="enterprise-eyebrow">0{{$i}} / RESOURCE</span><h3>{{$title}}</h3><p>{{index $s (printf "resource_%s_text" $i)}}</p>{{template "nexora-action-link" (dict "Page" $ "URL" $url "Label" "查看资料" "Class" "text-link")}}</article>
+{{end}}{{end}}</div></section>{{end}}{{end}}
+
+{{define "enterprise-jobs"}}
+{{$s := .Settings}}
+{{if or $s.job_1_title $s.job_2_title $s.job_3_title}}<div class="enterprise-jobs">
+{{range $i, $_ := dict "1" true "2" true "3" true}}
+{{with index $s (printf "job_%s_title" $i)}}<details class="enterprise-job"><summary><span><strong>{{.}}</strong><small>{{index $s (printf "job_%s_meta" $i)}}</small></span><span aria-hidden="true">+</span></summary><div class="enterprise-job-body"><p>{{index $s (printf "job_%s_text" $i)}}</p>{{template "nexora-action-link" (dict "Page" $ "URL" (index $s (printf "job_%s_url" $i)) "Label" "岗位详情与投递" "Class" "text-link")}}</div></details>{{end}}
+{{end}}</div>{{end}}{{end}}

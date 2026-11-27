@@ -1,0 +1,40 @@
+{{define "home-module-editor"}}
+{{$settings := .Settings}}{{$errors := .Errors}}{{with .Region}}
+<div class="home-module-editor" data-home-editor="{{.Key}}">
+  <ol class="home-editor-list">{{$region := .Key}}{{range .Modules}}{{template "home-editor-row" (dict "Block" . "Region" $region "Settings" (index $settings .Key) "Errors" $errors)}}{{end}}</ol>
+  <button type="button" class="admin-button home-custom-add" data-home-custom-add hidden>{{template "icon" "plus"}}添加 HTML 组件</button>
+  {{if eq .Key "top"}}<template data-home-custom-template>{{template "home-editor-row" (dict "Region" "top" "Block" (dict "Key" "custom_template" "Title" "自定义 HTML" "Description" "图文、链接和表格组成的自定义内容块" "Icon" "code-2" "Visibility" "both" "Unavailable" "" "Custom" (dict "Title" "" "HTML" "" "Surface" true)))}}</template>{{end}}
+  <details class="home-order-manual"><summary>手动填写顺序</summary><input type="text" id="setting-home_{{.Key}}_order" name="home_{{.Key}}_order" value="{{.Order}}" data-home-order aria-label="{{.Title}}的模块顺序"><small>使用模块名称，以英文逗号分隔。也可通过拖动或位置选项调整。</small></details>
+  <p class="home-editor-status" data-home-editor-status role="status" aria-live="polite"></p>
+</div>
+{{end}}{{end}}
+
+{{define "home-editor-row"}}
+{{$region := .Region}}{{$settings := .Settings}}{{$errors := .Errors}}{{with .Block}}
+<li class="home-editor-row" data-home-key="{{.Key}}" data-home-title="{{.Title}}" {{if .Custom}}data-home-custom{{end}}>
+  <button type="button" class="home-editor-handle" data-home-handle title="拖动排序，也可使用方向键" aria-label="移动{{.Title}}" hidden>{{template "icon" "grip-vertical"}}</button>
+  <span class="home-editor-icon">{{template "icon" .Icon}}</span><div class="home-editor-copy"><b>{{.Title}}</b><small>{{.Description}}</small>{{if .Unavailable}}<small class="home-module-unavailable">{{.Unavailable}}</small>{{end}}</div>
+  <label class="sr-only" for="home-device-{{.Key}}">{{.Title}}显示设备</label><select id="home-device-{{.Key}}" {{if .Custom}}data-admin-transient{{else}}name="home_{{.Key}}_visibility"{{end}} data-home-visibility><option value="both" {{if eq .Visibility "both"}}selected{{end}}>全部设备</option><option value="desktop" {{if eq .Visibility "desktop"}}selected{{end}}>仅桌面</option><option value="mobile" {{if eq .Visibility "mobile"}}selected{{end}}>仅手机</option><option value="hidden" {{if eq .Visibility "hidden"}}selected{{end}}>隐藏模块</option></select>
+  <label class="home-editor-position" hidden><span class="sr-only">{{.Title}}的位置</span><select data-admin-transient data-home-region aria-label="{{.Title}}的位置"><option value="top" {{if eq $region "top"}}selected{{end}}>首屏</option><option value="main" {{if eq $region "main"}}selected{{end}}>主栏</option><option value="aside" {{if eq $region "aside"}}selected{{end}}>侧栏</option></select></label>
+  <div class="home-editor-moves" hidden><button type="button" data-home-move="up" aria-label="上移{{.Title}}">{{template "icon" "arrow-up"}}</button><button type="button" data-home-move="down" aria-label="下移{{.Title}}">{{template "icon" "arrow-down"}}</button></div>
+  {{if .Custom}}<details class="home-custom-editor" open>
+    <summary>{{template "icon" "code-2"}}编辑 HTML<span class="home-custom-summary">标题与内容</span>{{template "icon" "chevron-down"}}</summary>
+    <div class="home-custom-fields">
+      <label for="home-title-{{.Key}}">模块标题 <small>可留空</small></label><input id="home-title-{{.Key}}" type="text" maxlength="80" value="{{.Custom.Title}}" data-admin-transient data-home-custom-title placeholder="例如：本周推荐">
+      <label for="home-html-{{.Key}}">HTML 内容</label><textarea id="home-html-{{.Key}}" rows="8" maxlength="4096" spellcheck="false" data-admin-transient data-home-custom-html placeholder="<p>在这里填写内容</p>">{{.Custom.HTML}}</textarea>
+      <small class="home-custom-hint">支持标题、段落、图片、链接、列表和表格。内容留空时不显示；脚本、内联样式和事件会被过滤。</small>
+      <label class="home-custom-surface"><input type="checkbox" data-admin-transient data-home-custom-surface {{if .Custom.Surface}}checked{{end}}>显示卡片底色</label>
+      <div class="home-custom-actions"><button type="button" class="admin-button admin-button-quiet" data-home-custom-copy hidden>{{template "icon" "copy"}}复制组件</button><button type="button" class="admin-button admin-button-quiet" data-home-custom-remove hidden>{{template "icon" "trash-2"}}删除组件</button></div>
+    </div>
+  </details>{{else}}
+  <details class="home-custom-editor home-module-settings" id="home-config-{{.Key}}" data-home-config="{{.Key}}">
+    <summary>{{template "icon" "sliders-horizontal"}}配置{{.Title}}{{template "icon" "chevron-down"}}</summary>
+    <div class="home-module-fields">
+      {{range $settings.Fields}}<div class="home-module-field" data-setting-field="{{.Key}}"><label for="setting-{{.Key}}">{{.Title}}{{if .Required}}<em>*</em>{{end}}</label>{{if .Description}}<small>{{.Description}}</small>{{end}}{{template "theme-setting-source" .}}{{template "admin-setting-input" (dict "Field" . "Prefix" "setting-" "MaxLength" 4096)}}{{with index $errors .Key}}<small class="admin-field-error">{{.}}</small>{{end}}</div>{{else}}<p class="home-custom-hint">此模块由站点内容自动生成，没有独立的主题内容设置。可使用上方控件调整显示设备、位置和顺序。</p>{{end}}
+      {{if eq .Key "notice_list"}}<a href="/admin/announcements/">管理公告内容</a>{{end}}
+      {{if or (eq .Key "hero") (eq .Key "feed") (eq .Key "spotlight") (eq .Key "recent") (eq .Key "updated")}}<a href="/admin/content/">管理文章内容</a>{{end}}
+      {{if or (eq .Key "hero") (eq .Key "focus_list") (eq .Key "image_grid")}}<p class="home-custom-hint">精选文章与“推荐阅读”模块共用，在其配置中调整。</p>{{end}}
+    </div>
+  </details>{{end}}
+</li>
+{{end}}{{end}}

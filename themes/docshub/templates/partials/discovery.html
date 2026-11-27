@@ -1,0 +1,28 @@
+{{define "discovery-filters"}}
+<nav class="category-filters" aria-label="内容分类">
+  <a data-filter-category="" href="/explore/?q={{.SearchQuery}}"{{if not .CategorySlug}} aria-current="page"{{end}}>全部文档</a>
+  {{range .Categories}}<a data-filter-category="{{.Slug}}" href="/explore/?q={{$.SearchQuery}}&amp;category={{.Slug}}"{{if eq $.CategorySlug .Slug}} aria-current="page"{{end}}>{{.Name}} <small>{{.Count}}</small></a>{{end}}
+</nav>
+{{end}}
+
+{{define "discovery-toolbar"}}
+<div class="listing-toolbar">
+  <p class="result-count">共 <strong>{{.Pagination.Total}}</strong> 篇文档{{if gt .Pagination.Total 0}}<span> · 第 {{.Pagination.Page}} / {{.Pagination.Pages}} 页</span>{{end}}</p>
+  {{if or (and (or (eq .Kind "explore") (eq .Kind "author")) (index .Settings "show_sort_control")) (index .Settings "show_view_switch")}}
+  <div class="listing-controls">
+    {{if and (or (eq .Kind "explore") (eq .Kind "author")) (index .Settings "show_sort_control")}}
+    <form class="sort-form" data-filter-form method="get">
+      {{if .SearchQuery}}<input type="hidden" name="q" value="{{.SearchQuery}}">{{end}}
+      {{if .CategorySlug}}<input type="hidden" name="category" value="{{.CategorySlug}}">{{end}}
+      <input type="hidden" name="view" value="{{index .Settings "list_default_view"}}">
+      <label for="document-sort">排序</label>
+      <select data-select-ui="soft" id="document-sort" name="sort"><option value="updated"{{if eq .Kind "explore"}} selected{{end}}>最近更新</option><option value="published"{{if eq .Kind "author"}} selected{{end}}>最新发布</option><option value="oldest">最早发布</option><option value="title">标题排序</option></select>
+      <button class="button button-secondary" data-apply-filters type="submit">应用</button>
+    </form>
+    {{end}}
+    {{if index .Settings "show_view_switch"}}<nav class="view-switch" aria-label="文档显示方式" hidden><a data-list-view="grid" href="?q={{.SearchQuery}}&amp;category={{.CategorySlug}}&amp;view=grid" aria-label="卡片视图"{{if eq (index .Settings "list_default_view") "grid"}} aria-current="true"{{end}}>{{template "icon" "grid"}}</a><a data-list-view="list" href="?q={{.SearchQuery}}&amp;category={{.CategorySlug}}&amp;view=list" aria-label="列表视图"{{if eq (index .Settings "list_default_view") "list"}} aria-current="true"{{end}}>{{template "icon" "list"}}</a></nav>{{end}}
+  </div>
+  {{end}}
+</div>
+{{if or .SearchQuery .CategorySlug}}<nav class="active-filters" aria-label="已选筛选条件">{{if .SearchQuery}}<a data-clear-filter="q" href="?category={{.CategorySlug}}" aria-label="清除关键词 {{.SearchQuery}}">关键词：{{.SearchQuery}} {{template "icon" "close"}}</a>{{end}}{{if .CategorySlug}}<a data-clear-filter="category" href="?q={{.SearchQuery}}" aria-label="清除分类 {{.Category}}">分类：{{.Category}} {{template "icon" "close"}}</a>{{end}}<a class="reset-filters" href="{{if eq .Kind "author"}}?{{else}}/explore/{{end}}">重置筛选</a></nav>{{end}}
+{{end}}

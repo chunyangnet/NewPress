@@ -1,0 +1,5 @@
+.error-page{text-align:center;min-height:65vh;padding-block:60px 90px}
+.error-number{display:block;color:#c8d2df;font-family:var(--serif);font-size:125px;line-height:1.5}
+.error-page h1{font-size:35px}
+.error-page>p:not(.eyebrow){color:var(--muted);margin-top:18px}
+.error-page .outline-button{margin-top:30px}

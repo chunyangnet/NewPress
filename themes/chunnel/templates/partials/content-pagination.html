@@ -1,0 +1,10 @@
+{{define "content-pagination"}}
+<div class="discovery-page-footer">
+  <p>共 <b>{{.Total}}</b> 篇{{if .Total}} · {{.From}}–{{.To}}{{end}}</p>
+  {{if .Total}}<nav class="pagination explore-pagination" aria-label="内容分页" data-server-pagination>
+    {{if .HasPrevious}}<a href="{{.PreviousURL}}" rel="prev" aria-label="上一页">{{template "icon" "chevron-left"}}</a>{{end}}
+    {{range .Links}}{{if .Ellipsis}}<span class="pagination-ellipsis" aria-hidden="true">…</span>{{else if .Current}}<span class="is-current" aria-current="page">{{.Page}}</span>{{else}}<a href="{{.URL}}" aria-label="第 {{.Page}} 页">{{.Page}}</a>{{end}}{{end}}
+    {{if .HasNext}}<a href="{{.NextURL}}" rel="next" aria-label="下一页">{{template "icon" "chevron-right"}}</a>{{end}}
+  </nav>{{end}}
+</div>
+{{end}}

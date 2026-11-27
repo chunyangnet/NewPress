@@ -1,0 +1,5 @@
+{{define "theme-settings-identity"}}
+{{if .Parent}}<div class="admin-callout" data-theme-settings-identity><span>{{template "icon" "diamond"}}</span><div><strong>当前子主题：{{.ThemeName}}（{{.Theme}} {{.ThemeVersion}}）</strong><p>父主题：<a href="/admin/themes/#theme-{{.Parent.Slug}}">{{.Parent.Name}} {{.Parent.Version}}</a> · 要求 {{.Parent.Requires}} · <a href="/admin/appearance/updates/#extension-{{.Parent.Slug}}">父主题版本管理</a></p><p>配置单独保存到当前子主题。继承的是字段定义与默认值，不是父主题已保存配置；修改、导入或恢复默认值不会更改父主题设置。</p></div></div>{{end}}
+{{end}}
+
+{{define "theme-setting-source"}}{{if .Source}}<small class="theme-setting-source" data-setting-source>{{.Source}} · {{.DefaultHint}}</small>{{end}}{{end}}

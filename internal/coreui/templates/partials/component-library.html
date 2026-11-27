@@ -1,0 +1,12 @@
+{{define "component-library"}}
+<dialog class="npl-dialog" data-component-library aria-labelledby="npl-title">
+  <header class="npl-header"><div><h2 id="npl-title">文章组件库</h2><p>选择组件并设置内容与样式。</p></div><button type="button" class="npl-close" data-component-close aria-label="关闭组件库">×</button></header>
+  <div class="npl-workspace">
+    <section class="npl-browser" aria-label="组件分类"><label class="npl-search"><span class="sr-only">搜索组件</span><input type="search" data-component-search placeholder="搜索组件，如代码、音频…" maxlength="60"></label><nav class="npl-categories" data-component-categories aria-label="组件分类"></nav><div class="npl-list" data-component-list></div></section>
+    <section class="npl-settings" aria-label="组件设置"><div data-component-fields></div></section>
+    <section class="npl-preview-pane" aria-label="组件预览"><div class="npl-preview-heading"><b data-component-name>效果预览</b></div><div class="npl-preview" data-component-preview></div><p class="npl-preview-note">预览用于检查排版与内容。{{if eq .Admin.Current "shop"}}保存商品后可在详情页查看实际效果。{{else}}保存后可通过“预览草稿”查看当前主题的实际效果。{{end}}</p></section>
+  </div>
+  <footer class="npl-footer"><p role="status" aria-live="polite" data-component-status>选择一个组件开始</p><button type="button" class="admin-button admin-button-primary" data-component-insert disabled>插入组件</button></footer>
+  <datalist id="npw-languages"><option value="auto">自动检测</option><option value="plaintext">纯文本</option><option value="python"><option value="javascript"><option value="typescript"><option value="go"><option value="java"><option value="cpp"><option value="c"><option value="csharp"><option value="rust"><option value="php"><option value="ruby"><option value="swift"><option value="kotlin"><option value="dart"><option value="sql"><option value="bash"><option value="powershell"><option value="json"><option value="yaml"><option value="xml"><option value="html"><option value="css"><option value="scss"><option value="markdown"><option value="dockerfile"><option value="nginx"><option value="lua"><option value="r"><option value="matlab"><option value="scala"><option value="perl"><option value="haskell"><option value="elixir"><option value="clojure"><option value="objectivec"><option value="protobuf"><option value="graphql"><option value="diff"><option value="toml"><option value="ini"><option value="makefile"><option value="wasm"><option value="latex"></datalist>
+</dialog>
+{{end}}

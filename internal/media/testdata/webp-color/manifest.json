@@ -1,0 +1,65 @@
+{
+  "pillow": "12.3.0",
+  "libwebp": "1.6.0",
+  "fixtures": [
+    {
+      "name": "palette",
+      "lossless": false,
+      "orientation": 1,
+      "width": 301,
+      "height": 201
+    },
+    {
+      "name": "alpha",
+      "lossless": false,
+      "orientation": 1,
+      "width": 301,
+      "height": 201
+    },
+    {
+      "name": "alpha-rotated",
+      "lossless": false,
+      "orientation": 6,
+      "width": 201,
+      "height": 301
+    },
+    {
+      "name": "gradient",
+      "lossless": false,
+      "orientation": 1,
+      "width": 257,
+      "height": 129
+    },
+    {
+      "name": "lossless",
+      "lossless": true,
+      "orientation": 1,
+      "width": 301,
+      "height": 201
+    },
+    {
+      "name": "narrow",
+      "lossless": false,
+      "orientation": 1,
+      "width": 1,
+      "height": 17
+    }
+  ],
+  "sha256": {
+    "alpha-rotated.png": "44ec59227974af64d9fd59c2e7d366343ad1a5572c1414c632cd521d3e535484",
+    "alpha-rotated.webp": "753ecb5ba17a8b865f80855edc58f07676959d50769fb802073d5dcc603c2e3a",
+    "alpha.png": "37d2e6a4ca117eee75fe3882c92a7f5252ebe6065881d95be67f57e76cd39664",
+    "alpha.webp": "439e60558061a87caddc4ee10cc4d262df8ec656a90b023d77984354d7a76e48",
+    "gradient.png": "9e809e29117055ebf41ab98ec493b4ee38813cc692886d8b81a7916c90a0e2fa",
+    "gradient.webp": "8167577e4aebdb7111872f2b62f36dcb82553280a5ce5adf4f2014d30aaac3bf",
+    "large-alpha.webp": "7213c27c099083fd00edcf5aa2f942cf5248efbf18067325863225a8a247955e",
+    "large-rotated.webp": "fe1d3136ef8e2935b84085c1612ed996ce633e1afa5a2f6eb9a4456532af3337",
+    "large.webp": "4d9784d2a4fa01a3e7d04501e439c22cb784e151ddd772e98acf12b7b10d44ae",
+    "lossless.png": "0a02f0b2ef8ea4f30f251fff53b05a8a964fd654da0e83a4a13ed864862be42f",
+    "lossless.webp": "93004cf8426938d9928a969957eb2b087b635b2c86fc2df1f2bbc1e0bdd38f12",
+    "narrow.png": "5bb90f3da193935db3c4089edb7ba21689e051ec7908ef9beee4f276fff742ce",
+    "narrow.webp": "192bc654919e2b9688b7682ec83db62714e32d2882889279588fdd2a2af3704a",
+    "palette.png": "ac21d440a84ecfb25b882f4543c0d085bd3dd1fa45f30c5673f2474cdd52aa08",
+    "palette.webp": "34065f869ccbd3b0af483b9dcb196c59adc074c73cd9be4ea7810a8a728237f3"
+  }
+}

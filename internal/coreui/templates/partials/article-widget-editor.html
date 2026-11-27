@@ -1,0 +1,21 @@
+{{define "article-widget-editor"}}
+<dialog class="admin-article-widget-dialog" data-editor-widget-dialog aria-labelledby="article-widget-title" aria-describedby="article-widget-description">
+  <header class="admin-article-widget-heading"><div><small>内容小组件</small><h2 id="article-widget-title">插入文章卡片</h2><p id="article-widget-description">插入本站文章，读者可直接继续阅读。</p></div><button class="admin-media-icon-button" type="button" data-editor-widget-close aria-label="关闭文章卡片选择器">{{template "icon" "x"}}</button></header>
+  <div class="admin-article-widget-workspace">
+    <section class="admin-article-widget-library" aria-label="选择本站文章">
+      <form class="admin-article-widget-search" data-editor-widget-search role="search"><label class="sr-only" for="article-widget-query">搜索本站文章</label><input id="article-widget-query" name="q" type="search" maxlength="80" placeholder="搜索已发布文章…" autocomplete="off"><button class="admin-button admin-button-quiet" type="submit">{{template "icon" "search"}}查找</button></form>
+      <p class="admin-article-widget-status" data-editor-widget-status role="status" aria-live="polite"></p>
+      <div class="admin-article-widget-results" data-editor-widget-results></div>
+      <nav class="admin-article-widget-pagination" aria-label="文章分页"><button class="admin-media-icon-button" type="button" data-editor-widget-previous aria-label="上一页文章" disabled>{{template "icon" "chevron-left"}}</button><span data-editor-widget-page>1 / 1</span><button class="admin-media-icon-button" type="button" data-editor-widget-next aria-label="下一页文章" disabled>{{template "icon" "chevron-right"}}</button></nav>
+    </section>
+    <section class="admin-article-widget-options" aria-label="文章卡片预览与样式">
+      <div class="admin-article-widget-section-title"><b>展示样式</b><span>随主题适配</span></div>
+      <fieldset class="admin-article-widget-layout"><legend class="sr-only">选择文章卡片样式</legend><label><input type="radio" name="article_widget_layout" value="card" checked><span><b>图文卡片</b><small>封面与摘要，完整推荐</small></span></label><label><input type="radio" name="article_widget_layout" value="compact"><span><b>紧凑链接</b><small>轻巧引用，融入行文</small></span></label></fieldset>
+      <div class="admin-article-widget-preview-label">内容预览</div>
+      <div class="admin-article-widget-preview" data-editor-widget-preview><p class="admin-article-widget-placeholder">选择一篇文章<br><span>在这里看看引用效果</span></p></div>
+      <p class="admin-article-widget-note">配色、字体与圆角跟随前台主题，保存后可在前台查看实际效果。文章更新后，引用信息也会更新。</p>
+    </section>
+  </div>
+  <footer class="admin-article-widget-footer"><span>仅引用公开文章 · 不复制正文</span><button class="admin-button admin-button-primary" type="button" data-editor-widget-insert disabled>{{template "icon" "plus"}}插入文章卡片</button></footer>
+</dialog>
+{{end}}

@@ -1,0 +1,28 @@
+{{define "content"}}
+{{if eq .BodyClass "is-page is-announcements"}}
+{{template "announcement-page" .}}
+{{else}}
+{{if index .ThemeValues "reading_progress"}}<div class="reading-progress" data-reading-progress></div>{{end}}
+<article class="article content-page shell">
+  <header class="article-header content-page-header">
+    <a class="back-link" href="/">{{template "icon" "arrow-left"}}返回首页</a>
+    <span class="article-category">站点页面</span>
+    {{template "article-badge-inline" .Post.ArticleBadge}}
+    <h1>{{.Post.Title}}</h1>
+    {{if .Post.Excerpt}}<p class="article-deck">{{.Post.Excerpt}}</p>{{end}}
+    <div class="content-page-meta"><span>{{template "icon" "badge-check"}}由 {{.Post.AuthorName}} 维护</span><span>更新于 {{dateIn .Post.UpdatedAt .Site.Timezone}}</span></div>
+  </header>
+  {{if .Post.CoverURL}}<figure class="article-cover"><img {{with index .Images .Post.CoverURL}}src="{{.CardSrc}}" srcset="{{.CardSrcSet}}" sizes="(max-width: 800px) 100vw, 1000px"{{else}}src="{{.Post.CoverURL}}"{{end}} alt="" {{if index .ThemeValues "lazy_images"}}loading="lazy"{{end}} width="1200" height="650"></figure>{{end}}
+  <div class="article-grid content-page-grid">
+    <aside class="article-rail"><span>页面导航</span><a href="#page-body">页面正文</a><a href="#page-end">页面底部</a></aside>
+    <div class="article-content">
+      <div id="page-body" class="prose">{{responsiveHTML .Post.ContentHTML .BodyImages}}</div>
+      <footer id="page-end" class="article-footer content-page-footer">
+        <h2>继续浏览站点</h2>
+        <a class="ui-button ui-button-primary" href="/">返回首页 {{template "icon" "arrow-right"}}</a>
+      </footer>
+    </div>
+  </div>
+</article>
+{{end}}
+{{end}}

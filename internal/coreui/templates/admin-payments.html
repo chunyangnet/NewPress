@@ -1,0 +1,17 @@
+{{define "content"}}
+<section class="admin-page payments-admin" data-payments-admin data-user-id="{{.Admin.Principal.UserID}}" data-csrf="{{.Admin.CSRFToken}}" data-read-only="{{.Admin.ReadOnly}}">
+  <header class="admin-page-heading"><div><h1>支付与订单</h1><p>配置支付渠道、充值商品、会员方案和兑换规则，查询订单。</p></div><a href="/billing/" class="admin-button admin-button-secondary">打开收银台 {{template "icon" "chevron-right"}}</a></header>
+  <p class="payments-status" data-payments-status role="status" aria-live="polite">正在读取支付配置…</p>
+  <noscript><p>启用 JavaScript 后可配置支付渠道与查看订单。</p></noscript>
+  {{if .Admin.ReadOnly}}<p class="payments-note">当前为只读模式。</p>{{end}}
+  <nav class="payments-tabs" aria-label="支付设置"><a href="#payments-general">基础设置</a><a href="#payments-channels">支付渠道</a><a href="#payments-products">充值与会员</a><a href="#payments-exchanges">货币兑换</a><a href="#payments-orders">订单记录</a></nav>
+  <form data-payments-form hidden autocomplete="off"><fieldset data-payments-fields {{if .Admin.ReadOnly}}disabled{{end}}>
+    <section class="payments-section" id="payments-general"><header><div><span class="payments-kicker">01 / 基础配置</span><h2>基础设置</h2></div><span class="payments-state" data-payments-enabled-label></span></header><div data-payment-general></div></section>
+    <section class="payments-section" id="payments-channels"><header><div><span class="payments-kicker">02 / 渠道配置</span><h2>支付渠道</h2><p>配置商户凭据后启用。相同协议可以添加多个渠道。</p></div><button type="button" class="admin-button admin-button-secondary" data-payments-add="channels">添加渠道</button></header><div data-payment-channels></div></section>
+    <section class="payments-section" id="payments-products"><header><div><span class="payments-kicker">03 / 商品配置</span><h2>充值与会员商品</h2><p>售价、到账数量和会员天数均以服务器记录为准。</p></div><button type="button" class="admin-button admin-button-secondary" data-payments-add="products">添加商品</button></header><div data-payment-products></div></section>
+    <section class="payments-section" id="payments-exchanges"><header><div><span class="payments-kicker">04 / 兑换配置</span><h2>站内货币兑换</h2><p>按方向设置固定比例与手续费。兑换结果向下保留目标货币支持的小数位。</p></div><button type="button" class="admin-button admin-button-secondary" data-payments-add="exchanges">添加规则</button></header><div data-payment-exchanges></div></section>
+    <div class="payments-savebar"><span data-payments-version></span><button type="submit" class="admin-button admin-button-primary" data-payments-save>保存支付设置</button></div>
+  </fieldset></form>
+  <section class="payments-section" id="payments-orders"><header><div><span class="payments-kicker">05 / 订单查询</span><h2>订单记录</h2><p>最近 100 笔订单，也可按完整订单号查询历史记录。</p></div><button type="button" class="admin-button admin-button-secondary" data-payments-orders-refresh>更新订单</button></header><form class="payments-order-lookup" data-payments-order-lookup><label>查询订单<input name="order" type="search" maxlength="35" placeholder="输入完整 np_ 订单号"></label><button class="admin-button admin-button-secondary">查询</button></form><div data-payment-orders><p class="payments-empty">正在读取订单…</p></div></section>
+</section>
+{{end}}

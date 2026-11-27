@@ -1,0 +1,112 @@
+{{define "content"}}
+<section class="admin-navigation-page" data-navigation-editor data-explore-editor="{{.MenuAdmin.ExploreEditor}}" data-can-write="{{.MenuAdmin.CanWrite}}">
+  <header class="admin-page-heading"><h1>导航菜单</h1><div class="admin-navigation-shortcuts"><a class="admin-button admin-button-quiet" href="/admin/navigation/?location=explore">发现页导航</a><a class="admin-button admin-button-quiet" href="/admin/navigation/?location=mobile">移动底栏菜单</a><a class="admin-button admin-button-quiet" href="/admin/navigation/?location=mobile_action">中央按钮</a></div></header>
+  {{if .FeatureStatus}}{{template "admin-feature-status" .}}{{end}}
+
+  {{if .Admin.ReadOnly}}<div class="admin-callout admin-callout-warning" role="status"><span>{{template "icon" "triangle-alert"}}</span><div><strong>当前为只读导航预览</strong></div></div>{{end}}
+  {{if .MenuAdmin.Notice.Message}}<div class="admin-callout admin-callout-{{.MenuAdmin.Notice.Tone}}" role="status"><span>{{if eq .MenuAdmin.Notice.Tone "success"}}{{template "icon" "check-circle"}}{{else}}{{template "icon" "triangle-alert"}}{{end}}</span><div><strong>{{if eq .MenuAdmin.Notice.Tone "success"}}导航路径已同步{{else}}导航配置未保存{{end}}</strong><p>{{.MenuAdmin.Notice.Message}}</p></div></div>{{end}}
+
+  <section class="admin-callout" aria-label="发现页已发布内容来源" data-explore-source><span>{{template "icon" "compass"}}</span><div><strong>{{.MenuAdmin.ExploreSource.Title}}</strong><p>{{if .MenuAdmin.ExploreSource.MenuName}}菜单：{{.MenuAdmin.ExploreSource.MenuName}}。{{end}}{{.MenuAdmin.ExploreSource.Detail}}</p><p>这里显示已保存的来源，未保存的编辑不会影响前台。</p><p>{{if .MenuAdmin.ExploreSource.EditURL}}<a href="{{.MenuAdmin.ExploreSource.EditURL}}">编辑来源菜单</a> · {{end}}<a href="/admin/navigation/?location=explore">配置发现页专属菜单</a> · <a href="/explore/" target="_blank" rel="noopener">查看发现页（新窗口）</a></p></div></section>
+
+  <div class="admin-navigation-layout">
+    <aside class="admin-navigation-registry">
+      <header><h2>全部菜单</h2></header>
+      <nav aria-label="菜单列表">
+        {{range .MenuAdmin.Menus}}<a class="{{if .Active}}is-active{{end}}" href="{{.URL}}"><span class="admin-navigation-menu-index">{{if .Active}}{{template "icon" "route"}}{{else}}{{template "icon" "panels-top-left"}}{{end}}</span><span><b>{{.Menu.Name}}</b><small>{{.LocationLabel}}</small></span><em>{{len .Menu.Items}}</em></a>{{else}}<div class="admin-navigation-registry-empty"><span>{{template "icon" "route"}}</span><b>还没有菜单</b><small>创建后即可把入口添加到 Chunnel。</small></div>{{end}}
+      </nav>
+      <details class="admin-navigation-create" {{if eq .MenuAdmin.FormMode "create"}}open{{end}}>
+        <summary>{{template "icon" "plus"}}创建新菜单{{template "icon" "chevron-down"}}</summary>
+        <form action="/admin/navigation/" method="post">
+          <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><input type="hidden" name="action" value="create">
+          <fieldset {{if not .MenuAdmin.CanWrite}}disabled{{end}}>
+            <label><span>菜单名称</span><input type="text" name="name" value="{{.MenuAdmin.CreateForm.Name}}" maxlength="80" required placeholder="例如：页脚服务导航">{{if and (eq .MenuAdmin.FormMode "create") (index .MenuAdmin.FieldErrors "name")}}<small class="admin-field-error">{{index .MenuAdmin.FieldErrors "name"}}</small>{{end}}</label>
+            <label><span>稳定别名</span><input type="text" name="slug" value="{{.MenuAdmin.CreateForm.Slug}}" maxlength="96" placeholder="可留空自动生成">{{if and (eq .MenuAdmin.FormMode "create") (index .MenuAdmin.FieldErrors "slug")}}<small class="admin-field-error">{{index .MenuAdmin.FieldErrors "slug"}}</small>{{end}}</label>
+            <label><span>菜单说明</span><textarea name="description" rows="3" maxlength="240" placeholder="绑定发现页时，此说明会公开显示">{{.MenuAdmin.CreateForm.Description}}</textarea></label>
+            <div class="admin-navigation-create-locations"><span>初始位置</span>{{range .MenuAdmin.Locations}}<label class="{{if .OccupiedBy}}is-occupied{{end}}"><input type="checkbox" name="locations" value="{{.Value}}" {{if .CreateChecked}}checked{{end}} {{if .OccupiedBy}}disabled{{end}}><i></i><span><b>{{.Label}}</b><small>{{if .OccupiedBy}}已由「{{.OccupiedBy}}」占用{{else}}{{.Detail}}{{end}}</small></span></label>{{end}}</div>
+            <button class="admin-button admin-button-primary" type="submit">{{template "icon" "plus"}}创建菜单</button>
+          </fieldset>
+        </form>
+      </details>
+    </aside>
+
+    <div class="admin-navigation-canvas">
+      {{if .MenuAdmin.HasSelected}}
+      <nav class="admin-section-tabs admin-settings-nav" aria-label="菜单设置">{{template "admin-settings-nav-item" (dict "Target" "navigation-items" "Title" "菜单结构")}}{{template "admin-settings-nav-item" (dict "Target" "navigation-properties" "Title" "属性与位置")}}</nav><section class="admin-navigation-menu-meta" id="navigation-properties" data-settings-section>
+        <header><div><h2>{{.MenuAdmin.Selected.Name}}</h2>{{if .MenuAdmin.Selected.Description}}<p>{{.MenuAdmin.Selected.Description}}</p>{{end}}</div><code>{{.MenuAdmin.Selected.Slug}}</code></header>
+        <div>
+          <form id="navigation-meta-form" action="/admin/navigation/" method="post" data-navigation-meta-form data-admin-native-save{{if eq .MenuAdmin.FormMode "update"}} data-admin-allow-clean{{end}}>
+            <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><input type="hidden" name="action" value="update"><input type="hidden" name="id" value="{{.MenuAdmin.Selected.ID}}"><input type="hidden" name="version" value="{{.MenuAdmin.EditForm.Version}}">
+            <fieldset {{if not .MenuAdmin.CanWrite}}disabled{{end}}>
+              <div class="admin-navigation-meta-fields">
+                <label><span>菜单名称</span><input type="text" name="name" value="{{.MenuAdmin.EditForm.Name}}" maxlength="80" required>{{if and (eq .MenuAdmin.FormMode "update") (index .MenuAdmin.FieldErrors "name")}}<small class="admin-field-error">{{index .MenuAdmin.FieldErrors "name"}}</small>{{end}}</label>
+                <label><span>稳定别名</span><input type="text" name="slug" value="{{.MenuAdmin.EditForm.Slug}}" maxlength="96" required>{{if and (eq .MenuAdmin.FormMode "update") (index .MenuAdmin.FieldErrors "slug")}}<small class="admin-field-error">{{index .MenuAdmin.FieldErrors "slug"}}</small>{{end}}</label>
+                <label class="is-wide"><span>菜单说明</span><textarea name="description" rows="2" maxlength="240">{{.MenuAdmin.EditForm.Description}}</textarea></label>
+              </div>
+              <p>绑定「发现页导航」后，菜单名称和说明会公开显示为页面标题和介绍，请勿填写内部备注。属性与位置、菜单结构需要分别保存。</p>
+              <div class="admin-navigation-location-grid"><span>主题位置</span>{{range .MenuAdmin.Locations}}<label class="{{if .OccupiedBy}}is-occupied{{end}}"><input type="checkbox" name="locations" value="{{.Value}}" {{if .Checked}}checked{{end}} {{if .OccupiedBy}}disabled{{end}}><i></i><span><b>{{.Label}}</b><small>{{if .OccupiedBy}}已由「{{.OccupiedBy}}」占用{{else}}{{.Detail}}{{end}}</small></span></label>{{end}}</div>
+              {{if and (eq .MenuAdmin.FormMode "update") (index .MenuAdmin.FieldErrors "locations")}}<small class="admin-field-error">{{index .MenuAdmin.FieldErrors "locations"}}</small>{{end}}
+              {{template "admin-savebar" (dict "FormID" "navigation-meta-form" "ReadOnly" (not .MenuAdmin.CanWrite) "Label" "保存属性与位置")}}
+            </fieldset>
+          </form>
+        </div>
+      </section>
+
+      <form id="navigation-items" data-settings-section class="admin-navigation-items-form" action="/admin/navigation/" method="post" data-navigation-items-form>
+        <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><input type="hidden" name="action" value="save_items"><input type="hidden" name="id" value="{{.MenuAdmin.Selected.ID}}"><input type="hidden" name="version" value="{{.MenuAdmin.Selected.Version}}">
+        <textarea name="items_json" hidden data-navigation-payload>{{.MenuAdmin.ItemsJSON}}</textarea>
+        <fieldset {{if not .MenuAdmin.CanWrite}}disabled{{end}}>
+          <header class="admin-navigation-canvas-head"><div><h2>菜单结构</h2><p><b data-navigation-count>{{len .MenuAdmin.FlatItems}}</b> / 80 个项目 · 拖动同层排序，按钮调整父子关系。</p></div><button type="button" data-navigation-add-custom>{{template "icon" "plus"}}自定义链接</button></header>
+          {{if .MenuAdmin.ExploreEditor}}<p>发现页中，带子项的顶层是分组，无子项的顶层是独立入口。分组标题也会跳转，链接地址必填；最多支持三层。展开方式仅用于其他支持它的导航位置，不改变发现页分组布局。</p>{{end}}
+          {{if index .MenuAdmin.FieldErrors "items"}}<div class="admin-navigation-item-error" role="alert">{{template "icon" "triangle-alert"}}<span>{{index .MenuAdmin.FieldErrors "items"}}</span></div>{{end}}
+          {{range $key, $message := .MenuAdmin.FieldErrors}}{{if ne $key "items"}}<p class="admin-field-error" role="alert">{{$message}}</p>{{end}}{{end}}
+          <div class="admin-navigation-list {{if not .MenuAdmin.FlatItems}}is-empty{{end}}" data-navigation-list>
+            {{range .MenuAdmin.FlatItems}}{{$row := .}}
+            <article class="admin-navigation-item {{.DepthClass}}" draggable="true" data-navigation-item data-nav-id="{{.Item.ID}}" data-nav-parent="{{.Item.ParentID}}" data-nav-depth="{{.Depth}}" data-nav-type="{{.Item.Type}}" data-nav-object-id="{{.Item.ObjectID}}">
+              <header><button class="admin-navigation-drag" type="button" aria-label="拖动排序" data-navigation-drag>{{template "icon" "grip-vertical"}}</button><span class="admin-navigation-item-icon nav-item-{{.Item.ID}}">{{if .Item.Icon}}{{template "icon" .Item.Icon}}{{else}}{{template "icon" "route"}}{{end}}</span><div><b data-navigation-card-title>{{.Item.Label}}</b><small><em>{{.TypeLabel}}</em> · <span data-navigation-depth-label>{{if eq .Depth 0}}顶层入口{{else}}第 {{.Depth}} 级子项{{end}}</span></small></div><code>#{{.Item.ID}}</code><div class="admin-navigation-item-actions"><button type="button" aria-label="上移" data-navigation-move="up">{{template "icon" "arrow-up"}}</button><button type="button" aria-label="下移" data-navigation-move="down">{{template "icon" "arrow-down"}}</button><button type="button" aria-label="缩进" data-navigation-indent>{{template "icon" "corner-down-right"}}</button><button type="button" aria-label="减少缩进" data-navigation-outdent>{{template "icon" "corner-up-left"}}</button><button class="is-danger" type="button" aria-label="删除项目" data-navigation-remove>{{template "icon" "trash-2"}}</button></div></header>
+              <div class="admin-navigation-item-fields">
+                <label><span>导航文字</span><input type="text" value="{{.Item.Label}}" maxlength="80" required data-nav-field="label"></label>
+                <label class="is-wide"><span>链接地址</span><input type="text" value="{{.Item.URL}}" maxlength="2048" required spellcheck="false" data-nav-field="url"></label>
+                <label><span>展开方式</span><select data-nav-field="presentation"><option value="standard" {{if eq .Item.Presentation "standard"}}selected{{end}}>普通链接</option><option value="dropdown" {{if eq .Item.Presentation "dropdown"}}selected{{end}}>紧凑下拉</option><option value="panel" {{if eq .Item.Presentation "panel"}}selected{{end}}>双列面板</option><option value="cards" {{if eq .Item.Presentation "cards"}}selected{{end}}>图标卡片</option></select></label>
+                <label><span>图标</span><select data-nav-field="icon" data-icon-select>{{range $.MenuAdmin.Icons}}<option value="{{.Value}}" {{if eq .Value $row.Item.Icon}}selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+                <label><span>强调色</span><input type="color" value="{{.AccentValue}}" data-nav-field="accent"></label>
+                <label class="is-wide"><span>辅助说明</span><textarea rows="2" maxlength="180" data-nav-field="description">{{.Item.Description}}</textarea></label>
+                {{template "admin-switch" (dict "NavField" "new_window" "Label" "新窗口打开" "Checked" (eq .Item.Target "blank"))}}
+                <label><span>链接关系</span><input type="text" value="{{.Item.Rel}}" maxlength="96" placeholder="nofollow ugc" data-nav-field="rel"></label>
+              </div>
+              {{template "admin-navigation-badge-fields" (dict "Badge" .Item.Badge)}}
+            </article>
+            {{end}}
+            <div class="admin-navigation-empty" data-navigation-empty><span>{{template "icon" "route"}}</span><b>尚未添加项目</b><p>从右侧内容库添加入口，或新建一个自定义链接。</p></div>
+          </div>
+          {{template "admin-savebar" (dict "FormID" "navigation-items" "Navigation" true "ReadOnly" (not .MenuAdmin.CanWrite) "Label" "保存菜单")}}
+        </fieldset>
+      </form>
+
+      <form class="admin-navigation-delete" action="/admin/navigation/" method="post" data-confirm="删除此菜单及全部项目？公开主题会回落到默认导航。">
+        <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="{{.MenuAdmin.Selected.ID}}"><input type="hidden" name="version" value="{{.MenuAdmin.Selected.Version}}"><button type="submit" {{if not .MenuAdmin.CanWrite}}disabled{{end}}>{{template "icon" "trash-2"}}删除「{{.MenuAdmin.Selected.Name}}」</button><span>删除会同时释放已分配的主题位置。</span>
+      </form>
+      {{else}}
+      <section class="admin-navigation-zero"><span>{{template "icon" "route"}}</span><h2>创建菜单</h2><p>创建菜单后，可以从公开内容、页面、分类、标签和系统入口中组合最多三层结构。</p><button type="button" data-navigation-open-create>{{template "icon" "plus"}}创建菜单</button></section>
+      {{end}}
+    </div>
+
+    <aside class="admin-navigation-library">
+      <header><h2>添加项目</h2></header>
+      <div class="admin-navigation-source-search"><span>{{template "icon" "search"}}</span><input type="search" placeholder="筛选标题或地址" aria-label="筛选导航入口" data-navigation-source-search></div>
+      <div class="admin-navigation-source-groups">
+        {{range .MenuAdmin.SourceGroups}}<details {{if eq .ID "builtins"}}open{{end}} data-navigation-source-group><summary><span>{{.Label}}</span><b>{{.Count}}</b>{{template "icon" "chevron-down"}}</summary><div>{{range .Sources}}<button type="button" data-navigation-source data-source-type="{{.Type}}" data-source-object-id="{{.ObjectID}}" data-source-label="{{.Label}}" data-source-url="{{.URL}}" data-source-description="{{.Description}}" data-source-icon="{{.Icon}}" {{if not $.MenuAdmin.CanWrite}}disabled{{end}}><span>{{template "icon" .Icon}}</span><p><b>{{.Label}}</b><small>{{if .Description}}{{.Description}}{{else}}{{.URL}}{{end}}</small></p>{{template "icon" "plus"}}</button>{{else}}<div class="admin-navigation-source-none">没有可用项目</div>{{end}}</div></details>{{end}}
+      </div>
+      <section class="admin-navigation-preview"><header><b>公开结构预览</b></header><ol data-navigation-preview></ol><p>移动底栏取前四个不同链接，中央按钮取独立菜单的首个有效顶层项目。可从入口库选择页面，修改文字、图标和跳转地址。角标按桌面效果预览。</p></section>
+
+    </aside>
+  </div>
+
+  <template data-navigation-item-template>
+    <article class="admin-navigation-item depth-0" draggable="true" data-navigation-item data-nav-id="" data-nav-parent="0" data-nav-depth="0" data-nav-type="custom" data-nav-object-id="0">
+      <header><button class="admin-navigation-drag" type="button" aria-label="拖动排序" data-navigation-drag>{{template "icon" "grip-vertical"}}</button><span class="admin-navigation-item-icon">{{template "icon" "route"}}</span><div><b data-navigation-card-title>新导航项目</b><small><em data-navigation-type-label>自定义</em> · <span data-navigation-depth-label>顶层入口</span></small></div><code data-navigation-id-label>最新</code><div class="admin-navigation-item-actions"><button type="button" aria-label="上移" data-navigation-move="up">{{template "icon" "arrow-up"}}</button><button type="button" aria-label="下移" data-navigation-move="down">{{template "icon" "arrow-down"}}</button><button type="button" aria-label="缩进" data-navigation-indent>{{template "icon" "corner-down-right"}}</button><button type="button" aria-label="减少缩进" data-navigation-outdent>{{template "icon" "corner-up-left"}}</button><button class="is-danger" type="button" aria-label="删除项目" data-navigation-remove>{{template "icon" "trash-2"}}</button></div></header>
+      <div class="admin-navigation-item-fields"><label><span>导航文字</span><input type="text" maxlength="80" required data-nav-field="label"></label><label class="is-wide"><span>链接地址</span><input type="text" maxlength="2048" required spellcheck="false" data-nav-field="url"></label><label><span>展开方式</span><select data-nav-field="presentation"><option value="standard">普通链接</option><option value="dropdown">紧凑下拉</option><option value="panel">双列面板</option><option value="cards">图标卡片</option></select></label><label><span>图标</span><select data-nav-field="icon" data-icon-select>{{range .MenuAdmin.Icons}}<option value="{{.Value}}">{{.Label}}</option>{{end}}</select></label><label><span>强调色</span><input type="color" value="{{index .ThemeValues "accent"}}" data-nav-field="accent"></label><label class="is-wide"><span>辅助说明</span><textarea rows="2" maxlength="180" data-nav-field="description"></textarea></label>{{template "admin-switch" (dict "NavField" "new_window" "Label" "新窗口打开")}}<label><span>链接关系</span><input type="text" maxlength="96" placeholder="nofollow ugc" data-nav-field="rel"></label></div>
+      {{template "admin-navigation-badge-fields" (dict)}}
+    </article>
+  </template>
+</section>
+{{end}}

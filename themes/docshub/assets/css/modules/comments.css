@@ -1,0 +1,238 @@
+.comments-section {
+  margin-top: 45px;
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+}
+.comments-section .section-heading h2 {
+  font-size: 20px;
+}
+.comments-section h2 small {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--subtle);
+}
+.comments-intro {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.8;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  margin: -8px 0 18px;
+}
+.comment {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+.comment header {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+}
+.comment time {
+  font-size: 11px;
+  color: var(--subtle);
+  margin-left: auto;
+}
+.comment > div {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+.comment .comment {
+  margin-left: 16px;
+  padding-bottom: 0;
+}
+.staff-label {
+  font-size: 10px;
+  padding: 1px 5px;
+  background: #eaf0ff;
+  color: var(--accent);
+  border-radius: 4px;
+}
+.comment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 22px;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+.comment-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.comment-form input,
+.comment-form textarea {
+  width: 100%;
+  border: 1px solid #dee3ef;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--page);
+  resize: vertical;
+}
+.comment-form .button {
+  align-self: flex-start;
+}
+.form-help {
+  font-size: 12px;
+  color: var(--subtle);
+  margin-top: 10px;
+}
+.form-notice {
+  background: #eaf4ff;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 13px;
+}
+.form-error {
+  font-size: 12px;
+  color: #c23e50;
+}
+.verification-box {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+}
+.verification-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+}
+.verification-heading span,
+.verification-status {
+  font-size: 11px;
+  color: var(--muted);
+}
+.verification-widget {
+  margin: 15px 0;
+  max-width: 100%;
+  overflow: auto;
+}
+.verification-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.verification-button {
+  background: var(--page);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.verification-local {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+}
+.verification-local label {
+  max-width: 150px;
+}
+.comments-empty {
+  padding: 18px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.comments-access {
+  padding: 18px 22px;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+}
+.comments-access .form-help {
+  margin: 0 0 12px;
+  color: var(--muted);
+}
+.comment-identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.comment-identity .icon {
+  width: 16px;
+  height: 16px;
+}
+.comment-identity strong {
+  color: var(--ink);
+}
+.comment-submit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.comment-submit > span {
+  color: var(--subtle);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.comment-form [aria-invalid=true] {
+  border-color: #c23e50;
+}
+.comment-form textarea {
+  min-height: 130px;
+  scroll-margin-top: 140px;
+}
+.comment-reply {
+  color: var(--muted);
+  padding: 5px 9px;
+  border-radius: 5px;
+  background: var(--panel);
+  font-size: 11px;
+  margin-top: 10px;
+}
+.comment-reply:hover,
+.comment-reply[aria-pressed=true] {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.reply-context {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 13px;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+}
+.reply-context button {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 0;
+  color: var(--muted);
+  background: transparent;
+  font-size: 11px;
+}
+.reply-context .icon {
+  width: 12px;
+  height: 12px;
+}
+.comment .comment {
+  border-left: 1px solid var(--line);
+  padding-left: 16px;
+}
+.form-help {
+  color: var(--muted);
+  line-height: 1.8;
+}

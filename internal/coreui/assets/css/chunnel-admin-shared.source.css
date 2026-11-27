@@ -1,0 +1,9 @@
+/* Shared prefix. Keep these imports in the legacy cascade order. */
+@import "./admin/editor-recovery.css";
+@import "./admin/shell.css";
+@import "./admin/dashboard.css";
+@import "./admin/appearance.css";
+@import "./admin/settings.css";
+@import "./admin/content.css";
+/* Includes shared editor, classification and responsive shell rules. */
+@import "./admin/media.css";

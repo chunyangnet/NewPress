@@ -1,0 +1,51 @@
+.access-settings{--access-accent:var(--admin-blue,var(--primary));--access-gutter:22px;min-width:0}
+html[data-style] body.admin-workbench .admin-setting-section.access-settings>header{padding-inline:var(--access-gutter)}
+.access-settings>form{padding:24px var(--access-gutter)}
+.access-settings fieldset{border:0;margin:0;padding:0;min-width:0}
+.access-config-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:4px 0 20px}
+.access-settings h3{margin:0;font-size:16px;font-weight:650}
+.access-settings p,.access-settings small{color:var(--muted);line-height:1.65}
+.access-config-heading p{margin:6px 0 0;font-size:13px}
+.access-config-badge{padding:4px 9px;background:var(--paper);border:1px solid var(--line);border-radius:5px;font-size:12px;color:var(--muted);white-space:nowrap}
+.access-config-base,.access-config-grid>label{display:flex;flex-direction:column;gap:7px;min-width:0;font-size:13px;font-weight:550}
+.access-config-base{margin-bottom:20px}
+.access-settings input:not([type=checkbox]),.access-settings select,.access-settings textarea{width:100%;min-width:0;box-sizing:border-box;border:1px solid var(--line);border-radius:6px;background:var(--white);color:var(--ink);padding:9px 11px;font:inherit;font-size:13px}
+.access-settings input:focus-visible,.access-settings textarea:focus-visible,.access-settings select:focus-visible{outline:2px solid var(--access-accent);outline-offset:2px}
+.access-settings input[type=checkbox]:not([role=switch]){width:16px;height:16px;margin:0;accent-color:var(--access-accent)}
+.access-settings small{font-size:12px;font-weight:400}
+.access-config-providers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.access-config-card{min-width:0;border:1px solid var(--line);border-radius:8px;padding:18px;transition:border-color .15s}
+.access-config-card[data-enabled=true]{border-color:var(--access-accent)}
+.access-config-card>header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
+.access-config-card h4{margin:0;font-size:15px}
+.access-config-provider-title{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;flex:1;min-width:0}
+.access-config-provider-title h4{white-space:nowrap}
+.access-config-apply{display:inline-flex;align-items:center;min-height:32px;white-space:nowrap;font-size:12px;color:var(--access-accent);text-decoration:none}
+.access-config-apply:hover{text-decoration:underline;text-underline-offset:3px}
+.access-config-apply:focus-visible{outline:2px solid var(--access-accent);outline-offset:3px;border-radius:3px}
+.access-config-toggle{flex:0 0 auto;white-space:nowrap}
+html[data-style] body.admin-workbench .access-settings .access-config-toggle>.admin-switch{width:auto;padding:0}
+.access-config-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.access-config-card .access-config-grid{grid-template-columns:minmax(0,1fr);gap:12px}
+.access-config-wide{grid-column:1/-1}
+.access-settings textarea{min-height:88px;font-family:Consolas,monospace;resize:vertical;line-height:1.6}
+.access-config-secret-actions{display:flex;align-items:center;gap:7px;font-weight:400;font-size:12px;color:var(--muted)}
+.access-config-callback{display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.access-config-callback input{font-family:Consolas,monospace!important;font-size:11px!important;background:var(--paper)!important}
+.access-config-callback button{flex-shrink:0;padding:6px 8px;font-size:12px}
+.access-config-note{font-size:12px;margin:14px 0 0}
+.access-config-note code{font-size:11px}
+.access-config-sms-heading{margin-top:32px;padding-top:28px;border-top:1px solid var(--line)}
+.access-config-provider-info{display:flex;justify-content:space-between;gap:12px;align-items:start;margin:8px 0 18px;font-size:12px}
+.access-config-provider-info p{margin:0}
+.access-config-provider-info a{white-space:nowrap;color:var(--access-accent)}
+.access-config-footer{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:26px;padding:18px 0;border-top:1px solid var(--line)}
+.access-config-footer>div{display:flex;gap:8px;flex-shrink:0}
+.access-config-footer p{margin:0;font-size:13px;overflow-wrap:anywhere}
+.access-config-test{display:grid;grid-template-columns:minmax(0,1fr) 220px auto;gap:14px;align-items:end;border:1px solid var(--line);border-radius:8px;padding:18px;background:var(--paper)}
+.access-config-test h3{font-size:14px}.access-config-test p{font-size:12px;margin:6px 0 0}.access-config-test>label{font-size:12px;display:grid;gap:6px}
+.access-config-test>[role=status]{grid-column:1/-1;margin:0;overflow-wrap:anywhere}.access-config-test>[role=status]:empty{display:none}
+.access-settings [data-tone=error]{color:var(--control-danger,#b42318)}.access-settings [data-tone=success]{color:var(--control-success,#18794e)}
+.access-settings [hidden]{display:none!important}
+@media(max-width:1100px){.access-config-test{grid-template-columns:minmax(0,1fr) auto}.access-config-test>div{grid-column:1/-1}}
+@media(max-width:720px){.access-settings{--access-gutter:18px}.access-settings>form{padding-block:18px}.access-config-providers,.access-config-grid,.access-config-test{grid-template-columns:minmax(0,1fr)}.access-config-card{padding:15px}.access-config-footer{align-items:stretch;flex-direction:column}.access-config-footer>div{justify-content:flex-end;flex-wrap:wrap}.access-config-provider-info{flex-direction:column}.access-config-test>button{width:100%}.access-config-heading{align-items:start}.access-config-badge{white-space:normal}}

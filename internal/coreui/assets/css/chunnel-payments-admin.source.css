@@ -1,0 +1,69 @@
+html:has(.payments-admin) { min-width: 0; }
+.payments-admin { color: var(--ink); min-width: 0; }
+.payments-admin [hidden] { display: none !important; }
+.payments-admin fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.payments-admin .admin-page-heading p { color: var(--muted); font-size: 13px; line-height: 1.8; margin: 10px 0 0; }
+.payments-main { min-width: 0; }
+.payments-tabs { display: none; }
+.payments-section { scroll-margin-top: 90px; padding: 24px; border: 1px solid var(--line); border-radius: var(--admin-radius, 8px); background: var(--white); min-width: 0; }
+.payments-section > header { display: flex; justify-content: space-between; gap: 20px; align-items: center; }
+.payments-kicker { display: none; }
+.payments-section h2 { font-size: 16px; font-weight: 500; line-height: 1.5; margin: 0; }
+.payments-section header p { margin-top: 6px; }
+.payments-section header p, .payments-help, .payments-note, .payments-empty { font-size: 12px; font-weight: 400; line-height: 1.85; color: var(--muted); }
+.payments-help { margin: 8px 0 12px; }
+.payments-note { margin: 0 0 16px; }
+.payments-empty { padding: 32px 20px; margin: 0; border: 1px dashed var(--line); border-radius: 6px; text-align: center; }
+.payments-grid { display: grid; min-width: 0; }
+.payments-field, .payments-order-lookup label { display: grid; gap: 8px; min-width: 0; font-size: 13px; line-height: 20px; font-weight: 400; color: var(--ink); }
+.payments-field > span { padding-top: 10px; }
+.payments-field > small { font-size: 12px; font-weight: 400; line-height: 1.75; color: var(--muted); }
+.payments-admin input:not([type=checkbox]), .payments-admin select, .payments-admin textarea { min-width: 0; width: 100%; max-width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; font: inherit; font-size: 14px; line-height: 1.6; background: var(--white); color: var(--ink); }
+.payments-admin textarea { resize: vertical; line-height: 1.8; }
+.payments-admin input:focus-visible, .payments-admin textarea:focus-visible, .payments-admin select:focus-visible { outline: 2px solid color-mix(in srgb, var(--primary) 25%, transparent); outline-offset: 2px; }
+.payments-grid > .admin-switch { border-bottom: 1px solid var(--line); }
+.payments-editor { border: 1px solid var(--line); border-radius: 6px; margin: 0 0 12px; background: var(--white); }
+.payments-editor:last-child { margin-bottom: 0; }
+.payments-editor > summary { display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 14px 16px; list-style: none; min-width: 0; }
+.payments-editor > summary::-webkit-details-marker { display: none; }
+.payments-editor > summary::after { content: '＋'; margin-left: auto; color: var(--muted); flex-shrink: 0; }
+.payments-editor[open] > summary::after { content: '−'; }
+.payments-editor > summary strong { font-size: 13px; font-weight: 500; overflow-wrap: anywhere; min-width: 0; }
+.payments-state { font-size: 11px; line-height: 1.5; white-space: nowrap; background: var(--paper); color: var(--muted); padding: 4px 8px; border-radius: 4px; }
+.payments-state[data-enabled=true] { background: color-mix(in srgb, var(--primary) 9%, var(--white)); color: var(--primary); }
+.payments-editor-body { padding: 0 16px 16px; border-top: 1px solid var(--line); }
+.payments-editor footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line); padding-top: 8px; margin-top: 18px; }
+.payments-remove { border: 0; background: none; color: var(--control-danger); font: inherit; font-size: 12px; padding: 8px; cursor: pointer; flex-shrink: 0; }
+.payments-callback { padding: 12px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); font-size: 12px; line-height: 1.85; overflow-wrap: anywhere; margin-top: 18px; }
+.payments-callback code { display: block; user-select: all; font-size: 11px; color: var(--ink); overflow-wrap: anywhere; white-space: normal; }
+.payments-status { border-left: 3px solid var(--primary); background: var(--white); padding: 12px 15px; font-size: 12px; line-height: 1.8; margin: 0 0 20px; border-radius: 5px; overflow-wrap: anywhere; }
+.payments-status:empty { display: none; }
+.payments-status[data-error=true] { border-color: var(--control-danger); color: var(--control-danger); }
+.payments-order-list { display: grid; gap: 12px; }
+.payments-order { padding: 16px; border: 1px solid var(--line); border-radius: 6px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px 20px; align-items: center; }
+.payments-order strong { font-size: 13px; overflow-wrap: anywhere; }
+.payments-order p, .payments-order code { font-size: 11px; line-height: 1.8; color: var(--muted); margin: 6px 0 0; overflow-wrap: anywhere; }
+.payments-order code { display: block; }
+.payments-order-side { text-align: right; display: grid; justify-items: end; gap: 8px; }
+.payments-order-side b { font: 600 18px "Barlow Semi Condensed", monospace; }
+.payments-order-note { grid-column: 1/-1; font-size: 12px; line-height: 1.8; color: var(--control-danger); margin: 0; }
+.payments-admin :disabled { opacity: .6; cursor: not-allowed; }
+.payments-order-lookup { display: flex; align-items: end; gap: 12px; margin: 0 0 20px; }
+.payments-order-lookup label { flex: 1; }
+@media (max-width: 760px) {
+  .payments-section { padding: 18px; }
+  .payments-section > header { align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+  .payments-field > span { padding-top: 0; }
+  .payments-editor > summary { padding: 14px 12px; gap: 9px; }
+  .payments-editor-body { padding: 0 12px 14px; }
+  .payments-order { padding: 13px; gap: 12px; }
+  .payments-admin .admin-page-heading { align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+  .payments-remove { min-height: 44px; }
+}
+@media (max-width: 460px) {
+  .payments-editor > summary { flex-wrap: wrap; }
+  .payments-order { grid-template-columns: minmax(0, 1fr); }
+  .payments-order-side { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; text-align: left; }
+  .payments-section { padding: 16px; }
+  .payments-order-lookup { flex-direction: column; align-items: stretch; }
+}

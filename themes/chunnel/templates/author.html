@@ -1,0 +1,17 @@
+{{define "content"}}
+<div class="shell portal-page">
+  <nav class="portal-breadcrumb" aria-label="当前位置"><a href="/">首页</a>{{template "icon" "chevron-right"}}<a href="/explore/">发现</a>{{template "icon" "chevron-right"}}<span aria-current="page">创作者</span></nav>
+  <section class="portal-panel portal-author-profile">
+    <div class="portal-author-banner"><img src="{{asset "images/editorial/cover-community-small.webp"}}" alt="" width="768" height="512"></div>
+    <div class="portal-author-summary"><span class="portal-author-avatar">{{if .Author.AvatarURL}}<img src="{{.Author.AvatarURL}}" alt="" width="88" height="88">{{else}}{{.Author.Initial}}{{end}}</span><div class="portal-author-copy"><h1>{{.Author.Name}}</h1><span class="progression-badges">{{template "progression-badges" .Author.Badges}}</span>{{template "identity-badges" .Recognition.AuthorBadges}}<p>{{.Author.Description}}</p><span>{{.Discovery.Total}} 篇公开文章{{if .Author.Joined}} · {{.Author.Joined}} 加入{{end}}</span></div><div class="portal-author-actions"><button class="ui-button ui-button-primary" type="button" data-follow="{{.Author.Name}}" data-follow-user="{{.Author.ID}}" aria-pressed="false">{{template "icon" "plus"}}关注</button>{{if $.ModuleEnabled "messaging"}}<button class="ui-button ui-button-secondary" type="button" {{if .Author.ID}}data-message-user="{{.Author.ID}}"{{else}}data-message-to="{{.Author.Name}}"{{end}}>{{template "icon" "message-square"}}私信</button>{{end}}<button class="ui-button ui-button-secondary ui-button-icon" type="button" data-share aria-label="分享创作者主页">{{template "icon" "share-2"}}</button></div></div>
+  </section>
+  <div class="portal-layout">
+    <section class="portal-panel author-content-panel" data-tabs>
+      <nav class="author-tabs" role="tablist" aria-label="创作者内容"><button class="is-active" type="button" role="tab" data-tab="author-posts">全部文章 <span>{{.Discovery.Total}}</span></button><button type="button" role="tab" data-tab="author-about">关于作者</button></nav>
+      <div id="author-posts" data-tab-panel data-list-page="author"><header class="portal-results-toolbar"><span>{{.Discovery.SortLabel}}</span><form class="discovery-sort-form" action="{{.Discovery.Path}}" method="get"><select data-select-ui="soft" name="sort" aria-label="作者内容排序" data-content-sort><option value="published" {{if eq .Discovery.Sort "published"}}selected{{end}}>最新发布</option><option value="updated" {{if eq .Discovery.Sort "updated"}}selected{{end}}>最近更新</option><option value="oldest" {{if eq .Discovery.Sort "oldest"}}selected{{end}}>最早发布</option><option value="title" {{if eq .Discovery.Sort "title"}}selected{{end}}>标题排序</option></select><button class="ui-button ui-button-secondary ui-button-small" type="submit">应用</button></form></header><div class="portal-posts portal-posts-list" data-server-results>{{template "portal-post-cards" .}}</div>{{template "content-pagination" .Discovery}}</div>
+      <div id="author-about" data-tab-panel hidden><div class="portal-author-about"><h2>关于 {{.Author.Name}}</h2><p>{{.Author.Description}}</p><a class="ui-button ui-button-secondary" href="/explore/">{{template "icon" "compass"}}继续发现 </a></div></div>
+    </section>
+    {{template "portal-reading-sidebar" .}}
+  </div>
+</div>
+{{end}}

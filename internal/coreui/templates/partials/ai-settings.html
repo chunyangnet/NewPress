@@ -1,0 +1,63 @@
+{{define "ai-settings"}}
+<section id="site-settings-ai" class="admin-setting-section ai-settings-section" aria-labelledby="site-settings-title-ai" data-settings-section data-ai-config>
+  <header><span>{{template "icon" "cpu"}}</span><div><h2 id="site-settings-title-ai">AI 接口与模型</h2><p>管理写作与生图接口，在编辑器中随时切换。</p></div></header>
+  <form id="ai-settings-form" data-ai-config-form data-user-id="{{.Admin.Principal.UserID}}">
+    <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}">
+    <fieldset {{if .Admin.ReadOnly}}disabled{{end}} data-ai-config-fields>
+      <div class="ai-config-toolbar"><p>支持 Chat Completions、Responses、Claude、Gemini、微软 Azure 写作，以及 GPT Image、Nano Banana、Seedream 生图。Key 仅在服务端保管，不随站点设置导出。</p><button type="button" class="admin-button admin-button-quiet" data-ai-config-add disabled>{{template "icon" "plus"}}添加接口</button></div>
+      <div class="ai-config-default"><label for="ai-default-provider">默认写作接口</label><select id="ai-default-provider" data-ai-config-default disabled><option value="">尚未配置接口</option></select></div>
+      <div class="ai-config-default"><label for="ai-default-image-provider">默认生图接口</label><select id="ai-default-image-provider" data-ai-config-image-default disabled><option value="">尚未配置生图接口</option></select></div>
+      <details class="ai-operations" open><summary>用量统计与展示 <span>运营统计 → AI 消耗</span></summary>
+        <div class="ai-operations-switches">
+          <label><input type="checkbox" data-ai-config-ops-enabled>采集 AI 用量</label>
+          <label><input type="checkbox" data-ai-config-ops-details>保留请求明细</label>
+          <label><input type="checkbox" data-ai-config-ops-costs>估算模型费用</label>
+          <label><input type="checkbox" data-ai-config-ops-balances>允许余额探测</label>
+          <label><input type="checkbox" data-ai-config-ops-charts>显示统计图表</label>
+        </div>
+        <div class="ai-operations-limits"><label>保留期<select data-ai-config-ops-retention><option value="7">7 天</option><option value="30">30 天</option><option value="90">90 天</option></select></label><label>明细条数上限<input type="number" min="100" max="10000" step="100" data-ai-config-ops-records value="5000"></label></div>
+        <p>关闭采集或明细只停止新增，历史数据按保留期清理。明细达到上限后滚动保留最新请求，汇总仍继续累计。仅记录用量与运行状态，不保存正文、提示词、思考内容和 Key。</p>
+      </details>
+      <div data-ai-config-list></div>
+      <p class="ai-config-empty" data-ai-config-empty hidden>还没有保存的接口。添加 API 地址和 Key，再选择常用模型。</p>
+    </fieldset>
+    <div class="ai-config-footer"><p data-ai-config-status role="status" aria-live="polite">正在加载 AI 设置…</p><div><button type="button" class="admin-button admin-button-quiet" data-ai-config-reload>重新加载</button><button type="submit" class="admin-button admin-button-primary" data-ai-config-save disabled>保存 AI 设置</button></div></div>
+    <noscript><p>请启用 JavaScript 后管理 AI 接口。</p></noscript>
+  </form>
+  <template data-ai-config-template>
+    <article class="ai-provider-card">
+      <div class="ai-provider-heading"><div><span class="ai-provider-number"></span><strong data-provider-title>新接口</strong><small data-provider-key-state>未保存</small></div><button class="admin-button admin-button-quiet" type="button" data-provider-remove>移除</button></div>
+      <div class="ai-provider-grid">
+        <label class="ai-provider-wide">接口用途与协议<select data-provider-protocol><optgroup label="文本写作"><option value="">文本 · Chat Completions 兼容</option><option value="openai_responses">文本 · OpenAI Responses</option><option value="anthropic">文本 · Claude / Anthropic Messages</option><option value="gemini">文本 · Google Gemini 原生</option><option value="azure_openai">文本 · 微软 Azure OpenAI v1</option><option value="azure_responses">文本 · 微软 Azure Responses v1</option><option value="azure_openai_legacy">文本 · 微软 Azure 部署式接口</option></optgroup><optgroup label="图片生成"><option value="openai_images">生图 · GPT Image / Images 兼容</option><option value="gemini_images">生图 · Nano Banana / Gemini generateContent</option><option value="gemini_interactions">生图 · Nano Banana / Gemini Interactions</option><option value="seedream">生图 · 字节 Seedream / 火山方舟</option></optgroup></select><small data-provider-protocol-help>请选择服务商实际支持的协议。</small></label>
+        <label>接口名称<input data-provider-name type="text" maxlength="80" placeholder="例如：主力写作" required></label>
+        <label>API 地址<input data-provider-base type="url" maxlength="2048" placeholder="https://api.example.com/v1" spellcheck="false" autocomplete="off" required></label>
+        <label class="ai-provider-wide ai-provider-network"><span><input data-provider-allow-insecure type="checkbox">允许此地址使用 HTTP／本地网络（含自定义端口）</span><small>仅为你信任的服务勾选。HTTP 会明文传输 Key 和内容；localhost 指运行 NewPress 的服务器。修改地址后须重新勾选，无鉴权服务可留空 Key。</small></label>
+        <label class="ai-provider-wide" data-provider-api-version-field hidden>Azure API 版本<input data-provider-api-version type="text" maxlength="32" value="2024-10-21" pattern="20[0-9]{2}-[0-9]{2}-[0-9]{2}(-preview)?" spellcheck="false" disabled><small>按 Azure 控制台填写，例如 2024-10-21；留空使用此版本。</small></label>
+        <label class="ai-provider-wide">API Key<input data-provider-key type="password" maxlength="4096" placeholder="填写服务商提供的 Key" autocomplete="new-password" spellcheck="false"><small>已保存的 Key 留空即可保留。更换地址或协议时需重新填写。</small></label>
+        <label>常用模型<textarea data-provider-models rows="4" placeholder="每行一个模型 ID，也可以用逗号分隔" spellcheck="false" required></textarea><small>可手动填写，或探测后勾选。最多 100 个。</small></label>
+        <div class="ai-provider-model-controls"><label>默认模型<select data-provider-default required><option value="">先添加模型</option></select></label><button class="admin-button admin-button-quiet" type="button" data-provider-probe>{{template "icon" "scan-search"}}探测模型</button><p data-provider-status role="status" aria-live="polite"></p></div>
+      </div>
+      <details class="ai-provider-operations"><summary>模型价格 <span>按百万 Token、每张图片或每次成功请求</span></summary><p>留空表示未配置，0 表示免费；缓存价格留空时按输入价格估算。不同币种分别汇总。价格修改只影响后续请求。</p><div data-provider-pricing-list></div></details>
+      <details class="ai-provider-operations"><summary>上游余额 <span>预设适配 · 自定义 JSON</span></summary>
+        <label class="ai-inline-switch"><input type="checkbox" data-provider-balance-enabled>启用此接口的余额查询</label>
+        <div class="ai-provider-grid">
+          <label>响应格式<select data-provider-balance-format><option value="custom">自定义 JSON</option><option value="sub2api">Sub2API</option><option value="newapi">New API</option><option value="deepseek">DeepSeek</option><option value="siliconflow">SiliconFlow / 硅基流动</option><option value="openrouter">OpenRouter</option></select></label>
+          <label>币种<select data-provider-balance-currency><option>USD</option><option>CNY</option><option>EUR</option><option>GBP</option><option>JPY</option></select></label>
+          <label class="ai-provider-wide">查询路径<input data-provider-balance-path maxlength="512" placeholder="预设可留空；例如 /v1/usage" autocomplete="off"><small>以 / 开头，同 API 地址的域名和端口；有路径前缀的中转可在这里覆盖预设。</small></label>
+          <label>自定义鉴权方式<select data-provider-balance-auth><option value="bearer">Authorization: Bearer</option><option value="x-api-key">x-api-key</option><option value="api-key">api-key</option><option value="x-goog-api-key">x-goog-api-key</option><option value="none">无鉴权</option></select><small>预设格式均使用 Bearer。</small></label>
+          <label>缓存时间（秒）<input data-provider-balance-cache type="number" min="60" max="86400" value="300"><small>手动查询触发；缓存期间复用结果。</small></label>
+          <label class="ai-provider-wide">独立查询令牌<input data-provider-balance-token type="password" maxlength="4096" autocomplete="new-password" placeholder="可选，留空使用接口 Key；New API 必填"><small data-provider-balance-key-state>已保存的独立令牌留空保留，不会回显。</small></label>
+          <label class="ai-inline-switch"><span><input data-provider-balance-clear type="checkbox">清除已保存的独立令牌</span></label>
+          <label>New API 用户 ID<input data-provider-balance-user type="text" inputmode="numeric" pattern="[0-9]{1,20}" maxlength="20" placeholder="New API 必填"></label>
+          <label>剩余额度字段<input data-provider-balance-remaining placeholder="data.balance" maxlength="200"><small>仅自定义格式；数组可写 data.0.balance。</small></label>
+          <label>已用额度字段<input data-provider-balance-used placeholder="data.used" maxlength="200"></label>
+          <label>总额度字段<input data-provider-balance-total placeholder="data.total" maxlength="200"><small>没有剩余字段时，以总额减已用计算。</small></label>
+          <label>数值换算除数<input data-provider-balance-divisor type="number" min="0.000001" max="1000000000000" step="any" value="1"><small>自定义格式默认 1；New API 通常为 500000。</small></label>
+        </div>
+        <div class="ai-balance-probe"><button type="button" class="admin-button admin-button-quiet" data-provider-balance-probe>查询已保存接口余额</button><p data-provider-balance-status role="status" aria-live="polite">保存设置后可查询。</p></div>
+      </details>
+      <fieldset class="ai-discovered-models" data-provider-discovered hidden><legend>选择常用模型</legend><div data-provider-options></div></fieldset>
+    </article>
+  </template>
+</section>
+{{end}}

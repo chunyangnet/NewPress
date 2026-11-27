@@ -1,0 +1,6 @@
+{{define "content"}}
+<section class="access-room shell"><nav class="portal-breadcrumb" aria-label="当前位置"><a href="/">首页</a>{{template "service-icon" "chevron-right"}}<a href="/account/?view=notifications">通知设置</a>{{template "service-icon" "chevron-right"}}<span aria-current="page">邮件订阅</span></nav><div class="access-layout"><div class="access-story"><span class="panel-kicker">邮件订阅</span><h1>邮件订阅设置</h1><p>查看邮件订阅状态，管理通知与每周精选。</p></div><div class="access-card">
+{{if .Unsubscribe.Done}}<h2>已停止邮件订阅</h2><p>后续通知邮件与每周精选都已关闭。你可以在个人中心重新开启。</p><a class="ui-button ui-button-primary" href="/account/?view=notifications">前往通知设置</a>
+{{else}}<h2>停止接收站点邮件？</h2><p>确认后，将关闭通知邮件和每周精选。站内通知仍可在通知中心查看。</p><form method="post" action="/account/notifications/unsubscribe/"><input type="hidden" name="u" value="{{.Unsubscribe.UserID}}"><input type="hidden" name="t" value="{{.Unsubscribe.Token}}"><button class="ui-button ui-button-primary" type="submit">确认退订邮件</button></form>{{end}}
+</div></div></section>
+{{end}}

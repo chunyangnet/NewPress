@@ -1,0 +1,18 @@
+{{define "home-partners"}}
+{{$s := .Settings}}
+{{if and $s.show_partners (or $s.partner_1_name $s.partner_2_name $s.partner_3_name $s.partner_4_name $s.partner_5_name $s.partner_6_name)}}
+<section class="partners-section section-shell" id="partners" data-home-section="partners" aria-labelledby="partners-title">
+  <div class="section-heading"><div><h2 id="partners-title">{{if $s.partners_title}}{{$s.partners_title}}{{else}}合作伙伴{{end}}</h2>{{if $s.partners_description}}<p class="rich-description">{{$s.partners_description}}</p>{{end}}</div></div>
+  <ul class="partner-grid">
+    {{template "home-partner" (dict "Name" $s.partner_1_name "Image" $s.partner_1_image "URL" $s.partner_1_url)}}
+    {{template "home-partner" (dict "Name" $s.partner_2_name "Image" $s.partner_2_image "URL" $s.partner_2_url)}}
+    {{template "home-partner" (dict "Name" $s.partner_3_name "Image" $s.partner_3_image "URL" $s.partner_3_url)}}
+    {{template "home-partner" (dict "Name" $s.partner_4_name "Image" $s.partner_4_image "URL" $s.partner_4_url)}}
+    {{template "home-partner" (dict "Name" $s.partner_5_name "Image" $s.partner_5_image "URL" $s.partner_5_url)}}
+    {{template "home-partner" (dict "Name" $s.partner_6_name "Image" $s.partner_6_image "URL" $s.partner_6_url)}}
+  </ul>
+</section>
+{{end}}
+{{end}}
+{{define "home-partner"}}{{if .Name}}<li class="partner-item">{{if .URL}}<a class="partner-link" href="{{.URL}}">{{template "home-partner-content" .}}</a>{{else}}<div class="partner-display">{{template "home-partner-content" .}}</div>{{end}}</li>{{end}}{{end}}
+{{define "home-partner-content"}}{{if .Image}}<img src="{{.Image}}" alt="" width="180" height="72" loading="lazy" decoding="async">{{end}}<span>{{.Name}}</span>{{end}}

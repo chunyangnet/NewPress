@@ -1,0 +1,39 @@
+{{define "home-carousel"}}
+<div class="home-carousel" data-home-carousel data-carousel-effect="{{index .ThemeValues "home_carousel_animation"}}" data-autoplay="{{index .ThemeValues "home_carousel_autoplay"}}" data-interval="{{index .ThemeValues "home_carousel_interval"}}" data-autohide-controls="{{index .ThemeValues "home_carousel_autohide"}}" role="region" aria-label="精选推荐" aria-roledescription="轮播图">
+  <div class="home-carousel-track" data-carousel-track tabindex="0" aria-label="轮播图片，可左右滑动或使用方向键切换">
+    {{range .Home.Slides}}<article class="home-slide" data-carousel-slide role="group" aria-roledescription="幻灯片" aria-label="第 {{.Index}} 张：{{.Title}}">
+      <img src="{{.Image}}" alt="" width="1536" height="864" loading="lazy" decoding="async">
+      <div class="home-slide-copy"><span class="home-media-eyebrow">精选推荐</span><h2>{{if .URL}}<a href="{{.URL}}">{{.Title}}</a>{{else}}{{.Title}}{{end}}</h2>{{if .Summary}}<p>{{.Summary}}</p>{{end}}</div>
+    </article>{{end}}
+  </div>
+  {{if gt (len .Home.Slides) 1}}<div class="home-carousel-controls" data-carousel-controls hidden>
+    <button class="home-carousel-arrow" type="button" data-carousel-prev aria-label="上一张">{{template "icon" "chevron-left"}}</button>
+    <div class="home-carousel-dots" role="group" aria-label="选择幻灯片">{{range .Home.Slides}}<button type="button" data-carousel-dot aria-label="第 {{.Index}} 张：{{.Title}}" aria-current="{{if eq .Index 1}}true{{else}}false{{end}}"><span></span></button>{{end}}</div>
+    <button class="home-carousel-arrow" type="button" data-carousel-next aria-label="下一张">{{template "icon" "chevron-right"}}</button>
+    <span class="sr-only" data-carousel-status aria-live="polite" aria-atomic="true"></span>
+  </div>{{end}}
+</div>
+{{end}}
+
+{{define "home-search-banner"}}
+<div class="home-search-banner" data-home-background="{{index .ThemeValues "home_search_background"}}" data-allow-motion="{{index .ThemeValues "home_search_motion"}}">
+  <div class="home-search-media" aria-hidden="true">
+    <img class="home-search-poster" src="{{assetOr (index .ThemeValues "home_search_poster") "images/editorial/cover-library.webp"}}" alt="" width="1536" height="864" loading="lazy">
+    {{if and (eq (index .ThemeValues "home_search_background") "image") (index .ThemeValues "home_search_image")}}<img class="home-search-motion" data-background-image data-bg-src="{{index .ThemeValues "home_search_image"}}" alt="" width="1536" height="864" hidden>{{end}}
+    {{if and (eq (index .ThemeValues "home_search_background") "video") (index .ThemeValues "home_search_video")}}<video class="home-search-motion" data-background-video data-bg-src="{{index .ThemeValues "home_search_video"}}" muted loop playsinline preload="none" tabindex="-1" hidden></video>{{end}}
+  </div>
+  <div class="home-search-copy"><h2>{{index .ThemeValues "home_search_title"}}</h2>{{if index .ThemeValues "home_search_summary"}}<p>{{index .ThemeValues "home_search_summary"}}</p>{{end}}
+    <form class="home-banner-search" action="/explore/" method="get" role="search" aria-label="首页内容搜索">
+      <span class="home-search-symbol" aria-hidden="true">{{template "icon" "search"}}</span><label class="sr-only" for="home-banner-query">搜索文章、作者或关键词</label><input id="home-banner-query" type="search" name="q" placeholder="{{index .ThemeValues "home_search_placeholder"}}" maxlength="80" autocomplete="off"><button type="submit"><span>搜索</span>{{template "icon" "arrow-right"}}</button>
+    </form>
+    {{if .Home.SearchTerms}}<nav class="home-search-terms" aria-label="热门搜索"><span>热门搜索</span>{{range .Home.SearchTerms}}<a href="{{.URL}}">{{.Title}}</a>{{end}}</nav>{{end}}
+  </div>
+</div>
+{{end}}
+
+{{define "home-custom"}}
+<div class="home-custom {{if .Surface}}home-panel{{end}}">
+  {{if .Title}}<header class="home-panel-heading"><h2>{{.Title}}</h2></header>{{end}}
+  <div class="home-custom-body">{{safeHTML (.HTML)}}</div>
+</div>
+{{end}}

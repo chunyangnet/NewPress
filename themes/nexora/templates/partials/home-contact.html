@@ -1,0 +1,3 @@
+{{define "home-contact"}}
+<section data-home-section="contact" class="contact-section section-shell" id="contact" aria-labelledby="contact-title"><div class="contact-heading"><div><h2 id="contact-title">{{.Settings.contact_title}}</h2><p>{{.Settings.contact_description}}</p></div>{{template "nexora-contact-action" (dict "Page" . "Class" "outline-button")}}</div>{{if or (eq .Settings.contact_details_location "contact") (eq .Settings.contact_details_location "both")}}{{template "contact-details" .}}{{end}}</section>
+{{end}}

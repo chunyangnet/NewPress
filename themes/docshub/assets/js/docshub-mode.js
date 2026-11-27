@@ -1,0 +1,2 @@
+/* Generated: npm run build:theme */
+(()=>{var m=new Set(["light","dark","system"]),r=e=>m.has(e)?e:null;function a(e,t,s=!0,n=!1){return s&&!n&&r(t)||r(e)||"light"}function d(e,t=!1){return e==="dark"||e==="system"&&t?"dark":"light"}var o=document.documentElement,l;try{l=localStorage.getItem("docshub:mode")}catch{}var c=a(o.dataset.defaultMode,l,o.dataset.allowColorSwitch!=="false",o.dataset.appearancePreview==="true");o.dataset.colorPreference=c;o.dataset.mode=d(c,window.matchMedia("(prefers-color-scheme: dark)").matches);})();

@@ -1,0 +1,80 @@
+{{define "content"}}
+<section class="admin-page admin-content-page">
+  <header class="admin-page-heading admin-content-heading">
+    <div>
+      <h1>文章与页面</h1>
+      
+    </div>
+    {{if not .Admin.ReadOnly}}<div class="admin-heading-actions">
+      <a class="admin-button admin-button-quiet" href="/admin/content/new/?type=page">{{template "icon" "panels-top-left"}}新建页面</a>
+      <a class="admin-button admin-button-primary" href="/admin/content/new/?type=post">{{template "icon" "plus"}}撰写文章</a>
+    </div>{{end}}
+  </header>
+
+  {{if .Admin.ReadOnly}}
+  <div class="admin-callout admin-callout-warning" role="status"><span>{{template "icon" "triangle-alert"}}</span><div><strong>当前内容工作区为只读</strong></div></div>
+  {{end}}
+  {{if .Admin.Notice}}
+  <div class="admin-content-notice admin-content-notice-{{.Admin.NoticeTone}}" role="status"><span>{{if eq .Admin.NoticeTone "success"}}{{template "icon" "check-circle"}}{{else}}{{template "icon" "triangle-alert"}}{{end}}</span><div><strong>{{if eq .Admin.NoticeTone "success"}}内容工作流已更新{{else}}操作需要处理{{end}}</strong><p>{{.Admin.Notice}}</p></div></div>
+  {{end}}
+
+  <section class="admin-content-overview" aria-label="内容状态概览">
+    {{range .Content.StatusFilters}}
+    <a class="{{if .Active}}is-active{{end}}" href="{{.URL}}" {{if .Active}}aria-current="page"{{end}}><span>{{.Label}}</span><strong>{{.Count}}</strong></a>
+    {{end}}
+  </section>
+
+  <section class="admin-panel admin-content-inventory">
+    <header class="admin-content-toolbar">
+      <nav aria-label="内容类型">
+        {{range .Content.TypeFilters}}<a class="{{if .Active}}is-active{{end}}" href="{{.URL}}" {{if .Active}}aria-current="page"{{end}}>{{.Label}} <b>{{.Count}}</b></a>{{end}}
+      </nav>
+      <form class="fluent-input-group" action="/admin/content/" method="get" role="search" aria-label="内容筛选">
+        {{if .Content.Type}}<input type="hidden" name="type" value="{{.Content.Type}}">{{end}}
+        {{if .Content.Status}}<input type="hidden" name="status" value="{{.Content.Status}}">{{end}}
+        {{template "icon" "search"}}<input type="search" name="q" value="{{.Content.Search}}" maxlength="100" placeholder="搜索标题、作者、分类或标签" aria-label="搜索内容"><button type="submit">搜索</button>
+      </form>
+    </header>
+
+    {{if not .Admin.ReadOnly}}<form class="admin-content-bulk" action="/admin/content/bulk/" method="post" data-content-bulk>
+      <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}">
+      <input type="hidden" name="return_type" value="{{.Content.Type}}">
+      <input type="hidden" name="return_status" value="{{.Content.Status}}">
+      <input type="hidden" name="return_q" value="{{.Content.Search}}">
+      <input type="hidden" name="return_page" value="{{.Content.Page}}">
+      {{if .Content.Rows}}<div class="admin-content-bulkbar">
+        <div class="admin-content-bulk-copy"><span>{{template "icon" "shield-check"}}</span><p><b>批量管理</b></p></div>
+        <div class="admin-content-bulk-controls">
+          <label><span class="sr-only">批量动作</span><select name="action" required data-content-bulk-action><option value="">选择批量动作</option>{{if .AIProMax.Enabled}}<option value="ai-enrich">AI 补全缺失字段</option>{{end}}<option value="draft">恢复 / 设为草稿</option><option value="pending">提交审核</option><option value="publish">立即发布</option><option value="private">设为私密</option><option value="trash">移入回收站</option>{{if eq .Content.Status "trash"}}<option value="delete">永久删除</option>{{end}}</select></label>
+          <button type="submit" data-content-bulk-submit>{{template "icon" "check"}}应用</button>
+        </div>
+        <p class="admin-content-bulk-state"><span><b data-content-selected-count>0</b> 项已选</span><small id="bulk-content-status" role="status" aria-live="polite" data-content-bulk-live>请选择当前页内容和一个动作。</small></p>
+      </div>{{end}}
+    {{end}}
+    <div class="admin-content-table-wrap">
+      <table class="admin-content-table admin-inventory-table{{if not .Admin.ReadOnly}} has-bulk-select{{end}}">
+        <thead><tr>{{if not .Admin.ReadOnly}}<th class="admin-content-select-cell"><label class="admin-content-check"><input type="checkbox" data-content-select-all aria-label="选择当前页全部内容"><span>{{template "icon" "check"}}</span></label><span class="admin-content-select-all-copy" aria-hidden="true">全选当前页</span></th>{{end}}<th>标题与公开地址</th><th>类型</th><th>分类与标签</th><th>作者</th><th>状态</th><th>最近修改</th><th><span class="sr-only">操作</span></th></tr></thead>
+        <tbody>
+          {{range .Content.Rows}}
+          <tr data-content-row>
+            {{if not $.Admin.ReadOnly}}<td class="admin-content-select-cell"><label class="admin-content-check"><input type="checkbox" name="selection" value="{{.Post.ID}}:{{.Post.Version}}" data-content-select aria-label="选择《{{.Post.Title}}》，当前版本 {{.Post.Version}}"><span>{{template "icon" "check"}}</span></label></td>{{end}}
+            <td class="admin-content-title-cell"><a class="admin-post-title" href="{{.EditURL}}"><span class="admin-content-mark admin-content-mark-{{.Post.Type}}" aria-hidden="true">{{if eq .Post.Type "page"}}{{template "icon" "panels-top-left"}}{{else}}{{template "icon" "newspaper"}}{{end}}</span><span><b>{{.Post.Title}}</b><small>{{if eq .Post.Type "page"}}/pages/{{else}}/posts/{{end}}{{.Post.Slug}} · v{{.Post.Version}}</small></span></a></td>
+            <td class="admin-content-type-cell" data-label="类型"><span class="admin-type-chip">{{.TypeLabel}}</span></td>
+            <td class="admin-content-taxonomy-cell" data-label="分类与标签"><div class="admin-taxonomy-stack">{{range .Post.Categories}}<a class="admin-taxonomy" href="/categories/{{.Slug}}/" target="_blank" rel="noopener">{{.Name}}</a>{{else}}<span class="admin-taxonomy">{{if .Post.Category}}{{.Post.Category}}{{else}}—{{end}}</span>{{end}}{{range .Post.Tags}}<a class="admin-taxonomy admin-taxonomy-tag" href="/tags/{{.Slug}}/" target="_blank" rel="noopener">#{{.Name}}</a>{{end}}</div></td>
+            <td class="admin-content-author-cell" data-label="作者">{{.Post.AuthorName}}</td>
+            <td class="admin-content-status-cell" data-label="状态"><span class="admin-state admin-state-{{.StatusTone}}"><i></i>{{.StatusLabel}}</span></td>
+            <td class="admin-content-modified-cell" data-label="最近修改"><time>{{.UpdatedLabel}}</time></td>
+            <td class="admin-content-actions-cell"><div class="admin-row-actions">{{if .AIState}}<a href="/admin/plugins/ai-pro-max/#writing-queue" title="AI 处理进度">{{.AIState}}</a>{{end}}{{if .AIAction}}<button type="submit" form="ai-row-{{.Post.ID}}" title="AI 补全缺失字段" aria-label="AI 补全《{{.Post.Title}}》">{{template "icon" "sparkles"}}</button>{{end}}<a href="{{.EditURL}}" aria-label="编辑《{{.Post.Title}}》">{{template "icon" "pen-line"}}</a>{{if .IsPublic}}<a href="{{.PublicURL}}" target="_blank" rel="noopener" aria-label="查看《{{.Post.Title}}》">{{template "icon" "external-link"}}</a>{{end}}</div></td>
+          </tr>
+          {{else}}
+          <tr><td colspan="{{if $.Admin.ReadOnly}}7{{else}}8{{end}}"><div class="admin-content-empty"><span>{{template "icon" "inbox"}}</span><strong>当前筛选没有内容</strong><p>换一个状态或搜索词{{if not .Admin.ReadOnly}}，或者从第一篇草稿开始{{end}}。</p>{{if not .Admin.ReadOnly}}<a class="admin-button admin-button-primary" href="/admin/content/new/">{{template "icon" "plus"}}新建内容</a>{{end}}</div></td></tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+    {{if not .Admin.ReadOnly}}</form>{{end}}
+ {{if .AIProMax.Enabled}}{{range .Content.Rows}}<form hidden id="ai-row-{{.Post.ID}}" method="post" action="/admin/plugins/ai-pro-max/content/"><input name="csrf_token" value="{{$.Admin.CSRFToken}}"><input name="selection" value="{{.Post.ID}}:{{.Post.Version}}"></form>{{end}}{{end}}
+    <footer class="admin-content-pagination"><p>共 <b>{{.Content.Total}}</b> 项 · 第 {{.Content.Page}} / {{.Content.Pages}} 页</p><nav aria-label="内容分页"><a class="{{if not .Content.HasPrevious}}is-disabled{{end}}" {{if .Content.HasPrevious}}href="{{.Content.PreviousURL}}"{{end}}>{{template "icon" "arrow-left"}}上一页</a><a class="{{if not .Content.HasNext}}is-disabled{{end}}" {{if .Content.HasNext}}href="{{.Content.NextURL}}"{{end}}>下一页{{template "icon" "arrow-right"}}</a></nav></footer>
+  </section>
+</section>
+{{end}}

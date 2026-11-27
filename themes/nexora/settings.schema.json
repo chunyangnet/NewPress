@@ -1,0 +1,2650 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "show_cases": {"type":"boolean","title":"显示客户案例","default":false,"x-newpress":{"group":"enterprise","control":"toggle","order":0}},
+    "cases_title": {"type":"string","title":"案例区标题","default":"让技术创造实际价值","maxLength":100,"x-newpress":{"group":"enterprise","control":"text","order":1}},
+    "cases_description": {"type":"string","title":"案例区说明","default":"","maxLength":500,"x-newpress":{"group":"enterprise","control":"textarea","order":2}},
+    "case_1_title": {"type":"string","title":"案例 1 · 名称","default":"","maxLength":160,"x-newpress":{"group":"enterprise","control":"text","order":10}},
+    "case_1_text": {"type":"string","title":"案例 1 · 挑战与成果","default":"","maxLength":800,"x-newpress":{"group":"enterprise","control":"textarea","order":11}},
+    "case_1_image": {"type":"string","title":"案例 1 · 图片","default":"","maxLength":2048,"format":"uri-reference","pattern":"^$|^(https?://[^\\s\\\\]+|/[^/\\s\\\\][^\\s\\\\]*|/)$","x-newpress":{"group":"enterprise","control":"image","order":12}},
+    "case_1_url": {"type":"string","title":"案例 1 · 正式内容页","default":"","maxLength":2048,"format":"uri-reference","pattern":"^$|^(https?://[^\\s\\\\]+|/[^/\\s\\\\][^\\s\\\\]*|/)$","x-newpress":{"group":"enterprise","control":"text","order":13}},
+    "case_2_title": {"type":"string","title":"案例 2 · 名称","default":"","maxLength":160,"x-newpress":{"group":"enterprise","control":"text","order":20}},
+    "case_2_text": {"type":"string","title":"案例 2 · 挑战与成果","default":"","maxLength":800,"x-newpress":{"group":"enterprise","control":"textarea","order":21}},
+    "case_2_image": {"type":"string","title":"案例 2 · 图片","default":"","maxLength":2048,"format":"uri-reference","pattern":"^$|^(https?://[^\\s\\\\]+|/[^/\\s\\\\][^\\s\\\\]*|/)$","x-newpress":{"group":"enterprise","control":"image","order":22}},
+    "case_2_url": {"type":"string","title":"案例 2 · 正式内容页","default":"","maxLength":2048,"format":"uri-reference","pattern":"^$|^(https?://[^\\s\\\\]+|/[^/\\s\\\\][^\\s\\\\]*|/)$","x-newpress":{"group":"enterprise","control":"text","order":23}},
+    "case_3_title": {"type":"string","title":"案例 3 · 名称","default":"","maxLength":160,"x-newpress":{"group":"enterprise","control":"text","order":30}},
+    "case_3_text": {"type":"string","title":"案例 3 · 挑战与成果","default":"","maxLength":800,"x-newpress":{"group":"enterprise","control":"textarea","order":31}},
+    "case_3_image": {"type":"string","title":"案例 3 · 图片","default":"","maxLength":2048,"format":"uri-reference","pattern":"^$|^(https?://[^\\s\\\\]+|/[^/\\s\\\\][^\\s\\\\]*|/)$","x-newpress":{"group":"enterprise","control":"image","order":32}},
+    "case_3_url": {"type":"string","title":"案例 3 · 正式内容页","default":"","maxLength":2048,"format":"uri-reference","pattern":"^$|^(https?://[^\\s\\\\]+|/[^/\\s\\\\][^\\s\\\\]*|/)$","x-newpress":{"group":"enterprise","control":"text","order":33}},
+    "show_process": {"type":"boolean","title":"显示合作流程","default":false,"x-newpress":{"group":"delivery","control":"toggle","order":0}},
+    "process_title": {"type":"string","title":"合作流程标题","default":"从需求到持续交付","maxLength":100,"x-newpress":{"group":"delivery","control":"text","order":1}},
+    "process_1_title": {"type":"string","title":"阶段 1 · 名称","default":"需求沟通","maxLength":100,"x-newpress":{"group":"delivery","control":"text","order":10}},
+    "process_1_text": {"type":"string","title":"阶段 1 · 说明","default":"共同明确业务目标、使用场景与项目边界。","maxLength":500,"x-newpress":{"group":"delivery","control":"textarea","order":11}},
+    "process_2_title": {"type":"string","title":"阶段 2 · 名称","default":"方案设计","maxLength":100,"x-newpress":{"group":"delivery","control":"text","order":20}},
+    "process_2_text": {"type":"string","title":"阶段 2 · 说明","default":"评估技术路径，确认实施方案与验收标准。","maxLength":500,"x-newpress":{"group":"delivery","control":"textarea","order":21}},
+    "process_3_title": {"type":"string","title":"阶段 3 · 名称","default":"实施交付","maxLength":100,"x-newpress":{"group":"delivery","control":"text","order":30}},
+    "process_3_text": {"type":"string","title":"阶段 3 · 说明","default":"按里程碑推进开发、测试、培训与上线。","maxLength":500,"x-newpress":{"group":"delivery","control":"textarea","order":31}},
+    "process_4_title": {"type":"string","title":"阶段 4 · 名称","default":"持续服务","maxLength":100,"x-newpress":{"group":"delivery","control":"text","order":40}},
+    "process_4_text": {"type":"string","title":"阶段 4 · 说明","default":"跟踪运行反馈，持续优化体验与业务效果。","maxLength":500,"x-newpress":{"group":"delivery","control":"textarea","order":41}},
+    "show_resources": {"type":"boolean","title":"显示资料中心","default":false,"x-newpress":{"group":"resources","control":"toggle","order":0}},
+    "resources_title": {"type":"string","title":"资料区标题","default":"资料与洞察","maxLength":100,"x-newpress":{"group":"resources","control":"text","order":1}},
+    "resources_description": {"type":"string","title":"资料区说明","default":"","maxLength":500,"x-newpress":{"group":"resources","control":"textarea","order":2}},
+    "resource_1_title": {"type":"string","title":"资料 1 · 名称","default":"","maxLength":160,"x-newpress":{"group":"resources","control":"text","order":10}},
+    "resource_1_text": {"type":"string","title":"资料 1 · 格式、版本与简介","default":"","maxLength":500,"x-newpress":{"group":"resources","control":"textarea","order":11}},
+    "resource_1_url": {"type":"string","title":"资料 1 · 文件或详情地址","default":"","maxLength":2048,"format":"uri-reference","pattern":"^$|^(https?://[^\\s\\\\]+|/[^/\\s\\\\][^\\s\\\\]*|/)$","x-newpress":{"group":"resources","control":"text","order":12}},
+    "resource_2_title": {"type":"string","title":"资料 2 · 名称","default":"","maxLength":160,"x-newpress":{"group":"resources","control":"text","order":20}},
+    "resource_2_text": {"type":"string","title":"资料 2 · 格式、版本与简介","default":"","maxLength":500,"x-newpress":{"group":"resources","control":"textarea","order":21}},
+    "resource_2_url": {"type":"string","title":"资料 2 · 文件或详情地址","default":"","maxLength":2048,"format":"uri-reference","pattern":"^$|^(https?://[^\\s\\\\]+|/[^/\\s\\\\][^\\s\\\\]*|/)$","x-newpress":{"group":"resources","control":"text","order":22}},
+    "resource_3_title": {"type":"string","title":"资料 3 · 名称","default":"","maxLength":160,"x-newpress":{"group":"resources","control":"text","order":30}},
+    "resource_3_text": {"type":"string","title":"资料 3 · 格式、版本与简介","default":"","maxLength":500,"x-newpress":{"group":"resources","control":"textarea","order":31}},
+    "resource_3_url": {"type":"string","title":"资料 3 · 文件或详情地址","default":"","maxLength":2048,"format":"uri-reference","pattern":"^$|^(https?://[^\\s\\\\]+|/[^/\\s\\\\][^\\s\\\\]*|/)$","x-newpress":{"group":"resources","control":"text","order":32}},
+    "job_1_title": {"type":"string","title":"岗位 1 · 名称","default":"","maxLength":160,"x-newpress":{"group":"careers","control":"text","order":50}},
+    "job_1_meta": {"type":"string","title":"岗位 1 · 地点、部门与类型","default":"","maxLength":200,"x-newpress":{"group":"careers","control":"text","order":51}},
+    "job_1_text": {"type":"string","title":"岗位 1 · 职责与要求","default":"","maxLength":2000,"x-newpress":{"group":"careers","control":"textarea","order":52}},
+    "job_1_url": {"type":"string","title":"岗位 1 · 详情或投递地址","default":"","maxLength":2048,"format":"uri-reference","pattern":"^$|^(https?://[^\\s\\\\]+|/[^/\\s\\\\][^\\s\\\\]*|/)$","x-newpress":{"group":"careers","control":"text","order":53}},
+    "job_2_title": {"type":"string","title":"岗位 2 · 名称","default":"","maxLength":160,"x-newpress":{"group":"careers","control":"text","order":60}},
+    "job_2_meta": {"type":"string","title":"岗位 2 · 地点、部门与类型","default":"","maxLength":200,"x-newpress":{"group":"careers","control":"text","order":61}},
+    "job_2_text": {"type":"string","title":"岗位 2 · 职责与要求","default":"","maxLength":2000,"x-newpress":{"group":"careers","control":"textarea","order":62}},
+    "job_2_url": {"type":"string","title":"岗位 2 · 详情或投递地址","default":"","maxLength":2048,"format":"uri-reference","pattern":"^$|^(https?://[^\\s\\\\]+|/[^/\\s\\\\][^\\s\\\\]*|/)$","x-newpress":{"group":"careers","control":"text","order":63}},
+    "job_3_title": {"type":"string","title":"岗位 3 · 名称","default":"","maxLength":160,"x-newpress":{"group":"careers","control":"text","order":70}},
+    "job_3_meta": {"type":"string","title":"岗位 3 · 地点、部门与类型","default":"","maxLength":200,"x-newpress":{"group":"careers","control":"text","order":71}},
+    "job_3_text": {"type":"string","title":"岗位 3 · 职责与要求","default":"","maxLength":2000,"x-newpress":{"group":"careers","control":"textarea","order":72}},
+    "job_3_url": {"type":"string","title":"岗位 3 · 详情或投递地址","default":"","maxLength":2048,"format":"uri-reference","pattern":"^$|^(https?://[^\\s\\\\]+|/[^/\\s\\\\][^\\s\\\\]*|/)$","x-newpress":{"group":"careers","control":"text","order":73}},
+    "page_contact_cta": {"type":"boolean","title":"企业内容页显示咨询入口","default":false,"x-newpress":{"group":"article","control":"toggle","order":120}},
+    "accent": {
+      "type": "string",
+      "title": "强调色",
+      "default": "#304b68",
+      "maxLength": 7,
+      "x-newpress": {
+        "group": "visual",
+        "control": "color",
+        "order": 0,
+        "css_variable": "--accent"
+      },
+      "pattern": "^#[0-9a-fA-F]{6}$",
+      "description": "用于链接、选中态、焦点和重点按钮；建议与背景保持清晰对比。"
+    },
+    "ink": {
+      "type": "string",
+      "title": "正文与标题颜色",
+      "default": "#171b20",
+      "maxLength": 7,
+      "pattern": "^#[0-9a-fA-F]{6}$",
+      "x-newpress": {
+        "group": "visual",
+        "control": "color",
+        "order": 10,
+        "css_variable": "--ink"
+      }
+    },
+    "paper": {
+      "type": "string",
+      "title": "页面背景色",
+      "default": "#f4f5f7",
+      "maxLength": 7,
+      "pattern": "^#[0-9a-fA-F]{6}$",
+      "x-newpress": {
+        "group": "visual",
+        "control": "color",
+        "order": 20,
+        "css_variable": "--paper"
+      },
+      "description": "同时生成首页各浅色区块的层次背景；图片区块保持原有图片。"
+    },
+    "muted": {
+      "type": "string",
+      "title": "辅助文字颜色",
+      "default": "#727d93",
+      "maxLength": 7,
+      "pattern": "^#[0-9a-fA-F]{6}$",
+      "x-newpress": {
+        "group": "visual",
+        "control": "color",
+        "order": 30,
+        "css_variable": "--muted"
+      },
+      "description": "用于摘要、日期与说明文字；请确保在页面背景上易于阅读。"
+    },
+    "surface": {
+      "type": "string",
+      "title": "浮层与输入区域背景色",
+      "default": "#ffffff",
+      "maxLength": 7,
+      "pattern": "^#[0-9a-fA-F]{6}$",
+      "x-newpress": {
+        "group": "visual",
+        "control": "color",
+        "order": 40,
+        "css_variable": "--surface"
+      }
+    },
+    "border": {
+      "type": "string",
+      "title": "分隔线颜色",
+      "default": "#dfe2e9",
+      "maxLength": 7,
+      "pattern": "^#[0-9a-fA-F]{6}$",
+      "x-newpress": {
+        "group": "visual",
+        "control": "color",
+        "order": 50,
+        "css_variable": "--line"
+      }
+    },
+    "heading_font": {
+      "type": "string",
+      "title": "标题字体",
+      "default": "serif",
+      "maxLength": 160,
+      "oneOf": [
+        {
+          "const": "serif",
+          "title": "衬线标题",
+          "description": "沿用 Nexora 的中文衬线标题。"
+        },
+        {
+          "const": "sans",
+          "title": "无衬线标题",
+          "description": "与正文使用一致的无衬线字体。"
+        }
+      ],
+      "x-newpress": {
+        "group": "typography",
+        "control": "radio-card",
+        "order": 0,
+        "class_prefix": "nexora-font-"
+      }
+    },
+    "button_shape": {
+      "type": "string",
+      "title": "按钮形状",
+      "default": "pill",
+      "description": "应用于操作按钮与分页按钮，不改变图标按钮的点击区域。",
+      "maxLength": 160,
+      "oneOf": [
+        {
+          "const": "pill",
+          "title": "胶囊"
+        },
+        {
+          "const": "soft",
+          "title": "微圆角"
+        },
+        {
+          "const": "square",
+          "title": "直角"
+        }
+      ],
+      "x-newpress": {
+        "group": "typography",
+        "control": "segmented",
+        "order": 10,
+        "css_variable": "--button-radius",
+        "css_map": {
+          "pill": "999px",
+          "soft": "6px",
+          "square": "0px"
+        }
+      }
+    },
+    "content_density": {
+      "type": "string",
+      "title": "内容间距",
+      "default": "comfortable",
+      "maxLength": 160,
+      "oneOf": [
+        {
+          "const": "comfortable",
+          "title": "舒展",
+          "description": "保持现有首页留白与内页节奏。"
+        },
+        {
+          "const": "compact",
+          "title": "紧凑",
+          "description": "减少区块间距与卡片留白，移动端仍保留可点击区域。"
+        }
+      ],
+      "x-newpress": {
+        "group": "typography",
+        "control": "radio-card",
+        "order": 20,
+        "class_prefix": "nexora-density-"
+      }
+    },
+    "motion_enabled": {
+      "type": "boolean",
+      "title": "启用界面动效",
+      "default": true,
+      "description": "关闭后取消界面过渡、图片悬停缩放与平滑滚动；系统的减少动态效果偏好始终优先。",
+      "x-newpress": {
+        "group": "typography",
+        "control": "toggle",
+        "order": 30,
+        "class_when_false": "nexora-no-motion"
+      }
+    },
+    "logo_image": {
+      "type": "string",
+      "title": "页眉与页脚标志图片",
+      "description": "可填写媒体库中的透明图片。留空使用 N 形标志；品牌文字始终取核心站点名称。",
+      "default": "",
+      "format": "uri-reference",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "header",
+        "control": "image",
+        "order": 0
+      }
+    },
+    "logo_width": {
+      "type": "integer",
+      "title": "自定义标志最大宽度",
+      "default": 80,
+      "description": "仅作用于自定义标志图片，高度随原图比例和页眉空间适配。",
+      "minimum": 48,
+      "maximum": 180,
+      "x-newpress": {
+        "group": "header",
+        "control": "range",
+        "order": 10,
+        "unit": "px",
+        "step": 1,
+        "css_variable": "--logo-width",
+        "css_unit": "px"
+      }
+    },
+    "header_background": {
+      "type": "string",
+      "title": "页眉背景色",
+      "default": "#f5f6f8",
+      "maxLength": 7,
+      "pattern": "^#[0-9a-fA-F]{6}$",
+      "x-newpress": {
+        "group": "header",
+        "control": "color",
+        "order": 20,
+        "css_variable": "--header-background"
+      },
+      "description": "用于实体页眉、滚动后的页眉与移动导航；透明首屏仍使用图片背景。"
+    },
+    "header_color": {
+      "type": "string",
+      "title": "页眉文字颜色",
+      "default": "#26384c",
+      "maxLength": 7,
+      "pattern": "^#[0-9a-fA-F]{6}$",
+      "x-newpress": {
+        "group": "header",
+        "control": "color",
+        "order": 30,
+        "css_variable": "--header-color"
+      },
+      "description": "用于实体页眉的文字与图标；透明首屏使用浅色文字。"
+    },
+    "header_sticky": {
+      "type": "boolean",
+      "title": "滚动时固定页眉",
+      "default": true,
+      "description": "关闭后页眉随页面滚动；首页透明首屏保持可读的导航位置。",
+      "x-newpress": {
+        "group": "header",
+        "control": "toggle",
+        "order": 40,
+        "class_when_false": "nexora-header-static"
+      }
+    },
+    "header_transparent": {
+      "type": "boolean",
+      "title": "首页首屏使用透明页眉",
+      "default": true,
+      "description": "仅在启用首屏时生效；滚动后、其他页面和关闭首屏时使用实体页眉。",
+      "x-newpress": {
+        "group": "header",
+        "control": "toggle",
+        "order": 50,
+        "class_when_false": "nexora-header-solid"
+      }
+    },
+    "show_header_search": {
+      "type": "boolean",
+      "title": "显示页眉搜索入口",
+      "default": true,
+      "description": "隐藏页眉搜索按钮；新闻列表的筛选和站点搜索页面仍可使用。",
+      "x-newpress": {
+        "group": "header",
+        "control": "toggle",
+        "order": 60
+      }
+    },
+    "header_contact_label": {
+      "type": "string",
+      "title": "页眉联系按钮文字",
+      "default": "联系我们",
+      "description": "留空隐藏按钮；链接在下方单独设置。",
+      "maxLength": 40,
+      "x-newpress": {
+        "group": "header",
+        "control": "text",
+        "order": 70
+      }
+    },
+    "contact_link": {
+      "type": "string",
+      "title": "页眉联系按钮链接",
+      "default": "/#contact",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "header",
+        "control": "text",
+        "order": 80
+      },
+      "format": "uri-reference",
+      "description": "留空隐藏页眉联系按钮。默认进入首页联系区；联系区关闭时使用合作按钮的直接入口。",
+      "pattern": "^$|^(https?://[^\\s\\\\]+|/[^/\\s\\\\][^\\s\\\\]*|/)$"
+    },
+    "footer_background": {
+      "type": "string",
+      "title": "页脚背景色",
+      "default": "#1f3043",
+      "maxLength": 7,
+      "pattern": "^#[0-9a-fA-F]{6}$",
+      "x-newpress": {
+        "group": "footer",
+        "control": "color",
+        "order": 0,
+        "css_variable": "--footer-background"
+      }
+    },
+    "footer_color": {
+      "type": "string",
+      "title": "页脚文字颜色",
+      "default": "#d9e1eb",
+      "maxLength": 7,
+      "pattern": "^#[0-9a-fA-F]{6}$",
+      "x-newpress": {
+        "group": "footer",
+        "control": "color",
+        "order": 10,
+        "css_variable": "--footer-color"
+      },
+      "description": "用于页脚品牌、导航、联系信息与版权文字。"
+    },
+    "show_footer_top": {
+      "type": "boolean",
+      "title": "显示页脚品牌介绍",
+      "default": true,
+      "description": "控制页脚上半部；版权与站点登记信息仍保留。",
+      "x-newpress": {
+        "group": "footer",
+        "control": "toggle",
+        "order": 20
+      }
+    },
+    "footer_description": {
+      "type": "string",
+      "title": "页脚品牌说明",
+      "default": "",
+      "description": "留空使用核心站点标语。",
+      "maxLength": 500,
+      "x-newpress": {
+        "group": "footer",
+        "control": "textarea",
+        "order": 30
+      }
+    },
+    "footer_copyright": {
+      "type": "string",
+      "title": "版权文字",
+      "default": "",
+      "description": "留空显示当前年份与核心站点名称；仅接受纯文本。",
+      "maxLength": 200,
+      "x-newpress": {
+        "group": "footer",
+        "control": "text",
+        "order": 40
+      }
+    },
+    "show_back_to_top": {
+      "type": "boolean",
+      "title": "显示返回顶部",
+      "default": true,
+      "description": "控制页脚的返回顶部入口。",
+      "x-newpress": {
+        "group": "footer",
+        "control": "toggle",
+        "order": 50
+      }
+    },
+    "show_hero": {
+      "type": "boolean",
+      "title": "显示首屏轮播",
+      "default": true,
+      "description": "关闭后保留简洁的企业名称与标语。",
+      "x-newpress": {
+        "group": "modules",
+        "control": "toggle",
+        "order": 0,
+        "class_when_false": "nexora-without-hero"
+      }
+    },
+    "home_sequence": {
+      "type": "string",
+      "title": "首页内容顺序",
+      "default": "classic",
+      "oneOf": [
+        {
+          "const": "classic",
+          "title": "企业介绍优先",
+          "description": "介绍 → 事实 → 优势 → 研发 → 业务 → 新闻。"
+        },
+        {
+          "const": "business-first",
+          "title": "业务服务优先",
+          "description": "业务 → 优势 → 介绍 → 事实 → 研发 → 新闻。"
+        },
+        {
+          "const": "news-first",
+          "title": "新闻内容优先",
+          "description": "新闻 → 介绍 → 事实 → 优势 → 研发 → 业务。"
+        }
+      ],
+      "x-newpress": {
+        "group": "modules",
+        "control": "radio-card",
+        "order": 10
+      },
+      "description": "仅调整首页展示顺序；关闭的区块继续隐藏，首屏在前，合作伙伴、招聘、常见问题和联系区在后。"
+    },
+    "show_about": {
+      "type": "boolean",
+      "title": "显示关于我们",
+      "default": true,
+      "description": "关闭后隐藏首页区块及默认导航中的对应入口。",
+      "x-newpress": {
+        "group": "modules",
+        "control": "toggle",
+        "order": 20
+      }
+    },
+    "show_strengths": {
+      "type": "boolean",
+      "title": "显示服务优势",
+      "default": true,
+      "description": "关闭后隐藏首页区块及默认导航中的对应入口。",
+      "x-newpress": {
+        "group": "modules",
+        "control": "toggle",
+        "order": 30
+      }
+    },
+    "show_innovation": {
+      "type": "boolean",
+      "title": "显示技术研发",
+      "default": true,
+      "description": "关闭后隐藏首页区块及默认导航中的对应入口。",
+      "x-newpress": {
+        "group": "modules",
+        "control": "toggle",
+        "order": 40
+      }
+    },
+    "show_facts": {
+      "type": "boolean",
+      "title": "显示企业事实",
+      "default": false,
+      "description": "默认关闭；至少填写一条完整内容才会显示，避免空区块。",
+      "x-newpress": {
+        "group": "modules",
+        "control": "toggle",
+        "order": 50
+      }
+    },
+    "show_business": {
+      "type": "boolean",
+      "title": "显示核心业务",
+      "default": true,
+      "description": "关闭后隐藏首页区块及默认导航中的对应入口。",
+      "x-newpress": {
+        "group": "modules",
+        "control": "toggle",
+        "order": 60
+      }
+    },
+    "show_news": {
+      "type": "boolean",
+      "title": "显示新闻动态",
+      "default": true,
+      "description": "关闭后隐藏首页区块及默认导航中的对应入口。",
+      "x-newpress": {
+        "group": "modules",
+        "control": "toggle",
+        "order": 70
+      }
+    },
+    "show_partners": {
+      "type": "boolean",
+      "title": "显示合作伙伴",
+      "default": false,
+      "description": "默认关闭；至少填写一条完整内容才会显示，避免空区块。",
+      "x-newpress": {
+        "group": "modules",
+        "control": "toggle",
+        "order": 80
+      }
+    },
+    "show_careers": {
+      "type": "boolean",
+      "title": "显示人才招聘",
+      "default": true,
+      "description": "关闭后隐藏首页区块及默认导航中的对应入口。",
+      "x-newpress": {
+        "group": "modules",
+        "control": "toggle",
+        "order": 90
+      }
+    },
+    "show_faq": {
+      "type": "boolean",
+      "title": "显示常见问题",
+      "default": false,
+      "description": "默认关闭；至少填写一条完整内容才会显示，避免空区块。",
+      "x-newpress": {
+        "group": "modules",
+        "control": "toggle",
+        "order": 100
+      }
+    },
+    "show_contact": {
+      "type": "boolean",
+      "title": "显示联系合作",
+      "default": true,
+      "description": "关闭后隐藏首页区块及默认导航中的对应入口。",
+      "x-newpress": {
+        "group": "modules",
+        "control": "toggle",
+        "order": 110
+      }
+    },
+    "hero_mode": {
+      "type": "string",
+      "title": "首屏形式",
+      "default": "carousel",
+      "description": "单屏模式仅展示第一张内容，并隐藏切换控件。",
+      "maxLength": 160,
+      "oneOf": [
+        {
+          "const": "carousel",
+          "title": "三屏轮播"
+        },
+        {
+          "const": "single",
+          "title": "单屏展示"
+        }
+      ],
+      "x-newpress": {
+        "group": "hero",
+        "control": "segmented",
+        "order": 0
+      }
+    },
+    "hero_autoplay": {
+      "type": "boolean",
+      "title": "自动轮播",
+      "default": false,
+      "description": "仅在轮播模式生效；悬停、键盘操作、页面不可见或启用减少动效时暂停。",
+      "x-newpress": {
+        "group": "hero",
+        "control": "toggle",
+        "order": 10
+      }
+    },
+    "hero_interval": {
+      "type": "integer",
+      "title": "自动轮播间隔",
+      "default": 7,
+      "description": "仅在开启自动轮播时使用。",
+      "minimum": 5,
+      "maximum": 15,
+      "x-newpress": {
+        "group": "hero",
+        "control": "range",
+        "order": 20,
+        "unit": "秒",
+        "step": 1
+      }
+    },
+    "hero_height": {
+      "type": "string",
+      "title": "首屏高度",
+      "default": "standard",
+      "description": "不同屏幕仍保留文案与切换控件所需空间。",
+      "maxLength": 160,
+      "oneOf": [
+        {
+          "const": "compact",
+          "title": "紧凑"
+        },
+        {
+          "const": "standard",
+          "title": "标准"
+        },
+        {
+          "const": "tall",
+          "title": "高屏"
+        }
+      ],
+      "x-newpress": {
+        "group": "hero",
+        "control": "segmented",
+        "order": 30,
+        "class_prefix": "nexora-hero-height-"
+      }
+    },
+    "hero_alignment": {
+      "type": "string",
+      "title": "首屏文案对齐",
+      "default": "left",
+      "maxLength": 160,
+      "oneOf": [
+        {
+          "const": "left",
+          "title": "左对齐"
+        },
+        {
+          "const": "center",
+          "title": "居中"
+        }
+      ],
+      "x-newpress": {
+        "group": "hero",
+        "control": "segmented",
+        "order": 40,
+        "class_prefix": "nexora-hero-align-"
+      }
+    },
+    "hero_shade": {
+      "type": "number",
+      "title": "额外图片遮罩",
+      "default": 0.0,
+      "description": "在原有图片效果上增加暗色遮罩；数值越大，浅色标题对比越强。",
+      "minimum": 0,
+      "maximum": 0.7,
+      "x-newpress": {
+        "group": "hero",
+        "control": "range",
+        "order": 50,
+        "step": 0.05,
+        "css_variable": "--hero-overlay"
+      }
+    },
+    "hero_title": {
+      "type": "string",
+      "title": "第一张 · 标题第一行",
+      "default": "企业产品",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 60
+      }
+    },
+    "hero_title_second": {
+      "type": "string",
+      "title": "第一张 · 标题第二行",
+      "default": "与技术服务",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 70
+      }
+    },
+    "hero_subtitle": {
+      "type": "string",
+      "title": "第一张 · 副标题",
+      "default": "查看业务介绍、技术方案和企业动态。",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 80
+      }
+    },
+    "hero_button": {
+      "type": "string",
+      "title": "第一张 · 按钮文字",
+      "default": "了解公司",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 90
+      }
+    },
+    "hero_link": {
+      "type": "string",
+      "title": "第一张 · 按钮链接",
+      "default": "/#about",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 100
+      },
+      "format": "uri-reference",
+      "description": "留空隐藏此按钮。可填写企业页面地址；指向已关闭首页区块的按钮会自动隐藏，联系区关闭时转到直接联系入口。",
+      "pattern": "^$|^(https?://[^\\s\\\\]+|/[^/\\s\\\\][^\\s\\\\]*|/)$"
+    },
+    "hero_image": {
+      "type": "string",
+      "title": "第一张 · 背景图片",
+      "default": "",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "hero",
+        "control": "image",
+        "order": 110
+      },
+      "description": "填写媒体库图片地址；留空使用内置建筑背景。建议约 2.09:1 的横向照片。",
+      "format": "uri-reference"
+    },
+    "hero_mobile_image": {
+      "type": "string",
+      "title": "第一张 · 移动端图片",
+      "default": "",
+      "description": "用于窄屏的第一张首屏图片；留空继续使用桌面图片。建议上传主体居中的竖向照片。",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "pattern": "^$|^(https?://[^\\s]+|/[^/#\\s][^\\s]*)$",
+      "x-newpress": {
+        "group": "hero",
+        "control": "image",
+        "order": 120
+      }
+    },
+    "hero_image_alt": {
+      "type": "string",
+      "title": "第一张 · 图片替代文字",
+      "default": "",
+      "description": "图片承载额外信息时填写；纯装饰图片留空，避免屏幕阅读器重复朗读。",
+      "maxLength": 200,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 130
+      }
+    },
+    "second_title": {
+      "type": "string",
+      "title": "第二张 · 标题第一行",
+      "default": "业务范围",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 140
+      }
+    },
+    "second_title_second": {
+      "type": "string",
+      "title": "第二张 · 标题第二行",
+      "default": "与合作方式",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 150
+      }
+    },
+    "second_subtitle": {
+      "type": "string",
+      "title": "第二张 · 副标题",
+      "default": "了解服务内容，通过联系入口提交项目需求。",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 160
+      }
+    },
+    "second_button": {
+      "type": "string",
+      "title": "第二张 · 按钮文字",
+      "default": "查看核心业务",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 170
+      }
+    },
+    "second_link": {
+      "type": "string",
+      "title": "第二张 · 按钮链接",
+      "default": "/#business",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 180
+      },
+      "format": "uri-reference",
+      "description": "留空隐藏此按钮。可填写企业页面地址；指向已关闭首页区块的按钮会自动隐藏，联系区关闭时转到直接联系入口。",
+      "pattern": "^$|^(https?://[^\\s\\\\]+|/[^/\\s\\\\][^\\s\\\\]*|/)$"
+    },
+    "second_image": {
+      "type": "string",
+      "title": "第二张 · 背景图片",
+      "default": "",
+      "description": "留空沿用关于我们图片，再回退到内置建筑照片；使用站内绝对路径或 http(s) 图片地址。",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "pattern": "^$|^(https?://[^\\s]+|/[^/#\\s][^\\s]*)$",
+      "x-newpress": {
+        "group": "hero",
+        "control": "image",
+        "order": 190
+      }
+    },
+    "second_image_alt": {
+      "type": "string",
+      "title": "第二张 · 图片替代文字",
+      "default": "",
+      "description": "图片承载额外信息时填写；纯装饰图片留空，避免屏幕阅读器重复朗读。",
+      "maxLength": 200,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 200
+      }
+    },
+    "third_title": {
+      "type": "string",
+      "title": "第三张 · 标题第一行",
+      "default": "技术研发",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 210
+      }
+    },
+    "third_title_second": {
+      "type": "string",
+      "title": "第三张 · 标题第二行",
+      "default": "与应用实践",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 220
+      }
+    },
+    "third_subtitle": {
+      "type": "string",
+      "title": "第三张 · 副标题",
+      "default": "查看研发方向、实施过程与应用案例。",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 230
+      }
+    },
+    "third_button": {
+      "type": "string",
+      "title": "第三张 · 按钮文字",
+      "default": "了解研发方向",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 240
+      }
+    },
+    "third_link": {
+      "type": "string",
+      "title": "第三张 · 按钮链接",
+      "default": "/#innovation",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 250
+      },
+      "format": "uri-reference",
+      "description": "留空隐藏此按钮。可填写企业页面地址；指向已关闭首页区块的按钮会自动隐藏，联系区关闭时转到直接联系入口。",
+      "pattern": "^$|^(https?://[^\\s\\\\]+|/[^/\\s\\\\][^\\s\\\\]*|/)$"
+    },
+    "third_image": {
+      "type": "string",
+      "title": "第三张 · 背景图片",
+      "default": "",
+      "description": "留空沿用研发图片，再回退到内置山峦照片；使用站内绝对路径或 http(s) 图片地址。",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "pattern": "^$|^(https?://[^\\s]+|/[^/#\\s][^\\s]*)$",
+      "x-newpress": {
+        "group": "hero",
+        "control": "image",
+        "order": 260
+      }
+    },
+    "third_image_alt": {
+      "type": "string",
+      "title": "第三张 · 图片替代文字",
+      "default": "",
+      "description": "图片承载额外信息时填写；纯装饰图片留空，避免屏幕阅读器重复朗读。",
+      "maxLength": 200,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 270
+      }
+    },
+    "about_title": {
+      "type": "string",
+      "title": "标题",
+      "default": "关于我们",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "about",
+        "control": "text",
+        "order": 0
+      }
+    },
+    "about_description": {
+      "type": "string",
+      "title": "介绍文案",
+      "default": "提供产品与技术服务。这里介绍我们的业务范围、研发方向和项目合作方式。",
+      "maxLength": 1200,
+      "x-newpress": {
+        "group": "about",
+        "control": "textarea",
+        "order": 10
+      }
+    },
+    "about_image": {
+      "type": "string",
+      "title": "建筑图片",
+      "default": "",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "about",
+        "control": "image",
+        "order": 20
+      },
+      "description": "填写媒体库图片地址；留空使用内置建筑照片。第二张轮播未单独设置图片时也使用此图。",
+      "format": "uri-reference"
+    },
+    "about_button": {
+      "type": "string",
+      "title": "按钮文字",
+      "default": "查看研发方向",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "about",
+        "control": "text",
+        "order": 30
+      }
+    },
+    "about_link": {
+      "type": "string",
+      "title": "按钮链接",
+      "default": "/#innovation",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "about",
+        "control": "text",
+        "order": 40
+      },
+      "format": "uri-reference",
+      "description": "留空隐藏此按钮。可填写企业页面地址；指向已关闭首页区块的按钮会自动隐藏，联系区关闭时转到直接联系入口。",
+      "pattern": "^$|^(https?://[^\\s\\\\]+|/[^/\\s\\\\][^\\s\\\\]*|/)$"
+    },
+    "facts_title": {
+      "type": "string",
+      "title": "区块标题",
+      "default": "企业事实",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "facts",
+        "control": "text",
+        "order": 0
+      },
+      "pattern": "^$|\\S"
+    },
+    "facts_description": {
+      "type": "string",
+      "title": "区块说明",
+      "default": "",
+      "maxLength": 500,
+      "x-newpress": {
+        "group": "facts",
+        "control": "textarea",
+        "order": 10
+      },
+      "pattern": "^$|\\S"
+    },
+    "fact_1_value": {
+      "type": "string",
+      "title": "事实 1 · 数值或短语",
+      "default": "",
+      "maxLength": 32,
+      "x-newpress": {
+        "group": "facts",
+        "control": "text",
+        "order": 20
+      },
+      "pattern": "^$|\\S",
+      "description": "填写可核实的企业信息；留空不展示此项。可用数字或短语，不自动添加单位。"
+    },
+    "fact_1_label": {
+      "type": "string",
+      "title": "事实 1 · 名称与统计口径",
+      "default": "",
+      "maxLength": 100,
+      "x-newpress": {
+        "group": "facts",
+        "control": "text",
+        "order": 30
+      },
+      "pattern": "^$|\\S",
+      "description": "与上方数值一起填写；建议注明统计口径或截止时间。"
+    },
+    "fact_2_value": {
+      "type": "string",
+      "title": "事实 2 · 数值或短语",
+      "default": "",
+      "maxLength": 32,
+      "x-newpress": {
+        "group": "facts",
+        "control": "text",
+        "order": 40
+      },
+      "pattern": "^$|\\S",
+      "description": "填写可核实的企业信息；留空不展示此项。可用数字或短语，不自动添加单位。"
+    },
+    "fact_2_label": {
+      "type": "string",
+      "title": "事实 2 · 名称与统计口径",
+      "default": "",
+      "maxLength": 100,
+      "x-newpress": {
+        "group": "facts",
+        "control": "text",
+        "order": 50
+      },
+      "pattern": "^$|\\S",
+      "description": "与上方数值一起填写；建议注明统计口径或截止时间。"
+    },
+    "fact_3_value": {
+      "type": "string",
+      "title": "事实 3 · 数值或短语",
+      "default": "",
+      "maxLength": 32,
+      "x-newpress": {
+        "group": "facts",
+        "control": "text",
+        "order": 60
+      },
+      "pattern": "^$|\\S",
+      "description": "填写可核实的企业信息；留空不展示此项。可用数字或短语，不自动添加单位。"
+    },
+    "fact_3_label": {
+      "type": "string",
+      "title": "事实 3 · 名称与统计口径",
+      "default": "",
+      "maxLength": 100,
+      "x-newpress": {
+        "group": "facts",
+        "control": "text",
+        "order": 70
+      },
+      "pattern": "^$|\\S",
+      "description": "与上方数值一起填写；建议注明统计口径或截止时间。"
+    },
+    "fact_4_value": {
+      "type": "string",
+      "title": "事实 4 · 数值或短语",
+      "default": "",
+      "maxLength": 32,
+      "x-newpress": {
+        "group": "facts",
+        "control": "text",
+        "order": 80
+      },
+      "pattern": "^$|\\S",
+      "description": "填写可核实的企业信息；留空不展示此项。可用数字或短语，不自动添加单位。"
+    },
+    "fact_4_label": {
+      "type": "string",
+      "title": "事实 4 · 名称与统计口径",
+      "default": "",
+      "maxLength": 100,
+      "x-newpress": {
+        "group": "facts",
+        "control": "text",
+        "order": 90
+      },
+      "pattern": "^$|\\S",
+      "description": "与上方数值一起填写；建议注明统计口径或截止时间。"
+    },
+    "strengths_title": {
+      "type": "string",
+      "title": "标题",
+      "default": "服务内容",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "strengths",
+        "control": "text",
+        "order": 0
+      }
+    },
+    "strengths_subtitle": {
+      "type": "string",
+      "title": "副标题",
+      "default": "从需求沟通、技术实施到交付维护。",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "strengths",
+        "control": "text",
+        "order": 10
+      }
+    },
+    "strength_1_title": {
+      "type": "string",
+      "title": "优势 1 · 标题",
+      "default": "技术开发",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "strengths",
+        "control": "text",
+        "order": 20
+      }
+    },
+    "strength_1_text": {
+      "type": "string",
+      "title": "优势 1 · 说明",
+      "default": "功能设计、开发与测试",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "strengths",
+        "control": "text",
+        "order": 30
+      }
+    },
+    "strength_2_title": {
+      "type": "string",
+      "title": "优势 2 · 标题",
+      "default": "系统集成",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "strengths",
+        "control": "text",
+        "order": 40
+      }
+    },
+    "strength_2_text": {
+      "type": "string",
+      "title": "优势 2 · 说明",
+      "default": "现有系统对接与数据互通",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "strengths",
+        "control": "text",
+        "order": 50
+      }
+    },
+    "strength_3_title": {
+      "type": "string",
+      "title": "优势 3 · 标题",
+      "default": "交付验收",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "strengths",
+        "control": "text",
+        "order": 60
+      }
+    },
+    "strength_3_text": {
+      "type": "string",
+      "title": "优势 3 · 说明",
+      "default": "按约定需求检查交付结果",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "strengths",
+        "control": "text",
+        "order": 70
+      }
+    },
+    "strength_4_title": {
+      "type": "string",
+      "title": "优势 4 · 标题",
+      "default": "维护支持",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "strengths",
+        "control": "text",
+        "order": 80
+      }
+    },
+    "strength_4_text": {
+      "type": "string",
+      "title": "优势 4 · 说明",
+      "default": "使用说明、问题反馈与维护",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "strengths",
+        "control": "text",
+        "order": 90
+      }
+    },
+    "innovation_title": {
+      "type": "string",
+      "title": "标题",
+      "default": "技术研发与应用",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "innovation",
+        "control": "text",
+        "order": 0
+      }
+    },
+    "innovation_description": {
+      "type": "string",
+      "title": "描述",
+      "default": "围绕具体业务需求，开展方案设计、功能验证与应用测试。",
+      "maxLength": 500,
+      "x-newpress": {
+        "group": "innovation",
+        "control": "textarea",
+        "order": 10
+      }
+    },
+    "innovation_image": {
+      "type": "string",
+      "title": "山峦图片",
+      "default": "",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "innovation",
+        "control": "image",
+        "order": 20
+      },
+      "description": "留空使用内置山峦背景；第三张轮播未单独设置图片时也使用此图。",
+      "format": "uri-reference"
+    },
+    "innovation_button": {
+      "type": "string",
+      "title": "按钮文字",
+      "default": "查看业务介绍",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "innovation",
+        "control": "text",
+        "order": 30
+      }
+    },
+    "innovation_link": {
+      "type": "string",
+      "title": "按钮链接",
+      "default": "/#business",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "innovation",
+        "control": "text",
+        "order": 40
+      },
+      "format": "uri-reference",
+      "description": "留空隐藏此按钮。可填写企业页面地址；指向已关闭首页区块的按钮会自动隐藏，联系区关闭时转到直接联系入口。",
+      "pattern": "^$|^(https?://[^\\s\\\\]+|/[^/\\s\\\\][^\\s\\\\]*|/)$"
+    },
+    "business_title": {
+      "type": "string",
+      "title": "标题",
+      "default": "核心业务",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "business",
+        "control": "text",
+        "order": 0
+      }
+    },
+    "business_description": {
+      "type": "string",
+      "title": "描述",
+      "default": "按业务类型查看服务内容，了解需求对接与项目实施方式。",
+      "maxLength": 500,
+      "x-newpress": {
+        "group": "business",
+        "control": "textarea",
+        "order": 10
+      }
+    },
+    "business_1_title": {
+      "type": "string",
+      "title": "业务 1 · 标题",
+      "default": "软件开发",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "business",
+        "control": "text",
+        "order": 20
+      }
+    },
+    "business_1_text": {
+      "type": "string",
+      "title": "业务 1 · 说明",
+      "default": "根据业务流程设计功能，完成开发、测试与部署。",
+      "maxLength": 600,
+      "x-newpress": {
+        "group": "business",
+        "control": "textarea",
+        "order": 30
+      }
+    },
+    "business_1_link": {
+      "type": "string",
+      "title": "业务 1 · 详情链接",
+      "default": "/#contact",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "business",
+        "control": "text",
+        "order": 40
+      },
+      "description": "发布企业介绍页面后，可填写对应的 /pages/页面别名。",
+      "format": "uri-reference",
+      "pattern": "^$|^(https?://[^\\s\\\\]+|/[^/\\s\\\\][^\\s\\\\]*|/)$"
+    },
+    "business_2_title": {
+      "type": "string",
+      "title": "业务 2 · 标题",
+      "default": "系统集成",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "business",
+        "control": "text",
+        "order": 50
+      }
+    },
+    "business_2_text": {
+      "type": "string",
+      "title": "业务 2 · 说明",
+      "default": "对接已有系统和数据接口，整理数据交换与权限规则。",
+      "maxLength": 600,
+      "x-newpress": {
+        "group": "business",
+        "control": "textarea",
+        "order": 60
+      }
+    },
+    "business_2_link": {
+      "type": "string",
+      "title": "业务 2 · 详情链接",
+      "default": "/#contact",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "business",
+        "control": "text",
+        "order": 70
+      },
+      "description": "发布企业介绍页面后，可填写对应的 /pages/页面别名。",
+      "format": "uri-reference",
+      "pattern": "^$|^(https?://[^\\s\\\\]+|/[^/\\s\\\\][^\\s\\\\]*|/)$"
+    },
+    "business_3_title": {
+      "type": "string",
+      "title": "业务 3 · 标题",
+      "default": "运维支持",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "business",
+        "control": "text",
+        "order": 80
+      }
+    },
+    "business_3_text": {
+      "type": "string",
+      "title": "业务 3 · 说明",
+      "default": "提供使用说明、故障排查、版本更新和日常维护。",
+      "maxLength": 600,
+      "x-newpress": {
+        "group": "business",
+        "control": "textarea",
+        "order": 90
+      }
+    },
+    "business_3_link": {
+      "type": "string",
+      "title": "业务 3 · 详情链接",
+      "default": "/#contact",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "business",
+        "control": "text",
+        "order": 100
+      },
+      "description": "发布企业介绍页面后，可填写对应的 /pages/页面别名。",
+      "format": "uri-reference",
+      "pattern": "^$|^(https?://[^\\s\\\\]+|/[^/\\s\\\\][^\\s\\\\]*|/)$"
+    },
+    "news_title": {
+      "type": "string",
+      "title": "新闻区标题",
+      "default": "新闻中心",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "news",
+        "control": "text",
+        "order": 0
+      }
+    },
+    "news_description": {
+      "type": "string",
+      "title": "新闻区说明",
+      "default": "",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "news",
+        "control": "text",
+        "order": 10
+      }
+    },
+    "partners_title": {
+      "type": "string",
+      "title": "区块标题",
+      "default": "合作伙伴",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "partners",
+        "control": "text",
+        "order": 0
+      },
+      "pattern": "^$|\\S"
+    },
+    "partners_description": {
+      "type": "string",
+      "title": "区块说明",
+      "default": "",
+      "maxLength": 500,
+      "x-newpress": {
+        "group": "partners",
+        "control": "textarea",
+        "order": 10
+      },
+      "pattern": "^$|\\S"
+    },
+    "partner_1_name": {
+      "type": "string",
+      "title": "合作伙伴 1 · 名称",
+      "default": "",
+      "maxLength": 100,
+      "x-newpress": {
+        "group": "partners",
+        "control": "text",
+        "order": 20
+      },
+      "pattern": "^$|\\S",
+      "description": "必填名称才展示此项；使用已获授权的真实合作关系。"
+    },
+    "partner_1_image": {
+      "type": "string",
+      "title": "合作伙伴 1 · 标志图片",
+      "default": "",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "partners",
+        "control": "image",
+        "order": 30
+      },
+      "pattern": "^$|^(https?://[^\\s]+|/[^/#\\s][^\\s]*)$",
+      "format": "uri-reference",
+      "description": "使用以 / 开头的站内路径或完整 http(s) 地址；留空显示文字名称。"
+    },
+    "partner_1_url": {
+      "type": "string",
+      "title": "合作伙伴 1 · 网站链接",
+      "default": "",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "partners",
+        "control": "text",
+        "order": 40
+      },
+      "pattern": "^$|^(https?://[^\\s]+|/[^/#\\s][^\\s]*)$",
+      "format": "uri-reference",
+      "description": "使用以 / 开头的站内路径或完整 http(s) 地址；留空作为普通展示项。"
+    },
+    "partner_2_name": {
+      "type": "string",
+      "title": "合作伙伴 2 · 名称",
+      "default": "",
+      "maxLength": 100,
+      "x-newpress": {
+        "group": "partners",
+        "control": "text",
+        "order": 50
+      },
+      "pattern": "^$|\\S",
+      "description": "必填名称才展示此项；使用已获授权的真实合作关系。"
+    },
+    "partner_2_image": {
+      "type": "string",
+      "title": "合作伙伴 2 · 标志图片",
+      "default": "",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "partners",
+        "control": "image",
+        "order": 60
+      },
+      "pattern": "^$|^(https?://[^\\s]+|/[^/#\\s][^\\s]*)$",
+      "format": "uri-reference",
+      "description": "使用以 / 开头的站内路径或完整 http(s) 地址；留空显示文字名称。"
+    },
+    "partner_2_url": {
+      "type": "string",
+      "title": "合作伙伴 2 · 网站链接",
+      "default": "",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "partners",
+        "control": "text",
+        "order": 70
+      },
+      "pattern": "^$|^(https?://[^\\s]+|/[^/#\\s][^\\s]*)$",
+      "format": "uri-reference",
+      "description": "使用以 / 开头的站内路径或完整 http(s) 地址；留空作为普通展示项。"
+    },
+    "partner_3_name": {
+      "type": "string",
+      "title": "合作伙伴 3 · 名称",
+      "default": "",
+      "maxLength": 100,
+      "x-newpress": {
+        "group": "partners",
+        "control": "text",
+        "order": 80
+      },
+      "pattern": "^$|\\S",
+      "description": "必填名称才展示此项；使用已获授权的真实合作关系。"
+    },
+    "partner_3_image": {
+      "type": "string",
+      "title": "合作伙伴 3 · 标志图片",
+      "default": "",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "partners",
+        "control": "image",
+        "order": 90
+      },
+      "pattern": "^$|^(https?://[^\\s]+|/[^/#\\s][^\\s]*)$",
+      "format": "uri-reference",
+      "description": "使用以 / 开头的站内路径或完整 http(s) 地址；留空显示文字名称。"
+    },
+    "partner_3_url": {
+      "type": "string",
+      "title": "合作伙伴 3 · 网站链接",
+      "default": "",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "partners",
+        "control": "text",
+        "order": 100
+      },
+      "pattern": "^$|^(https?://[^\\s]+|/[^/#\\s][^\\s]*)$",
+      "format": "uri-reference",
+      "description": "使用以 / 开头的站内路径或完整 http(s) 地址；留空作为普通展示项。"
+    },
+    "partner_4_name": {
+      "type": "string",
+      "title": "合作伙伴 4 · 名称",
+      "default": "",
+      "maxLength": 100,
+      "x-newpress": {
+        "group": "partners",
+        "control": "text",
+        "order": 110
+      },
+      "pattern": "^$|\\S",
+      "description": "必填名称才展示此项；使用已获授权的真实合作关系。"
+    },
+    "partner_4_image": {
+      "type": "string",
+      "title": "合作伙伴 4 · 标志图片",
+      "default": "",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "partners",
+        "control": "image",
+        "order": 120
+      },
+      "pattern": "^$|^(https?://[^\\s]+|/[^/#\\s][^\\s]*)$",
+      "format": "uri-reference",
+      "description": "使用以 / 开头的站内路径或完整 http(s) 地址；留空显示文字名称。"
+    },
+    "partner_4_url": {
+      "type": "string",
+      "title": "合作伙伴 4 · 网站链接",
+      "default": "",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "partners",
+        "control": "text",
+        "order": 130
+      },
+      "pattern": "^$|^(https?://[^\\s]+|/[^/#\\s][^\\s]*)$",
+      "format": "uri-reference",
+      "description": "使用以 / 开头的站内路径或完整 http(s) 地址；留空作为普通展示项。"
+    },
+    "partner_5_name": {
+      "type": "string",
+      "title": "合作伙伴 5 · 名称",
+      "default": "",
+      "maxLength": 100,
+      "x-newpress": {
+        "group": "partners",
+        "control": "text",
+        "order": 140
+      },
+      "pattern": "^$|\\S",
+      "description": "必填名称才展示此项；使用已获授权的真实合作关系。"
+    },
+    "partner_5_image": {
+      "type": "string",
+      "title": "合作伙伴 5 · 标志图片",
+      "default": "",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "partners",
+        "control": "image",
+        "order": 150
+      },
+      "pattern": "^$|^(https?://[^\\s]+|/[^/#\\s][^\\s]*)$",
+      "format": "uri-reference",
+      "description": "使用以 / 开头的站内路径或完整 http(s) 地址；留空显示文字名称。"
+    },
+    "partner_5_url": {
+      "type": "string",
+      "title": "合作伙伴 5 · 网站链接",
+      "default": "",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "partners",
+        "control": "text",
+        "order": 160
+      },
+      "pattern": "^$|^(https?://[^\\s]+|/[^/#\\s][^\\s]*)$",
+      "format": "uri-reference",
+      "description": "使用以 / 开头的站内路径或完整 http(s) 地址；留空作为普通展示项。"
+    },
+    "partner_6_name": {
+      "type": "string",
+      "title": "合作伙伴 6 · 名称",
+      "default": "",
+      "maxLength": 100,
+      "x-newpress": {
+        "group": "partners",
+        "control": "text",
+        "order": 170
+      },
+      "pattern": "^$|\\S",
+      "description": "必填名称才展示此项；使用已获授权的真实合作关系。"
+    },
+    "partner_6_image": {
+      "type": "string",
+      "title": "合作伙伴 6 · 标志图片",
+      "default": "",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "partners",
+        "control": "image",
+        "order": 180
+      },
+      "pattern": "^$|^(https?://[^\\s]+|/[^/#\\s][^\\s]*)$",
+      "format": "uri-reference",
+      "description": "使用以 / 开头的站内路径或完整 http(s) 地址；留空显示文字名称。"
+    },
+    "partner_6_url": {
+      "type": "string",
+      "title": "合作伙伴 6 · 网站链接",
+      "default": "",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "partners",
+        "control": "text",
+        "order": 190
+      },
+      "pattern": "^$|^(https?://[^\\s]+|/[^/#\\s][^\\s]*)$",
+      "format": "uri-reference",
+      "description": "使用以 / 开头的站内路径或完整 http(s) 地址；留空作为普通展示项。"
+    },
+    "faq_title": {
+      "type": "string",
+      "title": "区块标题",
+      "default": "常见问题",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "faq",
+        "control": "text",
+        "order": 0
+      },
+      "pattern": "^$|\\S"
+    },
+    "faq_description": {
+      "type": "string",
+      "title": "区块说明",
+      "default": "",
+      "maxLength": 500,
+      "x-newpress": {
+        "group": "faq",
+        "control": "textarea",
+        "order": 10
+      },
+      "pattern": "^$|\\S"
+    },
+    "faq_1_question": {
+      "type": "string",
+      "title": "问题 1",
+      "default": "",
+      "maxLength": 180,
+      "x-newpress": {
+        "group": "faq",
+        "control": "text",
+        "order": 20
+      },
+      "pattern": "^$|\\S",
+      "description": "问题和回答必须同时填写才展示。"
+    },
+    "faq_1_answer": {
+      "type": "string",
+      "title": "回答 1",
+      "default": "",
+      "maxLength": 2000,
+      "x-newpress": {
+        "group": "faq",
+        "control": "textarea",
+        "order": 30
+      },
+      "pattern": "^$|\\S",
+      "description": "纯文本，保留换行；不要粘贴 HTML。"
+    },
+    "faq_2_question": {
+      "type": "string",
+      "title": "问题 2",
+      "default": "",
+      "maxLength": 180,
+      "x-newpress": {
+        "group": "faq",
+        "control": "text",
+        "order": 40
+      },
+      "pattern": "^$|\\S",
+      "description": "问题和回答必须同时填写才展示。"
+    },
+    "faq_2_answer": {
+      "type": "string",
+      "title": "回答 2",
+      "default": "",
+      "maxLength": 2000,
+      "x-newpress": {
+        "group": "faq",
+        "control": "textarea",
+        "order": 50
+      },
+      "pattern": "^$|\\S",
+      "description": "纯文本，保留换行；不要粘贴 HTML。"
+    },
+    "faq_3_question": {
+      "type": "string",
+      "title": "问题 3",
+      "default": "",
+      "maxLength": 180,
+      "x-newpress": {
+        "group": "faq",
+        "control": "text",
+        "order": 60
+      },
+      "pattern": "^$|\\S",
+      "description": "问题和回答必须同时填写才展示。"
+    },
+    "faq_3_answer": {
+      "type": "string",
+      "title": "回答 3",
+      "default": "",
+      "maxLength": 2000,
+      "x-newpress": {
+        "group": "faq",
+        "control": "textarea",
+        "order": 70
+      },
+      "pattern": "^$|\\S",
+      "description": "纯文本，保留换行；不要粘贴 HTML。"
+    },
+    "faq_4_question": {
+      "type": "string",
+      "title": "问题 4",
+      "default": "",
+      "maxLength": 180,
+      "x-newpress": {
+        "group": "faq",
+        "control": "text",
+        "order": 80
+      },
+      "pattern": "^$|\\S",
+      "description": "问题和回答必须同时填写才展示。"
+    },
+    "faq_4_answer": {
+      "type": "string",
+      "title": "回答 4",
+      "default": "",
+      "maxLength": 2000,
+      "x-newpress": {
+        "group": "faq",
+        "control": "textarea",
+        "order": 90
+      },
+      "pattern": "^$|\\S",
+      "description": "纯文本，保留换行；不要粘贴 HTML。"
+    },
+    "careers_title": {
+      "type": "string",
+      "title": "人才标题",
+      "default": "加入我们",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "careers",
+        "control": "text",
+        "order": 0
+      }
+    },
+    "careers_description": {
+      "type": "string",
+      "title": "人才描述",
+      "default": "岗位职责、任职要求与应聘方式，请通过联系入口咨询。",
+      "maxLength": 500,
+      "x-newpress": {
+        "group": "careers",
+        "control": "textarea",
+        "order": 10
+      }
+    },
+    "careers_button": {
+      "type": "string",
+      "title": "人才按钮文字",
+      "default": "咨询岗位",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "careers",
+        "control": "text",
+        "order": 20
+      }
+    },
+    "careers_link": {
+      "type": "string",
+      "title": "人才按钮链接",
+      "default": "/#contact",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "careers",
+        "control": "text",
+        "order": 30
+      },
+      "format": "uri-reference",
+      "description": "留空隐藏此按钮。可填写企业页面地址；指向已关闭首页区块的按钮会自动隐藏，联系区关闭时转到直接联系入口。",
+      "pattern": "^$|^(https?://[^\\s\\\\]+|/[^/\\s\\\\][^\\s\\\\]*|/)$"
+    },
+    "contact_title": {
+      "type": "string",
+      "title": "合作标题",
+      "default": "业务咨询与合作",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "contact",
+        "control": "text",
+        "order": 0
+      }
+    },
+    "contact_description": {
+      "type": "string",
+      "title": "合作描述",
+      "default": "说明你需要的服务、项目进度和联系方式，便于我们回复。",
+      "maxLength": 500,
+      "x-newpress": {
+        "group": "contact",
+        "control": "textarea",
+        "order": 10
+      }
+    },
+    "contact_action_label": {
+      "type": "string",
+      "title": "合作按钮文字",
+      "default": "联系我们",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "contact",
+        "control": "text",
+        "order": 20
+      }
+    },
+    "contact_action_url": {
+      "type": "string",
+      "title": "合作按钮链接",
+      "default": "",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "contact",
+        "control": "text",
+        "order": 30
+      },
+      "description": "留空时根据核心模块状态进入在线留言或用户中心。可填写企业联系页面或 HTTPS 链接。",
+      "format": "uri-reference",
+      "pattern": "^$|^(https?://[^\\s\\\\]+|/[^/\\s\\\\][^\\s\\\\]*|/)$"
+    },
+    "contact_details_location": {
+      "type": "string",
+      "title": "联系信息展示位置",
+      "default": "hidden",
+      "description": "只展示已填写的信息；选择首页联系区时还需启用首页联系模块。",
+      "maxLength": 160,
+      "oneOf": [
+        {
+          "const": "hidden",
+          "title": "不显示"
+        },
+        {
+          "const": "contact",
+          "title": "首页联系区"
+        },
+        {
+          "const": "footer",
+          "title": "页脚"
+        },
+        {
+          "const": "both",
+          "title": "联系区与页脚"
+        }
+      ],
+      "x-newpress": {
+        "group": "contact_details",
+        "control": "radio-card",
+        "order": 0
+      }
+    },
+    "contact_email": {
+      "type": "string",
+      "title": "联系邮箱",
+      "default": "",
+      "description": "纯邮箱地址，自动生成邮件链接。留空不展示。",
+      "maxLength": 254,
+      "pattern": "^$|^[^\\s@<>]+@[^\\s@<>]+\\.[^\\s@<>]+$",
+      "x-newpress": {
+        "group": "contact_details",
+        "control": "text",
+        "order": 10
+      }
+    },
+    "contact_phone": {
+      "type": "string",
+      "title": "联系电话",
+      "default": "",
+      "description": "可使用 +、数字、空格、括号与连字符；自动生成拨号链接。留空不展示。",
+      "maxLength": 32,
+      "pattern": "^$|^\\+?[0-9][0-9 ()-]{2,30}[0-9]$",
+      "x-newpress": {
+        "group": "contact_details",
+        "control": "text",
+        "order": 20
+      }
+    },
+    "contact_address": {
+      "type": "string",
+      "title": "联系地址",
+      "default": "",
+      "description": "填写对外公开的办公或服务地址；留空不展示。",
+      "maxLength": 300,
+      "x-newpress": {
+        "group": "contact_details",
+        "control": "textarea",
+        "order": 30
+      }
+    },
+    "contact_hours": {
+      "type": "string",
+      "title": "服务时间",
+      "default": "",
+      "description": "例如：周一至周五 09:00–18:00；留空不展示。",
+      "maxLength": 100,
+      "x-newpress": {
+        "group": "contact_details",
+        "control": "text",
+        "order": 40
+      }
+    },
+    "contact_map_url": {
+      "type": "string",
+      "title": "地图链接",
+      "default": "",
+      "description": "需同时填写联系地址，地址将链接到该地图；使用站内页面或完整 http(s) 地址。留空显示纯文字地址。",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "pattern": "^$|^(https?://[^\\s]+|/[^/#\\s][^\\s]*)$",
+      "x-newpress": {
+        "group": "contact_details",
+        "control": "text",
+        "order": 50
+      }
+    },
+    "contact_qr_image": {
+      "type": "string",
+      "title": "联系二维码",
+      "default": "",
+      "description": "填写站内绝对路径或 http(s) 图片地址；留空不展示二维码。",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "pattern": "^$|^(https?://[^\\s]+|/[^/#\\s][^\\s]*)$",
+      "x-newpress": {
+        "group": "contact_details",
+        "control": "image",
+        "order": 60
+      }
+    },
+    "contact_qr_label": {
+      "type": "string",
+      "title": "二维码说明",
+      "default": "扫码联系",
+      "description": "在二维码旁显示，也作为图片替代文字。",
+      "maxLength": 80,
+      "x-newpress": {
+        "group": "contact_details",
+        "control": "text",
+        "order": 70
+      }
+    },
+    "social_1_label": {
+      "type": "string",
+      "title": "社交入口 1 · 名称",
+      "default": "",
+      "description": "名称和链接均填写后才展示此入口。",
+      "maxLength": 40,
+      "x-newpress": {
+        "group": "contact_details",
+        "control": "text",
+        "order": 80
+      }
+    },
+    "social_1_url": {
+      "type": "string",
+      "title": "社交入口 1 · 链接",
+      "default": "",
+      "description": "填写站内页面或完整 http(s) 链接；与名称配合显示。",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "pattern": "^$|^(https?://[^\\s]+|/[^/#\\s][^\\s]*)$",
+      "x-newpress": {
+        "group": "contact_details",
+        "control": "text",
+        "order": 90
+      }
+    },
+    "social_2_label": {
+      "type": "string",
+      "title": "社交入口 2 · 名称",
+      "default": "",
+      "description": "名称和链接均填写后才展示此入口。",
+      "maxLength": 40,
+      "x-newpress": {
+        "group": "contact_details",
+        "control": "text",
+        "order": 100
+      }
+    },
+    "social_2_url": {
+      "type": "string",
+      "title": "社交入口 2 · 链接",
+      "default": "",
+      "description": "填写站内页面或完整 http(s) 链接；与名称配合显示。",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "pattern": "^$|^(https?://[^\\s]+|/[^/#\\s][^\\s]*)$",
+      "x-newpress": {
+        "group": "contact_details",
+        "control": "text",
+        "order": 110
+      }
+    },
+    "social_3_label": {
+      "type": "string",
+      "title": "社交入口 3 · 名称",
+      "default": "",
+      "description": "名称和链接均填写后才展示此入口。",
+      "maxLength": 40,
+      "x-newpress": {
+        "group": "contact_details",
+        "control": "text",
+        "order": 120
+      }
+    },
+    "social_3_url": {
+      "type": "string",
+      "title": "社交入口 3 · 链接",
+      "default": "",
+      "description": "填写站内页面或完整 http(s) 链接；与名称配合显示。",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "pattern": "^$|^(https?://[^\\s]+|/[^/#\\s][^\\s]*)$",
+      "x-newpress": {
+        "group": "contact_details",
+        "control": "text",
+        "order": 130
+      }
+    },
+    "listing_title": {
+      "type": "string",
+      "title": "新闻列表标题",
+      "default": "新闻中心",
+      "maxLength": 100,
+      "x-newpress": {
+        "group": "listing",
+        "control": "text",
+        "order": 0
+      }
+    },
+    "listing_description": {
+      "type": "string",
+      "title": "新闻列表说明",
+      "default": "查看企业新闻、产品更新和技术文章。",
+      "description": "显示在新闻列表页顶部；留空隐藏说明。",
+      "maxLength": 500,
+      "x-newpress": {
+        "group": "listing",
+        "control": "textarea",
+        "order": 10
+      }
+    },
+    "listing_layout": {
+      "type": "string",
+      "title": "新闻列表布局",
+      "default": "grid",
+      "description": "分类与搜索结果使用相同布局。",
+      "maxLength": 160,
+      "oneOf": [
+        {
+          "const": "grid",
+          "title": "卡片网格"
+        },
+        {
+          "const": "list",
+          "title": "横向列表"
+        }
+      ],
+      "x-newpress": {
+        "group": "listing",
+        "control": "segmented",
+        "order": 20
+      }
+    },
+    "listing_columns": {
+      "type": "string",
+      "title": "宽屏卡片列数",
+      "default": "3",
+      "description": "仅在网格布局生效；窄屏会自动减少列数。",
+      "maxLength": 160,
+      "oneOf": [
+        {
+          "const": "2",
+          "title": "两列"
+        },
+        {
+          "const": "3",
+          "title": "三列"
+        },
+        {
+          "const": "4",
+          "title": "四列"
+        }
+      ],
+      "x-newpress": {
+        "group": "listing",
+        "control": "segmented",
+        "order": 30
+      }
+    },
+    "card_image": {
+      "type": "boolean",
+      "title": "显示卡片图片",
+      "default": true,
+      "description": "同时作用于首页新闻、新闻列表与其他复用新闻卡片的页面。",
+      "x-newpress": {
+        "group": "listing",
+        "control": "toggle",
+        "order": 40
+      }
+    },
+    "card_excerpt": {
+      "type": "boolean",
+      "title": "显示卡片摘要",
+      "default": true,
+      "description": "同时作用于首页新闻、新闻列表与其他复用新闻卡片的页面。",
+      "x-newpress": {
+        "group": "listing",
+        "control": "toggle",
+        "order": 50
+      }
+    },
+    "card_date": {
+      "type": "boolean",
+      "title": "显示卡片日期",
+      "default": true,
+      "description": "同时作用于首页新闻、新闻列表与其他复用新闻卡片的页面。",
+      "x-newpress": {
+        "group": "listing",
+        "control": "toggle",
+        "order": 60
+      }
+    },
+    "card_category": {
+      "type": "boolean",
+      "title": "显示卡片分类",
+      "default": true,
+      "description": "同时作用于首页新闻、新闻列表与其他复用新闻卡片的页面。",
+      "x-newpress": {
+        "group": "listing",
+        "control": "toggle",
+        "order": 70
+      }
+    },
+    "card_excerpt_lines": {
+      "type": "integer",
+      "title": "卡片摘要行数",
+      "default": 2,
+      "description": "仅在启用卡片摘要且文章有摘要时生效。",
+      "minimum": 1,
+      "maximum": 4,
+      "x-newpress": {
+        "group": "listing",
+        "control": "range",
+        "order": 80,
+        "unit": "行",
+        "step": 1,
+        "css_variable": "--card-excerpt-lines"
+      }
+    },
+    "show_breadcrumbs": {
+      "type": "boolean",
+      "title": "显示内页面包屑",
+      "default": true,
+      "description": "用于文章、页面、分类、作者与专题等内页的层级导航。",
+      "x-newpress": {
+        "group": "listing",
+        "control": "toggle",
+        "order": 90
+      }
+    },
+    "article_cover": {
+      "type": "boolean",
+      "title": "显示文章封面",
+      "default": true,
+      "description": "文章有封面图片时显示。",
+      "x-newpress": {
+        "group": "article",
+        "control": "toggle",
+        "order": 0
+      }
+    },
+    "article_summary": {
+      "type": "boolean",
+      "title": "显示文章摘要",
+      "default": true,
+      "description": "文章有摘要时显示；正文内容保持不变。",
+      "x-newpress": {
+        "group": "article",
+        "control": "toggle",
+        "order": 10
+      }
+    },
+    "article_meta": {
+      "type": "boolean",
+      "title": "显示作者与发布日期",
+      "default": true,
+      "description": "控制文章标题下的作者、日期与分类信息。",
+      "x-newpress": {
+        "group": "article",
+        "control": "toggle",
+        "order": 20
+      }
+    },
+    "article_tags": {
+      "type": "boolean",
+      "title": "显示文章标签",
+      "default": true,
+      "description": "文章设置了标签时显示。",
+      "x-newpress": {
+        "group": "article",
+        "control": "toggle",
+        "order": 30
+      }
+    },
+    "article_toc": {
+      "type": "boolean",
+      "title": "显示文章目录",
+      "default": true,
+      "description": "根据正文标题自动生成；标题不足时不显示空目录。",
+      "x-newpress": {
+        "group": "article",
+        "control": "toggle",
+        "order": 40
+      }
+    },
+    "article_reading_time": {
+      "type": "boolean",
+      "title": "显示预计阅读时间",
+      "default": true,
+      "description": "根据文章正文自动估算；开启文章元信息后生效，仅用于文章。",
+      "x-newpress": {
+        "group": "article",
+        "control": "toggle",
+        "order": 50
+      }
+    },
+    "article_copy_link": {
+      "type": "boolean",
+      "title": "显示复制链接按钮",
+      "default": true,
+      "description": "方便读者复制当前文章地址进行分享。",
+      "x-newpress": {
+        "group": "article",
+        "control": "toggle",
+        "order": 60
+      }
+    },
+    "article_series": {
+      "type": "boolean",
+      "title": "显示所属专题与上下篇",
+      "default": true,
+      "description": "文章属于已发布专题或系列时显示。",
+      "x-newpress": {
+        "group": "article",
+        "control": "toggle",
+        "order": 70
+      }
+    },
+    "article_toc_open": {
+      "type": "boolean",
+      "title": "默认展开文章目录",
+      "default": true,
+      "description": "关闭后目录默认折叠，读者仍可手动展开。",
+      "x-newpress": {
+        "group": "article",
+        "control": "toggle",
+        "order": 80
+      }
+    },
+    "article_updated": {
+      "type": "boolean",
+      "title": "显示文章更新时间",
+      "default": false,
+      "description": "有晚于发布日期的更新时间时显示；开启文章元信息后生效，仅用于文章。",
+      "x-newpress": {
+        "group": "article",
+        "control": "toggle",
+        "order": 90
+      }
+    },
+    "article_width": {
+      "type": "string",
+      "title": "正文宽度",
+      "default": "standard",
+      "description": "宽屏最大宽度分别为 760、1000、1200 px；移动端自适应。",
+      "maxLength": 160,
+      "oneOf": [
+        {
+          "const": "narrow",
+          "title": "窄版"
+        },
+        {
+          "const": "standard",
+          "title": "标准"
+        },
+        {
+          "const": "wide",
+          "title": "宽版"
+        }
+      ],
+      "x-newpress": {
+        "group": "article",
+        "control": "segmented",
+        "order": 100
+      }
+    },
+    "article_title_align": {
+      "type": "string",
+      "title": "文章标题对齐",
+      "default": "center",
+      "maxLength": 160,
+      "oneOf": [
+        {
+          "const": "center",
+          "title": "居中"
+        },
+        {
+          "const": "left",
+          "title": "左对齐"
+        }
+      ],
+      "x-newpress": {
+        "group": "article",
+        "control": "segmented",
+        "order": 110
+      }
+    },
+    "comments_title": {
+      "type": "string",
+      "title": "评论区标题",
+      "default": "交流与观点",
+      "maxLength": 100,
+      "x-newpress": {
+        "group": "comments",
+        "control": "text",
+        "order": 0
+      }
+    },
+    "comments_intro": {
+      "type": "string",
+      "title": "评论区说明",
+      "default": "",
+      "description": "补充交流提示，留空不显示；核心评论开关、审核和隐私政策仍由站点设置管理。",
+      "maxLength": 300,
+      "x-newpress": {
+        "group": "comments",
+        "control": "textarea",
+        "order": 10
+      }
+    },
+    "series_title": {
+      "type": "string",
+      "title": "专题列表标题",
+      "default": "专题与系列",
+      "maxLength": 100,
+      "x-newpress": {
+        "group": "series",
+        "control": "text",
+        "order": 0
+      }
+    },
+    "series_description": {
+      "type": "string",
+      "title": "专题列表说明",
+      "default": "按主题浏览企业动态与研究成果，沿着系列深入阅读。",
+      "description": "显示在专题与系列列表页顶部；留空隐藏说明。",
+      "maxLength": 500,
+      "x-newpress": {
+        "group": "series",
+        "control": "textarea",
+        "order": 10
+      }
+    }
+  },
+  "x-newpress": {
+    "version": 1,
+    "groups": [
+      {"id":"enterprise","title":"客户案例","description":"填写真实项目与成果，详情链接指向已发布企业页面；空案例不展示。","icon":"layout","order":145},
+      {"id":"delivery","title":"合作与交付流程","description":"按实际服务流程调整各阶段，再开启展示。","icon":"layout","order":146},
+      {"id":"resources","title":"资料中心","description":"先上传资料或发布内容页，再填写实际地址。名称与地址同时存在才展示。","icon":"layout","order":147},
+      {
+        "id": "visual",
+        "title": "全站配色",
+        "description": "统一正文、背景、强调色与分隔线。图片区块保留图片色彩；请配合预览检查文字对比。",
+        "icon": "palette",
+        "order": 0
+      },
+      {
+        "id": "typography",
+        "title": "排版与交互",
+        "description": "选择标题字体、按钮形状、内容间距和界面动效。",
+        "icon": "type",
+        "order": 10
+      },
+      {
+        "id": "header",
+        "title": "页眉与导航",
+        "description": "设置品牌标志、固定导航、首页透明页眉、搜索与联系入口。导航内容由核心菜单管理。",
+        "icon": "navigation",
+        "order": 20
+      },
+      {
+        "id": "footer",
+        "title": "页脚",
+        "description": "设置页脚配色、品牌说明、版权文字与返回顶部入口。站点登记信息由核心管理。",
+        "icon": "layout",
+        "order": 30
+      },
+      {
+        "id": "modules",
+        "title": "首页模块与顺序",
+        "description": "原有模块默认保留；企业事实、合作伙伴与常见问题默认关闭，填写完整内容后再启用。",
+        "icon": "layout",
+        "order": 40
+      },
+      {
+        "id": "hero",
+        "title": "首屏与轮播",
+        "description": "设置首屏形式、图片、轮播行为与文案。按钮指向关闭的首页区块时会自动隐藏。",
+        "icon": "image",
+        "order": 50
+      },
+      {
+        "id": "about",
+        "title": "关于我们",
+        "description": "编辑企业简介、图片与了解更多入口。",
+        "icon": "building",
+        "order": 60
+      },
+      {
+        "id": "facts",
+        "title": "企业事实",
+        "description": "展示可核实的企业信息；每项需同时填写数值或短语、名称与统计口径。",
+        "icon": "chart",
+        "order": 70
+      },
+      {
+        "id": "strengths",
+        "title": "服务优势",
+        "description": "编辑四项服务内容与说明。",
+        "icon": "sparkles",
+        "order": 80
+      },
+      {
+        "id": "innovation",
+        "title": "技术研发",
+        "description": "编辑研发方向、背景图片与详情入口。",
+        "icon": "mountain",
+        "order": 90
+      },
+      {
+        "id": "business",
+        "title": "核心业务",
+        "description": "编辑三个业务介绍与对应链接。",
+        "icon": "layers",
+        "order": 100
+      },
+      {
+        "id": "news",
+        "title": "首页新闻",
+        "description": "设置首页新闻区的标题与说明；文章内容由核心内容管理提供。",
+        "icon": "newspaper",
+        "order": 110
+      },
+      {
+        "id": "partners",
+        "title": "合作伙伴",
+        "description": "最多展示六个合作伙伴；名称必填，标志和链接可选。",
+        "icon": "users",
+        "order": 120
+      },
+      {
+        "id": "faq",
+        "title": "常见问题",
+        "description": "最多展示四组问答；问题与回答同时填写才显示。",
+        "icon": "message",
+        "order": 130
+      },
+      {
+        "id": "careers",
+        "title": "人才招聘",
+        "description": "编辑岗位介绍与应聘联系入口。",
+        "icon": "users",
+        "order": 140
+      },
+      {
+        "id": "contact",
+        "title": "首页联系合作",
+        "description": "编辑联系区标题、说明和主要合作入口。",
+        "icon": "mail",
+        "order": 150
+      },
+      {
+        "id": "contact_details",
+        "title": "联系信息与社交",
+        "description": "按需在首页联系区、页脚或两处展示公开联系信息。空白项不会占位。",
+        "icon": "phone",
+        "order": 160
+      },
+      {
+        "id": "listing",
+        "title": "新闻列表与卡片",
+        "description": "设置新闻列表、卡片信息及内页层级导航。筛选、分类与分页由核心提供。",
+        "icon": "grid",
+        "order": 170
+      },
+      {
+        "id": "article",
+        "title": "文章阅读",
+        "description": "设置正文宽度、封面、元信息、目录和分享入口；SEO 元信息继续使用核心内容数据。",
+        "icon": "book",
+        "order": 180
+      },
+      {
+        "id": "comments",
+        "title": "评论区",
+        "description": "编辑评论区文案；评论权限、验证和审核策略由核心站点设置管理。",
+        "icon": "message",
+        "order": 190
+      },
+      {
+        "id": "series",
+        "title": "专题与系列",
+        "description": "编辑专题列表说明；专题内容与文章顺序由核心管理。",
+        "icon": "layers",
+        "order": 200
+      }
+    ]
+  },
+  "title": "Nexora 主题设置",
+  "description": "企业展示、新闻阅读和品牌外观的主题设置；内容、菜单、SEO 与评论策略使用 NewPress 核心管理。"
+}

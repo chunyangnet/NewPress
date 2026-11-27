@@ -1,0 +1,163 @@
+{{define "base"}}
+
+<!doctype html>
+<html lang="{{.Site.Locale}}" data-input-style="fluent" data-choice-controls data-site-timezone="{{.Site.Timezone}}" data-style="{{if eq (index .ThemeValues "visual_style") "liquid-glass"}}liquid-glass{{else}}classic{{end}}">
+<head>
+  <meta charset="utf-8">
+  {{$hasBadges := false}}{{range .Posts}}{{if .ArticleBadge.Kind}}{{$hasBadges = true}}{{end}}{{end}}{{range .Featured}}{{if .ArticleBadge.Kind}}{{$hasBadges = true}}{{end}}{{end}}
+  {{if or (ne .BodyClass "is-home") $hasBadges}}<link rel="stylesheet" href="{{asset "css/chunnel-article-badges.css"}}" data-article-badge-styles>{{end}}
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {{if ne .BodyClass "is-home"}}<script src="{{asset "js/chunnel-scroll.js"}}?v={{.Site.ThemeVersion}}&amp;ui=resources-20261114-1" defer></script>{{end}}
+  <title>{{.PageTitle}}</title>
+  <meta name="description" content="{{.Description}}">
+  {{if and (not .IsAdmin) (not .IsPreview) (index .ThemeValues "cookie_consent_enabled")}}<script src="{{asset "js/cookie-consent.js"}}?v={{.Site.ThemeVersion}}&amp;ui=cookie-20261119" defer></script>{{end}}
+  {{range .Integrations.Verification}}<meta name="{{.Name}}" content="{{.Content}}">{{end}}
+  {{if .Integrations.AnalyticsConfig}}<script src="{{.Integrations.ScriptURL}}" data-site-integrations="{{.Integrations.AnalyticsConfig}}"{{if index .ThemeValues "cookie_consent_enabled"}} data-consent-required="true"{{end}} defer></script>{{end}}
+  {{if .IsPreview}}<meta name="robots" content="noindex, nofollow, noarchive">{{else}}{{if .Site.Robots}}<meta name="robots" content="{{.Site.Robots}}">{{end}}{{end}}
+  {{if .IsPreview}}<meta name="referrer" content="no-referrer">{{end}}
+  {{if .Site.Generator}}<meta name="generator" content="{{.Site.Generator}}">{{end}}
+  {{if and .Canonical (not .IsPreview)}}<link rel="canonical" href="{{.Canonical}}">{{end}}
+  <meta name="theme-color" content="{{index .ThemeValues "paper_color"}}">
+  {{if eq .BodyClass "is-home"}}<script src="{{if eq (index .ThemeValues "visual_style") "liquid-glass"}}{{asset "js/chunnel-home-glass.js"}}{{else}}{{asset "js/chunnel-home.js"}}{{end}}?v={{.Site.ThemeVersion}}&amp;ui=color-mode-20261118-2" data-home-entry></script>{{else}}<script src="{{asset "js/chunnel-color-mode.js"}}?v={{.Site.ThemeVersion}}&amp;ui=color-mode-20261118-2"></script>{{end}}
+  <link rel="icon" href="{{.Site.IconURL}}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{asset "images/brand/apple-touch-icon.png"}}?v={{.Site.ThemeVersion}}">
+  {{if and true (not .IsPreview)}}
+  {{if .Site.PublicAPIEnabled}}<link rel="alternate" type="application/rss+xml" title="{{.Site.Title}} · RSS" href="/feed.xml">{{end}}
+  <meta property="og:site_name" content="{{.Site.Title}}">
+  <meta property="og:title" content="{{.PageTitle}}">
+  <meta property="og:description" content="{{.Description}}">
+  <meta property="og:type" content="{{if .SEO.Kind}}{{.SEO.Kind}}{{else}}website{{end}}">
+  {{if .Canonical}}<meta property="og:url" content="{{.Canonical}}">{{end}}
+  {{if .Site.SocialImageURL}}<meta property="og:image" content="{{.Site.SocialImageURL}}"><meta name="twitter:card" content="summary_large_image">{{else}}<meta name="twitter:card" content="summary">{{end}}
+  {{if .Site.SocialImageURL}}<meta property="og:image:alt" content="{{.SEO.ImageAlt}}"><meta name="twitter:image" content="{{.Site.SocialImageURL}}">{{end}}
+  {{if .SEO.ImageWidth}}<meta property="og:image:width" content="{{.SEO.ImageWidth}}"><meta property="og:image:height" content="{{.SEO.ImageHeight}}">{{end}}
+  <meta name="twitter:title" content="{{.PageTitle}}"><meta name="twitter:description" content="{{.Description}}">
+  {{if eq .SEO.Kind "article"}}<meta property="article:published_time" content="{{.SEO.Published}}"><meta property="article:modified_time" content="{{.SEO.Modified}}">{{end}}
+  {{if .SEO.JSONLD}}<script type="application/ld+json">{{.SEO.JSONLD}}</script>{{end}}
+  {{end}}
+  
+  {{if eq .BodyClass "is-home"}}
+  <link rel="stylesheet" href="{{if eq (index .ThemeValues "visual_style") "liquid-glass"}}{{asset "css/chunnel-home-glass.css"}}{{else}}{{asset "css/chunnel-home.css"}}{{end}}?v={{.Site.ThemeVersion}}&amp;ui=module-design-20261115-3">
+  {{if .Home.HasSidebarModules}}<link rel="stylesheet" href="{{asset "css/chunnel-home-sidebar.css"}}?v={{.Site.ThemeVersion}}">{{end}}
+  {{if .Home.HasCustomBlocks}}<link rel="stylesheet" href="{{asset "css/chunnel-home-blocks.css"}}?v={{.Site.ThemeVersion}}"><script src="{{asset "js/chunnel-home-blocks.js"}}?v={{.Site.ThemeVersion}}" defer></script>{{end}}
+  {{else}}
+  <link rel="stylesheet" href="{{asset "css/chunnel.css"}}?v={{.Site.ThemeVersion}}">
+  <link rel="stylesheet" href="{{asset "css/chunnel-ui.css"}}?v={{.Site.ThemeVersion}}&amp;ui=resources-20261114-1">
+  <link rel="stylesheet" href="{{asset "css/chunnel-pages.css"}}?v={{.Site.ThemeVersion}}&amp;ui=origin-flags-20261115-1">
+  <link rel="stylesheet" href="{{asset "css/chunnel-settings.css"}}?v={{.Site.ThemeVersion}}">
+  <link rel="stylesheet" href="{{asset "css/chunnel-discovery.css"}}?v={{.Site.ThemeVersion}}">
+  {{end}}
+  {{if or (eq .BodyClass "is-error") (eq .BodyClass "is-maintenance")}}<link rel="stylesheet" href="{{asset "css/chunnel-status.css"}}?v=status-20261126">{{end}}
+  {{if .Navigation.HasBadges}}<link rel="stylesheet" href="{{asset "css/chunnel-navigation-badges.css"}}">{{end}}
+  <link rel="stylesheet" href="{{.Navigation.CSSURL}}">
+  
+  {{if or (eq .BodyClass "is-account-access") (eq .BodyClass "is-admin is-admin-users")}}<link rel="stylesheet" href="{{asset "css/chunnel-access.css"}}?v={{.Site.ThemeVersion}}">{{end}}
+  {{if and (ne .BodyClass "is-home") true}}<link rel="stylesheet" href="{{asset "css/chunnel-interactions.css"}}?v={{.Site.ThemeVersion}}&amp;ui=resources-20261114-1">{{end}}
+  {{if and (ne .BodyClass "is-home") (eq (index .ThemeValues "visual_style") "liquid-glass")}}<link rel="stylesheet" href="{{asset "css/chunnel-glass.css"}}?v={{.Site.ThemeVersion}}">{{end}}
+  
+  <noscript><link rel="stylesheet" href="{{if eq .BodyClass "is-home"}}{{asset "css/chunnel-home-nojs.css"}}{{else}}{{asset "css/chunnel-nojs.css"}}{{end}}?v={{.Site.ThemeVersion}}"></noscript>
+  {{if or (eq .Kind "series") (eq .Kind "single")}}<link rel="stylesheet" href="{{asset "css/chunnel-series.css"}}?v={{.Site.ThemeVersion}}">{{end}}
+  
+  
+  
+  
+  
+  
+  {{if .PluginFragments}}<link rel="stylesheet" href="{{asset "css/chunnel-plugin-fragments.css"}}?v={{.Site.ThemeVersion}}">{{end}}
+  {{if or (eq .BodyClass "is-links") (eq .BodyClass "is-admin is-admin-links")}}<link rel="stylesheet" href="{{asset "css/chunnel-links.css"}}?v={{.Site.ThemeVersion}}">{{end}}
+  {{if or (eq .BodyClass "is-feedback") (eq .BodyClass "is-admin is-admin-features")}}<link rel="stylesheet" href="{{asset "css/chunnel-feedback.css"}}?v={{.Site.ThemeVersion}}">{{end}}
+  
+  
+  
+  {{if eq .BodyClass "is-circles"}}<link rel="stylesheet" href="{{asset "css/chunnel-circles.css"}}?v={{.Site.ThemeVersion}}">{{end}}
+  {{if ne .BodyClass "is-home"}}<link rel="stylesheet" href="{{asset "css/chunnel-inputs.css"}}?v={{.Site.ThemeVersion}}&amp;ui=resources-20261114-1">{{end}}
+  {{if ne .BodyClass "is-home"}}<link rel="stylesheet" href="{{asset "css/chunnel-foundation.css"}}?v={{.Site.ThemeVersion}}&amp;ui=resources-20261114-1">{{end}}
+  {{if eq .BodyClass "is-account"}}<link rel="stylesheet" href="{{asset "css/chunnel-dialogs.css"}}?v={{.Site.ThemeVersion}}">{{end}}
+  
+  
+  
+  
+  
+  
+  
+  {{if eq .BodyClass "is-account"}}<link rel="stylesheet" href="{{asset "css/chunnel-account.css"}}?v={{.Site.ThemeVersion}}&amp;ui=account-mobile-20261112">{{end}}
+  {{if eq .BodyClass "is-account"}}<link rel="stylesheet" href="{{asset "css/chunnel-currency.css"}}?v={{.Site.ThemeVersion}}">{{end}}
+  {{if or (eq .BodyClass "is-account") (eq .BodyClass "is-author")}}<link rel="stylesheet" href="{{asset "css/chunnel-progression.css"}}?v={{.Site.ThemeVersion}}">{{end}}
+  {{if eq .BodyClass "is-billing"}}<link rel="stylesheet" href="{{asset "css/chunnel-billing.css"}}?v={{.Site.ThemeVersion}}">{{end}}
+  
+  {{if or (eq .BodyClass "is-account") (eq .BodyClass "is-author")}}<script src="{{asset "js/chunnel-progression-badges.js"}}?v={{.Site.ThemeVersion}}" defer></script>{{end}}
+  {{if and true (ne .BodyClass "is-home")}}<link rel="stylesheet" href="{{asset "css/chunnel-portal.css"}}?v={{.Site.ThemeVersion}}">{{end}}
+  {{if eq .BodyClass "is-explore"}}<link rel="stylesheet" href="{{asset "css/chunnel-explore.css"}}?v={{.Site.ThemeVersion}}&amp;ui=resources-20261114-1">{{end}}
+  
+  {{if ne .BodyClass "is-home"}}<link rel="stylesheet" href="{{asset "css/chunnel-community.css"}}?v={{.Site.ThemeVersion}}">{{end}}
+  {{if or (eq .Kind "single") (eq .Kind "page")}}<link rel="stylesheet" href="{{asset "css/chunnel-reader.css"}}?v={{.Site.ThemeVersion}}">{{end}}
+  
+  
+  {{if .VerificationEnabled}}<link rel="stylesheet" href="{{asset "css/chunnel-verification.css"}}?v={{.Site.ThemeVersion}}"><script src="{{asset "js/chunnel-verification.js"}}?v={{.Site.ThemeVersion}}" defer></script>{{end}}
+  
+  {{if .Integrations.FooterHTML}}<link rel="stylesheet" href="{{asset "css/chunnel-footer.css"}}?v={{.Site.ThemeVersion}}">{{end}}
+  {{if and (not .IsAdmin) (not .IsPreview) (index .ThemeValues "cookie_consent_enabled")}}<link rel="stylesheet" href="{{asset "css/cookie-consent.css"}}?v={{.Site.ThemeVersion}}&amp;ui=cookie-20261119">{{end}}
+  {{if eq .BodyClass "is-shop"}}<link rel="stylesheet" href="/core-assets/css/newpress-shop.css">{{end}}
+  {{if and (eq .BodyClass "is-home") (index .ThemeValues "market_module")}}<link rel="stylesheet" href="/core-assets/css/newpress-shop-coupons.css">{{end}}
+  {{if ne .BodyClass "is-home"}}<link rel="stylesheet" href="{{asset "css/chunnel-selects.css"}}?v={{.Site.ThemeVersion}}">{{end}}
+  <link rel="stylesheet" href="{{.ThemeCSSURL}}">
+  <link rel="stylesheet" href="{{asset "css/chunnel-color-mode.css"}}?v={{.Site.ThemeVersion}}&amp;ui=color-mode-20261118-2">
+{{if or (eq .Kind "single") (eq .BodyClass "is-account") (eq .BodyClass "is-author") (eq .BodyClass "is-admin is-admin-recognition")}}<link rel="stylesheet" href="/core-assets/css/newpress-recognition.css"><script src="/core-assets/js/newpress-client.js" defer></script><script src="/core-assets/js/newpress-recognition.js" defer></script>{{end}}
+  {{if eq .BodyClass "is-questions"}}<link rel="stylesheet" href="/core-assets/css/newpress-questions.css"><script src="/core-assets/js/newpress-questions.js" defer></script>{{end}}
+  {{if or (and (eq .BodyClass "is-questions") (not .Questions.New) (not .Questions.Question.ID)) (and (eq .BodyClass "is-circles") .Circles.Directory)}}<link rel="stylesheet" href="{{asset "css/chunnel-channels.css"}}?v={{.Site.ThemeVersion}}">{{end}}
+  {{if eq .BodyClass "is-page is-announcements"}}<link rel="stylesheet" href="{{asset "css/chunnel-announcements.css"}}?v={{.Site.ThemeVersion}}">{{end}}
+{{template "child-head" .}}
+</head>
+<body class="{{.BodyClass}} {{.ThemeClass}}{{if ne .BodyClass "is-home"}} portal-site{{end}}">
+  {{template "icon-sprite" .}}
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  
+  {{if and .IsPreview .Preview.EditorURL}}<div class="content-preview-bar" role="status">
+    <div class="shell"><span>{{template "icon" "eye"}}</span><p><b>安全草稿预览</b><small>恢复点 {{.Preview.SavedLabel}} · 来源 v{{.Preview.SourceVersion}} · {{.Preview.StatusLabel}} · 链接 {{.Preview.ExpiresLabel}} 失效</small></p>{{if .Preview.EditorURL}}<a href="{{.Preview.EditorURL}}" rel="noreferrer">{{template "icon" "arrow-left"}}返回编辑器</a>{{end}}</div>
+  </div>{{end}}
+  {{template "header" .}}
+  <main id="main-content" class="site-main">
+    {{template "content" .}}
+  </main>
+  {{template "footer" .}}
+  {{if and (not .IsAdmin) (not .IsPreview) (index .ThemeValues "cookie_consent_enabled")}}{{template "cookie-consent" .}}{{end}}
+  {{template "interaction-hub" .}}
+  {{if and (index .ThemeValues "floating_tools") (or (index .ThemeValues "floating_top") (index .ThemeValues "floating_notifications") (index .ThemeValues "floating_search"))}}<aside class="floating-tools" aria-label="快捷工具" data-floating-tools>
+    {{if index .ThemeValues "floating_top"}}<button type="button" aria-label="回到顶部" data-tooltip="回到顶部" data-scroll-top>{{template "icon" "arrow-up-to-line"}}</button>{{end}}
+    {{if index .ThemeValues "floating_notifications"}}<button type="button" aria-controls="notification-drawer" aria-haspopup="dialog" aria-expanded="false" aria-label="打开通知" data-tooltip="通知中心" data-drawer-open="notification-drawer">{{template "icon" "bell-ring"}}<i data-unread-dot hidden></i></button>{{end}}
+    {{if index .ThemeValues "floating_search"}}{{if index .ThemeValues "search_enabled"}}<button type="button" aria-expanded="false" aria-label="打开搜索" data-tooltip="快速搜索" data-focus-search>{{template "icon" "scan-search"}}</button>{{else}}<a href="/explore/" aria-label="打开搜索" data-tooltip="搜索内容">{{template "icon" "scan-search"}}</a>{{end}}{{end}}
+  </aside>{{end}}
+  {{if index .ThemeValues "mobile_nav_enabled"}}<nav class="mobile-bottom-nav {{if and (index .ThemeValues "mobile_quick_action") (or (not .Navigation.MobileActionConfigured) .Navigation.MobileAction)}}has-create{{end}}" aria-label="移动端导航">
+    {{template "mobile-navigation" .}}
+  </nav>{{end}}
+
+  {{if ne .BodyClass "is-home"}}
+  <script src="{{asset "js/chunnel-time.js"}}?v={{.Site.ThemeVersion}}" defer></script>
+  <script src="{{if eq (index .ThemeValues "visual_style") "liquid-glass"}}{{asset "js/chunnel-shell-glass.js"}}{{else}}{{asset "js/chunnel-shell.js"}}{{end}}?v={{.Site.ThemeVersion}}&amp;ui=resources-20261114-1" defer></script>
+  <script src="{{asset "js/chunnel-motion.js"}}?v={{.Site.ThemeVersion}}" defer></script>
+  <script src="{{asset "js/chunnel.js"}}?v={{.Site.ThemeVersion}}&amp;ui=resources-20261114-1" defer></script>
+  <script src="{{asset "js/chunnel-emoji-editor.js"}}?v={{.Site.ThemeVersion}}" defer></script>
+  <script src="{{asset "js/chunnel-emoji.js"}}?v={{.Site.ThemeVersion}}" defer></script>
+  <script src="/core-assets/js/newpress-client.js" defer></script>
+  {{if eq .BodyClass "is-shop"}}<script src="/core-assets/js/newpress-shop-services.js" defer></script><script src="/core-assets/js/newpress-shop.js" defer></script>{{end}}
+  <script src="{{asset "js/chunnel-interactions.js"}}?v={{.Site.ThemeVersion}}" defer></script>
+  {{if eq .BodyClass "is-billing"}}<script src="{{asset "js/chunnel-currency-shared.js"}}?v={{.Site.ThemeVersion}}" defer></script><script src="{{asset "js/chunnel-billing.js"}}?v={{.Site.ThemeVersion}}" defer></script>{{end}}
+  <script src="{{asset "js/chunnel-engagement.js"}}?v={{.Site.ThemeVersion}}" defer></script>
+  <script src="{{if eq .BodyClass "is-explore"}}{{asset "js/chunnel-explore.js"}}{{else}}{{asset "js/chunnel-experience.js"}}{{end}}?v={{.Site.ThemeVersion}}&amp;ui=origin-flags-20261115-1" defer></script>
+  {{if or .Archive.Term.Name (eq .BodyClass "is-author") (eq .BodyClass "is-series")}}<script src="{{asset "js/chunnel-list-navigation.js"}}?v={{.Site.ThemeVersion}}&amp;ui=resources-20261114-1" defer></script>{{end}}
+  {{if or (eq .BodyClass "is-account") (eq .BodyClass "is-account-access")}}<script src="{{asset "js/chunnel-account-nav.js"}}?v={{.Site.ThemeVersion}}" defer></script>{{end}}
+  {{if eq .BodyClass "is-account"}}<script src="{{asset "js/chunnel-notifications.js"}}?v={{.Site.ThemeVersion}}" defer></script><script src="{{asset "js/chunnel-currency-shared.js"}}?v={{.Site.ThemeVersion}}" defer></script><script src="{{asset "js/chunnel-wallet.js"}}?v={{.Site.ThemeVersion}}" defer></script><script src="{{asset "js/chunnel-progression-shared.js"}}?v={{.Site.ThemeVersion}}" defer></script><script src="{{asset "js/chunnel-progression.js"}}?v={{.Site.ThemeVersion}}" defer></script><script src="{{asset "js/chunnel-account.js"}}?v={{.Site.ThemeVersion}}&amp;ui=resources-20261114-1" defer></script><script src="{{asset "js/chunnel-account-import.js"}}?v={{.Site.ThemeVersion}}" defer></script>{{end}}
+  {{if eq .BodyClass "is-account-access"}}<script src="{{asset "js/chunnel-registration.js"}}?v={{.Site.ThemeVersion}}" defer></script>{{end}}
+  {{if eq .BodyClass "is-feedback"}}<script src="{{asset "js/chunnel-feedback.js"}}?v={{.Site.ThemeVersion}}&amp;ui=admin-20261114-2" defer></script>{{end}}
+  {{if eq .BodyClass "is-circles"}}<script src="{{asset "js/chunnel-circles.js"}}?v={{.Site.ThemeVersion}}" defer></script>{{end}}
+  {{if or (eq .BodyClass "is-circles") (eq .BodyClass "is-questions")}}<link rel="stylesheet" href="/core-assets/css/newpress-community-compose.css"><script src="/core-assets/js/newpress-community-compose.js" defer></script>{{end}}
+  <script src="{{asset "js/chunnel-search.js"}}?v={{.Site.ThemeVersion}}" defer></script>
+  {{end}}
+  {{if and (eq .BodyClass "is-home") (index .ThemeValues "market_module")}}<script src="/core-assets/js/newpress-shop-coupons.js" defer></script>{{end}}
+  
+  {{if ne .BodyClass "is-home"}}<script src="{{asset "js/chunnel-selects.js"}}?v={{.Site.ThemeVersion}}" defer></script>{{end}}
+{{template "child-body-end" .}}
+</body>
+</html>
+
+{{end}}

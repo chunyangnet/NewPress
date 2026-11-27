@@ -1,0 +1,110 @@
+{{define "ai-editor"}}
+{{if not .Admin.ReadOnly}}
+<dialog class="ai-editor" data-ai-editor aria-labelledby="ai-editor-title" aria-describedby="ai-editor-description">
+  <div class="ai-editor-frame">
+    <header class="ai-topbar">
+      <div class="ai-brand"><span class="ai-brand-icon">{{template "icon" "cpu"}}</span><div><h2 id="ai-editor-title">AI 编辑器</h2></div><span class="ai-beta">创作空间</span></div>
+      <div class="ai-topbar-actions">{{if and (.Admin.CanWrite "media:write") (.Admin.Can "media:read")}}<button class="ai-link-button" type="button" data-ai-image-open="body" data-ai-image-suggestion aria-haspopup="dialog" aria-expanded="false">{{template "icon" "image"}}生图</button>{{end}}<button class="ai-settings-toggle" type="button" data-ai-settings-toggle aria-expanded="false" aria-controls="ai-writing-settings">{{template "icon" "sliders-horizontal"}}设置</button><button class="ai-close" type="button" data-ai-close aria-label="关闭 AI 编辑器">{{template "icon" "x"}}</button></div>
+    </header>
+    <div class="ai-workspace">
+      <aside class="ai-sidebar" id="ai-writing-settings" aria-label="AI 写作设置">
+        <details class="ai-connection" data-ai-connection open>
+          <summary><span>{{template "icon" "sliders-horizontal"}}模型连接</span><span class="ai-connection-badge" data-ai-connection-badge>待连接</span></summary>
+          <div class="ai-connection-fields">
+            <label for="ai-provider">写作接口<select id="ai-provider" data-ai-provider><option value="">临时接口（仅本页）</option></select></label>
+            <label for="ai-saved-model" data-ai-saved-model-field hidden>写作模型<select id="ai-saved-model" data-ai-saved-model></select></label>
+            <div class="ai-connection-links"><button class="ai-link-button" type="button" data-ai-connections-refresh>刷新接口</button>{{if .Admin.Can "settings:manage"}}<a href="/admin/settings/#site-settings-ai" target="_blank" rel="noopener">管理接口与模型 {{template "icon" "external-link"}}</a>{{end}}</div>
+            <div data-ai-temporary class="ai-connection-fields">
+            <label for="ai-base-url">API 地址<input id="ai-base-url" type="url" data-ai-base placeholder="https://api.example.com/v1" maxlength="2048" spellcheck="false" autocomplete="off" autocapitalize="none" aria-describedby="ai-connection-help"></label>
+            <label for="ai-api-key">API Key<span class="ai-key-field"><input id="ai-api-key" type="password" data-ai-key placeholder="输入你的 API Key" maxlength="4096" autocomplete="off" spellcheck="false" autocapitalize="none"><button type="button" data-ai-key-toggle aria-pressed="false" aria-label="显示 API Key">显示</button></span></label>
+            <button class="ai-detect" type="button" data-ai-detect>{{template "icon" "scan-search"}}<span>探测可用模型</span></button>
+            <label for="ai-model">写作模型<input id="ai-model" type="text" data-ai-model list="ai-model-options" placeholder="探测后选择，或手动输入" maxlength="200" autocomplete="off" spellcheck="false" autocapitalize="none"></label>
+            <datalist id="ai-model-options" data-ai-models></datalist>
+            <p id="ai-connection-help" class="ai-help">兼容 Chat Completions 的公网 HTTPS 接口。Key 仅保留在当前页面。</p>
+            </div>
+            <p class="ai-help" data-ai-saved-help hidden>使用设置中保存的接口，可随时切换模型。</p>
+            <p class="ai-connection-status" data-ai-connection-status role="status" aria-live="polite"></p>
+          </div>
+        </details>
+        <div class="ai-templates-heading"><span class="ai-section-label">专属提示词</span><small data-ai-template-count>按写作场景分类</small></div>
+        <div class="ai-categories" data-ai-categories role="group" aria-label="提示词分类"></div>
+        <div class="ai-templates" data-ai-templates role="group" aria-label="写作模板"><p class="ai-help" data-ai-prompts-loading>打开后加载写作模板…</p></div>
+        <button class="ai-link-button" type="button" data-ai-prompts-retry hidden>重新加载提示词</button>
+        <details class="ai-custom-prompt"><summary>调整专属提示词 {{template "icon" "pen-line"}}</summary><label for="ai-instruction" class="ai-sr-only">当前模板提示词</label><textarea id="ai-instruction" data-ai-instruction rows="8" maxlength="12000" placeholder="可根据你的写作习惯修改提示词"></textarea><button type="button" class="ai-link-button" data-ai-reset-prompt>恢复模板提示词</button></details>
+        <details class="ai-advanced" open><summary>行文偏好</summary><label for="ai-writing-style">表达方式<select id="ai-writing-style" data-ai-writing-style><option value="natural">自然行文</option><option value="restrained">更克制，少套话</option><option value="preserve">贴近原稿语气</option></select></label><label for="ai-style-reference">参考你的文风（可选）<textarea id="ai-style-reference" data-ai-style-reference rows="3" maxlength="2000" placeholder="粘贴一小段你自己的文字，只参考表达，不作为事实素材"></textarea></label><label for="ai-avoid-phrases">不想出现的表达（可选）<textarea id="ai-avoid-phrases" data-ai-avoid-phrases rows="2" maxlength="1000" placeholder="例如：值得注意的是、总而言之、赋能"></textarea></label><p class="ai-help">优先保留具体信息，不用固定开场、排比和总结凑篇幅。</p></details>
+        <details class="ai-advanced"><summary>更多生成选项</summary><label for="ai-language">输出语言<select id="ai-language" data-ai-language>{{range $.AILanguages}}<option value="{{.Code}}">{{.Name}}</option>{{end}}</select></label><label for="ai-max-tokens">Token 上限（可留空）<input id="ai-max-tokens" data-ai-max-tokens type="number" min="512" max="32768" step="1" inputmode="numeric" placeholder="使用服务商默认值"></label><p class="ai-help">模型提前结束时可适当增加上限，具体额度以所选模型为准。</p></details>
+        <div class="ai-usage-option" data-ai-stream-usage-option><label class="ai-check"><input type="checkbox" data-ai-stream-usage checked aria-describedby="ai-usage-help">请求 Token 用量</label><p class="ai-help" id="ai-usage-help">兼容接口若不支持用量参数，可关闭后重新生成。按接口记住此选择。</p></div>
+        <p class="ai-sidebar-note">AI 生成初稿后，请自行检查并修改。</p>
+      </aside>
+      <section class="ai-stage" aria-label="文章生成工作区">
+        <header class="ai-stage-bar"><div class="ai-live-state"><span class="ai-activity" aria-hidden="true"><span class="ai-activity-track">✳<br>✦<br>✶<br>✧<br>✳</span></span><span data-ai-stage-state>准备写作</span></div><div class="ai-stage-tools"><div class="ai-view-modes" role="group" aria-label="生成内容显示方式"><button type="button" data-ai-view="preview" aria-pressed="true">阅读</button><button type="button" data-ai-view="markdown" aria-pressed="false">Markdown</button></div><button class="ai-thinking-toggle" type="button" data-ai-thinking-toggle aria-expanded="true" aria-controls="ai-thinking-panel" aria-label="模型思考：等待开始"><span class="ai-thinking-indicator" aria-hidden="true"></span>思考</button></div></header>
+        <div class="ai-output" data-ai-output>
+          <div class="ai-empty" data-ai-empty>
+            <div class="ai-empty-mark" aria-hidden="true"><span></span><span></span><span></span><b>{{template "icon" "pen-line"}}</b></div>
+            <h3>开始生成文章</h3>
+            <p id="ai-editor-description">选择写作模板并填写主题，生成标题、正文、摘要和标签。</p>
+            <div class="ai-starters" data-ai-starters><button type="button" data-ai-starter="tutorial">{{template "icon" "library"}}写一篇技术教程 </button><button type="button" data-ai-starter="article">{{template "icon" "pen-line"}}写一篇观点文章 </button><button type="button" data-ai-starter="rewrite">{{template "icon" "pen-line"}}润色我的草稿 </button><button type="button" data-ai-starter="humanize">{{template "icon" "user-round"}}去掉文章 AI 感 </button></div>
+          </div>
+          <div class="ai-result" data-ai-result hidden>
+            <div class="ai-document-heading"><h3 data-ai-document-title>正在构思标题…</h3><p data-ai-document-excerpt></p></div>
+            <article class="ai-prose" data-ai-preview aria-label="生成的文章正文"></article>
+            <label class="ai-markdown-label" data-ai-markdown-pane hidden><span class="ai-sr-only">编辑生成的 Markdown 正文</span><textarea data-ai-markdown maxlength="524288" spellcheck="false" aria-label="编辑生成的 Markdown 正文"></textarea></label>
+            <details class="ai-metadata" data-ai-metadata hidden>
+              <summary><span>{{template "icon" "pen-line"}}文章信息</span><small>可在填入前修改</small></summary>
+              <div class="ai-metadata-grid"><label>文章标题<input type="text" data-ai-meta-title maxlength="200"></label><label>公开别名<input type="text" data-ai-meta-slug maxlength="128" spellcheck="false"></label><label class="ai-wide">摘要<textarea data-ai-meta-excerpt rows="3" maxlength="500"></textarea></label><label class="ai-wide">标签<input type="text" data-ai-meta-tags maxlength="1620" placeholder="用逗号分隔"></label><div class="ai-wide ai-category-result"><span>建议分类</span><p data-ai-meta-categories>沿用当前分类</p></div><label class="ai-wide">配图建议<textarea data-ai-meta-cover rows="2" maxlength="1000"></textarea></label></div>
+            </details>
+          </div>
+        </div>
+        <div class="ai-output-bar">
+          <div class="ai-metrics"><span data-ai-word-count>0 字</span><span data-ai-elapsed></span>
+            <details class="ai-usage" data-ai-usage>
+              <summary data-ai-usage-summary aria-label="查看生成统计" title="平均 TPS 与 Token 用量；展开查看统计口径"><span data-ai-tps>— TPS</span><span data-ai-tokens>— Tokens</span></summary>
+              <div class="ai-usage-panel" data-ai-usage-panel>
+                <div class="ai-usage-heading"><strong data-ai-usage-model>当前生成</strong><span data-ai-usage-state>生成统计</span></div>
+                <dl class="ai-usage-grid">
+                  <div><dt>输入 Token</dt><dd data-ai-usage-input>—</dd></div><div><dt>输出 Token</dt><dd data-ai-usage-output>—</dd></div>
+                  <div><dt>其中推理</dt><dd data-ai-usage-reasoning>—</dd></div><div><dt>输入缓存命中</dt><dd data-ai-usage-cached>—</dd></div>
+                  <div><dt>输入缓存写入</dt><dd data-ai-usage-cache-created>—</dd></div><div><dt>总计 Token</dt><dd data-ai-usage-total>—</dd></div>
+                  <div data-ai-usage-tool-row hidden><dt>工具提示 Token</dt><dd data-ai-usage-tool>—</dd></div>
+                  <div><dt>首次内容返回</dt><dd data-ai-usage-first>—</dd></div><div><dt>最近用量上报</dt><dd data-ai-usage-sample>尚未收到</dd></div>
+                </dl>
+                <p data-ai-usage-note>开始生成后显示接口实际返回的用量。</p>
+                <p class="ai-usage-formula">平均 TPS = 输出 Token（含推理）÷ 从开始生成到最近用量上报的秒数，包含等待时间。未返回的字段显示 —，不按字数估算。</p>
+              </div>
+            </details>
+          </div>
+          <div class="ai-output-actions"><button type="button" class="ai-link-button" data-ai-humanize disabled title="使用当前模型改写这里的正文，保留上一版">再去一次 AI 感</button><button type="button" class="ai-link-button" data-ai-previous disabled>上一版</button><button type="button" class="ai-link-button" data-ai-copy disabled>复制正文</button><button type="button" class="ai-link-button" data-ai-follow aria-pressed="true">跟随输出</button></div>
+        </div>
+        <div class="ai-prompt-box">
+          <div class="ai-brief-heading"><label for="ai-brief">写作主题</label><span data-ai-selected-template>先选择写作模板</span></div>
+          <textarea id="ai-brief" data-ai-brief rows="3" maxlength="8000" aria-describedby="ai-brief-help" placeholder="写下主题、读者和你想讲清的内容，也可以粘贴素材或提纲…"></textarea>
+          <p id="ai-brief-help" class="ai-help" data-ai-brief-help>写清一个具体问题。新闻需附事件和来源原文，材料少可以写短。</p>
+          <div class="ai-prompt-controls"><div class="ai-writing-options"><label><span class="ai-sr-only">写作语气</span><select data-ai-tone aria-label="写作语气"><option value="natural">自然清晰</option><option value="professional">专业严谨</option><option value="friendly">亲切易读</option><option value="concise">简洁直接</option></select></label><label><span class="ai-sr-only">文章篇幅</span><select data-ai-length aria-label="文章篇幅"><option value="short">短篇 · 约 800 字</option><option value="medium" selected>标准 · 约 1800 字</option><option value="long">长篇 · 约 3500 字</option></select></label></div><button class="ai-generate" type="button" data-ai-generate>{{template "icon" "cpu"}}<span data-ai-generate-label>生成全文</span></button><button class="ai-stop" type="button" data-ai-stop hidden><span aria-hidden="true">■</span>停止生成</button></div>
+          <div class="ai-prompt-note"><label class="ai-check"><input type="checkbox" data-ai-use-draft>参考当前草稿</label><span>Ctrl / ⌘ + Enter 开始生成</span></div>
+        </div>
+      </section>
+      <aside class="ai-thinking" id="ai-thinking-panel" data-ai-thinking data-state="idle" aria-labelledby="ai-thinking-title">
+        <header class="ai-thinking-heading">
+          <span class="ai-thinking-mark ai-activity" aria-hidden="true"><span class="ai-activity-track">✳<br>✦<br>✶<br>✧<br>✳</span></span>
+          <div><h3 id="ai-thinking-title">模型思考</h3><p data-ai-thinking-model>随生成实时显示</p></div>
+          <button class="ai-thinking-close" type="button" data-ai-thinking-close aria-label="收起模型思考">{{template "icon" "x"}}</button>
+        </header>
+        <div class="ai-thinking-status"><span data-ai-thinking-state role="status" aria-live="polite">等待开始</span><span data-ai-thinking-elapsed>等待输出</span></div>
+        <div class="ai-thinking-output" data-ai-thinking-output tabindex="0" role="region" aria-label="模型返回的思考内容">
+          <div class="ai-thinking-empty" data-ai-thinking-empty>
+            <div class="ai-thinking-lines" aria-hidden="true"><i></i><i></i><i></i></div>
+            <h4 data-ai-thinking-empty-title>留一处空间，看看思路</h4>
+            <p data-ai-thinking-empty-note>开始生成后，在这里阅读模型返回的思考内容。</p>
+          </div>
+          <div class="ai-thinking-text" data-ai-thinking-text hidden></div>
+          <p class="ai-thinking-limit" data-ai-thinking-limit hidden>思考内容较长，仅展示前 256 KiB；正文会继续生成。</p>
+        </div>
+        <div class="ai-thinking-toolbar"><span data-ai-thinking-count>0 字</span><div><button type="button" class="ai-link-button" data-ai-thinking-stop aria-label="停止本次生成" hidden>停止生成</button><button type="button" class="ai-link-button" data-ai-thinking-follow aria-pressed="true" disabled>跟随思考</button></div></div>
+        <p class="ai-thinking-note">仅展示模型返回的思考内容或摘要，不会填入文章。</p>
+      </aside>
+    </div>
+    <footer class="ai-footer"><div class="ai-footer-copy"><p data-ai-status role="status" aria-live="polite">连接模型后即可开始生成。</p><a data-ai-login href="/admin/login/" target="_blank" rel="noopener" hidden>重新登录后重试 {{template "icon" "external-link"}}</a><label class="ai-check" data-ai-keep-slug-label hidden><input type="checkbox" data-ai-keep-slug checked>保留已有公开别名</label></div><div class="ai-footer-actions"><button class="ai-secondary" type="button" data-ai-undo-apply disabled>撤回上次填入</button><button class="ai-apply" type="button" data-ai-apply disabled>{{template "icon" "check"}}填入文章</button></div></footer>
+  </div>
+</dialog>
+{{end}}
+{{end}}

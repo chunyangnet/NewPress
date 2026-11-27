@@ -1,0 +1,90 @@
+{{define "public-comment-node"}}
+<article class="comment comment-depth-{{.Depth}}" id="comment-{{.ID}}" data-comment-id="{{.ID}}">
+  <span class="avatar avatar-b" aria-hidden="true">{{.Avatar}}</span>
+  <div class="comment-main">
+    <header>
+      <div><b>{{.AuthorName}}</b>{{template "identity-badges" .Badges}}{{if .Support.Supported}}<span class="comment-support-badge">{{template "icon" "heart"}}<span>{{.Support.Label}}</span></span>{{end}}{{if .StaffReply}}<span class="ui-badge comment-staff-badge">站方回复</span>{{else if gt .ParentID 0}}<span class="ui-badge badge-blue">回复</span>{{end}}<small>{{dateIn .CreatedAt .Timezone}}{{if not .EditedAt.IsZero}} · 已编辑{{end}}</small></div>
+      <a class="comment-anchor" href="#comment-{{.ID}}" aria-label="评论固定链接">#{{.ID}}</a>
+    </header>
+    {{if or .Origin.Location .Origin.Device}}
+    <div class="comment-origin-badges" aria-label="评论来源信息">
+      {{if .Origin.Location}}<span class="comment-origin-location" title="IP 大致归属地，受网络出口和服务精度影响" data-precision="{{.Origin.Precision}}">{{if .Origin.Flag}}<img class="comment-origin-flag" src="/plugin-assets/comment-origin/flags/{{.Origin.Flag}}.svg" alt="" width="20" height="15" loading="lazy" aria-hidden="true">{{else}}{{template "icon" "globe-2"}}{{end}}<span class="comment-origin-label">IP 属地</span><span class="comment-origin-value">{{.Origin.Location}}{{if eq .Origin.Precision "region"}}（省／地区）{{else if eq .Origin.Precision "country"}}（国家）{{end}}</span></span>{{end}}
+      {{if .Origin.Device}}<span class="comment-origin-device" title="由客户端 UA 报告，可被修改">{{if eq .Origin.Kind "mobile"}}{{template "icon" "smartphone"}}{{else if eq .Origin.Kind "tablet"}}{{template "icon" "tablet"}}{{else if eq .Origin.Kind "bot"}}{{template "icon" "bot"}}{{else}}{{template "icon" "laptop"}}{{end}}<span class="comment-origin-value">{{.Origin.Device}}</span></span>{{end}}
+    </div>{{end}}
+    <div class="comment-copy">{{safeHTML .ContentHTML}}</div>
+    {{if .CanReply}}<footer><button type="button" data-comment-reply data-parent-id="{{.ID}}" data-parent-name="{{.AuthorName}}">{{template "icon" "corner-up-left"}}<span>回复</span></button></footer>{{end}}
+    {{if .Children}}<div class="comment-children">{{range .Children}}{{template "public-comment-node" .}}{{end}}</div>{{end}}
+  </div>
+</article>
+{{end}}
+
+{{define "public-comments"}}
+<section class="article-comments surface" id="comments">
+  <header>
+    <div><span>评论与交流</span><h2>认真讨论这篇内容</h2></div>
+    <b>{{.Comments.Total}} 条评论</b>
+  </header>
+
+  {{if .Comments.Notice}}
+  <div class="comment-notice comment-notice-{{.Comments.NoticeTone}}" role="status">
+    {{template "icon" "message-circle"}}<p>{{.Comments.Notice}}</p>
+  </div>
+  {{end}}
+
+  {{if .Comments.Open}}
+  <div class="comment-entry" data-comment-entry>
+  <form {{if .Comments.LoginRequired}}inert aria-hidden="true"{{end}} class="comment-composer comment-form" action="{{.Comments.FormURL}}" method="post" data-comment-form data-comment-post-id="{{.Post.ID}}" data-comment-login-required="{{.Comments.RequireLogin}}" data-comment-locked="{{.Comments.LoginRequired}}" data-comment-drafts="{{index .ThemeValues "comment_drafts"}}" data-comment-max="{{.Comments.MaxLength}}" data-comment-replies="{{.Comments.AllowReplies}}" data-comment-depth="{{.Comments.MaxDepth}}" {{if .Site.PublicAPIEnabled}}data-comment-api="{{.Comments.APIURL}}"{{end}}>
+    <input type="hidden" name="form_token" value="{{.Comments.FormToken}}">
+    <span hidden data-comment-retry-supported></span>
+    <input type="hidden" name="parent_id" value="{{.Comments.Form.ParentID}}" data-comment-parent>
+    <label class="comment-honeypot" aria-hidden="true">个人网站<input name="website" value="" tabindex="-1" autocomplete="off"></label>
+    <span class="avatar avatar-a" aria-hidden="true">你</span>
+    <div class="comment-form-panel">
+      <div class="comment-composer-heading"><span>{{template "icon" "pen-line"}}发表评论</span><small>填写评论后提交</small></div>
+      <div class="comment-reply-context" data-comment-reply-context {{if not .Comments.Form.ParentID}}hidden{{end}}>
+        <span>{{template "icon" "corner-up-left"}}<b data-comment-reply-label>{{if .Comments.Form.ParentID}}正在回复评论 #{{.Comments.Form.ParentID}}{{end}}</b></span>
+        <button type="button" data-comment-reply-cancel>取消回复</button>
+      </div>
+      <p data-comment-account {{if not .Comments.AccountName}}hidden{{end}}>以 <b data-comment-account-name>{{.Comments.AccountName}}</b> 发表评论，提交后可在「我的评论」查看。</p>
+      <div class="comment-identity-grid" data-comment-identity {{if .Comments.AccountName}}hidden{{end}}>
+        <label class="{{if index .Comments.FieldErrors "author_name"}}has-error{{end}}"><span>称呼</span><input name="author_name" value="{{.Comments.Form.AuthorName}}" maxlength="160" autocomplete="name" {{if not .Comments.AccountName}}required{{end}} placeholder="如何称呼你">{{with index .Comments.FieldErrors "author_name"}}<small>{{.}}</small>{{end}}</label>
+        <label class="{{if index .Comments.FieldErrors "email"}}has-error{{end}}"><span>邮箱 <em>不会公开</em></span><input name="email" type="email" value="{{.Comments.Form.AuthorEmail}}" maxlength="320" autocomplete="email" {{if not .Comments.AccountName}}required{{end}} placeholder="you@example.com">{{with index .Comments.FieldErrors "email"}}<small>{{.}}</small>{{end}}</label>
+      </div>
+      {{with index .Comments.FieldErrors "parent_id"}}<p class="comment-field-error">{{.}}</p>{{end}}
+      <label class="comment-body-field {{if index .Comments.FieldErrors "content"}}has-error{{end}}"><span class="sr-only">评论内容</span><textarea name="content" rows="{{index .ThemeValues "comment_editor_rows"}}" maxlength="{{.Comments.MaxLength}}" required placeholder="友善交流，认真表达你的观点" data-comment-content {{if index .ThemeValues "comment_emoji"}}data-emoji-input{{else}}data-emoji-disabled{{end}}>{{.Comments.Form.Content}}</textarea>{{with index .Comments.FieldErrors "content"}}<small>{{.}}</small>{{end}}</label>
+      <footer>
+        <p>{{.Comments.PrivacyNotice}}{{if .Comments.ModerationNotice}}<br>{{.Comments.ModerationNotice}}{{end}}</p>
+        <span><b data-comment-count>0</b> / {{.Comments.MaxLength}}</span>
+        <button class="ui-button ui-button-primary ui-button-small" type="submit">{{template "icon" "send"}}发表评论</button>
+      </footer>
+    </div>
+  </form>
+  <div class="comment-login-gate" data-comment-login-gate {{if not .Comments.LoginRequired}}hidden{{end}}>
+    <span class="comment-login-symbol" aria-hidden="true">{{template "icon" "lock-keyhole"}}</span>
+    <b>登录后，加入这场讨论</b><p>填写昵称和评论内容后提交。</p>
+    <button class="ui-button ui-button-primary" type="button" data-account-login>{{template "icon" "user-round"}}登录并评论</button>
+    <a href="/account/access/">创建账号 / 查看邀请方式 {{template "icon" "chevron-right"}}</a>
+    <noscript><p>启用 JavaScript 后可登录评论。</p></noscript>
+  </div>
+  </div>
+  {{else}}
+  <div data-comment-closed data-comment-post-id="{{.Post.ID}}" data-comment-drafts="{{index .ThemeValues "comment_drafts"}}" {{if .Site.PublicAPIEnabled}}data-comment-api="{{.Comments.APIURL}}" data-comment-token="{{.Comments.FormToken}}"{{end}}>
+  <div class="comment-closed" role="status">{{template "icon" "lock-keyhole"}}<div><b>评论入口已关闭</b><p>{{.Comments.ClosedReason}}</p></div></div>
+  </div>
+  {{end}}
+
+  <div class="comment-list">
+    {{range .Comments.Items}}{{template "public-comment-node" .}}{{else}}
+    <div class="comment-empty"><span>{{template "icon" "message-circle"}}</span><b>还没有公开评论</b><p>{{if $.Comments.Open}}成为第一个认真回应这篇内容的人。{{else}}已审核讨论会显示在这里。{{end}}</p></div>
+    {{end}}
+  </div>
+
+  {{if or .Comments.PreviousURL .Comments.NextURL}}
+  <nav class="comment-pagination" aria-label="评论分页">
+    {{if .Comments.PreviousURL}}<a href="{{.Comments.PreviousURL}}">{{template "icon" "arrow-left"}}上一页</a>{{else}}<span></span>{{end}}
+    <b>第 {{.Comments.Page}} / {{.Comments.Pages}} 页</b>
+    {{if .Comments.NextURL}}<a href="{{.Comments.NextURL}}">下一页{{template "icon" "arrow-right"}}</a>{{end}}
+  </nav>
+  {{end}}
+</section>
+{{end}}

@@ -1,0 +1,8 @@
+{{define "content"}}
+<section class="admin-page feature-recovery">
+  <header class="admin-page-heading"><div><h1>{{.Admin.DetailTitle}}</h1><p>{{.Description}}</p></div></header>
+  {{if .FeatureStatus}}{{template "admin-feature-status" .}}{{end}}
+  <p>处理上方未满足的条件后，点击「进入业务页」继续管理。</p>
+  <a class="admin-button admin-button-secondary" href="">{{template "icon" "arrow-right"}}进入业务页</a>
+</section>
+{{end}}

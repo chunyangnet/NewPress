@@ -1,0 +1,56 @@
+{{define "content"}}
+<div class="shell portal-page explore-page" data-discovery data-discovery-mode="{{if .Discovery.Directory}}directory{{else}}results{{end}}">
+  <nav class="portal-breadcrumb" aria-label="当前位置"><a href="/">首页</a>{{template "icon" "chevron-right"}}<span aria-current="page">发现</span></nav>
+  <section class="explore-hero">
+    <div class="explore-hero-copy">
+      <h1>{{if .Discovery.Directory}}{{if .Navigation.ExploreTitle}}{{.Navigation.ExploreTitle}}{{else}}发现{{end}}{{else}}发现文章{{end}}</h1>
+      <p>{{if .Discovery.Directory}}{{if .Navigation.ExploreDescription}}{{.Navigation.ExploreDescription}}{{else}}从这里进入你感兴趣的栏目。{{end}}{{else}}搜索文章，或按分类继续浏览。{{end}}</p>
+      <form class="explore-search fluent-input-group" action="/explore/" method="get" role="search" aria-label="内容筛选搜索" data-discovery-search>
+        {{template "icon" "search"}}<label class="sr-only" for="explore-query">搜索标题、作者、分类或标签</label>
+        {{if .CategorySlug}}<input type="hidden" name="category" value="{{.CategorySlug}}">{{end}}
+        <input type="hidden" name="sort" value="{{.Discovery.Sort}}"><input type="hidden" name="view" value="{{.Discovery.View}}" data-discovery-view>
+        <input id="explore-query" name="q" value="{{.SearchQuery}}" type="search" placeholder="搜索文章、作者或关键词" maxlength="80" autocomplete="off"><button class="ui-button ui-button-primary" type="submit">搜索</button>
+      </form>
+    </div>
+    <a class="ui-button ui-button-secondary" href="{{if .Discovery.Directory}}/explore/?sort=updated{{else}}/explore/{{end}}">{{if .Discovery.Directory}}浏览全部文章{{else}}返回发现导航{{end}}</a>
+  </section>
+  {{if .Discovery.Directory}}
+  <nav class="explore-directory" aria-label="发现页导航">
+    {{range .Navigation.Explore}}
+    <section class="explore-directory-group nav-item-{{.ID}}">
+      {{if .Children}}<header>{{template "explore-directory-link" .}}</header><ul>{{range .Children}}<li>{{template "explore-directory-link" .}}{{if .Children}}<ul>{{range .Children}}<li>{{template "explore-directory-link" .}}</li>{{end}}</ul>{{end}}</li>{{end}}</ul>
+      {{else}}{{template "explore-directory-link" .}}{{end}}
+    </section>
+    {{else}}<div class="portal-empty"><h2>暂无导航入口</h2><p>可以搜索文章，或浏览全部文章。</p><a class="ui-button ui-button-secondary" href="/explore/?sort=updated">浏览全部文章</a></div>{{end}}
+  </nav>
+  {{else}}
+  <div class="portal-layout explore-layout">
+    <section class="portal-panel explore-results" aria-label="内容结果" data-discovery-results>
+      <header class="explore-results-head">
+        <div class="explore-results-title"><h2>{{if .SearchQuery}}“{{.SearchQuery}}”<span>的搜索结果</span>{{else if .Category}}{{.Category}}{{else}}全部内容{{end}}</h2><span class="portal-count">{{.Discovery.Total}}</span></div>
+        <div class="explore-results-tools">
+          <nav class="portal-view-switch" aria-label="文章排列方式"><button type="button" data-view-toggle="list" aria-pressed="{{if eq .Discovery.View "list"}}true{{else}}false{{end}}" aria-label="列表视图" title="列表视图">{{template "icon" "list"}}</button><button type="button" data-view-toggle="grid" aria-pressed="{{if ne .Discovery.View "list"}}true{{else}}false{{end}}" aria-label="网格视图" title="网格视图">{{template "icon" "layout-grid"}}</button></nav>
+          <form class="discovery-sort-form explore-sort" action="/explore/" method="get" data-discovery-sort>{{if .SearchQuery}}<input type="hidden" name="q" value="{{.SearchQuery}}">{{end}}{{if .CategorySlug}}<input type="hidden" name="category" value="{{.CategorySlug}}">{{end}}<input type="hidden" name="view" value="{{.Discovery.View}}" data-discovery-view><select data-select-ui="soft" name="sort" aria-label="内容排序" data-content-sort><option value="updated" {{if eq .Discovery.Sort "updated"}}selected{{end}}>最近更新</option><option value="published" {{if eq .Discovery.Sort "published"}}selected{{end}}>最新发布</option><option value="oldest" {{if eq .Discovery.Sort "oldest"}}selected{{end}}>最早发布</option><option value="title" {{if eq .Discovery.Sort "title"}}selected{{end}}>标题排序</option></select><button class="ui-button ui-button-secondary ui-button-small" type="submit">应用</button></form>
+        </div>
+      </header>
+      <nav class="explore-chips" aria-label="内容筛选"><a {{if eq .CategorySlug ""}}aria-current="true"{{end}} href="/explore/?q={{.SearchQuery}}&amp;sort={{.Discovery.Sort}}&amp;view={{.Discovery.View}}"><span>全部</span><small>{{.Discovery.Total}}</small></a>{{range .Categories}}<a {{if eq $.CategorySlug .Slug}}aria-current="true"{{end}} href="/explore/?category={{.Slug}}&amp;q={{$.SearchQuery}}&amp;sort={{$.Discovery.Sort}}&amp;view={{$.Discovery.View}}"><span>{{.Name}}</span><small>{{.Count}}</small></a>{{end}}</nav>
+      <div class="explore-results-meta">
+        <span class="explore-summary" data-content-summary>{{.Discovery.Total}} 条结果 · {{.Discovery.SortLabel}}</span>
+        {{if or .SearchQuery .Category}}<p class="explore-query-note">{{if .SearchQuery}}关键词：<b>{{.SearchQuery}}</b>{{end}}{{if .Category}}分类：<b>{{.Category}}</b>{{end}}<a href="/explore/">清除筛选 {{template "icon" "x"}}</a></p>{{end}}
+      </div>
+      <div class="portal-posts explore-posts" data-results-view="{{.Discovery.View}}" data-server-results>{{template "portal-post-cards" .}}</div>
+      {{template "content-pagination" .Discovery}}
+    </section>
+    {{template "portal-reading-sidebar" .}}
+  </div>
+  {{end}}
+  <p class="sr-only" role="status" aria-live="polite" data-discovery-status></p>
+</div>
+{{end}}
+{{define "explore-directory-link"}}
+<a class="explore-directory-link nav-item-{{.ID}}" href="{{.URL}}" {{if .Current}}aria-current="page"{{end}} {{if .NewWindow}}target="_blank"{{end}} {{if .Rel}}rel="{{.Rel}}"{{end}}>
+  <span class="explore-directory-icon">{{if .Icon}}{{template "icon" .Icon}}{{else}}{{template "icon" "link"}}{{end}}</span>
+  <span class="explore-directory-copy"><b>{{template "navigation-label" .}}</b>{{if .Description}}<small>{{.Description}}</small>{{end}}</span>
+  {{if .NewWindow}}{{template "icon" "external-link"}}{{else}}{{template "icon" "chevron-right"}}{{end}}
+</a>
+{{end}}

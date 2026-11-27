@@ -1,0 +1,93 @@
+:root {
+  --np-close: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m4 4 8 8M12 4l-8 8' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+/* The actual single select displays its live value. Only checkbox/tag fields
+   get a separate trigger so their removable chips can be real sibling buttons. */
+:root[data-choice-controls] :is(body, body[class]) select[data-choice-source] {
+  position: absolute !important; inline-size: 1px !important; block-size: 1px !important; min-height: 0 !important; min-width: 0 !important;
+  padding: 0 !important; margin: -1px !important; clip-path: inset(50%); overflow: hidden; pointer-events: none;
+  border-radius: var(--choice-radius, var(--control-field-radius, var(--choice-context-radius, 8px)));
+  color: var(--choice-ink); font: 400 var(--choice-size, 14px)/1.4 var(--choice-font);
+}
+/* Tag fields are the only controls that need this shell. Its styles arrive
+   with the optional menu, after the source field supplies its appearance. */
+:root[data-choice-controls] :is(body, body[class]) .np-choice-chips {
+  box-sizing: border-box; position: relative; vertical-align: middle;
+  --choice-box: var(--admin-ui-control-height, var(--fluent-control-height, var(--choice-height, 44px)));
+  min-width: 0; max-width: 100%; min-height: var(--choice-box); margin-block: 0;
+  padding-inline: var(--choice-inset, 11px) var(--choice-end-inset, calc(var(--choice-arrow-inset, var(--choice-inset, 11px)) + 1.6em));
+  border: 1px solid var(--fluent-validation, var(--choice-edge)); border-radius: var(--choice-radius, var(--control-field-radius, var(--choice-context-radius, 8px)));
+  background: var(--choice-surface); color: var(--choice-ink); box-shadow: none;
+  font: 400 var(--choice-size, 14px)/1.4 var(--choice-font); letter-spacing: normal; text-align: start;
+}
+:root[data-choice-controls] :is(body, body[class]) .np-choice-chips:has(:focus-visible) {
+  outline: 0; border-color: var(--fluent-validation, var(--choice-accent)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--fluent-validation, var(--choice-accent)) 12%, transparent);
+}
+:root .np-choice-chips:has(.np-choice-trigger:disabled) {
+  border-color: var(--choice-paper-edge); color: var(--choice-muted); background-color: var(--choice-hover); cursor: not-allowed; opacity: .66;
+}
+:root[data-choice-controls] :is(body, body[class]) .np-choice-chips { display: inline-flex; align-items: center; width: 100%; height: auto; padding-block: 4px; }
+:root select[hidden], :root select[hidden] + .np-choice-chips { display: none !important; }
+:root[data-choice-controls] :is(body, body[class]) .np-choice-chips .np-choice-trigger {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-end; width: 100%; height: 100%; min-height: 0;
+  min-width: 0; margin: 0; padding: 0 var(--choice-arrow-inset, var(--choice-inset, 11px)); border: 0; border-radius: inherit; color: inherit; background: transparent; box-shadow: none; cursor: pointer;
+}
+:root .np-choice-chips .np-choice-trigger:focus { outline: 0; }
+:root .np-choice-values { position: relative; display: flex; align-items: center; flex-wrap: wrap; min-width: 0; width: 100%; gap: 4px 6px; pointer-events: none; }
+:root .np-choice-placeholder { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--choice-muted); }
+:root .np-choice-chip { box-sizing: border-box; display: inline-flex; align-items: center; gap: 3px; min-width: 0; max-width: 100%; padding: 1px 2px 1px .48em; min-height: 1.68em; border-radius: var(--choice-option-radius, max(4px, calc(var(--choice-radius, var(--control-field-radius, 8px)) - 2px))); background: color-mix(in srgb, var(--choice-accent) 13%, var(--choice-surface)); }
+:root .np-choice-chip-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:root .np-choice-chips :is(.np-choice-clear, .np-choice-trigger) { font: inherit; }
+:root[data-choice-controls] :is(body, body[class]) .np-choice-chips .np-choice-clear { pointer-events: auto; display: grid; place-items: center; flex: none; width: 24px; min-width: 0; height: 24px; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 4px; background: transparent; color: inherit; cursor: pointer; box-shadow: none; }
+:root .np-choice-clear:is(:hover, :focus-visible):not(:disabled) { outline: 1px solid var(--choice-accent); }
+:root .np-choice-clear:disabled { cursor: not-allowed; opacity: .6; }
+:root .np-choice-chips:has(.np-choice-trigger[aria-invalid="true"]) { --fluent-validation: var(--fluent-error, var(--control-danger, #c42b1c)); }
+:root .np-choice-glyph { display: inline-block; flex: none; width: 1.06em; height: 1.06em; background: currentColor; mask: var(--choice-leading) center / contain no-repeat; pointer-events: none; }
+:root .np-choice-glyph:is([data-glyph="pin"], [data-glyph="folder"]) { mask: none; background: var(--choice-leading) center / contain no-repeat; }
+:root [data-glyph="down"] { --choice-leading: var(--np-down); width: .95em; height: .95em; }
+:root [data-glyph="close"] { --choice-leading: var(--np-close); width: .8em; height: .8em; }
+:root [data-glyph="check"] { --choice-leading: var(--np-check); position: absolute; inset-inline-end: .68em; color: var(--choice-accent); }
+:root [data-glyph="search"] { --choice-leading: var(--np-search); }
+:root .np-choice-panel {
+  position: fixed; inset: auto; margin: 0; padding: var(--choice-menu-padding, 6px); box-sizing: border-box; overflow: hidden;
+  border: 1px solid var(--choice-paper-edge); border-radius: var(--choice-menu-radius, max(8px, calc(var(--choice-radius, var(--control-field-radius, 8px)) + 2px))); color: var(--choice-ink); background: var(--choice-surface); box-shadow: var(--choice-shadow);
+  font: 400 var(--choice-size, 14px)/1.4 var(--choice-font); letter-spacing: normal; text-align: start;
+}
+:root .np-choice-panel:popover-open { display: flex; flex-direction: column; }
+:root .np-choice-panel[data-variant="outline"] { padding-block: .68em; }
+:root .np-choice-panel[data-checkboxes] { padding-block: .58em; }
+:root .np-choice-list { min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; outline: none; }
+:root .np-choice-searchbox { flex: none; display: flex; align-items: center; gap: 8px; margin: 2px 2px 6px; padding-inline: .68em; border: 1px solid var(--choice-edge); border-radius: var(--choice-radius, var(--control-field-radius, 8px)); background: color-mix(in srgb, var(--choice-ink) 2%, var(--choice-surface)); color: var(--choice-muted); }
+:root .np-choice-searchbox:focus-within { border-color: var(--choice-accent); }
+:root[data-choice-controls] :is(body, body[class]) .np-choice-searchbox input.np-choice-search { flex: 1; width: 0; min-width: 0; height: max(32px, 2.16em); min-height: 0; padding: 0; border: 0; border-radius: 0; outline: 0; color: var(--choice-ink); background: transparent; box-shadow: none; font: inherit; }
+:root .np-choice-search::placeholder { color: var(--choice-muted); }
+:root .np-choice-option { box-sizing: border-box; display: flex; align-items: center; gap: .72em; min-height: max(34px, 2.26em); padding: .42em 1em; padding-inline-end: .68em; border-radius: var(--choice-option-radius, max(4px, calc(var(--choice-radius, var(--control-field-radius, 8px)) - 2px))); cursor: pointer; }
+:root .np-choice-panel:not([data-checkboxes], [data-variant="soft"]) .np-choice-option { position: relative; padding-inline-end: 2em; }
+:root .np-choice-text { flex: 1; min-width: 0; overflow-wrap: anywhere; white-space: normal; }
+:root .np-choice-option:hover:where(:not([aria-disabled="true"])), :root .np-choice-panel[data-keyboard] .np-choice-option[data-current]:where(:not([aria-selected="true"])) { background: var(--choice-hover); }
+:root .np-choice-panel:not([data-checkboxes]) .np-choice-option[aria-selected="true"] { background: var(--choice-wash); }
+:root .np-choice-panel[data-keyboard] .np-choice-option[data-current] { outline: 1px solid var(--choice-accent); outline-offset: -1px; }
+:root .np-choice-option[aria-disabled="true"] { color: var(--choice-muted); opacity: .65; cursor: not-allowed; }
+:root .np-choice-panel[data-checkboxes] .np-choice-option { padding-inline-start: .74em; }
+:root .np-choice-option [data-glyph="box"] { box-sizing: border-box; width: 1.16em; height: 1.16em; margin-inline-end: .22em; border: 1.4px solid color-mix(in srgb, var(--choice-muted) 70%, var(--choice-surface)); border-radius: 4px; mask: none; background: var(--choice-surface); }
+:root .np-choice-option[aria-selected="true"] [data-glyph="box"] { display: grid; place-items: center; border-color: var(--choice-accent); background: var(--choice-accent); }
+:root .np-choice-option[aria-selected="true"] [data-glyph="box"]::after { content: ''; width: .8em; height: .8em; background: var(--choice-surface); mask: var(--np-check) center / contain no-repeat; }
+:root .np-choice-heading { padding: .2em 1em; color: var(--choice-muted); font-size: .86em; overflow-wrap: anywhere; }
+:root .np-choice-group .np-choice-option { padding-inline-start: 1.85em; }
+:root .np-choice-group + .np-choice-group { border-block-start: 1px solid var(--choice-paper-edge); margin-block-start: 5px; padding-block-start: 5px; }
+:root .np-choice-status:empty { display: none; }
+:root .np-choice-status { padding: 10px 14px; color: var(--choice-muted); font-size: max(12px, .9em); line-height: 1.5; overflow-wrap: anywhere; }
+@media (max-width: 700px), (pointer: coarse) {
+  :root .np-choice-option { min-height: 44px; }
+  :root[data-choice-controls] :is(body, body[class]) :is(select[data-choice-source], .np-choice-chips) { font-size: max(16px, var(--choice-size, 14px)); }
+  :root[data-choice-controls] :is(body, body[class]) .np-choice-chips { min-height: 44px; }
+  :root[data-choice-controls] :is(body, body[class]) .np-choice-chips .np-choice-clear { width: 30px; height: 30px; }
+  :root[data-choice-controls] :is(body, body[class]) .np-choice-searchbox input.np-choice-search { height: 42px; font-size: max(16px, 1em); }
+}
+@media (forced-colors: active) {
+  :root :is(.np-choice-chips, .np-choice-panel) { --choice-surface: Canvas; --choice-ink: CanvasText; --choice-muted: GrayText; --choice-accent: Highlight; --choice-edge: ButtonText; --choice-paper-edge: ButtonText; --choice-wash: Highlight; --choice-hover: Canvas; }
+  :root .np-choice-option[aria-selected="true"] { forced-color-adjust: none; color: HighlightText; background: Highlight; }
+  :root .np-choice-glyph, :root .np-choice-option [data-glyph="box"] { forced-color-adjust: none; }
+  :root .np-choice-option[aria-selected="true"] [data-glyph="check"] { color: HighlightText; }
+  :root .np-choice-option[data-current] { outline: 2px solid Highlight; outline-offset: -2px; }
+}

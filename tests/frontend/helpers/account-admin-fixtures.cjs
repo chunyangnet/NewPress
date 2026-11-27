@@ -1,0 +1,9 @@
+const D = JSON.parse(JSON.stringify({}));
+const login=['qq','github','wechat','microsoft','google','linuxdo'],smsIDs=['aliyun','tencent','huawei','yunpian','twilio','custom'],verifyIDs=['local','geetest','tencent','turnstile','hcaptcha','recaptcha_v2','recaptcha_v3'];
+const sms=()=>({enabled:false,provider:'aliyun',access_key:'',region:'ap-guangzhou',app_id:'',sign_name:'',template_id:'',template_params:'{"code":"{code}"}',sender:'',message:'验证码 {code}',endpoint:'',encoding:'json',auth:'bearer',auth_header:'X-API-Key',payload:'{"phone":"{phone}","code":"{code}"}',success_path:'',success_value:'',timeout_seconds:8});
+const access=()=>({settings:{revision:'access-original',callback_base_url:'',providers:login.map(id=>({id,enabled:false,client_id:'',has_secret:false})),sms:sms()},providers:login.map(id=>({id,name:id,callback:'https://example.test/auth/'+id+'/callback',application_url:'https://example.test/apply'})),sms_providers:smsIDs.map(id=>({id,name:id,description:id,docs:'https://example.test/docs'})),default_callback_base_url:'https://example.test',sms_ready:false});
+const verification=()=>({settings:{revision:'verification-original',enabled:false,default_provider:'local',theme:'auto',language:'zh-CN',timeout_seconds:8,scenes:Object.fromEntries(['comment','register','recover','login','admin_login','feedback'].map(id=>[id,{enabled:false,provider:'',skip_members:false}])),providers:[]},providers:verifyIDs.map(id=>({id,name:id,network:'local',network_note:'test',description:'test',docs:''}))});
+const code=(patch={})=>({id:'a'.repeat(32),code:'TEST-1234',enabled:true,max_uses:0,used:0,version:1,note:'原备注',created_at:'2026-11-26T00:00:00Z',updated_at:'2026-11-26T00:00:00Z',...patch});
+const policy=()=>({revision:'policy-original',mode:'optional',registration:'open',code_url:''});
+const identity=()=>({version:1,grants:[],equipped:[],history:[]});
+module.exports={access,verification,sms,code,policy,identity};

@@ -1,0 +1,109 @@
+{{define "content"}}
+<div class="plugin-workspace" data-plugin-workspace data-csrf="{{.Admin.CSRFToken}}" data-user-id="{{.Admin.Principal.UserID}}" data-market-configured="{{.PluginAdmin.Market.Configured}}" data-readonly="{{.Admin.ReadOnly}}">
+  <header class="plugin-heading"><div><h1>{{if .PluginAdmin.Editing}}评论来源{{else}}插件{{end}}</h1></div>{{if .PluginAdmin.Editing}}<a class="admin-button admin-button-secondary" href="/admin/plugins/">{{template "icon" "arrow-left"}}返回插件</a>{{else}}<div class="plugin-heading-actions">{{if and .Admin.PersistentUsers (not .Admin.ReadOnly)}}<a class="admin-button admin-button-secondary" href="/admin/plugin-records/">{{template "icon" "scan-search"}}结果核对</a>{{end}}<a class="admin-button admin-button-secondary" href="/admin/plugins/updates/">{{template "icon" "file-archive"}}版本与更新</a><button class="admin-button admin-button-secondary" type="button" data-plugin-action="refresh" {{if or .Admin.ReadOnly (not .PluginAdmin.Market.Configured)}}disabled{{end}}>{{template "icon" "refresh-cw"}}刷新官方市场</button></div>{{end}}</header>
+  <p class="plugin-feedback" data-plugin-status role="status" aria-live="polite" hidden></p>
+  <noscript><p class="plugin-feedback">安装和配置插件需要启用 JavaScript。</p></noscript>
+  {{if .PluginAdmin.Editing}}
+  <div class="plugin-editor admin-settings-layout" data-settings-layout>{{template "admin-settings-nav" (dict "Groups" .PluginAdmin.SettingsPage.Groups "Prefix" "origin-")}}<div>
+    <section class="origin-preview-panel" id="origin-preview" aria-label="评论来源实时预览">
+      <div class="origin-preview-copy"><div class="origin-preview-heading"><span class="plugin-eyebrow">评论中的小细节</span><span class="origin-preview-live">实时预览</span></div>
+        <div class="plugin-sample"><span class="plugin-avatar" aria-hidden="true">林</span><div><b>林间来信</b><small>刚刚</small><p>这篇整理很有帮助，期待后续更新。</p>
+          <div class="comment-origin-badges"><span class="comment-origin-location" data-preview-location><img class="comment-origin-flag" data-preview-flag alt="" width="20" height="15" aria-hidden="true" hidden><i data-preview-globe>{{template "icon" "globe-2"}}</i><span class="comment-origin-label">IP 属地</span><span class="comment-origin-value" data-preview-location-label>浙江 · 杭州</span></span><span class="comment-origin-device" data-preview-device><i data-device-icon="mobile">{{template "icon" "smartphone"}}</i><i data-device-icon="desktop" hidden>{{template "icon" "laptop"}}</i><i data-device-icon="tablet" hidden>{{template "icon" "tablet"}}</i><span class="comment-origin-value" data-preview-device-label>iOS · Safari</span></span></div>
+          <small class="plugin-preview-hidden" data-preview-hidden hidden>此用户组的来源标签已隐藏</small>
+        </div></div><p class="plugin-help">示例随设置即时变化，保存后应用到评论区。</p>
+      </div>
+      <div class="origin-preview-controls"><label>来源示例<select data-select-ui="icon" data-select-icon="pin" data-preview-country><option value="domestic">国内 · 杭州</option><option value="foreign">国外 · 东京</option><option value="unknown">国家代码未知</option></select></label><label>作者用户组<select data-preview-role>{{range .PluginAdmin.Roles}}<option value="{{.Role}}">{{.Label}}</option>{{end}}</select></label><label>设备<select data-preview-device-select><option value="mobile">手机 · iOS / Safari</option><option value="desktop">电脑 · Windows / Edge</option><option value="tablet">平板 · iPadOS / Safari</option></select></label></div>
+    </section>
+    <form id="plugin-origin-form" data-origin-settings data-version="{{.PluginAdmin.Origin.Settings.Version}}" class="plugin-settings">
+      <fieldset {{if .Admin.ReadOnly}}disabled{{end}}>
+      <section class="plugin-section" id="origin-display" data-settings-section><header><span>01</span><div><h2>展示内容</h2><p>为每条评论补充轻巧的来源标记，保留阅读的空间。</p></div></header>
+        {{template "admin-switch" (dict "Name" "location" "Label" "IP 归属地" "Help" "优先显示城市；只有省份或国家时按实际精度显示。" "Checked" .PluginAdmin.Origin.Settings.Location)}}
+        {{template "admin-switch" (dict "Name" "device" "Label" "设备与系统" "Help" "识别电脑、手机和平板，展示客户端报告的系统。" "Checked" .PluginAdmin.Origin.Settings.Device)}}
+        {{template "admin-switch" (dict "Name" "browser" "Label" "同时显示浏览器" "Help" "例如 Windows · Edge、iOS · Safari。" "Checked" .PluginAdmin.Origin.Settings.Browser)}}
+        <fieldset class="origin-flag-settings" data-flag-options aria-describedby="origin-flag-hint">
+          <legend>国旗 / 地区旗帜</legend>
+          <div class="origin-flag-options">
+            <label class="origin-flag-option"><input type="radio" name="flag_mode" value="off" {{if eq .PluginAdmin.Origin.Settings.FlagMode "off"}}checked{{end}}><span><b>关闭</b><small>保持简洁的地球图标</small></span>{{template "icon" "globe-2"}}</label>
+            <label class="origin-flag-option"><input type="radio" name="flag_mode" value="all" {{if eq .PluginAdmin.Origin.Settings.FlagMode "all"}}checked{{end}}><span><b>全部显示</b><small>有国家代码时显示旗帜</small></span><img src="/plugin-assets/comment-origin/flags/cn.svg" width="24" height="18" alt="" aria-hidden="true"></label>
+            <label class="origin-flag-option"><input type="radio" name="flag_mode" value="foreign" {{if eq .PluginAdmin.Origin.Settings.FlagMode "foreign"}}checked{{end}}><span><b>仅国外</b><small>仅显示国外来源的旗帜</small></span><img src="/plugin-assets/comment-origin/flags/jp.svg" width="24" height="18" alt="" aria-hidden="true"></label>
+          </div>
+        </fieldset>
+        <p class="plugin-help" id="origin-flag-hint" data-flag-hint>国旗遵循归属地的用户组权限；“仅国外”下，中国内地及港澳台不显示旗帜。</p>
+      </section>
+      <section class="plugin-section" id="origin-roles" data-settings-section><header><span>02</span><div><h2>哪些作者显示来源</h2><p>按评论作者当前所属用户组控制。多角色采用更严格的规则，新增用户组默认隐藏。</p></div></header>
+        <div class="plugin-role-table" tabindex="0" role="region" aria-label="作者用户组显示规则"><table><thead><tr><th scope="col">作者用户组</th><th scope="col">归属地</th><th scope="col">设备</th></tr></thead><tbody>{{range .PluginAdmin.Roles}}<tr data-origin-role="{{.Role}}"><th scope="row">{{.Label}}</th><td>{{template "admin-switch" (dict "Rule" "location" "Checked" .Location "AccessibleLabel" (printf "%s显示归属地" .Label))}}</td><td>{{template "admin-switch" (dict "Rule" "device" "Checked" .Device "AccessibleLabel" (printf "%s显示设备" .Label))}}</td></tr>{{end}}</tbody></table></div>
+      </section>
+      <section class="plugin-section" id="origin-provider" data-settings-section><header><span>03</span><div><h2>归属地服务</h2><p>仅由服务器查询。启用后，评论来源 IP 会发送给所选服务。</p></div></header>
+        <div class="plugin-form-grid">
+          <label class="plugin-wide">服务提供方<select name="provider"><option value="ipwhois" {{if eq .PluginAdmin.Origin.Settings.Provider "ipwhois"}}selected{{end}}>IPWho.is · 免费免密钥 · IPv4 / IPv6</option><option value="amap" {{if eq .PluginAdmin.Origin.Settings.Provider "amap"}}selected{{end}}>高德 · 国内 IPv4 · 需要 Key</option><option value="baidu" {{if eq .PluginAdmin.Origin.Settings.Provider "baidu"}}selected{{end}}>百度 · 国内 IP · 需要 AK</option><option value="custom" {{if eq .PluginAdmin.Origin.Settings.Provider "custom"}}selected{{end}}>自定义 HTTPS JSON API</option></select></label>
+          <p class="plugin-help plugin-wide" data-provider-help>免费服务不保证城市精度，可能返回英文地名。需要中文结果时可配置高德或百度。</p>
+          <label class="plugin-wide" data-provider-key>API Key / 百度 AK<input type="password" name="key" value="" autocomplete="new-password" maxlength="512" placeholder="{{if .PluginAdmin.Origin.KeySaved}}已保存，留空保留现有密钥{{else}}填写服务提供方的密钥{{end}}"><small>密钥只在服务端保存。更换服务或自定义地址需重新填写；百度使用服务端 IP 白名单校验方式。</small></label>
+          <label class="plugin-check plugin-wide" data-provider-clear><input type="checkbox" name="clear_key">清除已保存的密钥</label>
+          <div class="plugin-custom plugin-wide" data-provider-custom>
+            <label>请求地址<input name="endpoint" type="text" value="{{.PluginAdmin.Origin.Settings.Endpoint}}" maxlength="2048" placeholder="https://your-provider.example/lookup?ip={ip}&amp;key={key}"><small>必须包含 {ip}；密钥使用 {key} 占位符。仅允许公网 HTTPS，接口需返回 JSON。</small></label>
+            <div class="plugin-form-grid"><label>国家字段<input name="country_path" value="{{.PluginAdmin.Origin.Settings.CountryPath}}" placeholder="data.country" maxlength="160"></label><label>国家代码字段（可选）<input name="country_code_path" value="{{.PluginAdmin.Origin.Settings.CountryCodePath}}" placeholder="data.country_code" maxlength="160"><small>ISO 两位代码，如 CN、JP、US；留空或无法识别时不显示旗帜。</small></label><label>省份字段<input name="region_path" value="{{.PluginAdmin.Origin.Settings.RegionPath}}" placeholder="data.region" maxlength="160"></label><label>城市字段<input name="city_path" value="{{.PluginAdmin.Origin.Settings.CityPath}}" placeholder="data.city" maxlength="160"></label><label>成功状态字段<input name="success_path" value="{{.PluginAdmin.Origin.Settings.SuccessPath}}" maxlength="160"></label><label>成功状态值<input name="success_value" value="{{.PluginAdmin.Origin.Settings.SuccessValue}}" placeholder="true 或 0" maxlength="60"></label></div>
+          </div>
+          {{template "admin-switch" (dict "Name" "fallback" "Label" "查询失败时使用免费服务" "Help" "主服务失败后将同一 IP 发给 IPWho.is；默认关闭。" "Checked" .PluginAdmin.Origin.Settings.Fallback)}}
+          <label>每日最多查询<input name="daily_limit" type="number" min="1" max="900" value="{{.PluginAdmin.Origin.Settings.DailyLimit}}" required><small>按站点时区 {{.Site.Timezone}} 的自然日计数，包含测试与备用查询。</small></label><label>相同 IP 缓存天数<input name="cache_days" type="number" min="1" max="30" value="{{.PluginAdmin.Origin.Settings.CacheDays}}" required><small>1–30 天；减少重复查询。</small></label>
+        </div>
+      </section>
+      <section class="plugin-section" id="origin-retention" data-settings-section><header><span>04</span><div><h2>记录与保留</h2><p>本插件的真实 IP 与完整 UA 记录保存在私有目录。</p></div></header><label class="plugin-retention">原始 IP／UA 保留天数<input name="retention_days" type="number" min="1" max="365" value="{{.PluginAdmin.Origin.Settings.RetentionDays}}" required><small>到期清除原始数据，保留已查询的归属地与设备标签。卸载会删除全部插件数据。</small></label>
+        <div class="plugin-source-check" data-reliable="{{.PluginAdmin.ClientSource.Reliable}}"><h3>当前访问来源 <span>{{.PluginAdmin.ClientSource.Method}}</span></h3>{{if .PluginAdmin.ClientSource.Address}}<p class="plugin-source-address">{{.PluginAdmin.ClientSource.Address}}</p>{{end}}<p>{{.PluginAdmin.ClientSource.Detail}}</p><small>{{.PluginAdmin.ClientSource.Trust}}</small><p class="plugin-help">从启用 CDN 的正式域名访问这里核对。配置异常时不查询代理节点属地；修复配置只影响后续评论，历史来源不会补造。</p></div>
+      </section>
+      </fieldset>
+{{template "admin-savebar" (dict "FormID" "plugin-origin-form" "ReadOnly" .Admin.ReadOnly)}}
+    </form>
+    <section class="plugin-aside" id="origin-diagnostics" data-settings-section aria-label="预览与运行记录">
+      <section class="plugin-health"><h2>运行情况</h2><dl><div><dt>已记录</dt><dd>{{.PluginAdmin.Origin.Records}}</dd></div><div><dt>已定位</dt><dd>{{.PluginAdmin.Origin.Resolved}}</dd></div><div><dt>等待查询</dt><dd>{{.PluginAdmin.Origin.Pending}}</dd></div><div><dt>查询失败</dt><dd>{{.PluginAdmin.Origin.Failed}}</dd></div></dl>{{if .PluginAdmin.Origin.Unavailable}}<p class="plugin-help">{{.PluginAdmin.Origin.Unavailable}} 条来源未通过验证，可按评论编号查看原因。</p>{{end}}{{if .PluginAdmin.Origin.LastError}}<p class="plugin-help">{{.PluginAdmin.Origin.LastError}}</p>{{end}}<p class="plugin-help">状态在刷新页面后更新。旧评论没有真实 IP 记录时不补造归属地。</p><button type="button" class="admin-button admin-button-secondary" data-plugin-action="retry" data-slug="comment-origin" {{if or .Admin.ReadOnly (not .PluginAdmin.Origin.Enabled)}}disabled{{end}}>重试未完成查询</button><p class="plugin-result" data-retry-result role="status" hidden></p></section>
+      <section class="plugin-diagnostic"><h2>测试已保存的服务</h2><form data-origin-test><label>公网 IP<input name="ip" required maxlength="45" placeholder="输入 IPv4 或 IPv6" {{if .Admin.ReadOnly}}disabled{{end}}></label><button type="submit" class="admin-button admin-button-secondary" {{if .Admin.ReadOnly}}disabled{{end}}>查询归属地</button><p class="plugin-result" data-test-result role="status" aria-live="polite" hidden></p></form></section>
+      {{if .Admin.Can "comments:moderate"}}<section class="plugin-diagnostic"><h2>核对评论来源</h2><form data-origin-record><label>评论编号<input name="comment_id" type="number" min="1" required placeholder="例如 128" {{if .Admin.ReadOnly}}disabled{{end}}></label><button type="submit" class="admin-button admin-button-secondary" {{if .Admin.ReadOnly}}disabled{{end}}>查看私有记录</button><p class="plugin-result" data-record-result role="status" aria-live="polite" hidden></p></form></section>{{end}}
+    </section>
+  </div></div>
+  {{else}}
+
+  <div class="plugin-directory-tools" data-plugin-tools hidden>
+    <label class="plugin-search">{{template "icon" "search"}}<input type="search" data-plugin-search placeholder="搜索名称、功能或标签" aria-label="搜索插件" autocomplete="off" maxlength="120"></label>
+    <label class="plugin-status-filter"><span>状态</span><select data-select-ui="soft" data-plugin-status-filter aria-label="筛选插件状态"><option value="all">全部状态</option><option value="installed">已安装</option><option value="enabled">运行中</option><option value="available">未安装</option><option value="updates">可更新</option></select></label>
+  </div>
+  <div class="plugin-market-loading" data-plugin-market-loading role="status" aria-live="polite" aria-atomic="true" hidden>
+    <span class="plugin-market-spinner" aria-hidden="true">{{template "icon" "refresh-cw"}}</span>
+    <div><strong data-plugin-loading-title>正在加载插件市场</strong><p data-plugin-loading-detail>正在检测官方源并获取目录，请稍候…</p></div>
+    <span class="plugin-market-loading-track" aria-hidden="true"></span>
+  </div>
+  <div class="plugin-directory" data-plugin-market-content data-market-error="{{.PluginAdmin.Market.Error}}">
+    <section class="plugin-catalog" aria-label="插件目录">
+      <div class="plugin-directory-heading">
+        <div class="plugin-categories" role="group" aria-label="按分类筛选插件" data-plugin-categories hidden>
+          <button type="button" class="plugin-category" data-plugin-category="all" aria-pressed="true">全部插件 <span data-category-count>{{len .PluginAdmin.Cards}}</span></button>
+          {{range .PluginAdmin.Categories}}<button type="button" class="plugin-category" data-plugin-category="{{.Slug}}" aria-pressed="false">{{.Name}} <span data-category-count>{{.Count}}</span></button>{{end}}
+        </div>
+        <p class="plugin-result-count" data-plugin-result-count role="status" aria-live="polite">{{len .PluginAdmin.Cards}} 个插件</p>
+      </div>
+      <div class="plugin-grid">
+      {{range .PluginAdmin.Cards}}
+        <article class="plugin-card" data-plugin-card="{{.Slug}}" data-category="{{.Category.Slug}}" data-installed="{{.Installed}}" data-enabled="{{.Enabled}}" data-update="{{.UpdateAvailable}}" data-search="{{.SearchText}}">
+          <header><span class="plugin-mark" data-category="{{.Category.Slug}}">{{if eq .Slug "comment-origin"}}{{template "icon" "globe-2"}}{{else}}{{template "icon" .Category.Icon}}{{end}}</span><div><h3>{{.Manifest.Name}}</h3><p>{{if .Official}}官方插件{{else}}历史安装{{end}}{{if .Manifest.Version}}<span>v{{.Manifest.Version}}</span>{{end}}{{if .Bundled}}<span>内置</span>{{end}}</p></div><span class="plugin-state" data-enabled="{{.Enabled}}" data-error="{{if .Error}}true{{else}}false{{end}}">{{if .Error}}需修复{{else if .Installed}}{{if .Enabled}}运行中{{else}}已停用{{end}}{{else}}未安装{{end}}</span></header>
+          <p class="plugin-description">{{if .Manifest.Description}}{{.Manifest.Description}}{{else}}暂无插件介绍。{{end}}</p>
+          <div class="plugin-card-labels"><span class="plugin-category-label">{{.Category.Name}}</span>{{range .Manifest.Tags}}<span class="plugin-tag">{{.}}</span>{{end}}</div>
+          {{if .UpdateAvailable}}<p class="plugin-version-notice"><a href="/admin/plugins/updates/">{{template "icon" "refresh-cw"}}可更新至 {{.LatestVersion}}</a></p>{{end}}
+          {{if .ReviewRequired}}<p class="plugin-feedback">新版需要重新确认配置与权限，请先打开设置页保存。</p>{{end}}{{if .Error}}<p class="plugin-feedback">{{.Error}}</p>{{end}}
+          <footer><button type="button" class="plugin-details-button" data-plugin-details-open aria-haspopup="dialog" aria-controls="plugin-details-{{.Slug}}">查看详情</button><div>{{if .Installed}}{{if .SettingsURL}}<a class="admin-button admin-button-secondary" href="{{.SettingsURL}}">设置</a>{{else}}<button type="button" class="admin-button admin-button-secondary" data-plugin-details-open aria-haspopup="dialog" aria-controls="plugin-details-{{.Slug}}">管理</button>{{end}}{{else}}<button type="button" class="admin-button admin-button-primary" data-plugin-action="install" data-slug="{{.Slug}}" data-digest="{{.Digest}}" {{if $.Admin.ReadOnly}}disabled{{end}}>{{template "icon" "plus"}}安装</button>{{end}}</div></footer>
+          <dialog class="plugin-details-drawer" id="plugin-details-{{.Slug}}" data-plugin-details aria-labelledby="plugin-details-title-{{.Slug}}">
+            <header class="plugin-drawer-heading"><div><span class="plugin-drawer-kicker">插件详情</span><h2 id="plugin-details-title-{{.Slug}}">{{.Manifest.Name}}</h2><p>{{.Category.Name}}{{if .Manifest.Version}} · v{{.Manifest.Version}}{{end}}</p></div><button type="button" class="plugin-drawer-close" data-plugin-details-close aria-label="关闭插件详情" autofocus>{{template "icon" "x"}}</button></header>
+            <div class="plugin-drawer-body">
+              <p class="plugin-feedback" data-plugin-detail-status role="status" hidden></p>
+              <section class="plugin-drawer-section"><h3>插件介绍</h3><p>{{.Manifest.Description}}</p></section><section class="plugin-drawer-section"><h3>插件信息</h3><dl class="plugin-metadata"><div><dt>标识</dt><dd>{{.Slug}}</dd></div>{{if .Manifest.Author}}<div><dt>作者</dt><dd>{{.Manifest.Author}}</dd></div>{{end}}{{if .Manifest.License}}<div><dt>许可</dt><dd>{{.Manifest.License}}</dd></div>{{end}}</dl></section><section class="plugin-drawer-section"><h3>所需权限</h3><ul class="plugin-capabilities">{{range .Capabilities}}<li>{{.}}</li>{{else}}<li>未声明额外能力</li>{{end}}</ul></section><section class="plugin-drawer-section"><h3>卸载与数据</h3><p>卸载会清除插件配置和数据，站点内容保留。</p></section>
+              <section class="plugin-drawer-section"><h3>功能标签</h3><div class="plugin-detail-tags">{{range .Manifest.Tags}}<span>{{.}}</span>{{else}}<span>{{.Category.Name}}</span>{{end}}</div></section>
+            </div>
+            <footer class="plugin-drawer-actions"><div>{{if .Installed}}{{if .SettingsURL}}<a class="admin-button admin-button-secondary" href="{{.SettingsURL}}">设置</a>{{end}}{{if .Enabled}}<button type="button" class="admin-button admin-button-secondary" data-plugin-action="disable" data-slug="{{.Slug}}" {{if $.Admin.ReadOnly}}disabled{{end}}>停用</button>{{else}}<button type="button" class="admin-button admin-button-primary" data-plugin-action="enable" data-slug="{{.Slug}}" {{if or $.Admin.ReadOnly (not .Official) .Error .ReviewRequired}}disabled{{end}}>启用</button>{{end}}<button type="button" class="plugin-remove" data-plugin-remove="{{.Slug}}" data-name="{{.Manifest.Name}}" {{if $.Admin.ReadOnly}}disabled{{end}}>卸载</button>{{else}}<button type="button" class="admin-button admin-button-primary" data-plugin-action="install" data-slug="{{.Slug}}" data-digest="{{.Digest}}" {{if $.Admin.ReadOnly}}disabled{{end}}>{{template "icon" "plus"}}安装</button>{{end}}</div></footer>
+          </dialog>
+        </article>
+      {{end}}
+      </div>
+      <div class="plugin-empty" data-plugin-empty hidden>{{template "icon" "search"}}<h3>没有匹配的插件</h3><p>试试其他关键词、分类或安装状态。</p><button type="button" class="admin-button admin-button-secondary" data-plugin-clear>清除筛选</button></div>
+    </section>
+  {{if not .PluginAdmin.Editing}}<details class="admin-plugin-source"><summary>插件来源</summary><section class="plugin-source"><h3>{{if .PluginAdmin.Market.Configured}}官方仓库已配置{{else}}官方源待配置{{end}}</h3>{{if .PluginAdmin.Market.Configured}}<p>由服务器检测 GitHub／Gitee，校验后自动选择可用源。Gitee 为国内服务器提供镜像。</p>{{range .PluginAdmin.Market.Sources}}<small><b>{{.Name}}</b> · {{if .Selected}}当前使用 · {{end}}{{if .Available}}{{.LatencyMS}} ms{{else if .Error}}{{.Error}}{{else}}待检测{{end}}</small>{{end}}{{if .PluginAdmin.Market.Source}}<a href="{{.PluginAdmin.Market.Source}}" target="_blank" rel="noopener">查看官方目录 {{template "icon" "external-link"}}</a>{{end}}{{if not .PluginAdmin.Market.Checked.IsZero}}<small>上次检查 {{dateIn .PluginAdmin.Market.Checked $.Site.Timezone}}</small>{{end}}{{else}}<p>部署时填写官方目录地址与签名公钥后，可在这里浏览远程插件。随程序提供的插件可直接安装。</p>{{end}}{{if .PluginAdmin.Market.Error}}<p class="plugin-feedback">{{.PluginAdmin.Market.Error}}</p>{{end}}</section></details>{{end}}
+  </div><dialog class="plugin-uninstall-dialog" data-plugin-uninstall aria-labelledby="plugin-uninstall-title"><form method="dialog"><header><h2 id="plugin-uninstall-title">卸载 <span data-uninstall-name></span></h2><button value="cancel" aria-label="关闭">{{template "icon" "x"}}</button></header><p>将立即停用插件，并删除它的安装文件、配置、API 密钥、缓存及来源记录。评论正文与用户账号保留。</p><p>此操作不能撤销。重新安装后使用默认设置。</p><p class="plugin-feedback" data-uninstall-error role="alert" hidden></p><footer><button class="admin-button admin-button-secondary" value="cancel">保留插件</button><button class="admin-button plugin-danger" type="button" data-uninstall-confirm>完整卸载</button></footer></form></dialog>
+  {{end}}
+</div>
+{{end}}

@@ -1,0 +1,6 @@
+{{define "reading-series"}}
+{{range .ReadingSeries}}<section class="reading-series" aria-label="{{.Series.Title}}">
+  <div class="reading-series-heading"><div><span class="eyebrow">{{.Series.Label}} · 第 {{.Position}} / {{.Series.Count}} 篇</span><h2><a href="{{.Series.URL}}">{{.Series.Title}}</a></h2></div><a class="text-link" href="{{.Series.URL}}">查看全部{{template "icon-arrow" .}}</a></div>
+  {{if eq .Series.Kind "series"}}<nav class="article-pagination" aria-label="系列上下篇">{{if gt .Previous.ID 0}}<a href="{{.Previous.URL}}" rel="prev"><span>上一篇</span><strong>{{.Previous.Title}}</strong></a>{{else}}<div class="is-disabled"><span>上一篇</span><strong>已是本系列第一篇</strong></div>{{end}}{{if gt .Next.ID 0}}<a href="{{.Next.URL}}" rel="next"><span>下一篇</span><strong>{{.Next.Title}}</strong>{{template "icon-arrow" .}}</a>{{else}}<div class="is-disabled"><span>下一篇</span><strong>已读至本系列最后一篇</strong></div>{{end}}</nav>{{else if .Related}}<ul class="related-posts">{{range .Related}}<li><a href="{{.URL}}">{{.Title}}{{template "icon-arrow" .}}</a></li>{{end}}</ul>{{end}}
+</section>{{end}}
+{{end}}

@@ -1,0 +1,14 @@
+{{define "content"}}
+<div class="shell portal-page" data-list-page="archive">
+  <nav class="portal-breadcrumb" aria-label="当前位置"><a href="/">首页</a>{{template "icon" "chevron-right"}}<a href="/explore/">发现</a>{{template "icon" "chevron-right"}}<span aria-current="page">{{if eq .Archive.Term.Taxonomy "category"}}分类{{else}}标签{{end}}</span></nav>
+  <header class="portal-heading"><div><h1>{{.Archive.Term.Name}}<span class="portal-count">{{.Archive.Total}}</span></h1><p>{{if .Archive.Term.Description}}{{.Archive.Term.Description}}{{else}}查看此分类或标签下的公开文章。{{end}}</p></div><a class="ui-button ui-button-secondary" href="/explore/">全部内容 {{template "icon" "chevron-right"}}</a></header>
+  {{template "portal-navigation" .}}
+  <div class="portal-layout {{if not .Archive.Related}}portal-layout-single{{end}}">
+    <section class="portal-panel portal-results-panel"><header class="portal-panel-heading"><h2>文章列表</h2><span class="portal-caption">{{.Archive.Total}} 篇公开文章</span></header>
+      <div class="portal-posts portal-posts-list" data-server-results>{{template "portal-post-cards" .}}</div>
+      {{if gt .Archive.Pages 1}}<footer class="portal-page-footer"><span>共 {{.Archive.Total}} 篇文章</span><nav class="portal-pagination" aria-label="文章分页">{{if .Archive.HasPrevious}}<a href="{{.Archive.PreviousURL}}">{{template "icon" "arrow-left"}}上一页</a>{{end}}{{if .Archive.HasNext}}<a href="{{.Archive.NextURL}}">下一页{{template "icon" "arrow-right"}}</a>{{end}}</nav></footer>{{end}}
+    </section>
+    {{if .Archive.Related}}<aside class="portal-sidebar"><section class="portal-panel portal-widget"><header class="portal-widget-heading"><h2>{{if eq .Archive.Term.Taxonomy "category"}}其他分类{{else}}其他标签{{end}}</h2>{{template "icon" "layout-grid"}}</header><div class="portal-term-links">{{range .Archive.Related}}<a href="{{.URL}}"><span>{{.Term.Name}}</span><small>{{.Term.Count}}</small>{{template "icon" "chevron-right"}}</a>{{end}}</div></section>{{if .ModuleEnabled "series"}}<section class="portal-panel portal-widget"><h2>其他浏览方式</h2><p>跟随专题目录，把相关的文章连起来读。</p><a class="ui-button ui-button-secondary" href="/series/">浏览专题 {{template "icon" "arrow-right"}}</a></section>{{end}}</aside>{{end}}
+  </div>
+</div>
+{{end}}

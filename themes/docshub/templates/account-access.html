@@ -1,0 +1,39 @@
+{{define "content"}}
+<section class="access-room shell" data-account-access>
+  <a class="access-back" href="/account/">{{template "service-icon" "arrow-left"}} 返回个人中心</a>
+  <div class="access-layout">
+    <header class="access-story"><h1>你的个人中心</h1><p>登录后管理收藏、关注、消息与站点权益。</p><figure class="access-photo"><img src="/core-assets/images/editorial/cover-library-small.webp" alt="午后阳光穿过混凝土楼梯，层层叠叠的几何结构向高处延伸。" width="768" height="512"></figure><a href="/explore/">{{template "service-icon" "compass"}}先看看站点内容 </a></header>
+    <section class="access-card" aria-labelledby="access-heading">
+      <span class="panel-kicker" data-access-kicker>邮箱确认</span><h2 id="access-heading" data-access-heading>创建账号</h2><p class="access-intro" data-access-intro>正在读取站点的加入方式…</p>
+      <div class="access-switch" data-access-switch role="group" aria-label="账号操作"><button type="button" data-access-flow="register" aria-pressed="true">创建账号</button><button type="button" data-access-flow="recover" aria-pressed="false">找回密码</button>{{if .CodeLoginEnabled}}<button type="button" data-access-flow="login" aria-pressed="false">验证码登录</button>{{end}}</div>
+      {{template "oauth-providers" .}}
+      <form data-access-register hidden novalidate>
+        <label data-code-login-choice hidden>登录方式<select data-code-login-channel><option value="email">邮箱验证码</option><option value="phone">手机验证码</option></select></label>
+        <div class="registration-fields">
+          <div data-registration-field="display_name"><label><span class="registration-label">公开昵称<small data-field-requirement></small></span><input type="text" name="display_name" autocomplete="nickname" placeholder="大家怎么称呼你" maxlength="160"></label></div>
+          <div data-registration-field="username"><label><span class="registration-label">用户名<small data-field-requirement></small></span><input type="text" name="username" autocomplete="username" placeholder="用于登录的英文或数字" minlength="3" maxlength="80" pattern="[A-Za-z0-9._\-]+"></label></div>
+          <div data-registration-field="email"><label><span class="registration-label">邮箱地址<small data-field-requirement></small></span><input type="email" name="email" autocomplete="email" placeholder="you@example.com" maxlength="320"></label><div class="registration-code" data-contact-code="email" hidden><div><label>邮箱验证码<input name="email_code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="6 位验证码"></label><button type="button" class="ui-button ui-button-outline" data-send-code="email">获取验证码</button></div><p class="access-field-error" data-code-unavailable hidden>验证通道暂不可用，请联系管理员。</p></div></div>
+          <div data-registration-field="phone"><div class="registration-label">手机号码<small data-field-requirement></small></div><div class="registration-phone"><select data-phone-region data-select-ui="searchable" data-select-icon="pin" aria-label="手机国家或地区区号" autocomplete="tel-country-code"><option value="+86">+86</option></select><span class="phone-region-fixed" data-phone-region-fixed hidden>+86</span><input type="tel" name="phone" aria-label="手机号码" autocomplete="tel-national" placeholder="13800138000" maxlength="24" inputmode="tel"></div><p class="access-hint" data-phone-hint>选择区号后填写手机号码。</p><div class="registration-code" data-contact-code="phone" hidden><div><label>短信验证码<input name="phone_code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="6 位验证码"></label><button type="button" class="ui-button ui-button-outline" data-send-code="phone">获取验证码</button></div><p class="access-field-error" data-code-unavailable hidden>验证通道暂不可用，请联系管理员。</p></div></div>
+          <div data-registration-field="password"><label><span class="registration-label">设置密码<small data-field-requirement></small></span><input type="password" name="password" autocomplete="new-password" placeholder="至少 12 个字符" minlength="12" maxlength="1024"></label></div>
+          <label data-registration-confirm><span class="registration-label">再次输入密码</span><input type="password" name="confirm_password" autocomplete="new-password" maxlength="1024" placeholder="再次输入相同的密码"></label>
+          <div data-registration-field="invitation_code"><label><span class="registration-label">邀请码<small data-field-requirement></small></span><input type="text" name="invitation_code" autocomplete="off" placeholder="填写邀请人提供的邀请码" maxlength="256"></label></div>
+          <div data-registration-field="registration_code"><label><span class="registration-label">注册码<small data-field-requirement></small></span><input type="text" name="registration_code" autocomplete="off" placeholder="填写站点注册码" maxlength="256"></label><a class="registration-code-link" data-registration-code-link href="/" target="_blank" rel="noopener noreferrer" hidden>获取注册码 {{template "service-icon" "external-link"}}</a></div>
+        </div>
+        <p class="access-hint" data-registration-retry-note hidden>上次结果尚未确认。重试将使用原内容，避免重复创建账号。</p>
+        <button type="submit" class="ui-button ui-button-primary" data-registration-submit>创建账号</button>
+      </form>
+      <form data-access-request hidden><label>邮箱地址<input type="email" name="email" required maxlength="320" autocomplete="email" placeholder="you@example.com"></label><button class="ui-button ui-button-primary" type="submit" data-access-send>发送确认邮件 {{template "service-icon" "arrow-right"}}</button><p class="access-hint">请在收件箱或垃圾邮件中查找。一分钟内无需重复申请。</p></form>
+      <form data-access-complete hidden>
+        <div data-access-identity><label>用户名<input name="username" required minlength="3" maxlength="80" autocomplete="username" pattern="[A-Za-z0-9._\-]+" placeholder="用于登录的英文或数字"></label><label>公开昵称<input name="display_name" required maxlength="160" autocomplete="nickname" placeholder="大家怎么称呼你"></label></div>
+        <label>设置密码<input type="password" name="password" required minlength="12" maxlength="1024" autocomplete="new-password" placeholder="至少 12 个字符"></label><label>再次输入密码<input type="password" name="confirm_password" required minlength="12" maxlength="1024" autocomplete="new-password"></label>
+        <p class="access-hint">建议使用一句容易记住的长密码。完成后用新密码登录。</p><button class="ui-button ui-button-primary" type="submit" data-access-finish>创建账号 {{template "service-icon" "check"}}</button>
+      </form>
+      <div class="access-result" data-access-result role="status" aria-live="polite"></div>
+      <p class="access-hint"><a data-access-retry href="/account/access/" hidden>重新申请邮件</a></p>
+      <div class="access-success" data-access-success hidden><span>{{template "service-icon" "check-circle"}}</span><h3 data-access-success-title>账号已创建。</h3><p data-access-success-text>请使用新账号登录。</p><a class="ui-button ui-button-primary" href="/account/">前往个人中心 {{template "service-icon" "arrow-right"}}</a></div>
+      <p class="access-login">已经有账号？<button type="button" data-account-login>直接登录</button></p>
+      <noscript><p>注册和验证需要启用 JavaScript。你仍然可以浏览公开内容。</p></noscript>
+    </section>
+  </div>
+</section>
+{{end}}

@@ -1,0 +1,16 @@
+import path from 'node:path';
+import {mkdirSync,writeFileSync,cpSync} from 'node:fs';
+import {spawn,spawnSync} from 'node:child_process';
+import {randomBytes} from 'node:crypto';
+const root=process.cwd(), data=path.join(root,'output','flash-list-preview',`data-${Date.now()}`);
+mkdirSync(data,{recursive:true});
+const themes=path.join(data,'themes'), plugins=path.join(data,'plugins');
+cpSync(path.join(root,'themes','chunnel'),path.join(themes,'chunnel'),{recursive:true});
+mkdirSync(plugins,{recursive:true});
+const go='D:/PCTools/Go/bin/go.exe', password=randomBytes(24).toString('base64url');
+const hash=spawnSync(go,['run','./cmd/newpress','admin','hash-password'],{cwd:root,input:password+'\n',encoding:'utf8'});
+if(hash.status!==0) throw new Error(hash.stderr || 'Password hashing failed');
+writeFileSync(path.join(root,'output','flash-list-preview','credentials.json'),JSON.stringify({username:'preview-flash',password}));
+const child=spawn(go,['run','./cmd/newpress','serve'],{cwd:root,stdio:'inherit',env:{...process.env,NEWPRESS_ADDR:'127.0.0.1:19426',NEWPRESS_PUBLIC_URL:'http://localhost:19426',NEWPRESS_DATA_DIR:data,NEWPRESS_DATABASE_URL:'',NEWPRESS_SEED_DEMO:'true',NEWPRESS_ADMIN_USERNAME:'preview-flash',NEWPRESS_ADMIN_PASSWORD_HASH:hash.stdout.trim(),NEWPRESS_ADMIN_PASSWORD_HASH_FILE:'',NEWPRESS_SETUP_TOKEN:'',NEWPRESS_SETUP_TOKEN_FILE:'',NEWPRESS_THEMES_DIR:themes,NEWPRESS_PLUGINS_DIR:plugins}});
+child.on('exit',code=>process.exit(code??1));
+for(const signal of ['SIGINT','SIGTERM']) process.on(signal,()=>child.kill(signal));

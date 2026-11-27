@@ -1,0 +1,120 @@
+{{define "home-block"}}
+{{if eq .Key "focus_list"}}{{template "home-focus-list" .Page}}{{else if eq .Key "topic_banner"}}{{template "home-topic-banner" .Page}}{{else if eq .Key "entry_cards"}}{{template "home-entry-cards" .Page}}{{else if eq .Key "image_grid"}}{{template "home-image-grid" .Page}}{{else if eq .Key "notice_list"}}{{template "home-announcement-list" .Page}}{{else if eq .Key "reading_guide"}}{{template "home-reading-guide" .Page}}{{else if eq .Key "updated"}}{{template "home-updated" .Page}}{{else if eq .Key "carousel"}}{{template "home-carousel" .Page}}{{else if eq .Key "search_banner"}}{{template "home-search-banner" .Page}}{{else if .Custom}}{{template "home-custom" .Custom}}{{else if eq .Key "hero"}}{{template "home-hero" .Page}}{{else if eq .Key "notice"}}{{template "home-notice" .Page}}{{else if eq .Key "channels"}}{{template "home-channels" .Page}}{{else if eq .Key "categories"}}{{template "home-categories" .Page}}{{else if eq .Key "feed"}}{{template "home-feed" .Page}}{{else if eq .Key "series"}}{{template "home-series" .Page}}{{else if eq .Key "spotlight"}}{{template "home-spotlight" .Page}}{{else if eq .Key "community"}}{{template "home-community" .Page}}{{else if eq .Key "welcome"}}{{template "home-welcome" .Page}}{{else if eq .Key "checkin"}}{{template "home-checkin" .Page}}{{else if eq .Key "recent"}}{{template "home-recent" .Page}}{{else if eq .Key "authors"}}{{template "home-authors" .Page}}{{else if eq .Key "tags"}}{{template "home-tags" .Page}}{{else if eq .Key "stats"}}{{template "home-stats" .Page}}{{else if eq .Key "subscribe"}}{{template "home-subscribe" .Page}}{{end}}
+{{end}}
+
+{{define "home-hero"}}
+<div class="home-hero">
+  <a class="home-hero-lead" href="/explore/">
+    <img {{with index .Images (index .ThemeValues "home_hero_cover")}}src="{{.Src}}" srcset="{{.SrcSet}}"{{else}}src="{{assetOr (index .ThemeValues "home_hero_cover") "images/editorial/cover-library.webp"}}"{{if eq (index .ThemeValues "home_hero_cover") "/theme-assets/images/editorial/cover-library.webp"}} srcset="{{asset "images/editorial/cover-library-small.webp"}} 768w, {{asset "images/editorial/cover-library.webp"}} 1536w"{{end}}{{end}} sizes="(max-width: 760px) 100vw, 760px" alt="午后阳光穿过混凝土楼梯，层层叠叠的几何结构向高处延伸。" width="1536" height="1024" fetchpriority="high">
+    <div class="home-hero-copy"><span class="home-hero-label">{{index .ThemeValues "hero_label"}}</span><h2>{{index .ThemeValues "hero_title"}}</h2><p>{{index .ThemeValues "hero_summary"}}</p><span class="home-hero-cta">浏览文章 {{template "icon" "arrow-right"}}</span></div>
+  </a>
+  {{if .Featured}}<div class="home-hero-picks">{{range $index, $post := .Featured}}{{if lt $index 2}}<a class="home-hero-pick" href="{{.URL}}">
+    <img {{with index $.Images .CoverURL}}src="{{.CardSrc}}" srcset="{{.CardSrcSet}}"{{else}}src="{{assetOr .CoverURL "images/editorial/cover-print-small.webp"}}"{{end}} sizes="(max-width: 760px) 50vw, 390px" alt="" width="720" height="430" loading="lazy">
+    {{template "article-badge-cover" .ArticleBadge}}<div class="home-pick-copy"><span>{{.Category}}</span><h3>{{.Title}}</h3><p><span class="home-pick-author">{{.AuthorName}}</span><span class="home-pick-action">阅读 {{template "icon" "chevron-right"}}</span></p></div>
+  </a>{{end}}{{end}}</div>{{end}}
+</div>
+{{end}}
+
+{{define "home-notice"}}
+<div class="home-notice" role="note" aria-labelledby="home-notice-title"><span class="home-notice-icon">{{template "icon" "megaphone"}}</span><b id="home-notice-title">{{index .ThemeValues "home_notice_title"}}</b><p>{{index .ThemeValues "home_notice_text"}}</p>{{if and .Home.NoticeURL (index .ThemeValues "home_notice_link_label")}}<a href="{{.Home.NoticeURL}}">{{index .ThemeValues "home_notice_link_label"}}{{template "icon" "chevron-right"}}</a>{{end}}</div>
+{{end}}
+
+{{define "home-channels"}}
+<nav class="home-channels" aria-label="快捷频道">{{range .Home.Channels}}<a href="{{.URL}}"><span class="home-channel-icon">{{template "icon" .Icon}}</span><span><b>{{.Title}}</b><small>{{.Description}}</small></span></a>{{end}}</nav>
+{{end}}
+
+{{define "home-categories"}}
+<div class="home-category-grid">{{range .Home.Categories}}<a class="home-category" href="/categories/{{.Slug}}/"><img {{with index $.Images .CoverURL}}src="{{.CardSrc}}" srcset="{{.CardSrcSet}}"{{else}}src="{{assetOr .CoverURL "images/editorial/cover-print-small.webp"}}"{{end}} sizes="(max-width: 600px) 50vw, 280px" alt="" width="480" height="280" loading="lazy"><div><h2>{{.Name}}</h2><span>{{.Count}} 篇文章 </span></div></a>{{end}}</div>
+{{end}}
+
+{{define "home-feed"}}
+<div id="latest" class="home-panel home-feed-panel">
+  <header class="home-panel-heading"><div><h2>{{if .SearchQuery}}搜索：{{.SearchQuery}}{{else}}{{index .ThemeValues "home_feed_title"}}{{end}}</h2><span class="home-count">{{.Discovery.Total}}</span></div><nav class="home-view-switch" aria-label="文章排列方式"><a href="{{.Home.ListURL}}" {{if eq .Discovery.View "list"}}aria-current="true"{{end}} aria-label="列表布局" title="列表布局">{{template "icon" "list"}}</a><a href="{{.Home.GridURL}}" {{if eq .Discovery.View "grid"}}aria-current="true"{{end}} aria-label="卡片布局" title="卡片布局">{{template "icon" "layout-grid"}}</a></nav></header>
+  <nav class="home-filters" aria-label="首页内容分类">{{range .Home.Filters}}<a href="{{.URL}}" {{if .Active}}aria-current="true"{{end}}>{{.Title}}</a>{{end}}</nav>
+  <div class="home-feed-toolbar"><span>{{if .Category}}{{.Category}}{{else}}最新发布与精选内容{{end}}</span><nav class="home-sort-links" aria-label="首页内容排序">{{range .Home.Sorts}}<a href="{{.URL}}" {{if .Active}}aria-current="true"{{end}}>{{.Title}}</a>{{end}}</nav></div>
+  <div class="home-feed home-feed-{{.Discovery.View}}">
+    {{range .Posts}}<article class="home-feed-item" data-post-id="{{.ID}}" data-content-url="{{.URL}}">
+      <a class="home-feed-cover" href="{{.URL}}" aria-label="阅读《{{.Title}}》"><img {{with index $.Images .CoverURL}}src="{{.CardSrc}}" srcset="{{.CardSrcSet}}"{{else}}src="{{assetOr .CoverURL "images/editorial/cover-notes-small.webp"}}"{{end}} sizes="(max-width: 600px) 42vw, (max-width: 980px) 40vw, 380px" alt="" width="480" height="300" {{if index $.ThemeValues "lazy_images"}}loading="lazy"{{end}}>{{template "article-badge-cover" .ArticleBadge}}</a>
+      <div class="home-feed-copy"><div class="home-post-tags">{{range $i, $term := .Categories}}{{if lt $i 2}}<a href="/categories/{{.Slug}}/">{{.Name}}</a>{{end}}{{end}}</div><h3><a href="{{.URL}}">{{.Title}}</a></h3><p class="home-excerpt">{{.Excerpt}}</p><footer class="home-feed-meta"><a class="home-byline" href="{{.AuthorURL}}"><span class="home-avatar home-avatar-small">{{index $.Home.Initials .AuthorName}}</span><b>{{.AuthorName}}</b></a><time datetime="{{dateIn .PublishedAt $.Site.Timezone}}">{{dateIn .PublishedAt $.Site.Timezone}}</time><span class="home-post-actions">{{if and ($.ModuleEnabled "comments") (eq .CommentStatus "open")}}<a href="{{.URL}}#comments" aria-label="讨论《{{.Title}}》" title="参与讨论">{{template "icon" "message-circle"}}</a>{{end}}<button type="button" data-favorite aria-pressed="false" aria-label="收藏《{{.Title}}》" title="收藏文章">{{template "icon" "heart"}}</button></span></footer></div>
+    </article>{{else}}<div class="home-empty"><span>{{template "icon" "coffee"}}</span><h3>{{if or .SearchQuery .Category}}这里还没有匹配的文章{{else}}还没有公开内容{{end}}</h3><p>{{if or .SearchQuery .Category}}换个分类，或看看站点里的其他内容。{{else}}发布后的公开文章会显示在这里。{{end}}</p><a class="ui-button ui-button-outline" href="{{if or .SearchQuery .Category}}{{.Home.ResetURL}}{{else}}/explore/{{end}}">{{if or .SearchQuery .Category}}查看全部文章{{else}}去发现页看看{{end}}{{template "icon" "arrow-right"}}</a></div>{{end}}
+  </div>
+  {{template "content-pagination" .Discovery}}
+</div>
+{{end}}
+
+{{define "home-series"}}
+<div class="home-panel"><header class="home-panel-heading"><div><h2>专题与系列</h2></div><a class="home-more" href="/series/">全部专题 {{template "icon" "chevron-right"}}</a></header><div class="home-series-grid">{{range .Home.Series}}<a class="home-series-card" href="{{.URL}}"><div class="home-series-cover"><img {{with index $.Images .CoverURL}}src="{{.CardSrc}}" srcset="{{.CardSrcSet}}"{{else}}src="{{assetOr .CoverURL "images/editorial/cover-library-small.webp"}}"{{end}} sizes="(max-width: 600px) 110px, 160px" alt="" width="480" height="320" loading="lazy"><span>{{.Label}}</span></div><div><h3>{{.Title}}</h3><p>{{.Description}}</p><small>{{.Count}} 篇内容 {{template "icon" "arrow-right"}}</small></div></a>{{end}}</div></div>
+{{end}}
+
+{{define "home-spotlight"}}
+{{range $device, $posts := dict "desktop" .Home.SpotlightDesktop "mobile" .Home.SpotlightMobile}}{{if $posts}}<div class="home-panel home-spotlight-{{$device}}"><header class="home-panel-heading"><div><h2>更多精选内容</h2></div><a class="home-more" href="/explore/">更多文章 {{template "icon" "chevron-right"}}</a></header><div class="home-reading-grid">{{range $posts}}<article class="home-reading-card"><a href="{{.URL}}"><div class="home-spotlight-card"><img {{with index $.Images .CoverURL}}src="{{.CardSrc}}" srcset="{{.CardSrcSet}}"{{else}}src="{{assetOr .CoverURL "images/editorial/cover-notes-small.webp"}}"{{end}} sizes="(max-width: 600px) 50vw, 400px" alt="" width="480" height="300" loading="lazy">{{template "article-badge-cover" .ArticleBadge}}</div><span>{{.Category}}</span><h3>{{.Title}}</h3></a><p>{{.AuthorName}}</p></article>{{end}}</div></div>{{end}}{{end}}
+{{end}}
+
+{{define "home-community"}}
+<div id="community" class="home-panel"><header class="home-panel-heading"><div><h2>社区圈子</h2></div><a class="home-more" href="/community/">全部圈子 {{template "icon" "chevron-right"}}</a></header><div class="home-circle-grid">{{range .Home.Circles}}<a class="home-circle-card" href="{{.URL}}"><span class="home-circle-icon">{{template "icon" "orbit"}}</span><div><h3>{{.Name}}</h3><p>{{.Description}}</p><small>{{.MemberCount}} 位成员<span>{{.JoinLabel}}{{template "icon" "chevron-right"}}</span></small></div></a>{{end}}</div></div>
+{{end}}
+
+{{define "home-welcome"}}
+<article class="home-panel home-member-card" data-home-member-card data-home-progression data-palette="{{index .ThemeValues "home_member_palette"}}">
+  <header class="home-card-head">
+    <a class="home-card-brand" href="/" aria-label="{{.Site.Title}}首页"><span class="home-card-brand-mark"><img src="{{assetOr .Site.IconURL "images/favicon.svg"}}" alt="" width="26" height="26"></span><span class="home-card-brand-copy"><b>{{.Site.Title}}</b><small>会员状态</small></span></a>
+    <a class="home-card-head-link" href="/account/?view=progression">账户中心 {{template "icon" "chevron-right"}}</a>
+  </header>
+  <div class="home-member-guest" data-home-guest>
+    <h2>登录后查看会员状态</h2>
+    <p class="home-card-copy">等级、经验和有效期会显示在这里。</p>
+    <div class="home-card-actions"><a class="home-card-button" href="/account/" data-account-login>登录账号</a><a class="home-card-text-link" href="/account/?view=progression">了解会员</a></div>
+  </div>
+  <div class="home-member-account" data-home-member hidden>
+    <div class="home-member-identity">
+      <span class="home-member-avatar" data-home-member-avatar aria-hidden="true"></span>
+      <div class="home-member-copy"><h2 data-home-name></h2><p data-home-member-state>正在同步会员状态</p></div>
+      <span class="home-member-plan" data-home-member-plan hidden></span>
+    </div>
+    <div class="home-member-progress" data-home-level-block hidden>
+      <div class="home-member-progress-row"><span data-home-level></span><b data-home-xp></b></div>
+      <div class="home-member-meter" role="progressbar" aria-label="等级进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-home-level-meter><i data-home-level-fill></i></div>
+      <p data-home-level-next></p>
+    </div>
+    <p class="home-member-description" data-home-member-description hidden></p>
+    <footer class="home-member-footer"><span data-home-membership-until>会员状态同步中</span><a href="/account/?view=progression" data-home-member-link>会员中心 {{template "icon" "chevron-right"}}</a></footer>
+  </div>
+</article>
+{{end}}
+
+{{define "home-checkin"}}
+<article class="home-panel home-checkin-card" data-home-checkin-card data-checkin-source="{{.Home.CheckIn.Source}}" data-palette="{{index .ThemeValues "home_checkin_palette"}}">
+  <header class="home-card-head">
+    <a class="home-card-brand" href="/" aria-label="{{.Site.Title}}首页"><span class="home-card-brand-mark"><img src="{{assetOr .Site.IconURL "images/favicon.svg"}}" alt="" width="26" height="26"></span><span class="home-card-brand-copy"><b>{{.Site.Title}}</b><small>每日签到</small></span></a>
+    <a class="home-card-head-link" href="{{.Home.CheckIn.AccountURL}}">签到记录 {{template "icon" "chevron-right"}}</a>
+  </header>
+  <div class="home-checkin-main">
+    <div class="home-checkin-reward"><span>今日签到</span><strong>+<b data-home-checkin-amount>{{.Home.CheckIn.Reward}}</b><small data-home-checkin-unit>{{.Home.CheckIn.Unit}}</small></strong></div>
+    <p class="home-checkin-note" data-home-checkin-note>{{if eq .Home.CheckIn.Mode "calendar_day"}}每天零点重置（{{if eq .Home.CheckIn.Timezone "Asia/Shanghai"}}北京时间{{else}}{{.Home.CheckIn.Timezone}}{{end}}）{{else}}每 {{.Home.CheckIn.IntervalHours}} 小时可签到一次{{end}}</p>
+  </div>
+  <button class="home-checkin-button" type="button" data-home-checkin><span data-home-checkin-label>登录后签到</span>{{template "icon" "arrow-right"}}</button>
+  <p class="home-checkin-status" data-home-checkin-status role="status" aria-live="polite" hidden></p>
+  <footer class="home-checkin-footer"><span data-home-checkin-meta>签到后查看下一次时间</span><a href="{{.Home.CheckIn.AccountURL}}">查看记录</a></footer>
+  <noscript><p class="home-checkin-noscript"><a href="{{.Home.CheckIn.AccountURL}}">前往个人中心签到</a></p></noscript>
+</article>
+{{end}}
+
+{{define "home-recent"}}
+<div class="home-panel home-widget"><header class="home-widget-heading"><h2>最近发布</h2><span class="home-widget-note">最新</span></header><ol class="home-recent-list">{{range $index, $post := .Home.Recent}}<li><span class="home-rank">0{{add $index 1}}</span><div><h3><a href="{{.URL}}">{{.Title}}</a></h3><time>{{dateIn .PublishedAt $.Site.Timezone}}</time></div></li>{{end}}</ol></div>
+{{end}}
+
+{{define "home-authors"}}
+<div class="home-panel home-widget"><header class="home-widget-heading"><h2>作者</h2>{{template "icon" "pen-line"}}</header><div class="home-author-list">{{range .Home.Authors}}<div class="home-author"><a class="home-avatar" href="{{.URL}}" aria-label="{{.Name}}的主页">{{if .AvatarURL}}<img src="{{.AvatarURL}}" alt="" width="44" height="44" loading="lazy">{{else}}{{.Initial}}{{end}}</a><div><h3><a href="{{.URL}}">{{.Name}}</a></h3><p>{{.Latest}}</p></div>{{if gt .ID 0}}<button class="home-follow" type="button" data-follow="{{.Name}}" data-follow-user="{{.ID}}" aria-pressed="false" aria-label="关注{{.Name}}">{{template "icon" "plus"}}<span>关注</span></button>{{else}}<a class="home-follow" href="{{.URL}}" aria-label="浏览{{.Name}}的文章">{{template "icon" "chevron-right"}}</a>{{end}}</div>{{end}}</div></div>
+{{end}}
+
+{{define "home-tags"}}
+<div class="home-panel home-widget"><header class="home-widget-heading"><h2>文章标签</h2>{{template "icon" "hash"}}</header><div class="home-tags">{{range .Home.Tags}}<a href="/tags/{{.Slug}}/"># {{.Name}}<small>{{.Count}}</small></a>{{end}}</div></div>
+{{end}}
+
+{{define "home-stats"}}
+<div class="home-panel home-widget"><header class="home-widget-heading"><h2>站点一览</h2>{{template "icon" "activity"}}</header><div class="home-stats"><a href="/explore/"><b>{{.Home.TotalPosts}}</b><span>篇文章</span></a><a href="/explore/"><b>{{.Home.TotalCategories}}</b><span>个分类</span></a>{{if .ModuleEnabled "series"}}<a href="/series/"><b>{{.Home.TotalSeries}}</b><span>个专题</span></a>{{end}}</div></div>
+{{end}}
+
+{{define "home-subscribe"}}
+<div class="home-panel home-widget home-subscribe"><span class="home-subscribe-icon">{{template "icon" "rss"}}</span><h2>订阅更新</h2><p>通过 RSS 阅读器查看新文章，<br>或在个人中心设置邮件订阅。</p><a class="ui-button ui-button-outline" href="/feed.xml" type="application/rss+xml">{{template "icon" "rss"}}订阅 RSS </a><a class="home-subscribe-settings" href="/account/?view=notifications">管理我的订阅偏好 {{template "icon" "chevron-right"}}</a></div>
+{{end}}

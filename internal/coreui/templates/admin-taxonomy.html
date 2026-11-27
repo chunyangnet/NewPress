@@ -1,0 +1,77 @@
+{{define "content"}}
+<section class="admin-page admin-taxonomy-page">
+  <header class="admin-page-heading admin-taxonomy-heading">
+    <div>
+      <h1>分类与标签</h1>
+      
+    </div>
+    <nav aria-label="分类法切换">
+      <a class="{{if eq .Taxonomy.Taxonomy "category"}}is-active{{end}}" href="/admin/taxonomy/?taxonomy=category"><span>{{template "icon" "database"}}</span><b>分类目录</b><small>{{.Taxonomy.CategoryCount}} 个分类</small></a>
+      <a class="{{if eq .Taxonomy.Taxonomy "post_tag"}}is-active{{end}}" href="/admin/taxonomy/?taxonomy=post_tag"><span>{{template "icon" "tags"}}</span><b>文章标签</b><small>{{.Taxonomy.TagCount}} 个标签</small></a>
+    </nav>
+  </header>
+
+  {{if .Admin.ReadOnly}}<div class="admin-callout admin-callout-warning" role="status"><span>{{template "icon" "triangle-alert"}}</span><div><strong>只读预览不会接受分类变更</strong><p>配置管理员密码哈希后，创建、编辑、删除和文章关系写入才会启用。</p></div></div>{{end}}
+  {{if .Admin.Notice}}<div class="admin-content-notice admin-content-notice-{{.Admin.NoticeTone}}" role="status"><span>{{if eq .Admin.NoticeTone "success"}}{{template "icon" "check-circle"}}{{else}}{{template "icon" "triangle-alert"}}{{end}}</span><div><strong>{{if eq .Admin.NoticeTone "success"}}分类与标签已更新{{else}}请处理以下问题{{end}}</strong><p>{{.Admin.Notice}}</p></div></div>{{end}}
+
+
+  <div class="admin-taxonomy-layout">
+    <aside class="admin-taxonomy-editor">
+      <form id="admin-taxonomy-form" action="/admin/taxonomy/" method="post" data-taxonomy-form data-admin-native-save{{if .Admin.FieldErrors}} data-admin-allow-clean{{end}}>
+        <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}">
+        <input type="hidden" name="taxonomy" value="{{.Taxonomy.Form.Taxonomy}}">
+        {{if .Taxonomy.Form.ID}}<input type="hidden" name="id" value="{{.Taxonomy.Form.ID}}"><input type="hidden" name="version" value="{{.Taxonomy.Form.Version}}">{{end}}
+        <header>
+          <span>{{if .Taxonomy.Form.ID}}{{template "icon" "pen-line"}}{{else}}{{template "icon" "plus"}}{{end}}</span>
+          <div><h2>{{if .Taxonomy.Form.ID}}编辑{{.Taxonomy.Label}}{{else}}添加{{.Taxonomy.Label}}{{end}}</h2></div>
+          {{if .Taxonomy.Form.ID}}<a href="/admin/taxonomy/?taxonomy={{.Taxonomy.Taxonomy}}" aria-label="取消编辑">{{template "icon" "x"}}</a>{{end}}
+        </header>
+
+        <label class="{{if index .Admin.FieldErrors "name"}}has-error{{end}}"><span class="admin-field-label">名称 <em>*</em></span>
+          <input type="text" name="name" value="{{.Taxonomy.Form.Name}}" maxlength="80" placeholder="例如：工程实践" autocomplete="off" data-term-name {{if .Admin.ReadOnly}}disabled{{end}}>
+          <small>{{if index .Admin.FieldErrors "name"}}{{index .Admin.FieldErrors "name"}}{{else}}显示在文章、归档页和筛选器中的公开名称。{{end}}</small>
+        </label>
+        <label class="{{if index .Admin.FieldErrors "slug"}}has-error{{end}}"><span class="admin-field-label">URL 别名 <em>*</em></span>
+          <span class="admin-taxonomy-slug fluent-input-group"><b>{{if eq .Taxonomy.Taxonomy "category"}}/categories/{{else}}/tags/{{end}}</b><input type="text" name="slug" value="{{.Taxonomy.Form.Slug}}" maxlength="160" placeholder="engineering" autocomplete="off" spellcheck="false" data-term-slug {{if .Admin.ReadOnly}}disabled{{end}}></span>
+          <small>{{if index .Admin.FieldErrors "slug"}}{{index .Admin.FieldErrors "slug"}}{{else}}支持中文、字母、数字和连字符；创建后仍可安全修改。{{end}}</small>
+        </label>
+        {{if eq .Taxonomy.Taxonomy "category"}}<label class="{{if index .Admin.FieldErrors "parent_id"}}has-error{{end}}">父级分类
+          <select name="parent_id" {{if .Admin.ReadOnly}}disabled{{end}}><option value="0">— 顶级分类 —</option>{{range .Taxonomy.ParentTerms}}<option value="{{.ID}}" {{if eq $.Taxonomy.Form.ParentID .ID}}selected{{end}}>{{if gt .Depth 0}}└ {{end}}{{.Name}}</option>{{end}}</select>
+          <small>{{if index .Admin.FieldErrors "parent_id"}}{{index .Admin.FieldErrors "parent_id"}}{{else}}父级不能是自身或自己的下级。{{end}}</small>
+        </label>{{else}}<div class="admin-taxonomy-flat-note"><span>{{template "icon" "activity"}}</span><p><b>标签保持扁平</b><small>编辑器输入名称即可复用或创建，不需要父子关系。</small></p></div>{{end}}
+        <label class="{{if index .Admin.FieldErrors "description"}}has-error{{end}}">说明
+          <textarea name="description" rows="5" maxlength="500" placeholder="描述这个栏目覆盖的内容范围与使用方式" {{if .Admin.ReadOnly}}disabled{{end}}>{{.Taxonomy.Form.Description}}</textarea>
+          <small>{{if index .Admin.FieldErrors "description"}}{{index .Admin.FieldErrors "description"}}{{else}}用于公开归档页。{{end}}</small>
+        </label>
+
+        {{if .Taxonomy.Form.System}}<div class="admin-taxonomy-system-note"><span>{{template "icon" "badge-check"}}</span><p><b>系统默认分类</b><small>可以重命名，但不能删除，确保每篇文章始终拥有安全归档。</small></p></div>{{end}}
+        <div class="admin-form-actions">
+          {{if and .Taxonomy.Form.ID (not .Taxonomy.Form.System)}}<button class="admin-button admin-button-danger" type="submit" name="action" value="delete" data-confirm-action="永久删除“{{.Taxonomy.Form.Name}}”？文章会移除该关系；失去全部分类的文章将回落到默认分类。" {{if .Admin.ReadOnly}}disabled{{end}}>{{template "icon" "x"}}删除</button>{{end}}
+          {{template "admin-savebar" (dict "FormID" "admin-taxonomy-form" "ReadOnly" .Admin.ReadOnly "SubmitName" "action" "SubmitValue" (or (and .Taxonomy.Form.ID "update") "create") "Label" (or (and .Taxonomy.Form.ID "保存更改") "创建"))}}
+        </div>
+      </form>
+    </aside>
+
+    <div class="admin-taxonomy-index">
+      <header>
+        <div><h2>{{.Taxonomy.Label}}索引</h2><p>共 {{.Taxonomy.Total}} 项 · 第 {{.Taxonomy.Page}} / {{.Taxonomy.Pages}} 页</p></div>
+        <form class="fluent-input-group" action="/admin/taxonomy/" method="get" role="search" aria-label="分类与标签检索"><input type="hidden" name="taxonomy" value="{{.Taxonomy.Taxonomy}}">{{template "icon" "search"}}<input type="search" name="q" value="{{.Taxonomy.Search}}" maxlength="100" placeholder="搜索名称、别名或说明" aria-label="搜索分类与标签"><button type="submit">检索</button></form>
+      </header>
+      {{if .Taxonomy.Search}}<div class="admin-taxonomy-query"><span>{{template "icon" "filter"}}</span><p>正在检索 <b>“{{.Taxonomy.Search}}”</b></p><a href="/admin/taxonomy/?taxonomy={{.Taxonomy.Taxonomy}}">清除</a></div>{{end}}
+
+      <div class="admin-taxonomy-table" role="table" aria-label="{{.Taxonomy.Label}}列表">
+        <div class="admin-taxonomy-table-head" role="row"><span role="columnheader">名称与说明</span><span role="columnheader">别名</span><span role="columnheader">内容</span><span role="columnheader">修改</span><span role="columnheader">操作</span></div>
+        {{range .Taxonomy.Rows}}<div class="admin-taxonomy-row {{.DepthClass}}" role="row">
+          <div role="cell"><span class="admin-term-node"><i></i>{{if .Term.System}}{{template "icon" "badge-check"}}{{else if eq .Term.Taxonomy "category"}}{{template "icon" "database"}}{{else}}{{template "icon" "tags"}}{{end}}</span><p><b>{{.Term.Name}}</b>{{if .Term.ParentName}}<em>属于 {{.Term.ParentName}}</em>{{end}}<small>{{if .Term.Description}}{{.Term.Description}}{{else}}尚未填写说明{{end}}</small></p></div>
+          <code role="cell">{{.Term.Slug}}</code>
+          <span role="cell"><b>{{.Term.Count}}</b><small>篇关联</small></span>
+          <time role="cell">{{.UpdatedLabel}}<small>v{{.Term.Version}}</small></time>
+          <div role="cell"><a href="{{.EditURL}}">编辑</a><a href="{{.ArchiveURL}}" target="_blank" rel="noopener">归档 {{template "icon" "external-link"}}</a></div>
+        </div>{{else}}<div class="admin-taxonomy-empty"><span>{{template "icon" "tags"}}</span><strong>这里还没有匹配项</strong><p>创建第一项，或缩短搜索关键词后再试。</p></div>{{end}}
+      </div>
+
+      <footer class="admin-taxonomy-pagination"><span>{{.Taxonomy.Total}} 项 · 第 {{.Taxonomy.Page}} 页</span><nav aria-label="术语分页">{{if .Taxonomy.HasPrevious}}<a href="{{.Taxonomy.PreviousURL}}">{{template "icon" "arrow-left"}}上一页</a>{{else}}<span>{{template "icon" "arrow-left"}}上一页</span>{{end}}{{if .Taxonomy.HasNext}}<a href="{{.Taxonomy.NextURL}}">下一页{{template "icon" "arrow-right"}}</a>{{else}}<span>下一页{{template "icon" "arrow-right"}}</span>{{end}}</nav></footer>
+    </div>
+  </div>
+</section>
+{{end}}

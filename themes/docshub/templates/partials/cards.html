@@ -1,0 +1,15 @@
+{{define "tutorial-card"}}
+{{$cover := index .Settings "card_cover"}}{{$hasCover := or (eq $cover "all") (and (eq $cover "real") .Post.CoverURL)}}
+<article class="tutorial-card{{if not $hasCover}} card-no-cover{{end}}">
+  {{if $hasCover}}<a class="tutorial-image" href="{{.Post.URL}}" tabindex="-1" aria-hidden="true">
+    {{$fallback := "images/tutorial-workspace.webp"}}{{if eq .Index 1}}{{$fallback = "images/tutorial-components.webp"}}{{else if eq .Index 2}}{{$fallback = "images/tutorial-code.webp"}}{{else if eq .Index 3}}{{$fallback = "images/tutorial-performance.webp"}}{{end}}
+    {{with index .Images .Post.CoverURL}}{{if .CardSrc}}<img src="{{.CardSrc}}"{{if .CardSrcSet}} srcset="{{.CardSrcSet}}" sizes="(max-width: 600px) 90vw, (max-width: 1000px) 40vw, 22vw"{{end}} alt="" width="456" height="168" loading="lazy">{{else}}<img src="{{assetOr $.Post.CoverURL $fallback}}" alt="" width="456" height="168" loading="lazy">{{end}}{{else}}<img src="{{assetOr .Post.CoverURL $fallback}}" alt="" width="456" height="168" loading="lazy">{{end}}
+  </a>{{end}}
+  <div class="tutorial-body">
+    {{if .Post.Pinned}}<span class="docs-pin">{{template "service-icon" "pin"}}置顶</span>{{end}}{{template "article-badge-inline" .Post.ArticleBadge}}
+    {{if index .Settings "show_card_category"}}<span class="category-badge">{{if .Post.Category}}{{.Post.Category}}{{else}}教程{{end}}</span>{{end}}
+    <h3><a href="{{.Post.URL}}">{{.Post.Title}}</a></h3>
+    {{if and (index .Settings "show_card_excerpt") .Post.Excerpt}}<p>{{.Post.Excerpt}}</p>{{end}}
+    {{$meta := index .Settings "card_meta"}}{{if ne $meta "none"}}<div class="tutorial-meta" data-card-meta="{{$meta}}"><span>{{template "icon" "clock"}}<time datetime="{{date .Post.PublishedAt}}">{{date .Post.PublishedAt}}</time></span>{{if eq $meta "full"}}<span>{{template "icon" "eye"}}阅读全文</span>{{end}}</div>{{end}}
+  </div>
+</article>{{end}}

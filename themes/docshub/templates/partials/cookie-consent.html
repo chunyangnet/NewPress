@@ -1,0 +1,44 @@
+{{define "cookie-consent"}}
+<div class="cookie-consent-space" data-cookie-space hidden aria-hidden="true"></div>
+<section class="cookie-consent" data-cookie-consent hidden aria-labelledby="cookie-consent-title">
+  <div class="shell cookie-consent-inner">
+    <span class="cookie-consent-icon" aria-hidden="true">{{template "service-icon" "shield-check"}}</span>
+    <div class="cookie-consent-copy">
+      <strong id="cookie-consent-title">Cookie 与隐私</strong>
+      <p>必要 Cookie 用于登录、安全与基础偏好。你可以选择是否允许分析 Cookie，并随时更改。{{with index .Settings "cookie_privacy_url"}} <a href="{{.}}">隐私政策{{template "service-icon" "chevron-right"}}</a>{{end}}</p>
+    </div>
+    <div class="cookie-consent-actions">
+      <button type="button" class="cookie-button cookie-button-secondary" data-cookie-open aria-haspopup="dialog" aria-controls="cookie-preferences">管理设置</button>
+      <button type="button" class="cookie-button cookie-button-secondary" data-cookie-reject>拒绝可选</button>
+      <button type="button" class="cookie-button cookie-button-primary" data-cookie-accept>接受全部</button>
+    </div>
+  </div>
+</section>
+<dialog id="cookie-preferences" class="cookie-dialog" data-cookie-dialog aria-labelledby="cookie-dialog-title" aria-describedby="cookie-dialog-description">
+  <div class="cookie-dialog-header">
+    <span class="cookie-dialog-icon" aria-hidden="true">{{template "service-icon" "sliders-horizontal"}}</span>
+    <button type="button" class="cookie-dialog-close" data-cookie-close aria-label="关闭 Cookie 设置" autofocus>{{template "service-icon" "x"}}</button>
+  </div>
+  <h2 id="cookie-dialog-title">隐私，由你选择</h2>
+  <p id="cookie-dialog-description">管理这台设备上的 Cookie 偏好。拒绝可选项后，你仍可正常浏览和使用网站。</p>
+  <div class="cookie-categories">
+    <div class="cookie-category">
+      <div class="cookie-category-copy"><strong>必要 Cookie</strong><p>保障登录、网站安全及基础偏好，并记住本次选择。</p></div>
+      <span class="cookie-required">{{template "service-icon" "lock-keyhole"}}始终开启</span>
+    </div>
+    <label class="cookie-category cookie-category-toggle">
+      <span class="cookie-category-copy"><strong id="cookie-analytics-label">分析 Cookie</strong><span id="cookie-analytics-description">帮助了解访问情况、改进网站体验。关闭后不加载站点配置的统计脚本。</span></span>
+      <span class="cookie-switch">
+        <input type="checkbox" role="switch" data-cookie-analytics aria-labelledby="cookie-analytics-label" aria-describedby="cookie-analytics-description">
+        <span class="cookie-switch-track" aria-hidden="true"></span>
+        <span class="cookie-switch-label" data-cookie-state aria-hidden="true">已关闭</span>
+      </span>
+    </label>
+  </div>
+  <p class="cookie-dialog-note">可随时通过页脚的「Cookie 设置」修改。{{with index .Settings "cookie_privacy_url"}} <a href="{{.}}">查看隐私政策</a>{{end}}</p>
+  <div class="cookie-dialog-actions">
+    <button type="button" class="cookie-button cookie-button-secondary" data-cookie-reject>拒绝可选</button>
+    <button type="button" class="cookie-button cookie-button-primary" data-cookie-save>保存选择</button>
+  </div>
+</dialog>
+{{end}}

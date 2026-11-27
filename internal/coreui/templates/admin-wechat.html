@@ -1,0 +1,72 @@
+{{define "content"}}
+<section class="wechat-page" data-wechat data-csrf="{{.Admin.CSRFToken}}" data-readonly="{{.Admin.ReadOnly}}" data-user-id="{{.Admin.Principal.UserID}}">
+  <header class="admin-page-heading"><div><h1>微信公众号</h1><span class="wechat-connection" data-wechat-connection>正在读取连接状态…</span><p>同步开关在「账号与设置」管理；自动同步决定是否随新文章发布触发，关闭后仍可手动同步。<a href="/admin/modules/#module-card-wechat">公众号模块开关</a>可暂停整个公众号工作区（包括采集）。</p></div></header>
+  {{if .FeatureStatus}}{{template "admin-feature-status" .}}{{end}}
+  <nav class="wechat-tabs" aria-label="公众号工作区"><button type="button" class="is-active" aria-selected="true" data-wechat-tab="sync">同步与记录</button><button type="button" aria-selected="false" data-wechat-tab="collect">采集文章</button><button type="button" aria-selected="false" data-wechat-tab="config">账号与设置<span class="wechat-dirty" data-wechat-dirty hidden>未保存</span></button></nav>
+  <div class="wechat-statusbar"><p class="wechat-status" id="wechat-operation-status" role="status" aria-live="polite" data-wechat-status>正在加载公众号工作区。</p><button class="admin-button" type="button" data-wechat-stop-read aria-describedby="wechat-operation-status" hidden>停止读取</button></div>
+  <aside class="wechat-recovery" data-wechat-recovery hidden aria-label="恢复公众号工作区"><p data-wechat-recovery-copy>本页输入已保留，请核对登录后继续。</p><div><a class="admin-button" href="/admin/login/?next=/admin/wechat/" target="_blank" rel="noopener">登录原账号（新窗口）</a><button class="admin-button admin-button-primary" type="button" data-wechat-recover>检查登录并恢复</button></div><small>恢复只读取状态；同步、发表和导入均需手动继续。</small></aside>
+  <section data-wechat-panel="sync">
+    <div class="wechat-grid">
+      <section class="wechat-card"><header><h2>同步文章到公众号</h2><p data-wechat-sync-hint>默认同步到草稿箱，排版确认后再发表。</p></header>
+        <form data-wechat-sync><fieldset {{if .Admin.ReadOnly}}disabled{{end}}><label>查找本站文章<div class="wechat-search"><input name="q" type="search" maxlength="100" placeholder="输入标题关键词" aria-label="查找本站文章"><button type="button" class="admin-button" data-wechat-search>查找</button></div></label><label>选择已保存的文章<select name="post_id" required data-wechat-posts><option value="">正在读取文章…</option></select></label><p class="wechat-note" data-wechat-post-note>同步使用正式保存的版本；编辑页尚未保存的改动不会发送。</p><div class="wechat-send-actions"><button class="admin-button" type="button" data-wechat-check>{{template "icon" "check"}}检查文章</button><button class="admin-button admin-button-primary" type="submit" data-wechat-send>{{template "icon" "send"}}同步到公众号</button></div></fieldset></form>
+        <section class="wechat-check" data-wechat-check-result hidden aria-labelledby="wechat-check-title">
+          <header><span class="wechat-eyebrow">文章检查</span><strong data-wechat-check-badge></strong></header><h3 id="wechat-check-title" data-wechat-check-title></h3>
+          <dl class="wechat-check-metrics"><div><dt>标题字数</dt><dd data-wechat-check-title-count></dd></div><div><dt>正文长度 · 含排版标记</dt><dd data-wechat-check-content-count></dd></div><div><dt>图片检查</dt><dd data-wechat-check-images></dd></div></dl>
+          <p class="wechat-check-state" data-wechat-check-state role="status" aria-live="polite"></p><ul class="wechat-check-issues" data-wechat-check-issues></ul><div class="wechat-check-notes" data-wechat-check-warnings></div>
+          <footer><a class="wechat-imported-link" data-wechat-check-edit target="_blank" rel="noopener">前往编辑文章 {{template "icon" "external-link"}}</a><span data-wechat-check-time></span></footer><p class="wechat-note">检查不会上传图片或创建任务。微信权限与最终处理结果仍以实际同步为准。</p>
+        </section>
+      </section>
+      <aside class="wechat-card wechat-guide"><h2>同步前的准备</h2><ol><li><b>连接你的公众号</b><span>在“账号与设置”中填写 AppID 与 AppSecret，并测试连接。</span></li><li><b>使用本站图片</b><span>正文与封面使用媒体库图片。同步时自动压缩并上传微信。</span></li><li><b>核对同步结果</b><span>草稿创建、提交发表和发表完成分别显示，方便后续处理。</span></li></ol></aside>
+    </div>
+    <section class="wechat-card wechat-history">
+      <header><div><h2>同步记录 <small data-wechat-total></small></h2></div><button class="admin-button" type="button" data-wechat-refresh>{{template "icon" "refresh-cw"}}刷新</button></header>
+      <p class="wechat-note" data-wechat-job-summary></p>
+      <form class="wechat-history-filters" data-wechat-job-filters role="search" aria-label="筛选同步记录">
+        <label>文章标题<input name="job_q" type="search" maxlength="100" placeholder="搜索全部同步记录"></label>
+        <label>任务状态<select name="job_status"><option value="">全部状态</option><option value="queued">等待处理</option><option value="working">同步中</option><option value="draft">已存草稿</option><option value="publishing">发表中</option><option value="published">已发表</option><option value="failed">失败</option><option value="uncertain">结果待核对</option><option value="skipped">已停止</option></select></label>
+        <button class="admin-button" type="submit">筛选记录</button>
+      </form>
+      <div data-wechat-jobs><div class="wechat-empty">同步记录将在这里显示。</div></div>
+      <nav class="wechat-pagination" aria-label="同步记录分页"><button class="admin-button" type="button" data-wechat-prev disabled>上一页</button><span data-wechat-page aria-live="polite">第 1 页</span><button class="admin-button" type="button" data-wechat-next disabled>下一页</button></nav>
+    </section>
+  </section>
+  <section data-wechat-panel="collect" hidden>
+    <section class="wechat-collection-draft" data-wechat-collection-draft hidden aria-label="本标签页采集进度">
+      {{template "admin-switch" (dict "WechatDraft" true "Label" "在此标签页保留链接与选择")}}
+      <p>最长保留 24 小时，包含粘贴时的附带文案。恢复后需重新预览；不会保存密钥、采集正文或导入凭证。</p>
+      <div data-wechat-draft-saved hidden><p data-wechat-draft-summary></p><div class="wechat-send-actions"><button class="admin-button" type="button" data-wechat-draft-restore>恢复链接与选择</button><button class="admin-button" type="button" data-wechat-draft-clear>清除并停止暂存</button></div></div>
+      <p data-wechat-draft-status role="status" aria-live="polite"></p>
+    </section>
+    <div class="wechat-grid wechat-collect-grid"><section class="wechat-card"><header><h2>从链接采集文章</h2><p>粘贴公开文章链接，先预览，再保存为本站草稿。</p></header>
+      <form data-wechat-collect><fieldset {{if .Admin.ReadOnly}}disabled{{end}}>
+        <label>微信公众号文章链接<textarea name="urls" rows="7" maxlength="22000" required aria-describedby="wechat-links-help wechat-links-status" placeholder="https://mp.weixin.qq.com/s/…&#10;&#10;也可直接粘贴带标题的分享文案"></textarea></label>
+        <p class="wechat-input-help" id="wechat-links-help">链接可用空格或换行分隔，每批最多 10 个不同链接。</p>
+        <div class="wechat-input-state" data-wechat-input-state id="wechat-links-status" role="status" aria-live="polite" aria-atomic="true"><span>本批链接</span><strong data-wechat-input-count>0 / 10</strong><p data-wechat-input-note>支持粘贴分享文案或多个链接，重复分享链接自动合并。</p></div>
+        <p class="wechat-note">采集文章正文、公众号名称与图片，并附上原文链接。请使用你有权转载或整理的内容。</p>
+        <button class="admin-button admin-button-primary" type="submit" data-wechat-preview>{{template "icon" "scan-search"}}采集并预览</button>
+      </fieldset></form>
+    </section>
+    <section class="wechat-card wechat-review"><header><h2>核对要带回来的内容</h2><p>勾选需要的文章，确认后保存为草稿；已导入文章保留本站修改。</p></header><p class="wechat-collect-state" data-wechat-preview-state hidden role="status" aria-live="polite"></p><div class="wechat-select-all" data-wechat-selection hidden><label><input type="checkbox" data-wechat-select-all><span>选择全部可导入文章</span></label></div><div data-wechat-collection><div class="wechat-empty"><span aria-hidden="true">↙</span><h3>还没有预览结果</h3><p>粘贴链接后，文章预览和导入结果会显示在这里。</p></div></div><div class="wechat-review-actions" data-wechat-apply-wrap hidden><section class="wechat-image-budget" data-wechat-image-budget hidden aria-label="本批图片数量"><div><span>本批图片</span><strong data-wechat-image-count>0 / 50 张</strong></div><progress data-wechat-image-meter max="50" value="0" aria-label="本批图片数量占用"></progress><p data-wechat-image-budget-note role="status" aria-live="polite"></p></section><p data-wechat-apply-note></p><button class="admin-button admin-button-primary" type="button" data-wechat-apply>确认导入为草稿</button></div><div class="wechat-import-results" data-wechat-import-results aria-live="polite"></div></section></div>
+  </section>
+  <section data-wechat-panel="config" hidden>
+    <form id="wechat-config-form" class="wechat-card wechat-config admin-settings-form" data-wechat-config><header><h2>连接与模块设置</h2></header><fieldset {{if .Admin.ReadOnly}}disabled{{end}}>
+      <div class="wechat-config-fields"><label>AppID<input name="app_id" autocomplete="off" maxlength="18" placeholder="wx…" pattern="wx[0-9a-fA-F]{16}"></label><label>AppSecret<input name="app_secret" type="password" autocomplete="new-password" maxlength="128" placeholder="填写公众号开发者密钥"><small data-wechat-secret-hint>密钥只保存在服务端。</small></label><label>默认作者<input name="author" maxlength="16" placeholder="留空使用本站文章作者"><small>公众号作者名最多 16 字。</small></label><label>默认封面素材 ID<input name="thumb_media_id" maxlength="128" placeholder="可选，微信永久图片素材 ID"><small>文章没有本站封面时使用。</small></label></div>
+      <div class="wechat-switches">
+        {{template "admin-switch" (dict "Name" "enabled" "Label" "开启公众号同步" )}}
+        {{template "admin-switch" (dict "Name" "auto_sync" "Label" "本站发布后自动同步" "Help" "仅处理开启后的新发布事件，旧文章可手动同步。")}}
+        {{template "admin-switch" (dict "Name" "auto_publish" "Label" "同步后自动发表" "Help" "用于新任务；已有任务保留原方式，可在同步记录中改为仅草稿。")}}
+        {{template "admin-switch" (dict "Name" "include_source" "Label" "附上“阅读原文”" )}}
+        {{template "admin-switch" (dict "Name" "open_comment" "Label" "开启公众号文章留言" "Help" "需要公众号具备留言权限。")}}
+        {{template "admin-switch" (dict "Name" "fans_comment" "Label" "仅粉丝可留言" "Help" "在公众号文章留言开启时生效。")}}
+        {{template "admin-switch" (dict "Name" "collect_enabled" "Label" "开启文章采集" "Help" "独立于公众号同步，无需填写 AppSecret。")}}
+        {{template "admin-switch" (dict "Name" "collect_drafts" "Label" "允许保留采集进度" "Help" "仅在当前标签页保留 24 小时，恢复后需重新预览。")}}
+      </div><label class="wechat-clear-secret"><input type="checkbox" name="clear_secret">清除已保存的密钥（需同时关闭同步）</label>
+      <p class="wechat-config-state" data-wechat-config-state role="status" aria-live="polite"></p>
+      <div class="admin-form-tools"><button class="admin-button admin-button-secondary" type="button" data-wechat-test>测试已保存的连接</button></div>{{template "admin-savebar" (dict "FormID" "wechat-config-form" "Wechat" true "ReadOnly" .Admin.ReadOnly)}}
+    </fieldset></form>
+    <p class="wechat-note">在微信公众平台获取开发者信息，并将本站服务器出口 IP 加入接口 IP 白名单。可用的草稿、发表及留言能力由账号实际权限决定。</p>
+  </section>
+  <dialog class="wechat-confirm" data-wechat-confirm aria-labelledby="wechat-confirm-title"><form method="dialog"><h2 id="wechat-confirm-title">确认公众号操作</h2><p data-wechat-confirm-copy></p><div data-wechat-resolve hidden><label>核对后的标识<input name="remote_id" maxlength="128" autocomplete="off"></label><small data-wechat-resolve-hint></small></div><footer><button class="admin-button" value="cancel" formnovalidate>取消</button><button class="admin-button admin-button-primary" value="confirm">确认</button></footer></form></dialog>
+  <noscript><p>公众号工作区需要 JavaScript 来预览内容和显示任务进度。</p></noscript>
+</section>
+{{end}}

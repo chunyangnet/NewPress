@@ -1,0 +1,33 @@
+{{define "service-navigation"}}
+{{if and (index .Settings "show_service_navigation") (ne (index .Settings "show_utility_navigation") false) (not (index .Navigation "utility").Configured)}}
+<div class="nav-divider"></div><p class="nav-label">学习与协作</p>
+<nav class="secondary-nav service-nav" aria-label="学习与协作">
+{{if index .Modules "questions"}}<a data-nav-link data-nav-kinds="questions" href="/questions/"{{if eq .Kind "questions"}} aria-current="page"{{end}}>{{template "service-icon" "circle-help"}}<span>技术问答</span></a>{{end}}
+{{if index .Modules "community"}}<a data-nav-link data-nav-kinds="circles" href="/community/"{{if eq .Kind "circles"}} aria-current="page"{{end}}>{{template "service-icon" "users"}}<span>学习小组</span></a>{{end}}
+{{if index .Modules "feedback"}}<a data-nav-link data-nav-kinds="feedback" href="/feedback/"{{if eq .Kind "feedback"}} aria-current="page"{{end}}>{{template "service-icon" "message-square"}}<span>反馈与路线图</span></a>{{end}}
+{{if index .Modules "flash"}}<a data-nav-link data-nav-kinds="flash flash-single flash-submit" href="/flash/"{{if eq .Kind "flash"}} aria-current="page"{{end}}>{{template "service-icon" "newspaper"}}<span>技术快讯</span></a>{{end}}
+{{if index .Modules "links"}}<a data-nav-link data-nav-kinds="links" href="/links/"{{if eq .Kind "links"}} aria-current="page"{{end}}>{{template "service-icon" "external-link"}}<span>开发者导航</span></a>{{end}}
+{{if index .Settings "show_shop_navigation"}}<a data-nav-link data-nav-kinds="shop" href="/shop/"{{if eq .Kind "shop"}} aria-current="page"{{end}}>{{template "service-icon" "package"}}<span>学习资源</span></a>{{end}}
+</nav>{{end}}
+{{end}}
+
+{{define "mobile-navigation"}}
+{{if index .Settings "show_mobile_navigation"}}
+{{$mobile := index .Navigation "mobile"}}
+{{if or (not $mobile.Configured) $mobile.Items}}<nav class="docs-mobile-nav" aria-label="移动端导航">
+{{if $mobile.Configured}}{{range $mobile.Items}}{{template "docs-mobile-item" .}}{{end}}
+{{else}}<a href="/"{{if eq .Kind "home"}} aria-current="page"{{end}}>{{template "icon" "home"}}<span>首页</span></a><a href="/explore/" data-nav-kinds="explore single archive author page"{{if or (eq .Kind "explore") (eq .Kind "single") (eq .Kind "archive")}} aria-current="page"{{end}}>{{template "icon" "book"}}<span>文档</span></a>{{if index .Modules "questions"}}<a href="/questions/"{{if eq .Kind "questions"}} aria-current="page"{{end}}>{{template "icon" "help"}}<span>问答</span></a>{{end}}<a href="/account/" data-nav-kinds="account account-access"{{if or (eq .Kind "account") (eq .Kind "account-access")}} aria-current="page"{{end}}>{{template "icon" "user"}}<span>我的</span></a>{{end}}
+{{$action := index .Navigation "mobile_action"}}{{if $action.Configured}}{{range $action.Items}}{{template "docs-mobile-item" .}}{{end}}{{else}}<button class="docs-mobile-action" type="button" data-modal-open="quick-actions" aria-controls="quick-actions" aria-haspopup="dialog" aria-expanded="false">{{template "icon" "grid"}}<span>快捷</span></button>{{end}}
+</nav>{{end}}{{end}}
+{{end}}
+
+{{define "home-services"}}
+<section class="docs-services-home docs-home-section" aria-labelledby="docs-services-heading"><div class="section-heading"><div><p class="eyebrow">从阅读到实践</p><h2 id="docs-services-heading">继续你的学习旅程</h2></div><a href="/account/">我的学习空间 {{template "icon" "arrow"}}</a></div><div class="docs-service-grid">
+{{if index .Modules "questions"}}<a class="docs-service-card" href="/questions/"><span class="docs-service-icon">{{template "icon" "help"}}</span><h3>寻找答案</h3><p>搜索已有解答，带着复现步骤提出问题。</p><span>技术问答 {{template "icon" "arrow"}}</span></a>{{end}}
+{{if index .Modules "community"}}<a class="docs-service-card" href="/community/"><span class="docs-service-icon">{{template "icon" "users"}}</span><h3>一起进步</h3><p>加入学习小组，交流经验和项目实践。</p><span>学习小组 {{template "icon" "arrow"}}</span></a>{{end}}
+{{if index .Modules "feedback"}}<a class="docs-service-card" href="/feedback/"><span class="docs-service-icon">{{template "icon" "chat"}}</span><h3>完善知识库</h3><p>提交文档纠错与功能建议，跟进处理进度。</p><span>反馈与路线图 {{template "icon" "arrow"}}</span></a>{{end}}
+{{if index .Modules "links"}}<a class="docs-service-card" href="/links/"><span class="docs-service-icon">{{template "icon" "code"}}</span><h3>发现好工具</h3><p>按主题查找参考资料、工具和开源项目。</p><span>开发者导航 {{template "icon" "arrow"}}</span></a>{{end}}
+{{if index .Settings "show_shop_navigation"}}<a class="docs-service-card" href="/shop/"><span class="docs-service-icon">{{template "icon" "box"}}</span><h3>获取学习资源</h3><p>查看资源说明、兑换条件与已购内容。</p><span>学习资源 {{template "icon" "arrow"}}</span></a>{{end}}
+{{if index .Modules "flash"}}<a class="docs-service-card" href="/flash/"><span class="docs-service-icon">{{template "icon" "history"}}</span><h3>关注技术动态</h3><p>查看简明资讯与原始来源，分享新发现。</p><span>技术快讯 {{template "icon" "arrow"}}</span></a>{{end}}
+</div></section>
+{{end}}

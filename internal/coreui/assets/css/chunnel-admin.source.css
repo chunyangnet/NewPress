@@ -1,0 +1,19 @@
+/* Admin styles: keep imports in cascade order. Built into chunnel-admin.css. */
+@import "./admin/editor-recovery.css";
+@import "./admin/shell.css";
+@import "./admin/dashboard.css";
+@import "./admin/appearance.css";
+@import "./admin/settings.css";
+@import "./admin/content.css";
+@import "./admin/media.css";
+@import "./admin/taxonomy.css";
+@import "./admin/users.css";
+@import "./admin/sessions.css";
+@import "./admin/navigation.css";
+@import "./admin/bulk-content.css";
+@import "./admin/editor-revisions.css";
+@import "./admin/comments.css";
+@import "./admin/tools.css";
+@import "./admin/comment-history.css";
+@import "./admin/accessibility.css";
+@import "./admin/feature-status.css";

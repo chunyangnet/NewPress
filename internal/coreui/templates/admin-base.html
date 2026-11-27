@@ -1,0 +1,157 @@
+{{define "base"}}
+
+<!doctype html>
+<html lang="{{.Site.Locale}}" data-input-style="fluent" data-choice-controls data-site-timezone="{{.Site.Timezone}}" data-style="{{if eq (index .ThemeValues "visual_style") "liquid-glass"}}liquid-glass{{else}}classic{{end}}">
+<head>
+  <meta charset="utf-8">
+  {{if .Editor.FormAction}}<script src="{{asset "js/chunnel-article-badge-editor.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="{{asset "js/chunnel-scroll.js"}}?v={{.UIAssetVersion}}&amp;ui=resources-20261114-1" defer></script>
+  <title>{{.PageTitle}}</title>
+  <meta name="description" content="{{.Description}}">
+  {{range .Integrations.Verification}}<meta name="{{.Name}}" content="{{.Content}}">{{end}}
+  {{if .Integrations.AnalyticsConfig}}<script src="{{.Integrations.ScriptURL}}" data-site-integrations="{{.Integrations.AnalyticsConfig}}" defer></script>{{end}}
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  {{if .IsPreview}}<meta name="referrer" content="no-referrer">{{end}}
+  {{if .Site.Generator}}<meta name="generator" content="{{.Site.Generator}}">{{end}}
+  {{if and .Canonical (not .IsPreview)}}<link rel="canonical" href="{{.Canonical}}">{{end}}
+  <meta name="theme-color" content="{{index .ThemeValues "paper_color"}}">
+  <script src="{{asset "js/chunnel-color-mode.js"}}?v={{.UIAssetVersion}}&amp;ui=color-mode-20261118-2"></script>
+  <link rel="icon" href="{{.Site.IconURL}}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{asset "images/brand/apple-touch-icon.png"}}?v={{.UIAssetVersion}}">
+  
+  
+  <link rel="stylesheet" href="{{asset "css/chunnel-admin-base.css"}}?v={{.UIAssetVersion}}">
+  {{if eq .Admin.Current "questions"}}<link rel="stylesheet" href="{{asset "css/newpress-questions.css"}}"><link rel="stylesheet" href="{{asset "css/newpress-community-compose.css"}}"><script src="{{asset "js/newpress-community-compose.js"}}" defer></script><script src="{{asset "js/newpress-questions.js"}}" defer></script>{{end}}
+  {{if eq .Admin.Current "announcements"}}<link rel="stylesheet" href="{{asset "css/chunnel-announcements.css"}}?v={{.UIAssetVersion}}"><script src="{{asset "js/chunnel-announcements.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+  {{if eq .Admin.Current "navigation"}}<link rel="stylesheet" href="{{asset "css/chunnel-navigation-badges.css"}}"><script src="{{asset "js/newpress-navigation-badges.js"}}" defer></script>{{end}}
+  {{if eq .Admin.Current "login"}}
+  <link rel="stylesheet" href="{{asset "css/chunnel-admin-login.css"}}?v={{.UIAssetVersion}}">
+  {{else}}
+  <link rel="stylesheet" href="{{asset "css/chunnel-admin-shared.css"}}?v={{.UIAssetVersion}}">
+  {{if or (eq .BodyClass "is-admin is-admin-taxonomy") (eq .BodyClass "is-admin is-admin-users")}}<link rel="stylesheet" href="{{asset "css/chunnel-admin-directory.css"}}?v={{.UIAssetVersion}}">{{else if eq .BodyClass "is-admin is-admin-sessions"}}<link rel="stylesheet" href="{{asset "css/chunnel-admin-sessions.css"}}?v={{.UIAssetVersion}}">{{end}}
+  <link rel="stylesheet" href="{{asset "css/chunnel-admin-workflows.css"}}?v={{.UIAssetVersion}}">
+  {{end}}
+  {{if eq .Admin.Current "updates"}}<link rel="stylesheet" href="{{asset "css/chunnel-updates.css"}}?v={{.UIAssetVersion}}&amp;core={{.Version}}&amp;ui=policy-2">{{end}}
+  {{if .ExtensionUpdates.Kind}}<link rel="stylesheet" href="{{asset "css/chunnel-extension-updates.css"}}?v={{.UIAssetVersion}}">{{end}}
+  {{if .ExtensionUpdates.Marketplace}}<link rel="stylesheet" href="{{asset "css/newpress-themes.css"}}">{{end}}
+  {{if .Editor.FormAction}}<link rel="stylesheet" href="{{asset "css/chunnel-editor-content.css"}}?v={{.UIAssetVersion}}"><meta data-component-style-anchor>{{else if eq .Admin.Current "shop"}}<link rel="stylesheet" href="{{asset "css/chunnel-composer.css"}}?v={{.UIAssetVersion}}"><link rel="stylesheet" href="{{asset "css/newpress-article-widgets.css"}}?v={{.UIAssetVersion}}"><link rel="stylesheet" href="{{asset "css/chunnel-editor-widgets.css"}}?v={{.UIAssetVersion}}"><link rel="stylesheet" href="{{asset "css/newpress-components.css"}}?v={{.UIAssetVersion}}"><link rel="stylesheet" href="{{asset "css/chunnel-component-library.css"}}?v={{.UIAssetVersion}}">{{end}}
+  
+  {{if or (eq .BodyClass "is-account-access") (eq .BodyClass "is-admin is-admin-users")}}<link rel="stylesheet" href="{{asset "css/chunnel-access.css"}}?v={{.UIAssetVersion}}">{{end}}
+  {{if and (ne .BodyClass "is-home") (or (not .IsAdmin) .Editor.FormAction (eq .Admin.Current "comments"))}}<link rel="stylesheet" href="{{asset "css/chunnel-interactions.css"}}?v={{.UIAssetVersion}}&amp;ui=resources-20261114-1">{{end}}
+  {{if and (ne .BodyClass "is-home") (or (eq (index .ThemeValues "visual_style") "liquid-glass") (and .IsAdmin (eq .Admin.Current "appearance")))}}<link rel="stylesheet" href="{{asset "css/chunnel-glass.css"}}?v={{.UIAssetVersion}}">{{end}}
+  {{if and .IsAdmin (ne .Admin.Current "login")}}<link rel="stylesheet" href="{{asset "css/chunnel-admin-settings.css"}}?v={{.UIAssetVersion}}&amp;ui=20261114">{{end}}
+  <noscript><link rel="stylesheet" href="{{asset "css/chunnel-nojs.css"}}?v={{.UIAssetVersion}}"></noscript>
+  {{if or (eq .BodyClass "is-series") (eq .BodyClass "is-admin is-admin-series") (eq .BodyClass "is-single")}}<link rel="stylesheet" href="{{asset "css/chunnel-series.css"}}?v={{.UIAssetVersion}}">{{end}}
+  {{if eq .BodyClass "is-admin is-admin-ai-usage"}}<link rel="stylesheet" href="{{asset "css/chunnel-ai-usage.css"}}?v={{.UIAssetVersion}}&amp;ui=ai-ops-20261116-1">{{end}}
+  {{if eq .Admin.Current "registration-codes"}}<link rel="stylesheet" href="{{asset "css/chunnel-registration-codes.css"}}?v={{.UIAssetVersion}}">{{end}}
+  {{if eq .Admin.Current "ai-workbench"}}<link rel="stylesheet" href="{{asset "css/chunnel-ai-workbench.css"}}?v={{.UIAssetVersion}}">{{end}}
+  {{if eq .BodyClass "is-admin is-admin-ai-pro-max"}}<link rel="stylesheet" href="{{asset "css/chunnel-ai-pro-max.css"}}?v={{.UIAssetVersion}}&amp;ui=ai-pro-max-2">{{end}}
+  {{if eq .BodyClass "is-admin is-admin-analytics"}}<link rel="stylesheet" href="{{asset "css/chunnel-analytics.css"}}?v={{.UIAssetVersion}}&amp;ui=analytics-20261111">{{end}}
+  {{if eq .BodyClass "is-admin is-admin-media"}}<link rel="stylesheet" href="{{asset "css/chunnel-images.css"}}?v={{.UIAssetVersion}}">{{end}}
+  {{if or (eq .BodyClass "is-admin is-admin-seo") (eq .BodyClass "is-admin is-admin-editor")}}<link rel="stylesheet" href="{{asset "css/chunnel-seo.css"}}?v={{.UIAssetVersion}}">{{end}}
+  {{if eq .BodyClass "is-admin is-admin-import"}}<link rel="stylesheet" href="{{asset "css/chunnel-import.css"}}?v={{.UIAssetVersion}}">{{end}}
+  {{if eq .BodyClass "is-admin is-admin-wechat"}}<link rel="stylesheet" href="{{asset "css/chunnel-wechat.css"}}?v={{.UIAssetVersion}}&amp;ui=module-design-20261115-3">{{end}}
+  {{if .PluginFragments}}<link rel="stylesheet" href="{{asset "css/chunnel-plugin-fragments.css"}}?v={{.UIAssetVersion}}">{{end}}
+  {{if or (eq .BodyClass "is-links") (eq .BodyClass "is-admin is-admin-links")}}<link rel="stylesheet" href="{{asset "css/chunnel-links.css"}}?v={{.UIAssetVersion}}">{{end}}
+  {{if or (eq .BodyClass "is-feedback") (eq .BodyClass "is-admin is-admin-features")}}<link rel="stylesheet" href="{{asset "css/chunnel-feedback.css"}}?v={{.UIAssetVersion}}">{{end}}
+  {{if eq .BodyClass "is-admin is-admin-plugins"}}<link rel="stylesheet" href="{{asset "css/chunnel-plugins.css"}}?v={{.UIAssetVersion}}&amp;ui=plugin-market-20261115-2">{{end}}
+  {{if eq .BodyClass "is-admin is-admin-plugin-records"}}<link rel="stylesheet" href="{{asset "css/newpress-plugin-records.css"}}?v={{.UIAssetVersion}}"><script src="{{asset "js/newpress-plugin-records.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+  {{if eq .BodyClass "is-admin is-admin-plugin-webhooks"}}<link rel="stylesheet" href="{{asset "css/newpress-plugin-records.css"}}?v={{.UIAssetVersion}}"><link rel="stylesheet" href="{{asset "css/newpress-plugin-webhooks.css"}}?v={{.UIAssetVersion}}"><script src="{{asset "js/newpress-plugin-webhooks.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+  {{if eq .BodyClass "is-admin is-admin-object-storage"}}<link rel="stylesheet" href="{{asset "css/chunnel-object-storage.css"}}?v={{.UIAssetVersion}}&amp;ui=storage-20261116-1"><script src="{{asset "js/chunnel-object-storage.js"}}?v={{.UIAssetVersion}}&amp;ui=storage-20261116-1" defer></script>{{end}}
+  {{if eq .BodyClass "is-admin is-admin-cdn"}}<link rel="stylesheet" href="{{asset "css/chunnel-cdn.css"}}?v={{.UIAssetVersion}}&amp;ui=cdn-20261116-2"><script src="{{asset "js/chunnel-cdn.js"}}?v={{.UIAssetVersion}}&amp;ui=cdn-20261116-2" defer></script><script src="{{asset "js/chunnel-cdn-routing.js"}}?v={{.UIAssetVersion}}&amp;ui=cdn-20261116-2" defer></script>{{end}}
+  {{if eq .Admin.Current "circles"}}<link rel="stylesheet" href="{{asset "css/chunnel-circles.css"}}?v={{.UIAssetVersion}}">{{end}}
+  <link rel="stylesheet" href="{{asset "css/chunnel-admin-controls.css"}}?v={{.UIAssetVersion}}">
+  {{if or (and .IsAdmin (ne .Admin.Current "login")) (eq .BodyClass "is-account")}}<link rel="stylesheet" href="{{asset "css/chunnel-dialogs.css"}}?v={{.UIAssetVersion}}">{{end}}
+  {{if and .IsAdmin (or (eq .Admin.Current "modules") (eq .Admin.Current "layout"))}}<link rel="stylesheet" href="{{asset "css/chunnel-design.css"}}?v=html-layout-20261115-2"><script src="{{asset "js/chunnel-design.js"}}?v=html-layout-20261115-2" defer></script>{{end}}
+  {{if or (eq .Admin.Current "appearance") (eq .Admin.Current "layout")}}<link rel="stylesheet" href="{{asset "css/chunnel-admin-layout-workspace.css"}}?v={{.UIAssetVersion}}">{{else}}<link rel="stylesheet" href="{{asset "css/chunnel-admin-workspace.css"}}?v={{.UIAssetVersion}}&amp;ui=html-layout-20261115-2">{{end}}
+  {{if eq .BodyClass "is-admin is-admin-site-settings"}}<link rel="stylesheet" href="{{asset "css/chunnel-ai-settings.css"}}?v={{.UIAssetVersion}}&amp;ui=ai-ops-20261116-1">{{end}}
+  {{if and .Editor.FormAction (.ModuleEnabled "ai")}}<link rel="stylesheet" href="{{asset "css/chunnel-ai-launch.css"}}?v={{.UIAssetVersion}}">{{end}}
+  {{if and .IsAdmin (eq .Admin.Current "system")}}<link rel="stylesheet" href="{{asset "css/chunnel-system.css"}}?v={{.UIAssetVersion}}&amp;ui=system-20261111-2">{{end}}
+  {{if or (eq .BodyClass "is-admin is-admin-features") (eq .BodyClass "is-admin is-admin-links")}}<link rel="stylesheet" href="{{asset "css/chunnel-features.css"}}?v={{.UIAssetVersion}}">{{end}}
+  {{if eq .BodyClass "is-account"}}<link rel="stylesheet" href="{{asset "css/chunnel-account.css"}}?v={{.UIAssetVersion}}&amp;ui=account-mobile-20261112">{{end}}
+  {{if or (eq .BodyClass "is-account") (and .IsAdmin (eq .Admin.Current "currency"))}}<link rel="stylesheet" href="{{asset "css/chunnel-currency.css"}}?v={{.UIAssetVersion}}">{{end}}
+  {{if or (eq .BodyClass "is-account") (eq .BodyClass "is-author") (and .IsAdmin (eq .Admin.Current "progression"))}}<link rel="stylesheet" href="{{asset "css/chunnel-progression.css"}}?v={{.UIAssetVersion}}">{{end}}
+  {{if eq .BodyClass "is-billing"}}<link rel="stylesheet" href="{{asset "css/chunnel-billing.css"}}?v={{.UIAssetVersion}}">{{end}}
+  {{if and .IsAdmin (eq .Admin.Current "payments")}}<link rel="stylesheet" href="{{asset "css/chunnel-payments-admin.css"}}?v={{.UIAssetVersion}}&amp;ui=payments-20261115-1">{{end}}
+  {{if and .IsAdmin (eq .Admin.Current "shop")}}<link rel="stylesheet" href="{{asset "css/newpress-shop-admin.css"}}?v={{.UIAssetVersion}}">{{end}}
+  {{if or (eq .BodyClass "is-account") (eq .BodyClass "is-author")}}<script src="{{asset "js/chunnel-progression-badges.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+  
+  {{if eq .BodyClass "is-explore"}}<link rel="stylesheet" href="{{asset "css/chunnel-explore.css"}}?v={{.UIAssetVersion}}&amp;ui=resources-20261114-1">{{end}}
+  {{if and .IsAdmin (or (eq .Admin.Current "appearance") (eq .Admin.Current "layout"))}}<link rel="stylesheet" href="{{asset "css/chunnel-appearance-preview.css"}}?v={{.UIAssetVersion}}&amp;ui=module-design-20261115-3">{{end}}
+  {{if eq .Admin.Current "login"}}<link rel="stylesheet" href="{{asset "css/chunnel-admin-login-skin.css"}}?v={{.UIAssetVersion}}">{{else}}<link rel="stylesheet" href="{{asset "css/chunnel-admin-skin.css"}}?v={{.UIAssetVersion}}">{{end}}
+  {{if or .VerificationEnabled (eq .Admin.Current "settings")}}<link rel="stylesheet" href="{{asset "css/chunnel-verification.css"}}?v={{.UIAssetVersion}}"><script src="{{asset "js/chunnel-verification.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+  {{if eq .Admin.Current "settings"}}<link rel="stylesheet" href="{{asset "css/registration-check.css"}}?v={{.UIAssetVersion}}">{{end}}
+  {{if eq .Admin.Current "settings"}}<link rel="stylesheet" href="{{asset "css/chunnel-access-settings.css"}}?v={{.UIAssetVersion}}"><script src="{{asset "js/chunnel-access-settings.js"}}?v={{.UIAssetVersion}}" defer></script><link rel="stylesheet" href="{{asset "css/chunnel-verification-settings.css"}}?v={{.UIAssetVersion}}"><script src="{{asset "js/chunnel-verification-settings.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+  <link rel="stylesheet" href="{{asset "css/chunnel-selects.css"}}?v={{.UIAssetVersion}}">
+  {{$mediaPicker := or .Editor.FormAction (eq .Admin.Current "settings") (eq .Admin.Current "appearance") (eq .Admin.Current "layout") (eq .Admin.Current "series") (eq .Admin.Current "shop") (eq .Admin.Current "recognition") (eq .Admin.Current "features") (eq .Admin.Current "users")}}
+  {{if and $mediaPicker (not .Editor.FormAction)}}<link rel="stylesheet" href="{{asset "css/chunnel-editor-media.css"}}?v={{.UIAssetVersion}}">{{end}}
+  <link rel="stylesheet" href="{{.ThemeCSSURL}}">
+  <link rel="stylesheet" href="{{asset "css/chunnel-color-mode.css"}}?v={{.UIAssetVersion}}&amp;ui=color-mode-20261118-2">
+{{if or (eq .Kind "single") (eq .BodyClass "is-account") (eq .BodyClass "is-author") (eq .BodyClass "is-admin is-admin-recognition") (eq .BodyClass "is-admin is-admin-progression")}}<link rel="stylesheet" href="/core-assets/css/newpress-recognition.css"><script src="/core-assets/js/newpress-client.js" defer></script><script src="/core-assets/js/newpress-recognition.js" defer></script>{{end}}
+  {{if .Editor.FormAction}}<link rel="stylesheet" href="{{asset "css/chunnel-editor-workspace.css"}}?v={{.UIAssetVersion}}"><script src="{{asset "js/chunnel-editor-workspace.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+  {{if eq .Admin.Current "snippets"}}<link rel="stylesheet" href="{{asset "css/newpress-snippets.css"}}?v={{.UIAssetVersion}}">{{end}}
+</head>
+<body class="{{.BodyClass}} {{.ThemeClass}} admin-workbench{{if .Editor.FormAction}} is-writing-workspace{{end}}">
+  {{template "icon-sprite" .}}
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  
+    {{if eq .Admin.Current "login"}}
+    <main id="main-content" class="admin-login-main">{{template "content" .}}</main>
+    {{else}}
+    <div class="admin-app">
+      {{template "admin-sidebar" .}}
+      <div class="admin-workspace">
+        {{template "admin-topbar" .}}
+        <main id="main-content" class="admin-main">{{template "content" .}}</main>
+      </div>
+    </div>
+    {{end}}
+    {{if $mediaPicker}}{{template "admin-media-picker" .}}<script src="{{asset "js/chunnel-admin-media.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+    <div class="admin-toast-stack" aria-live="polite" aria-atomic="false" data-admin-toast-stack></div>
+    {{if eq .Admin.Current "login"}}<script src="{{asset "js/chunnel-time.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+    {{if ne .Admin.Current "login"}}<script src="{{asset "js/chunnel-admin-workbench.js"}}?v={{.UIAssetVersion}}&amp;ui=module-design-20261115-3" data-choice-entry="{{asset "js/chunnel-selects.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+  {{if eq .Admin.Current "login"}}<script src="{{asset "js/chunnel-admin-login.js"}}?v={{.UIAssetVersion}}" defer></script>
+    {{else}}{{if .Editor.FormAction}}<script src="{{asset "js/chunnel-editor-recovery.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}<script src="{{asset "js/chunnel-admin.js"}}?v={{.UIAssetVersion}}&amp;ui=admin-20261114-2" defer></script>{{if .Editor.FormAction}}<script src="{{asset "js/chunnel-admin-editor.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}{{if eq .Admin.Current "navigation"}}<script src="{{asset "js/chunnel-admin-menu.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}{{end}}
+    {{if and (not .Editor.FormAction) (or (eq .Admin.Current "content") (eq .Admin.Current "comments") (eq .BodyClass "is-admin is-admin-taxonomy"))}}<script src="{{asset "js/chunnel-admin-lists.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+    {{if eq .Admin.Current "comments"}}<script src="{{asset "js/chunnel-admin-comments.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+    {{if or (eq .Admin.Current "settings") (eq .Admin.Current "appearance") (eq .Admin.Current "layout") (eq .Admin.Current "tools")}}<script src="{{asset "js/chunnel-admin-settings.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+    {{if eq .Admin.Current "media"}}<script src="{{asset "js/chunnel-admin-media-upload.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+    {{if or (eq .Admin.Current "appearance") (eq .Admin.Current "layout")}}<script src="{{asset "js/chunnel-home-editor.js"}}?v={{.UIAssetVersion}}&amp;ui=html-layout-20261115-4" defer></script>{{end}}
+    {{if or (eq .Admin.Current "appearance") (eq .Admin.Current "layout")}}<script src="{{asset "js/chunnel-appearance-preview.js"}}?v={{.UIAssetVersion}}&amp;ui=admin-20261114-2" defer></script>{{end}}
+    {{if eq .Admin.Current "features"}}<script src="{{asset "js/chunnel-feedback.js"}}?v={{.UIAssetVersion}}&amp;ui=admin-20261114-2" defer></script>{{end}}
+    {{if eq .Admin.Current "currency"}}<script src="{{asset "js/chunnel-currency-shared.js"}}?v={{.UIAssetVersion}}" defer></script><script src="{{asset "js/chunnel-currency-admin.js"}}?v={{.UIAssetVersion}}&amp;ui=admin-20261114-2" defer></script>{{end}}
+    {{if eq .Admin.Current "recognition"}}<script src="{{asset "js/newpress-recognition-admin.js"}}" defer></script>{{end}}
+    {{if eq .Admin.Current "progression"}}<script src="{{asset "js/chunnel-progression-shared.js"}}?v={{.UIAssetVersion}}" defer></script><script src="{{asset "js/chunnel-progression-admin.js"}}?v={{.UIAssetVersion}}&amp;ui=admin-20261114-2" defer></script>{{end}}
+    {{if eq .Admin.Current "payments"}}<script src="{{asset "js/chunnel-payments-admin.js"}}?v={{.UIAssetVersion}}&amp;ui=payments-20261115-1" defer></script>{{end}}
+    {{if eq .Admin.Current "shop"}}<script src="{{asset "js/newpress-client.js"}}" defer></script><script src="{{asset "js/newpress-shop-services.js"}}?v={{.UIAssetVersion}}" defer></script><script src="{{asset "js/newpress-shop-service-editor.js"}}?v={{.UIAssetVersion}}" defer></script><script src="{{asset "js/newpress-shop-admin.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+    {{if eq .BodyClass "is-admin is-admin-links"}}<script src="{{asset "js/chunnel-links.js"}}?v={{.UIAssetVersion}}&amp;ui=admin-20261114-2" defer></script>{{end}}
+    {{if eq .Admin.Current "plugins"}}<script src="{{asset "js/chunnel-plugins.js"}}?v={{.UIAssetVersion}}&amp;ui=plugin-market-20261115-2" defer></script><script src="{{asset "js/chunnel-plugin-runtime.js"}}?v={{.UIAssetVersion}}&amp;ui=admin-20261114-2" defer></script>{{end}}
+    {{if eq .Admin.Current "updates"}}<script src="{{asset "js/chunnel-updates.js"}}?v={{.UIAssetVersion}}&amp;core={{.Version}}&amp;ui=policy-3" defer></script>{{end}}
+    {{if .ExtensionUpdates.Kind}}<script src="{{asset "js/chunnel-extension-updates.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+    {{if .ExtensionUpdates.Marketplace}}<script src="{{asset "js/newpress-themes.js"}}" defer></script>{{end}}
+    {{if eq .Admin.Current "series"}}<script src="{{asset "js/chunnel-series.js"}}?v={{.UIAssetVersion}}&amp;ui=admin-20261114-2" defer></script>{{end}}
+    {{if eq .Admin.Current "snippets"}}<script src="{{asset "js/newpress-snippets.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+    {{if or (eq .Admin.Current "ai-usage") (eq .Admin.Current "ai-requests")}}<script src="{{asset "js/chunnel-ai-usage.js"}}?v={{.UIAssetVersion}}&amp;ui=ai-ops-20261116-1" defer></script>{{end}}
+    {{if eq .Admin.Current "registration-codes"}}<script src="{{asset "js/chunnel-registration-codes.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+    {{if eq .Admin.Current "ai-workbench"}}<script src="{{asset "js/chunnel-ai-workbench.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+    {{if eq .BodyClass "is-admin is-admin-ai-pro-max"}}<script src="{{asset "js/chunnel-ai-pro-max.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+    {{if eq .Admin.Current "analytics"}}<script src="{{asset "js/chunnel-analytics.js"}}?v={{.UIAssetVersion}}&amp;ui=analytics-20261125" defer></script><script src="{{asset "js/newpress-analytics-loader.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+    {{if eq .Admin.Current "system"}}<script src="{{asset "js/chunnel-system.js"}}?v={{.UIAssetVersion}}&amp;ui=admin-20261114-2" defer></script>{{end}}
+    {{if eq .Admin.Current "import"}}<script src="{{asset "js/chunnel-import.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+    {{if eq .Admin.Current "wechat"}}<script src="{{asset "js/chunnel-wechat-drafts.js"}}?v={{.UIAssetVersion}}" defer></script><script src="{{asset "js/chunnel-wechat.js"}}?v={{.UIAssetVersion}}&amp;ui=admin-20261114-2" defer></script>{{end}}
+    {{if eq .Admin.Current "media"}}<script src="{{asset "js/chunnel-images.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+    {{if or (eq .Admin.Current "seo") .Editor.FormAction}}<script src="{{asset "js/chunnel-seo.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+    {{if or .Editor.FormAction (eq .Admin.Current "comments")}}<script src="{{asset "js/chunnel-emoji-editor.js"}}?v={{.UIAssetVersion}}" defer></script>
+    <script src="{{asset "js/chunnel-emoji.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+    {{if eq .Admin.Current "settings"}}<script src="{{asset "js/chunnel-ai-settings.js"}}?v={{.UIAssetVersion}}&amp;ui=ai-ops-20261116-1" defer></script>{{end}}
+    {{if eq .Admin.Current "shop"}}<script src="{{asset "js/chunnel-component-library.js"}}?v={{.UIAssetVersion}}" defer></script><script src="{{asset "js/chunnel-composer.js"}}?v={{.UIAssetVersion}}" defer></script><script src="{{asset "js/chunnel-editor-widgets.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+    {{if .Editor.FormAction}}<script src="{{asset "js/newpress-component-loader.js"}}?v={{.UIAssetVersion}}" data-component-loader data-component-script="{{asset "js/chunnel-component-library.js"}}?v={{.UIAssetVersion}}" data-component-style="{{asset "css/chunnel-editor-components.css"}}?v={{.UIAssetVersion}}" defer></script><script src="{{asset "js/newpress-document-editor.js"}}?v={{.UIAssetVersion}}" defer></script><script src="{{asset "js/chunnel-editor-reuse.js"}}?v={{.UIAssetVersion}}" defer></script><script src="{{asset "js/newpress-editor-snippets.js"}}?v={{.UIAssetVersion}}" defer></script><script src="{{asset "js/chunnel-editor-widgets.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+    {{if and .Editor.FormAction (.ModuleEnabled "ai")}}<script src="{{asset "js/chunnel-ai-loader.js"}}?v={{.UIAssetVersion}}" data-ai-assets data-text-script="{{asset "js/chunnel-ai-editor.js"}}?v={{.UIAssetVersion}}" data-text-style="{{asset "css/chunnel-ai-editor.css"}}?v={{.UIAssetVersion}}" data-image-script="{{asset "js/chunnel-ai-images.js"}}?v={{.UIAssetVersion}}" data-image-style="{{asset "css/chunnel-ai-images.css"}}?v={{.UIAssetVersion}}" defer></script>{{if .AIProMax.Enabled}}<script src="{{asset "js/chunnel-ai-pro-editor.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}{{end}}
+  
+  {{if eq .Admin.Current "circles"}}<script src="{{asset "js/chunnel-circles.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+  {{if eq .Admin.Current "login"}}<script src="{{asset "js/chunnel-selects.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+</body>
+</html>
+
+{{end}}

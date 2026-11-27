@@ -1,0 +1,256 @@
+/* Claude design language — Chunnel skin.
+   Adapted from the Claude analysis in voltagent/awesome-design-md.
+   Loaded last so it can set type and geometry without touching the settings contract:
+   accent / paper / ink / focus / radius stay owned by /theme-settings.css. */
+:root {
+  --claude-serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Songti SC", "Noto Serif CJK SC", SimSun, serif;
+  --claude-sans: "Inter", "Inter", -apple-system, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+  --claude-mono: "JetBrains Mono", Consolas, monospace;
+  --claude-ink: var(--ink);
+  --claude-canvas: var(--paper);
+  --claude-dark: var(--night);
+  --claude-dark-elevated: var(--night-raised);
+  --claude-on-dark: #f8fafc;
+  --claude-on-dark-soft: var(--on-night-muted);
+  --claude-ease: cubic-bezier(.22, .61, .36, 1);
+}
+
+/* ---------- Type ---------- */
+
+body,
+body :is(button, input, textarea, select) {
+  font-family: var(--claude-sans);
+}
+
+body {
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.55;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Serif display: reserved for statements, never for UI chrome. */
+body:not(.theme-headings-modern) :is(
+  .hero h1,
+  .home-masthead h1,
+  .home-hero-copy h2,
+  .section-heading h2,
+  .manifesto blockquote,
+  .article-header h1,
+  .portal-section-header h2,
+  .portal-panel-heading h2,
+  .portal-heading h1,
+  .portal-series-hero h1,
+  .portal-status h1,
+  .portal-author-copy h1,
+  .access-story h1,
+  .access-card h1,
+  .account-welcome h1,
+  .account-profile-name h1,
+  .feedback-heading h1,
+  .feedback-detail h1,
+  .taxonomy-masthead h1,
+  .taxonomy-stream h2,
+  .author-profile-copy h1,
+  .prose h2,
+  .component-section-title h2
+) {
+  font-family: var(--claude-serif);
+  font-weight: 500;
+  letter-spacing: -.02em;
+  text-wrap: balance;
+}
+
+body :is(.hero h1, .home-masthead h1) {
+  font-size: clamp(44px, 5.4vw, 70px);
+  line-height: 1.1;
+  letter-spacing: -.03em;
+}
+
+body :is(.section-heading h2, .portal-section-header h2) {
+  font-size: clamp(28px, 3.2vw, 40px);
+  line-height: 1.18;
+}
+
+body :is(.article-header h1, .taxonomy-masthead h1, .portal-heading h1, .portal-series-hero h1) {
+  font-size: clamp(36px, 4.6vw, 60px);
+  line-height: 1.16;
+  letter-spacing: -.025em;
+}
+
+body .manifesto blockquote {
+  font-size: clamp(28px, 3.4vw, 44px);
+  line-height: 1.35;
+}
+
+body :is(.prose h2, .prose h3) {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* Card and panel titles stay in the UI face. */
+body :is(
+  .feed-copy h3,
+  .post-card h3,
+  .home-feed-copy h3,
+  .home-pick-copy h3,
+  .home-reading-card h3,
+  .home-series-card h3,
+  .home-author h3,
+  .home-circle-card h3,
+  .home-category h2,
+  .feature-card-side h2,
+  .collection-info h3,
+  .explore-result-body h3,
+  .taxonomy-post-copy h2,
+  .discussion-summary h3
+) {
+  font-family: var(--claude-sans);
+  font-weight: 500;
+  letter-spacing: -.01em;
+  line-height: 1.4;
+}
+
+body :is(.panel-header h2, .home-panel-heading h2, .home-widget-heading h2) {
+  font-family: var(--claude-sans);
+  font-weight: 500;
+  letter-spacing: -.005em;
+}
+
+/* Small caps label: 12/500, +1.2px, uppercase — the one systematic eyebrow. */
+body :is(
+  .section-kicker,
+  .taxonomy-kicker,
+  .feature-label,
+  .eyebrow,
+  .home-hero-label,
+  .home-checkin-label,
+  .admin-eyebrow,
+  .admin-login-kicker
+) {
+  font-family: var(--claude-sans);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+body .brand-type strong {
+  font-family: var(--claude-serif);
+  font-size: 21px;
+  font-weight: 500;
+  letter-spacing: -.015em;
+}
+
+body .brand-type small {
+  color: var(--muted);
+  font-family: var(--claude-mono);
+  font-size: 10px;
+  letter-spacing: .16em;
+}
+
+body :is(.ui-button, .admin-button, .np-update-button, .admin-login-submit) {
+  border-radius: 8px;
+  font-family: var(--claude-sans);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: .005em;
+  box-shadow: none;
+  transition: background-color .18s var(--claude-ease), border-color .18s var(--claude-ease), color .18s var(--claude-ease), transform .18s var(--claude-ease);
+}
+
+body :is(.ui-button, .admin-button, .np-update-button):hover:not(:disabled, [aria-disabled="true"]) {
+  transform: translateY(-1px);
+}
+
+body :is(.ui-button-primary, .admin-button-primary, .np-update-button) {
+  color: #fff;
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+body :is(.ui-button-primary, .admin-button-primary, .np-update-button):hover:not(:disabled) {
+  border-color: var(--primary-dark);
+  background: var(--primary-dark);
+}
+
+html[data-style="classic"] body :is(input, textarea, select) {
+  border-radius: 8px;
+  border-color: var(--line-dark);
+  background-color: var(--white);
+}
+
+body :is(input, textarea, select):focus {
+  border-color: var(--primary);
+  outline-color: var(--focus, var(--primary));
+}
+
+body .ui-badge,
+body .feed-tags a,
+body .result-tags a,
+body .taxonomy-kicker {
+  border-radius: 9999px;
+}
+
+/* ---------- Surfaces ---------- */
+
+html[data-style="classic"] body :is(.surface, .post-card, .product-card, .collection-card, .feature-card, .home-panel:not(.home-member-card):not(.home-checkin-card), .home-channels) {
+  border-color: var(--line);
+  border-radius: var(--radius, 12px);
+  background: var(--white);
+  box-shadow: var(--shadow-soft);
+}
+
+body :is(.post-card, .product-card, .collection-card):hover {
+  border-color: color-mix(in srgb, var(--primary) 26%, var(--line));
+  box-shadow: 0 16px 40px color-mix(in srgb, var(--shade-ink, var(--ink)) 6%, transparent);
+}
+
+body :is(.feed-list, .home-feed-list) > :is(.feed-row, article) + :is(.feed-row, article) {
+  border-top-color: var(--line);
+}
+
+body :is(.floating-tools button, .header-icon-action, .admin-top-action, .admin-nav-open) {
+  border-radius: 8px;
+}
+
+/* ---------- Header & footer ---------- */
+
+html[data-style="classic"] body .site-header {
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--white) 94%, transparent);
+  box-shadow: none;
+}
+
+body .brand-mark {
+  border-radius: 8px;
+  background: var(--shade-ink, var(--ink));
+}
+
+body .site-footer {
+  border-top: 0;
+  color: var(--claude-on-dark);
+  background: var(--claude-dark);
+}
+
+body .site-footer :is(p, small) {
+  color: var(--claude-on-dark-soft);
+}
+
+/* ---------- Motion & fallbacks ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  body :is(.post-card, .product-card, .collection-card, .home-category, .home-channel, .ui-button, .admin-button) {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+@media (forced-colors: active) {
+  body :is(.surface, .post-card, .product-card, .collection-card, .home-panel) {
+    border-color: CanvasText;
+  }
+}

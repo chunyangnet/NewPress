@@ -1,0 +1,17 @@
+{{define "content"}}
+{{if .Settings.use_home_layout}}{{template "docs-home-layout" .}}{{if index .Settings "show_reading_history"}}{{template "reading-history" .}}{{end}}{{else}}
+{{template "home-hero" .}}
+{{if index .Settings "show_reading_history"}}{{template "reading-history" .}}{{end}}
+{{if index .Settings "show_quick_links"}}{{template "home-links" .}}{{end}}
+{{if or (index .Settings "show_tutorials") (index .Settings "show_latest") (index .Settings "show_community") (index .Settings "show_learning_path")}}<div class="home-content">
+  {{if index .Settings "show_tutorials"}}{{template "home-tutorials" .}}{{end}}
+  {{if or (index .Settings "show_latest") (index .Settings "show_community") (index .Settings "show_learning_path")}}
+  <div class="home-bottom{{if not (and (index .Settings "show_latest") (or (index .Settings "show_community") (index .Settings "show_learning_path")))}} home-bottom-single{{end}}">
+    {{if index .Settings "show_latest"}}{{template "home-latest" .}}{{end}}
+    {{if or (index .Settings "show_community") (index .Settings "show_learning_path")}}{{template "home-aside" .}}{{end}}
+  </div>
+  {{end}}
+</div>{{end}}
+{{end}}
+{{if index .Settings "show_home_services"}}{{template "home-services" .}}{{end}}
+{{end}}

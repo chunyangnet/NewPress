@@ -1,0 +1,14 @@
+{{define "nav-item"}}
+<div class="nav-item nav-item-{{.ID}}">
+  <a data-nav-link href="{{.URL}}"{{if .Active}} aria-current="page"{{end}}{{if .NewWindow}} target="_blank" rel="noopener noreferrer"{{else if .Rel}} rel="{{.Rel}}"{{end}}>{{template "icon" .Icon}}<span class="nav-link-label"><span>{{.Label}}</span>{{template "docs-nav-badge" .Badge}}</span>{{if .NewWindow}}<span class="sr-only">（在新标签页打开）</span>{{end}}</a>
+  {{if .Children}}<details class="nav-branch" open><summary><span>{{.Label}}的子目录</span>{{template "icon" "down"}}</summary><div class="nav-children">{{range .Children}}{{template "nav-item" .}}{{end}}</div></details>{{end}}
+</div>
+{{end}}
+{{define "docs-nav-badge"}}{{if .Text}}<small class="nav-badge{{if .HideOnMobile}} nav-badge-mobile-hidden{{end}}" data-style="{{.Style}}" data-placement="{{.Placement}}">{{.Text}}</small>{{end}}{{end}}
+
+{{define "docs-mobile-item"}}
+{{if .Children}}<details class="docs-mobile-group nav-item-{{.ID}}"><summary>{{template "icon" .Icon}}<span>{{.Label}}</span></summary><div class="docs-mobile-children"><a href="{{.URL}}"{{if .NewWindow}} target="_blank" rel="noopener noreferrer"{{else if .Rel}} rel="{{.Rel}}"{{end}}>进入{{.Label}} {{template "icon" "arrow"}}</a>{{range .Children}}{{template "nav-item" .}}{{end}}</div></details>
+{{else}}<a class="nav-item-{{.ID}}" href="{{.URL}}"{{if .NewWindow}} target="_blank" rel="noopener noreferrer"{{else if .Rel}} rel="{{.Rel}}"{{end}}{{if .Active}} aria-current="page"{{end}}>{{template "icon" .Icon}}<span class="nav-link-label"><span>{{.Label}}</span>{{template "docs-nav-badge" .Badge}}</span></a>{{end}}
+{{end}}
+
+{{define "docs-footer-item"}}<div class="docs-footer-group nav-item-{{.ID}}"><a href="{{.URL}}"{{if .NewWindow}} target="_blank" rel="noopener noreferrer"{{else if .Rel}} rel="{{.Rel}}"{{end}}{{if .Current}} aria-current="page"{{end}}><span class="nav-link-label"><span>{{.Label}}</span>{{template "docs-nav-badge" .Badge}}</span></a>{{if .Children}}<div>{{range .Children}}{{template "docs-footer-item" .}}{{end}}</div>{{end}}</div>{{end}}

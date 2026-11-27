@@ -1,0 +1,80 @@
+{{define "content"}}
+<section class="admin-page admin-settings-page admin-site-settings-page">
+  <header class="admin-page-heading admin-settings-heading">
+    <div>
+      <h1>站点设置</h1>
+      
+    </div>
+    <div class="admin-heading-actions"><a class="admin-button admin-button-quiet" href="/admin/modules/">{{template "icon" "boxes"}}模块管理</a><details class="admin-more"><summary class="admin-button admin-button-quiet">更多</summary>      <div class="admin-settings-tools">
+        
+        <div><a href="/admin/settings/export/">{{template "icon" "arrow-down-to-line"}}导出 JSON</a><button type="button" data-import-open {{if .Admin.ReadOnly}}disabled{{end}}>{{template "icon" "upload-cloud"}}导入配置</button></div>
+        <button class="admin-reset-button" type="submit" form="site-settings-reset-form" {{if .Admin.ReadOnly}}disabled{{end}}>{{template "icon" "refresh-cw"}}恢复系统默认值</button>
+      </div>
+</details>
+      <a class="admin-button admin-button-quiet" href="/" target="_blank" rel="noopener">{{template "icon" "eye"}}查看站点</a>
+    </div>
+  </header>
+
+  {{template "admin-notice" (dict "Message" .Admin.Notice "Tone" .Admin.NoticeTone)}}
+
+  {{if .Admin.ReadOnly}}<div class="admin-callout admin-callout-warning"><span>{{template "icon" "triangle-alert"}}</span><div><strong>只读模式</strong><p>可以审阅全部运行时设置，但必须配置管理员密码哈希并登录后才能保存、导入或恢复默认值。</p></div></div>{{end}}
+
+<div class="admin-settings-layout" data-settings-layout>
+{{template "admin-settings-nav" (dict "Groups" .Admin.SiteSettings.Groups "Prefix" "site-settings-" "AI" true "Verification" true "Access" true)}}
+
+    <div class="admin-settings-panels">
+    <form id="site-settings-form" class="admin-settings-form" action="/admin/settings/" method="post" data-settings-form>
+      <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}">
+      <input type="hidden" name="revision" value="{{.Admin.SiteSettings.Revision}}">
+      <input type="hidden" name="action" value="save">
+      <input type="hidden" name="account_policy_version" value="2">
+      <fieldset {{if .Admin.ReadOnly}}disabled{{end}}>
+        {{range .Admin.SiteSettings.Groups}}
+        <section id="site-settings-{{.ID}}" class="admin-setting-section" aria-labelledby="site-settings-title-{{.ID}}" data-settings-section>
+          <header><span>{{template "icon" .Icon}}</span><div><h2 id="site-settings-title-{{.ID}}">{{.Title}}</h2></div></header>
+          {{if or (eq .ID "compliance") (eq .ID "footer")}}<p class="admin-setting-copy">保存更改后会显示在网站底部。<a href="/#site-footer" target="_blank" rel="noopener noreferrer">查看首页页脚 {{template "icon" "external-link"}}</a></p>{{end}}
+          {{if eq .ID "accounts"}}<div class="registration-check-toolbar"><button type="button" class="admin-button admin-button-primary" data-registration-check {{if $.Admin.ReadOnly}}disabled{{end}}>{{template "icon" "check-circle"}}检查注册状态</button><a class="admin-button admin-button-quiet" href="/admin/registration-codes/">{{template "icon" "key-round"}}注册码工作台</a><small>检查已保存配置；修改后请先保存。</small></div>{{end}}
+          <div class="admin-setting-fields">
+            {{range .Fields}}
+            {{$field := .}}
+            <article class="admin-setting-field {{if .Critical}}is-critical{{end}} {{if index $.Admin.FieldErrors .Key}}has-error{{end}}" data-setting-field="{{.Key}}">
+              <div class="admin-setting-copy"><label for="site-setting-{{.Key}}">{{.Title}}{{if .Required}}<em>*</em>{{end}}</label><p id="site-setting-help-{{.Key}}">{{.Description}}</p></div>
+              <div class="admin-setting-control">
+{{template "admin-setting-input" (dict "Field" . "Prefix" "site-setting-" "MaxLength" .MaxLength "InputMode" .InputMode)}}
+                {{with index $.Admin.FieldErrors .Key}}<small class="admin-field-error">{{template "icon" "circle-x"}}{{.}}</small>{{end}}
+              </div>
+            </article>
+            {{end}}
+          </div>
+        </section>
+        {{end}}
+      </fieldset>
+    </form>
+    {{template "access-settings" .}}
+    {{template "verification-settings" .}}
+    {{template "ai-settings" .}}
+    </div>
+
+  </div>
+
+{{template "admin-savebar" (dict "FormID" "site-settings-form" "Settings" true "ReadOnly" .Admin.ReadOnly "Notice" .Admin.Notice "Tone" .Admin.NoticeTone)}}
+<dialog class="registration-check-dialog" data-registration-check-dialog aria-labelledby="registration-check-title"><header><div><h2 id="registration-check-title">检查注册状态</h2><p>逐项核对已保存的配置，不发送邮件或短信。</p></div><button type="button" class="admin-button admin-button-quiet" data-registration-check-close aria-label="关闭">{{template "icon" "x"}}</button></header><div data-registration-check-list></div><p role="status" aria-live="polite" data-registration-check-summary></p><footer><button type="button" class="admin-button admin-button-primary" data-registration-check>重新检查</button></footer></dialog>
+
+  <dialog class="admin-import-dialog admin-footer-credit-dialog" aria-labelledby="footer-credit-title" aria-describedby="footer-credit-description" data-footer-credit-dialog>
+    <button class="admin-dialog-backdrop" type="button" aria-label="取消隐藏技术支持文字" tabindex="-1" data-footer-credit-cancel></button>
+    <section>
+      <span class="admin-dialog-icon">{{template "icon" "heart"}}</span><h2 id="footer-credit-title">隐藏技术支持文字</h2><p id="footer-credit-description">再考虑一下嘛？保留项目标识，有助于此开源项目被更多人看见、维护更新，有助于项目未来发展。真的要关闭吗？QwQ</p>
+      <div class="admin-footer-credit-actions"><button class="admin-button admin-button-quiet" type="button" autofocus data-footer-credit-cancel>取消</button><button class="admin-button admin-button-danger" type="button" data-footer-credit-confirm>继续关闭</button></div>
+    </section>
+  </dialog>
+  <form id="site-settings-reset-form" action="/admin/settings/" method="post" data-confirm="确定将站点设置恢复为系统内置默认值？建议先导出备份。"><input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><input type="hidden" name="revision" value="{{.Admin.SiteSettings.Revision}}"><input type="hidden" name="action" value="reset"></form>
+  <dialog class="admin-import-dialog" aria-labelledby="site-import-title" aria-describedby="site-import-description" data-import-dialog>
+    <button class="admin-dialog-backdrop" type="button" aria-label="关闭导入窗口" tabindex="-1" data-import-close></button>
+    <section>
+      <button class="admin-dialog-close" type="button" aria-label="关闭" autofocus data-import-close>{{template "icon" "x"}}</button>
+      <span class="admin-dialog-icon">{{template "icon" "upload-cloud"}}</span><h2 id="site-import-title">导入站点设置</h2><p id="site-import-description">选择本站导出的配置文件。校验通过后将替换当前设置，建议先导出一份备份。</p>
+      <form action="/admin/settings/" method="post" enctype="multipart/form-data"><input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><input type="hidden" name="revision" value="{{.Admin.SiteSettings.Revision}}"><input type="hidden" name="action" value="import"><label class="admin-file-drop">{{template "icon" "file-archive"}}<span><b>点击选择，或将文件拖到这里</b><small>JSON 格式 · 最大 256 KiB</small></span><input type="file" name="settings_file" accept="application/json,.json" required data-settings-file></label><output data-file-name aria-live="polite">尚未选择文件</output><button class="admin-button admin-button-primary" type="submit">{{template "icon" "upload-cloud"}}校验并导入</button></form>
+    </section>
+  </dialog>
+</section>
+{{end}}

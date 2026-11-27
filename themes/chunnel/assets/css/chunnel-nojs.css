@@ -1,0 +1,25 @@
+/* Native reading, search, forms and navigation remain available without JS. */
+.account-actions, .nav-toggle, .header-search-toggle, .floating-tools,
+.mobile-bottom-nav button, [data-admin-nav-open], [data-admin-nav-close],
+[data-password-toggle], [data-editor-preview], [data-editor-media-open],
+[data-emoji-trigger], [data-favorite], [data-saved-open], [data-follow],
+[data-account-login], [data-account-register], [data-composer-open], .composer-teaser,
+[data-share], [data-message-to], [data-message-user], [data-reaction],
+[data-view-toggle], [data-home-checkin], [data-admin-account-toggle], [data-admin-toast] { display: none !important; }
+.nav-row, .primary-nav { display: block !important; }
+.nav-row { position: static !important; }
+.primary-nav { max-height: none; }
+.primary-nav > a, .primary-menu-entry { display: inline-block; }
+.admin-account-menu { display: block !important; position: static; width: auto; }
+.admin-account-menu > :not(form) { display: none; }
+@media (max-width: 700px) {
+  .header-inner { flex-wrap: wrap; padding-block: 12px; }
+  .header-search { position: relative; display: block; flex-basis: 100%; max-width: none; min-width: 0; margin: 0; }
+}
+@media (max-width: 1050px) {
+  .admin-sidebar { visibility: visible; position: static; width: auto; height: auto; transform: none; box-shadow: none; }
+  .admin-nav { display: flex; flex-wrap: wrap; gap: 12px; }
+  .admin-nav section { flex: 1 1 200px; }
+  .admin-sidebar-foot { display: none; }
+}
+

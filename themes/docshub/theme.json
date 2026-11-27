@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "slug": "docshub",
+  "name": "DocsHub · 文档与教程",
+  "version": "2.0.1",
+  "description": "面向技术文档、教程与开发者知识库。完整覆盖文档阅读、学习系列、问答、圈子、反馈、技术快讯、资源商城与个人中心，提供统一的深浅色与移动端体验。",
+  "author": "NewPress Project",
+  "license": "Apache-2.0",
+  "engine": "go-template/v1",
+  "newpress": ">=0.1.0",
+  "view": "public/v1",
+  "templates": {
+    "home": "home.html",
+    "single": "single.html",
+    "page": "single.html",
+    "explore": "list.html",
+    "archive": "list.html",
+    "author": "list.html",
+    "series": "series.html",
+    "404": "error.html",
+    "maintenance": "error.html",
+    "account": "account.html",
+    "account-access": "account-access.html",
+    "billing": "billing.html",
+    "shop": "shop.html",
+    "questions": "questions.html",
+    "circles": "circles.html",
+    "feedback": "feedback.html",
+    "links": "links.html",
+    "flash": "flash.html",
+    "flash-single": "flash-single.html",
+    "flash-submit": "flash-submit.html",
+    "notification-unsubscribe": "notification-unsubscribe.html",
+    "community": "community.html"
+  },
+  "settings_schema": "settings.schema.json",
+  "cover": "assets/images/preview.webp",
+  "capabilities": [
+    "home-layout/v1"
+  ]
+}

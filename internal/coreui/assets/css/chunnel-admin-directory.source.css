@@ -1,0 +1,3 @@
+/* The user directory reuses taxonomy query/empty/pagination styles. */
+@import "./admin/taxonomy.css";
+@import "./admin/users.css";

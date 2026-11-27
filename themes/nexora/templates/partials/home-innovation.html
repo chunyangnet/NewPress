@@ -1,0 +1,5 @@
+{{define "home-innovation"}}
+<section data-home-section="innovation" class="innovation-section" id="innovation" aria-labelledby="innovation-title">
+  <img src="{{assetOr .Settings.innovation_image "images/innovation-banner.webp"}}" alt="" width="1254" height="410" loading="lazy"><div class="innovation-content"><span class="fine-rule" aria-hidden="true"></span><h2 id="innovation-title">{{.Settings.innovation_title}}</h2><p>{{.Settings.innovation_description}}</p>{{template "nexora-action-link" (dict "Page" . "URL" .Settings.innovation_link "Label" .Settings.innovation_button "Class" "outline-button")}}</div>
+</section>
+{{end}}

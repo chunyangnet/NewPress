@@ -1,0 +1,142 @@
+/* Color roles are shared by public pages, administration and isolated previews.
+   Literal fallbacks in component sources preserve the saved light palette. */
+:root {
+  color-scheme: light;
+  /* Resolve legacy light-skin fallbacks through the shared neutral surfaces. */
+  --tone-surface: var(--white);
+  --tone-soft: var(--paper-deep);
+  --tone-line: var(--line);
+  --selection-bg: var(--primary-soft);
+  --selection-text: var(--primary-readable);
+  --selection-line: var(--primary-line);
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #111721;
+  --paper-deep: #18212e;
+  --white: #1c2634;
+  --ink: #e7edf5;
+  --ink-soft: #c5d0df;
+  --muted: #a0aec1;
+  --line: #344154;
+  --line-dark: #4b5c73;
+  --primary-readable: color-mix(in srgb, var(--primary) 25%, #e1ecff);
+  --primary-soft: color-mix(in srgb, var(--primary) 17%, var(--white));
+  --primary-tint: color-mix(in srgb, var(--primary) 8%, var(--white));
+  --primary-line: color-mix(in srgb, var(--primary) 48%, var(--line));
+  --primary-ring: color-mix(in srgb, var(--primary) 38%, transparent);
+  --night: #101a2a;
+  --night-raised: #1b2d45;
+  --on-night-muted: #b4c4da;
+  --on-media: #f7f9fc;
+  --shade-ink: #122033;
+  --shade-ink-soft: #24364c;
+  --tone-surface: var(--white);
+  --tone-soft: var(--paper-deep);
+  --tone-text: var(--ink);
+  --tone-muted: var(--muted);
+  --tone-accent: var(--primary-readable);
+  --tone-solid: var(--primary);
+  --tone-danger-solid: #b43d4b;
+  --tone-line: var(--line);
+  --tone-blue: #a9c7ff;
+  --tone-green: #91dfba;
+  --tone-red: #ffb0b5;
+  --tone-amber: #f0cf91;
+  --tone-purple: #c8b8f6;
+  --tone-blue-soft: #233751;
+  --tone-green-soft: #1d3832;
+  --tone-red-soft: #3e2933;
+  --tone-amber-soft: #3c3527;
+  --tone-purple-soft: #322d49;
+  --control-danger: var(--tone-red);
+  --control-danger-soft: var(--tone-red-soft);
+  --control-success: var(--tone-green);
+  --control-success-soft: var(--tone-green-soft);
+  --control-success-line: #3b6657;
+  --control-warning: var(--tone-amber);
+  --control-warning-soft: var(--tone-amber-soft);
+  --control-warning-line: #6a5939;
+  --admin-success: var(--control-success);
+  --admin-success-soft: var(--control-success-soft);
+  --admin-success-line: var(--control-success-line);
+  --admin-danger: var(--control-danger);
+  --admin-danger-soft: var(--control-danger-soft);
+  --fluent-error: var(--control-danger);
+  --fluent-disabled: var(--muted);
+  --shadow-sm: 0 2px 8px #0003;
+  --shadow: 0 10px 30px #0004;
+  --shadow-lg: 0 24px 64px #0006;
+}
+html[data-theme="dark"][data-style] body {
+  --primary-readable: color-mix(in srgb, var(--primary) 25%, #e1ecff);
+  --fluent-fill: var(--white);
+  --fluent-hover: #253246;
+  --fluent-text: var(--ink);
+  --fluent-placeholder: var(--muted);
+  --fluent-edge: var(--line);
+  --fluent-baseline: var(--line-dark);
+  --fluent-accent: var(--primary-readable);
+  --glass-fill: color-mix(in srgb, var(--white) 88%, transparent);
+  --glass-control: color-mix(in srgb, var(--white) 94%, transparent);
+  --glass-overlay: color-mix(in srgb, var(--paper) 96%, transparent);
+  --glass-edge: #a8bfd52e;
+  --glass-sheen: linear-gradient(145deg, #b5cfff0c, #b5cfff02 42%, transparent);
+  --glass-shadow: inset 0 1px 0 #c9dfff12, 0 8px 32px #0004;
+}
+html[data-theme="dark"] .home-channel-icon {
+  color: color-mix(in srgb, var(--channel-accent) 30%, #e7edf5);
+  background: color-mix(in srgb, var(--channel-accent) 18%, var(--white));
+}
+html[data-theme="dark"][data-style] :is(.primary-nav, .mobile-bottom-nav) [aria-current="page"] { color: var(--primary-readable); }
+html[data-theme="dark"] .primary-menu-entry.is-active > a { color: var(--primary-readable); }
+html[data-theme="dark"] :is(input, textarea, select) { color-scheme: dark; }
+html[data-theme="dark"] :is(input, textarea)::placeholder { color: var(--muted); opacity: 1; }
+html[data-theme="dark"] :is(input, textarea):-webkit-autofill {
+  -webkit-text-fill-color: var(--ink);
+  box-shadow: 0 0 0 100px var(--white) inset;
+  caret-color: var(--ink);
+}
+/* A single selected-state contract, including legacy child colors. */
+html[data-style] body :is(.saved-filters button[aria-pressed="true"], .reader-focus[aria-pressed="true"]) {
+  color: var(--selection-text);
+  background: var(--selection-bg);
+  border-color: var(--selection-line);
+  box-shadow: none;
+}
+html .color-mode-control { position: relative; display: inline-flex; flex: none; padding: 3px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: var(--white); }
+html .color-mode-control[hidden] { display: none; }
+html .color-mode-control::before { content: ""; position: absolute; top: 3px; left: 3px; width: 32px; height: 32px; border-radius: 50%; background: #ffb842; }
+html[data-theme="dark"] .color-mode-control::before { transform: translateX(100%); background: #6d85d7; }
+html .color-mode-control > button { position: relative; display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; color: inherit; background: transparent; cursor: pointer; }
+html .color-mode-control > button[aria-pressed="true"] { color: #fff; }
+html .color-mode-control > button:focus-visible { outline: 2px solid var(--primary-readable); outline-offset: 1px; }
+html .color-mode-control .icon { width: 18px; height: 18px; }
+@media (prefers-reduced-motion: no-preference) {
+  html body:not(.theme-force-reduced-motion):not(.theme-motion-minimal) .color-mode-control::before { transition: transform .22s ease; }
+  html body:not(.theme-force-reduced-motion):not(.theme-motion-minimal) .color-mode-control .icon { transition: transform .18s ease; }
+  html body:not(.theme-force-reduced-motion):not(.theme-motion-minimal) .color-mode-control > button:active .icon { transform: scale(.86) rotate(-12deg); }
+}
+.admin-login-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.admin-login-heading .admin-login-brand { min-width: 0; }
+@media (max-width: 760px) {
+  html .header-inner > .color-mode-control { margin-left: auto; order: 2; }
+  html .header-inner > .header-search-toggle { margin-left: 0; order: 3; }
+  html .header-inner > .nav-toggle { order: 4; }
+  html .header-inner > .account-actions { order: 5; }
+  html .color-mode-control { padding: 0; border: 0; background: transparent; }
+  html .color-mode-control::before, html .color-mode-control > button[aria-pressed="true"] { display: none; }
+  html .color-mode-control > button { width: 44px; height: 44px; }
+  html .color-mode-control .icon { width: 20px; height: 20px; }
+}
+@media (min-width: 761px) and (pointer: coarse) {
+  html .color-mode-control { padding: 0; }
+  html .color-mode-control > button { width: 44px; height: 44px; }
+  html .color-mode-control::before { top: 6px; left: 6px; }
+  html[data-theme="dark"] .color-mode-control::before { transform: translateX(44px); }
+}
+@media (forced-colors: active) {
+  html[data-theme] { --paper: Canvas; --paper-deep: Canvas; --white: Canvas; --ink: CanvasText; --ink-soft: CanvasText; --muted: CanvasText; --line: CanvasText; --primary-readable: LinkText; --selection-bg: Highlight; --selection-text: HighlightText; --selection-line: Highlight; }
+  html .color-mode-control > button[aria-pressed="true"] { outline: 2px solid Highlight; outline-offset: -2px; }
+  html .color-mode-control::before { display: none; }
+}

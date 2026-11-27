@@ -1,0 +1,165 @@
+/* Theme options layer: safe settings tokens and conditional shell elements. */
+:root {
+  --docshub-shell-width: 1600px;
+  --docshub-sidebar-width: 218px;
+}
+.site-shell {
+  max-width: var(--docshub-shell-width);
+}
+.topbar-actions {
+  margin-left: auto;
+}
+.button-primary:hover,
+html[data-mode=dark] .button-primary:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft), 0 6px 18px #18223c15;
+}
+html[data-mode=dark] .button-primary:hover {
+  background: #eef2ff;
+  color: #18223c;
+}
+.button-secondary:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+.login-button:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.color-switch {
+  width: max-content;
+  max-width: 100%;
+}
+.color-switch [data-color-mode=system] {
+  width: 43px;
+  font-size: 11px;
+}
+.site-announcement {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 18px;
+  padding: 10px 30px;
+  border-bottom: 1px solid var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.site-announcement p {
+  min-width: 0;
+}
+.site-announcement a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  color: var(--accent);
+  font-weight: 600;
+}
+.site-announcement a .icon {
+  width: 14px;
+  height: 14px;
+}
+.site-announcement a:hover {
+  text-decoration: underline;
+}
+.back-to-top {
+  position: fixed;
+  z-index: 15;
+  right: 24px;
+  bottom: 24px;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--accent-line);
+  border-radius: 12px;
+  background: var(--page);
+  color: var(--accent);
+  box-shadow: 0 4px 20px #18223c12;
+}
+.back-to-top .icon {
+  transform: rotate(-90deg);
+}
+.back-to-top:hover {
+  background: var(--accent-soft);
+}
+html[data-sticky-header=false] .topbar {
+  position: relative;
+}
+html[data-sticky-header=false] {
+  scroll-padding-top: 20px;
+}
+html[data-reduce-motion=true] {
+  scroll-behavior: auto;
+}
+html[data-reduce-motion=true] *,
+html[data-reduce-motion=true] *::before,
+html[data-reduce-motion=true] *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+html[data-reduce-motion=true] :is(.tutorial-card, .button, .series-card):hover {
+  transform: none;
+}
+@media (min-width: 1181px) {
+  :root {
+    --sidebar: var(--docshub-sidebar-width);
+  }
+  .skip-link {
+    left: calc(var(--sidebar) + 22px);
+  }
+}
+@media (min-width: 761px) {
+  .topbar-navigation-only {
+    display: none;
+  }
+  .topbar-navigation-only + main > .page-content {
+    padding-top: 44px;
+  }
+  .docshub-nav-compact .sidebar [data-nav-link] {
+    min-height: 36px;
+    padding-block: 6px;
+  }
+  .docshub-nav-compact .primary-nav,
+  .docshub-nav-compact .secondary-nav {
+    gap: 2px;
+  }
+  .docshub-nav-compact .nav-label {
+    margin-top: 10px;
+  }
+  .docs-toast {
+    left: calc(50% + var(--sidebar) / 2);
+  }
+}
+@media (max-width: 760px) {
+  .back-to-top {
+    right: 16px;
+    bottom: 18px;
+    width: 44px;
+    height: 44px;
+  }
+  .site-announcement {
+    padding: 9px 18px;
+    font-size: 11px;
+  }
+  .color-switch button {
+    min-width: 44px;
+    min-height: 36px;
+  }
+}
+@media print {
+  .site-announcement,
+  .back-to-top {
+    display: none !important;
+  }
+  .site-shell {
+    max-width: none;
+  }
+}

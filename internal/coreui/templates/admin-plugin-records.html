@@ -1,0 +1,30 @@
+{{define "content"}}
+<section class="shared-review" data-shared-review data-user-id="{{.Admin.Principal.UserID}}" data-available="{{.PluginSharedReview.Available}}">
+  <header class="shared-review-heading"><div><p class="shared-review-eyebrow">插件 · 运行记录</p><h1>结果核对</h1><p>查看原操作的提交结果，以及共享授权与隔离修复记录。</p></div><a class="admin-button admin-button-secondary" href="/admin/plugins/">{{template "icon" "arrow-left"}}返回插件</a></header>
+  <p><a class="admin-button admin-button-secondary" href="/admin/plugin-webhooks/">Webhook 发送与人工核对</a></p>
+  <div class="shared-review-context"><span class="shared-review-tag">只读核对</span><p>内容回执记录当次提交，内容可能已被后续编辑。任何未修复的共享隔离记录都会阻止共享后台执行；当前筛选结果不能代表全站执行状态。</p></div>
+  {{if .PluginSharedReview.Available}}
+  <form class="shared-review-filters" data-review-form aria-label="筛选插件记录" autocomplete="off">
+    <fieldset class="shared-review-scope"><legend>查看范围</legend><label><input type="radio" name="scope" value="records" data-review-scope checked><span>原记录与结果</span></label><label><input type="radio" name="scope" value="quarantines" data-review-scope><span>隔离与修复审计</span></label></fieldset>
+    <div class="shared-review-fields">
+      <label>记录类型<select name="type" data-review-type><option value="content_effect">内容回执</option><option value="authority">共享授权</option><option value="webhook_intent">Webhook 意图</option><option value="">全部类型</option></select></label>
+      <label>插件标识<input name="plugin" data-review-plugin value="{{.PluginSharedReview.Plugin}}" minlength="3" maxlength="64" pattern="[a-z0-9][a-z0-9\-]{1,62}[a-z0-9]" placeholder="全部插件" autocapitalize="none" spellcheck="false"></label>
+      <label class="shared-review-job">任务 ID<input name="job" data-review-job value="{{.PluginSharedReview.Job}}" maxlength="64" pattern="[a-f0-9]{64}" placeholder="完整任务 ID（可选）" autocapitalize="none" spellcheck="false"></label>
+      <label>每页<select name="limit" data-review-limit><option value="20">20 条</option><option value="50">50 条</option><option value="100">100 条</option></select></label>
+      <button class="admin-button admin-button-primary" type="submit" data-review-search>{{template "icon" "search"}}查询</button>
+    </div>
+  </form>
+  <p class="shared-review-status" role="status" aria-live="polite" aria-atomic="true" data-review-status>正在读取记录…</p>
+  <div class="shared-review-access" data-review-access hidden><a class="admin-button admin-button-secondary" href="/admin/plugin-records/">重新核对登录账号</a></div>
+  <section class="shared-review-results" aria-labelledby="shared-review-results-title" data-review-results aria-busy="false">
+    <header class="shared-review-results-heading"><h2 id="shared-review-results-title" data-review-title>原记录与结果</h2><p data-review-summary>尚未取得结果</p></header>
+    <ol class="shared-review-list" data-review-list></ol>
+    <nav class="shared-review-pagination" aria-label="核对结果分页"><button class="admin-button admin-button-secondary" type="button" data-review-prev disabled>{{template "icon" "chevron-left"}}上一页</button><span data-review-page>—</span><button class="admin-button admin-button-secondary" type="button" data-review-next disabled>下一页{{template "icon" "chevron-right"}}</button></nav>
+  </section>
+  <noscript><p class="shared-review-status">启用 JavaScript 后可筛选并核对记录。</p></noscript>
+  {{else}}
+  <div class="shared-review-empty" role="status"><h2>当前存储不提供共享记录</h2><p>共享授权、内容回执与 Webhook 意图核对适用于 PostgreSQL 模式。文件任务队列可在对应插件的后台任务中查看。</p></div>
+  {{end}}
+  <details class="shared-review-guide"><summary>如何处理异常记录</summary><p>先核对完整任务 ID、操作 ID 和原提交版本。内容回执的结果不会随当前内容变化；授权显示已启用，也不代表所有执行条件均已满足。</p><p>隔离和修复需由运维人员停止全部共享实例后，使用维护命令处理。授权修复后处于退休状态，需要重新核对配置；回执修复保留原结果，并取消关联的活动或失败任务。Webhook 修复会取消待发送意图、把已领取发送记为待核对，已有结果保持原样，不会重新发送。</p><p>操作人和原因是维护时的人员声明。此页展示记录摘要与审计，不提供配置、原始数据、在线修复或重复执行入口。</p></details>
+</section>
+{{end}}

@@ -1,0 +1,80 @@
+{{define "comment-return-fields"}}
+<input type="hidden" name="return_status" value="{{.CommentAdmin.Status}}">
+<input type="hidden" name="return_q" value="{{.CommentAdmin.Search}}">
+<input type="hidden" name="return_post" value="{{.CommentAdmin.PostID}}">
+<input type="hidden" name="return_page" value="{{.CommentAdmin.Page}}">
+{{end}}
+
+{{define "content"}}
+<section class="admin-page admin-comments-page">
+  <header class="admin-page-heading"><h1>评论</h1><a class="admin-button admin-button-quiet" href="/admin/settings/#site-settings-discussion">{{template "icon" "sliders-horizontal"}}评论设置</a></header>
+  {{if .FeatureStatus}}{{template "admin-feature-status" .}}{{end}}
+
+  {{if .Admin.ReadOnly}}<div class="admin-callout admin-callout-warning" role="status"><span>{{template "icon" "triangle-alert"}}</span><div><strong>当前为只读审核预览</strong></div></div>{{end}}
+  {{if .CommentAdmin.Notice}}<div class="admin-comment-notice is-{{.CommentAdmin.NoticeTone}}" role="status"><span>{{if eq .CommentAdmin.NoticeTone "success"}}{{template "icon" "check-circle"}}{{else}}{{template "icon" "triangle-alert"}}{{end}}</span><div><strong>{{if eq .CommentAdmin.NoticeTone "success"}}审核队列已同步{{else}}队列发生并发变化{{end}}</strong><p>{{.CommentAdmin.Notice}}</p></div></div>{{end}}
+
+  <nav class="admin-comment-status-grid" aria-label="评论状态">
+    <a class="{{if eq .CommentAdmin.Status "pending"}}is-active{{end}}" {{if eq .CommentAdmin.Status "pending"}}aria-current="page"{{end}} href="/admin/comments/"><span>{{template "icon" "clock-3"}}</span><div><strong>{{index .CommentAdmin.StatusCounts "pending"}}</strong><b>待审核</b></div></a>
+    <a class="{{if eq .CommentAdmin.Status "approved"}}is-active{{end}}" {{if eq .CommentAdmin.Status "approved"}}aria-current="page"{{end}} href="/admin/comments/?status=approved"><span>{{template "icon" "check-circle"}}</span><div><strong>{{index .CommentAdmin.StatusCounts "approved"}}</strong><b>已批准</b></div></a>
+    <a class="{{if eq .CommentAdmin.Status "spam"}}is-active{{end}}" {{if eq .CommentAdmin.Status "spam"}}aria-current="page"{{end}} href="/admin/comments/?status=spam"><span>{{template "icon" "shield-alert"}}</span><div><strong>{{index .CommentAdmin.StatusCounts "spam"}}</strong><b>垃圾评论</b></div></a>
+    <a class="{{if eq .CommentAdmin.Status "trash"}}is-active{{end}}" {{if eq .CommentAdmin.Status "trash"}}aria-current="page"{{end}} href="/admin/comments/?status=trash"><span>{{template "icon" "trash-2"}}</span><div><strong>{{index .CommentAdmin.StatusCounts "trash"}}</strong><b>回收站</b></div></a>
+  </nav>
+
+  <section class="admin-comment-workbench">
+    <header class="admin-comment-toolbar">
+      <div><h2>{{if eq .CommentAdmin.Status "all"}}全部评论{{else if eq .CommentAdmin.Status "pending"}}待审核队列{{else if eq .CommentAdmin.Status "approved"}}已公开讨论{{else if eq .CommentAdmin.Status "spam"}}垃圾评论隔离区{{else}}评论回收站{{end}}</h2><p>共 {{.CommentAdmin.Total}} 条匹配记录 · 第 {{.CommentAdmin.Page}} / {{.CommentAdmin.Pages}} 页</p></div>
+      <form action="/admin/comments/" method="get" role="search" aria-label="评论检索">
+        <label><span class="sr-only">评论状态</span><select data-select-ui="soft" name="status"><option value="pending" {{if eq .CommentAdmin.Status "pending"}}selected{{end}}>待审核</option><option value="approved" {{if eq .CommentAdmin.Status "approved"}}selected{{end}}>已批准</option><option value="spam" {{if eq .CommentAdmin.Status "spam"}}selected{{end}}>垃圾评论</option><option value="trash" {{if eq .CommentAdmin.Status "trash"}}selected{{end}}>回收站</option><option value="all" {{if eq .CommentAdmin.Status "all"}}selected{{end}}>全部状态</option></select></label>
+        <label>{{template "icon" "search"}}<input type="search" name="q" value="{{.CommentAdmin.Search}}" maxlength="100" placeholder="搜索称呼、邮箱或内容" aria-label="搜索评论"></label>
+        <label class="admin-comment-post-filter"><span class="sr-only">内容 ID</span><input type="number" name="post" value="{{if .CommentAdmin.PostID}}{{.CommentAdmin.PostID}}{{end}}" min="1" placeholder="内容 ID" aria-label="按内容 ID 筛选"></label>
+        <button type="submit">筛选</button>
+      </form>
+    </header>
+
+    {{if and .CommentAdmin.CanModerate .CommentAdmin.Items}}<form class="admin-comment-bulk" id="admin-comment-bulk-form" action="/admin/comments/bulk/" method="post" data-comment-bulk>
+      <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}">{{template "comment-return-fields" .}}
+      <div class="admin-comment-bulk-copy"><span>{{template "icon" "message-square"}}</span><p><b>批量审核</b></p></div>
+      <label class="admin-comment-bulk-select-all"><span class="admin-comment-check"><input type="checkbox" data-comment-select-all aria-label="选择当前页全部评论"><i>{{template "icon" "check"}}</i></span><b>全选当前页</b></label>
+      <div class="admin-comment-bulk-controls">
+        <label><span class="sr-only">批量审核动作</span><select name="action" required data-comment-bulk-action><option value="">选择审核动作</option><option value="approved">批准并公开</option><option value="pending">移回待审核</option><option value="spam">标记为垃圾</option><option value="trash">移入回收站</option></select></label>
+        <button type="submit" data-comment-bulk-submit>{{template "icon" "shield-check"}}应用审核</button>
+      </div>
+      <p class="admin-comment-bulk-state"><span><b data-comment-selected-count>0</b> 条已选</span><small id="bulk-comment-status" role="status" aria-live="polite" aria-atomic="true" data-comment-bulk-live>请选择当前页评论和一个审核动作。</small></p>
+    </form>{{end}}
+
+    <div class="admin-comment-list">
+      {{range .CommentAdmin.Items}}
+      <article class="admin-comment-card is-{{.Comment.Status}}" id="comment-{{.Comment.ID}}" data-comment-row>
+        <header>
+          <div class="admin-comment-identity">{{if $.CommentAdmin.CanModerate}}<label class="admin-comment-check"><input form="admin-comment-bulk-form" type="checkbox" name="selection" value="{{.Comment.ID}}:{{.Comment.Version}}" data-comment-select aria-label="选择 {{.Comment.AuthorName}} 的评论 #{{.Comment.ID}}，当前版本 {{.Comment.Version}}"><i>{{template "icon" "check"}}</i></label>{{end}}<div class="admin-comment-author"><span aria-hidden="true">{{template "icon" "user-round"}}</span><div><b>{{.Comment.AuthorName}}{{if .Comment.StaffReply}}<em>站方</em>{{end}}</b><a href="mailto:{{.Comment.AuthorEmail}}">{{.Comment.AuthorEmail}}</a></div></div></div>
+          <div class="admin-comment-state"><span class="admin-state admin-state-{{.StatusTone}}"><i></i>{{.StatusLabel}}</span><code>v{{.Comment.Version}} · #{{.Comment.ID}}</code></div>
+        </header>
+        <div class="admin-comment-body">{{.Comment.ContentSource}}</div>
+        <div class="admin-comment-context">
+          <div><span>{{template "icon" "newspaper"}}</span><p><small>评论于</small><b>{{.PostTitle}}</b><em>{{if .Comment.ParentID}}回复 #{{.Comment.ParentID}} · {{end}}{{dateIn .Comment.CreatedAt $.Site.Timezone}}</em></p></div>
+          <div><span>{{template "icon" "fingerprint"}}</span><p><small>来源摘要</small><code>{{if .SourceFingerprint}}{{.SourceFingerprint}}{{else}}未记录{{end}}</code><em>不可逆 HMAC 指纹</em></p></div>
+          <nav>{{if $.CommentAdmin.CanModerate}}<a class="is-inspector" href="{{.InspectorURL}}">检查 / 编辑 / 回复</a>{{end}}{{if .PostEditURL}}<a href="{{.PostEditURL}}">编辑内容</a>{{end}}{{if .PostPermalink}}<a href="{{.PostPermalink}}#comment-{{.Comment.ID}}" target="_blank" rel="noopener">查看公开线程 {{template "icon" "external-link"}}</a>{{end}}</nav>
+        </div>
+        <footer>
+          <div>{{if .Comment.EditedBy}}<span>{{template "icon" "pen-line"}}v{{.Comment.Version}} 由 {{.Comment.EditedBy}} 修订</span>{{else if .Comment.ModeratedBy}}<span>{{template "icon" "shield-check"}}最近由 {{.Comment.ModeratedBy}} 审核</span>{{else}}<span>{{template "icon" "clock-3"}}尚未写入审核者</span>{{end}}</div>
+          {{if $.CommentAdmin.CanModerate}}<div class="admin-comment-actions">
+            <form action="/admin/comments/" method="post">
+              <input type="hidden" name="csrf_token" value="{{$.Admin.CSRFToken}}"><input type="hidden" name="id" value="{{.Comment.ID}}"><input type="hidden" name="version" value="{{.Comment.Version}}">{{template "comment-return-fields" $}}
+              {{if ne .Comment.Status "approved"}}<button class="is-approve" type="submit" name="action" value="approved">{{template "icon" "check"}}批准</button>{{end}}
+              {{if and (ne .Comment.Status "pending") (ne .Comment.Status "trash")}}<button type="submit" name="action" value="pending">{{template "icon" "clock-3"}}待审</button>{{end}}
+              {{if ne .Comment.Status "spam"}}<button class="is-spam" type="submit" name="action" value="spam">{{template "icon" "shield-alert"}}垃圾</button>{{end}}
+              {{if eq .Comment.Status "trash"}}<button type="submit" name="action" value="restore">{{template "icon" "rotate-ccw"}}恢复</button>{{else}}<button class="is-trash" type="submit" name="action" value="trash">{{template "icon" "trash-2"}}回收站</button>{{end}}
+            </form>
+            {{if .CanDelete}}<form action="/admin/comments/" method="post" data-confirm="永久删除这条评论及其全部回复？此操作无法撤销。"><input type="hidden" name="csrf_token" value="{{$.Admin.CSRFToken}}"><input type="hidden" name="id" value="{{.Comment.ID}}"><input type="hidden" name="version" value="{{.Comment.Version}}"><input type="hidden" name="action" value="delete">{{template "comment-return-fields" $}}<button class="is-delete" type="submit">永久删除</button></form>{{end}}
+          </div>{{end}}
+        </footer>
+      </article>
+      {{else}}
+      <div class="admin-comment-empty"><span>{{template "icon" "message-circle"}}</span><strong>当前筛选没有评论</strong><p>{{if eq .CommentAdmin.Status "pending"}}审核队列已经清空，可以继续专注内容发布。{{else}}尝试切换状态、清除搜索词或移除内容 ID。{{end}}</p><a href="/admin/comments/?status=all">查看全部评论</a></div>
+      {{end}}
+    </div>
+
+    <footer class="admin-comment-pagination"><p>每页 {{.CommentAdmin.PerPage}} 条 · 共 {{.CommentAdmin.Total}} 条</p><nav aria-label="评论分页">{{if .CommentAdmin.PreviousURL}}<a href="{{.CommentAdmin.PreviousURL}}">{{template "icon" "arrow-left"}}上一页</a>{{else}}<span>上一页</span>{{end}}<b>{{.CommentAdmin.Page}} / {{.CommentAdmin.Pages}}</b>{{if .CommentAdmin.NextURL}}<a href="{{.CommentAdmin.NextURL}}">下一页{{template "icon" "arrow-right"}}</a>{{else}}<span>下一页</span>{{end}}</nav></footer>
+  </section>
+</section>
+{{end}}

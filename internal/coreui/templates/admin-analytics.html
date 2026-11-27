@@ -1,0 +1,139 @@
+{{define "content"}}
+<div class="analytics-workspace" data-analytics data-analytics-report="{{.Analytics.BootstrapJSON}}" data-analytics-script="{{asset "js/newpress-analytics.js"}}?v={{.UIAssetVersion}}" data-analytics-style="{{asset "css/newpress-analytics.css"}}?v={{.UIAssetVersion}}" data-timezone="{{.Analytics.Timezone}}" data-days="{{.Analytics.Days}}" data-views="{{.Analytics.Views}}" data-article-views="{{.Analytics.ArticleViews}}" data-searches="{{.Analytics.Searches}}" data-misses="{{.Analytics.Misses}}">
+  <div data-analytics-root></div>
+  <div data-analytics-fallback>
+  <header class="analytics-heading">
+    <div><h1>访问统计</h1></div>
+    <div class="analytics-heading-actions">
+      <button type="button" class="analytics-action" data-analytics-activate hidden>试用交互图表</button>
+      <a class="analytics-action" href="?days={{.Analytics.Days}}" aria-label="刷新本期统计">{{template "icon" "refresh-cw"}}<span>刷新</span></a>
+      <a class="analytics-action analytics-action-primary" href="/api/v1/admin/analytics?days={{.Analytics.Days}}" download="newpress-analytics-{{.Analytics.Start}}-{{.Analytics.End}}.json">{{template "icon" "arrow-down-to-line"}}<span>导出数据</span></a>
+    </div>
+  </header>
+  {{if .FeatureStatus}}{{template "admin-feature-status" .}}{{end}}
+  <p class="analytics-caption" role="status" data-analytics-load-status></p>
+
+  <nav class="admin-section-tabs" aria-label="运营统计"><a href="/admin/analytics/" aria-current="page">访问统计</a><a href="/admin/analytics/ai/">AI 消耗</a><a href="/admin/analytics/ai/requests/">请求明细</a></nav>
+  <div class="analytics-toolbar">
+    <div class="analytics-period">
+      <span class="analytics-date">{{template "icon" "clock-3"}}<time>{{.Analytics.Start}}</time><span aria-hidden="true">—</span><time>{{.Analytics.End}}</time></span>
+      <span class="analytics-timezone">{{.Analytics.Timezone}} · 含今日</span>
+      <span class="analytics-collection {{if not .Analytics.Enabled}}is-paused{{end}}"><i aria-hidden="true"></i>{{if .Analytics.Enabled}}采集已开启{{else}}采集已暂停{{end}}</span>
+    </div>
+    <nav class="analytics-range" aria-label="统计时间范围">
+      {{if eq .Analytics.Days 7}}<span aria-current="page">近 7 天</span>{{else}}<a href="?days=7">近 7 天</a>{{end}}
+      {{if eq .Analytics.Days 30}}<span aria-current="page">近 30 天</span>{{else}}<a href="?days=30">近 30 天</a>{{end}}
+      {{if eq .Analytics.Days 90}}<span aria-current="page">近 90 天</span>{{else}}<a href="?days=90">近 90 天</a>{{end}}
+    </nav>
+  </div>
+  {{if not .Analytics.Enabled}}<p class="analytics-notice">{{template "icon" "circle-help"}}当前展示已保留的历史数据，暂停期间不会记录新的访问。</p>{{end}}
+
+  <section class="analytics-metrics" aria-label="期间概览">
+    <article class="analytics-metric analytics-metric-views">
+      <header><h2>页面浏览</h2><span class="analytics-metric-icon">{{template "icon" "eye"}}</span></header>
+      <div class="analytics-metric-value"><strong data-format-number>{{.Analytics.Views}}</strong><span>次</span><svg class="analytics-sparkline" viewBox="0 0 104 34" aria-hidden="true" data-sparkline="views" hidden></svg></div>
+      <footer><span>日均浏览 <b data-average>—</b></span><span>公开页面</span></footer>
+    </article>
+    <article class="analytics-metric analytics-metric-articles">
+      <header><h2>文章阅读</h2><span class="analytics-metric-icon">{{template "icon" "newspaper"}}</span></header>
+      <div class="analytics-metric-value"><strong data-format-number>{{.Analytics.ArticleViews}}</strong><span>次</span><svg class="analytics-mini-ring" viewBox="0 0 36 36" aria-hidden="true" data-article-ring hidden><circle class="analytics-mini-track" cx="18" cy="18" r="14"/><circle class="analytics-mini-fill" cx="18" cy="18" r="14" pathLength="100"/></svg></div>
+      <footer><span>占总浏览 <b data-article-share>—</b></span><span>文章正文页</span></footer>
+    </article>
+    <article class="analytics-metric analytics-metric-searches">
+      <header><h2>主动搜索</h2><span class="analytics-metric-icon">{{template "icon" "search"}}</span></header>
+      <div class="analytics-metric-value"><strong data-format-number>{{.Analytics.Searches}}</strong><span>次</span><svg class="analytics-sparkline" viewBox="0 0 104 34" aria-hidden="true" data-sparkline="searches" hidden></svg></div>
+      <footer><span>有结果 <b data-found-count>—</b></span><span>发现页搜索</span></footer>
+    </article>
+    <article class="analytics-metric analytics-metric-misses">
+      <header><h2>无结果搜索</h2><span class="analytics-metric-icon">{{template "icon" "scan-search"}}</span></header>
+      <div class="analytics-metric-value"><strong data-format-number>{{.Analytics.Misses}}</strong><span>次</span><svg class="analytics-sparkline" viewBox="0 0 104 34" aria-hidden="true" data-sparkline="misses" hidden></svg></div>
+      <footer><span>无结果率 <b data-miss-rate>—</b></span><span>可补充内容</span></footer>
+    </article>
+  </section>
+
+  <div class="analytics-primary-grid">
+    <section class="analytics-panel analytics-trend" aria-labelledby="analytics-trend-title">
+      <header class="analytics-panel-heading">
+        <div><h2 id="analytics-trend-title">访问趋势</h2><p>按天统计页面浏览和搜索。</p></div>
+        <div class="analytics-chart-switch" role="group" aria-label="趋势指标" data-chart-switch hidden>
+          <button type="button" aria-pressed="true" data-series="views">浏览</button>
+          <button type="button" aria-pressed="false" data-series="searches">搜索</button>
+          <button type="button" aria-pressed="false" data-series="misses">无结果</button>
+        </div>
+      </header>
+      <div class="analytics-trend-summary">
+        <div><span class="analytics-series-legend"><i aria-hidden="true"></i><span data-series-label>页面浏览</span></span><strong data-chart-total data-format-number>{{.Analytics.Views}}</strong><span class="analytics-summary-unit">次</span></div>
+        <dl><div><dt>日均</dt><dd data-chart-average>—</dd></div><div><dt>单日最高</dt><dd data-chart-peak data-format-number>{{.Analytics.Peak}}</dd></div></dl>
+      </div>
+      <div class="analytics-plot" data-chart-shell data-empty="{{if .Analytics.Views}}false{{else}}true{{end}}">
+        <div class="analytics-y-axis" aria-hidden="true" data-chart-axis><span>{{.Analytics.Peak}}</span><span></span><span></span><span></span><span>0</span></div>
+        <div class="analytics-plot-body">
+          <svg class="analytics-chart" viewBox="0 0 900 200" preserveAspectRatio="none" role="img" aria-label="每日页面浏览趋势，完整数值见下方每日明细" data-chart>
+            <defs><linearGradient id="analytics-trend-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="currentColor" stop-opacity=".18"/><stop offset="100%" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs>
+            <path class="analytics-chart-grid" d="M0 20H900M0 60H900M0 100H900M0 140H900M0 180H900"/>
+            <g data-chart-series>{{if .Analytics.Views}}<polygon class="analytics-chart-area" points="0,180 {{.Analytics.Points}} 900,180"/><polyline class="analytics-chart-line" points="{{.Analytics.Points}}"/>{{end}}</g>
+            <g class="analytics-chart-cursor" data-chart-cursor visibility="hidden"><line y1="20" y2="180"/><circle r="4"/></g>
+          </svg>
+          <div class="analytics-chart-empty" data-chart-empty {{if .Analytics.Views}}hidden{{end}}><span>{{template "icon" "activity"}}</span><strong data-chart-empty-title>还没有访问记录</strong><p>公开页面产生访问后，趋势会在这里呈现。<br>后台账号的访问不计入统计。</p></div>
+          <div class="analytics-chart-tooltip" data-chart-tooltip hidden><time></time><div><span data-tooltip-label>页面浏览</span><b></b></div></div>
+          <div class="analytics-chart-labels" aria-hidden="true" data-chart-labels><span>{{.Analytics.Start}}</span><span>{{.Analytics.End}}</span></div>
+        </div>
+      </div>
+      <p class="sr-only" id="analytics-chart-help">聚焦图表后，使用左右方向键查看日期，Home 和 End 跳到首尾，Escape 关闭提示。也可以展开每日明细查看所有数值。</p>
+      <p class="sr-only" aria-live="polite" aria-atomic="true" data-chart-announcement></p>
+      <details class="analytics-details">
+        <summary><span>{{template "icon" "list"}}查看每日明细</span><span>{{.Analytics.Days}} 天 {{template "icon" "chevron-down"}}</span></summary>
+        <div class="analytics-table-scroll" tabindex="0" role="region" aria-label="每日浏览与搜索明细">
+          <table data-analytics-daily><caption class="sr-only">每日浏览与搜索，当前报告时区 {{.Analytics.Timezone}}；历史桶保留原日期</caption><thead><tr><th scope="col">日期（{{.Analytics.Timezone}}）</th><th scope="col">页面浏览</th><th scope="col">搜索</th><th scope="col">无结果</th></tr></thead><tbody>{{range .Analytics.Trend}}<tr data-date="{{.Date}}" data-views="{{.Views}}" data-searches="{{.Searches}}" data-misses="{{.Misses}}"><th scope="row">{{.Date}}</th><td>{{.Views}}</td><td>{{.Searches}}</td><td>{{.Misses}}</td></tr>{{end}}</tbody></table>
+        </div>
+      </details>
+    </section>
+
+    <section class="analytics-panel analytics-sources" aria-labelledby="analytics-sources-title">
+      <header class="analytics-panel-heading"><div><h2 id="analytics-sources-title">访问来源</h2><p>读者进入站点时所在的来源。</p></div><span class="analytics-panel-symbol">{{template "icon" "globe-2"}}</span></header>
+      <div class="analytics-donut" data-source-chart>
+        <svg viewBox="0 0 180 180" aria-hidden="true"><circle class="analytics-donut-track" cx="90" cy="90" r="72"/><g data-source-segments></g></svg>
+        <div>{{if .Analytics.Views}}<strong data-format-number>{{.Analytics.Views}}</strong><span>页面浏览</span>{{else}}<span class="analytics-donut-empty-icon">{{template "icon" "globe-2"}}</span><span>等待访问</span>{{end}}</div>
+      </div>
+      {{if .Analytics.Sources}}
+      <ol class="analytics-source-list">{{range $index, $source := .Analytics.Sources}}{{if lt $index 4}}<li data-source-count="{{.Count}}" data-source-label="{{.Label}}" data-source-index="{{$index}}"><div><i aria-hidden="true"></i><span>{{.Label}}</span><b data-format-number>{{.Count}}</b><small data-source-share>—</small></div><meter min="0" max="{{$.Analytics.Views}}" value="{{.Count}}" aria-label="{{.Label}}，{{.Count}} 次浏览"></meter></li>{{end}}{{end}}</ol>
+      {{if gt (len .Analytics.Sources) 4}}<details class="analytics-more-sources"><summary>查看其余来源 {{template "icon" "chevron-down"}}</summary><ol class="analytics-source-list">{{range $index, $source := .Analytics.Sources}}{{if ge $index 4}}<li data-source-count="{{.Count}}" data-source-label="{{.Label}}" data-source-index="{{$index}}"><div><i aria-hidden="true"></i><span>{{.Label}}</span><b data-format-number>{{.Count}}</b><small data-source-share>—</small></div><meter min="0" max="{{$.Analytics.Views}}" value="{{.Count}}" aria-label="{{.Label}}，{{.Count}} 次浏览"></meter></li>{{end}}{{end}}</ol></details>{{end}}
+      <p class="analytics-source-remainder" data-source-remainder hidden></p>
+      {{else}}<p class="analytics-source-empty">有访问记录后，这里会显示<br>来源分布和各渠道占比。</p>{{end}}
+      <p class="analytics-caption">按来源域名汇总，展示前 10 项。包含站内跳转；未提供来源不一定是直接输入网址。</p>
+    </section>
+  </div>
+
+  <div class="analytics-secondary-grid">
+    <section class="analytics-panel analytics-articles" aria-labelledby="analytics-articles-title">
+      <header class="analytics-panel-heading"><div><h2 id="analytics-articles-title">热门内容</h2><p>按所选期间的浏览量排序。</p></div>{{if .Admin.Can "content:read"}}<a class="analytics-text-link" href="/admin/content/">全部内容 {{template "icon" "chevron-right"}}</a>{{end}}</header>
+      {{if .Analytics.Articles}}
+      <div class="analytics-table-meta"><span><i aria-hidden="true"></i>按期间浏览排序</span><span>{{len .Analytics.Articles}} 篇文章 · 最多 20 篇</span></div>
+      <p class="analytics-table-hint">左右滑动查看浏览与互动</p>
+      <div class="analytics-table-scroll analytics-article-scroll" tabindex="0" role="region" aria-label="文章浏览与互动，可横向滚动">
+        <table><caption>浏览为所选期间；点赞、收藏和已公开评论为当前累计数。</caption><thead><tr><th scope="col">文章</th><th scope="col" class="analytics-sorted-column">浏览 {{template "icon" "arrow-down"}}</th><th scope="col">点赞</th><th scope="col">收藏</th><th scope="col">评论</th></tr></thead><tbody>{{range .Analytics.Articles}}<tr><th scope="row"><div class="analytics-article-title"><span class="analytics-article-rank" aria-hidden="true"></span><a href="{{.URL}}">{{.Title}}{{template "icon" "chevron-right"}}</a></div></th><td class="analytics-article-views" data-format-number>{{.Views}}</td><td data-format-number>{{.Likes}}</td><td data-format-number>{{.Bookmarks}}</td><td data-format-number>{{.Comments}}</td></tr>{{end}}</tbody></table>
+      </div>
+      {{else}}
+      <div class="analytics-content-empty"><div class="analytics-empty-paper" aria-hidden="true">{{template "icon" "newspaper"}}<i></i><i></i><i></i><span>{{template "icon" "eye"}}</span></div><h3>还没有文章浏览记录</h3><p>文章获得浏览后，会按浏览量排列在这里。<br>同时显示点赞、收藏和评论数。</p>{{if .Admin.Can "content:read"}}<a class="analytics-text-link" href="/admin/content/">管理内容 {{template "icon" "arrow-right"}}</a>{{end}}</div>
+      {{end}}
+    </section>
+
+    <section class="analytics-panel analytics-searches" aria-labelledby="analytics-searches-title">
+      <header class="analytics-panel-heading"><div><h2 id="analytics-searches-title">搜索洞察</h2><p>查看没有找到结果的搜索词。</p></div><span class="analytics-panel-symbol">{{template "icon" "scan-search"}}</span></header>
+      <div class="analytics-search-health" data-search-health hidden><div><span>搜索有结果率</span><strong data-hit-rate>—</strong></div><div class="analytics-search-meter" aria-hidden="true"><i data-hit-bar></i><i data-miss-bar></i></div><p><span><i></i>有结果 <b data-found-count>—</b></span><span><i></i>无结果 <b data-format-number>{{.Analytics.Misses}}</b></span></p></div>
+      <div class="analytics-search-list-heading"><h3>无结果搜索词</h3><span>前 20 项</span></div>
+      {{if .Analytics.Terms}}
+      <ol class="analytics-term-list">{{range $index, $term := .Analytics.Terms}}{{if lt $index 5}}<li><span class="analytics-term-index" aria-hidden="true"></span><span>{{.Label}}</span><b><span data-format-number>{{.Count}}</span><small>次</small></b></li>{{end}}{{end}}</ol>
+      {{if gt (len .Analytics.Terms) 5}}<details class="analytics-more-terms"><summary>展开全部搜索词 {{template "icon" "chevron-down"}}</summary><ol class="analytics-term-list analytics-term-list-more" start="6">{{range $index, $term := .Analytics.Terms}}{{if ge $index 5}}<li><span class="analytics-term-index" aria-hidden="true"></span><span>{{.Label}}</span><b><span data-format-number>{{.Count}}</span><small>次</small></b></li>{{end}}{{end}}</ol></details>{{end}}
+      {{else}}<div class="analytics-search-empty"><span>{{template "icon" "search"}}</span><strong>没有无结果的搜索词</strong><p>没有找到结果的关键词会汇总在这里。</p></div>{{end}}
+      <p class="analytics-caption">仅统计发现页首屏搜索。疑似邮箱、链接和长数字会隐藏词语，仍保留次数。</p>
+    </section>
+  </div>
+
+  <details class="analytics-method">
+    <summary><span>{{template "icon" "shield-check"}}统计口径与隐私</span><span>按 {{.Analytics.Timezone}} 汇总 · 最多 90 个日期桶 {{template "icon" "chevron-down"}}</span></summary>
+    <div><p>这里统计页面请求，刷新会重复计数，不代表独立人数或阅读完成。缓存命中、未到达本站的请求不会出现。排除后台账号、常见机器人、预取及发送 DNT / GPC 信号的请求；此过滤不能识别全部机器人。</p><p>新数据按站点时区 {{.Analytics.Timezone}} 的自然日汇总，保留窗口为 90 天且最多 90 个日期桶；时区切换不重算历史桶，旧日期标签保留，当前范围外的桶不计入本报告。不保存访客标识、IP、浏览器信息或完整来源地址。每 5 秒尝试保存；异常退出可能丢失尚未保存的请求，过载会舍弃新请求。本进程已舍弃 <b>{{.Analytics.Dropped}}</b> 条。文章撤回后不再展示标题，历史汇总数保留。</p><a class="analytics-text-link" href="/api/v1/admin/analytics?days={{.Analytics.Days}}">{{template "icon" "file-json"}}读取本期 JSON 数据 </a></div>
+  </details>
+  </div>
+</div>
+{{end}}

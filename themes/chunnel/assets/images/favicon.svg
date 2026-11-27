@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="tile" cx="50%" cy="38%" r="78%">
+      <stop offset="0" stop-color="#262320"/>
+      <stop offset="1" stop-color="#141413"/>
+    </radialGradient>
+    <linearGradient id="arch" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d98a6c"/>
+      <stop offset="1" stop-color="#c06a4f"/>
+    </linearGradient>
+    <linearGradient id="light" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#faf9f5"/>
+      <stop offset="1" stop-color="#efe9de"/>
+    </linearGradient>
+    <linearGradient id="fold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#faf9f5" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#faf9f5" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#tile)"/>
+  <path d="M9.8 54.3V32a22.2 22.2 0 0 1 44.4 0v22.3h-5.95V32a16.25 16.25 0 0 0-32.5 0v22.3Z" fill="url(#arch)"/>
+  <path d="M15.75 54.3V32a16.25 16.25 0 0 1 32.5 0v22.3h-6.19V32a10.06 10.06 0 0 0-20.12 0v22.3Z" fill="#141413"/>
+  <path d="M21.94 54.3V32a10.06 10.06 0 0 1 20.12 0v22.3Z" fill="url(#light)"/>
+  <path d="M15.75 54.3V32a16.25 16.25 0 0 1 32.5 0v22.3" fill="none" stroke="#a9583e" stroke-width=".55" opacity=".8"/>
+  <path d="M32 9.8A22.2 22.2 0 0 0 9.8 32v15.5" fill="none" stroke="url(#fold)" stroke-width=".55" stroke-linecap="round"/>
+</svg>

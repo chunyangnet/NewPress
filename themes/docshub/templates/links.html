@@ -1,0 +1,23 @@
+{{define "content"}}
+<section class="links-page shell portal-page" data-links-public data-accent="{{.LinkPages.Board.Accent}}">
+  <nav class="portal-breadcrumb" aria-label="当前位置"><a href="/">首页</a>{{template "service-icon" "chevron-right"}}{{if .LinkPages.Board.Slug}}<a href="/links/">开发者导航</a>{{template "service-icon" "chevron-right"}}<span aria-current="page">{{.LinkPages.Board.Name}}</span>{{else}}<span aria-current="page">开发者导航</span>{{end}}</nav>
+  <header class="links-masthead portal-heading"><div><h1>{{if .LinkPages.Board.Slug}}{{.LinkPages.Board.Name}}{{else}}开发者导航{{end}}</h1><p>{{if .LinkPages.Board.Slug}}{{.LinkPages.Board.Description}}{{else}}按主题查找开发工具、参考资料与社区资源。{{end}}</p></div><a class="ui-button ui-button-secondary" href="/explore/">{{template "service-icon" "arrow-left"}}返回发现 </a></header>
+  {{if .LinkPages.Board.Slug}}
+  
+  <form class="links-toolbar" method="get" action="/links/{{.LinkPages.Board.Slug}}/">
+    {{if .LinkPages.Board.Search}}<label class="links-search"><input type="search" name="q" placeholder="搜索站点、简介或域名" value="{{.LinkPages.Search}}" aria-label="搜索资源" maxlength="100"></label>{{end}}
+    <label><span class="sr-only">分类</span><select data-select-ui="soft" name="category" aria-label="资源分类"><option value="">全部分类</option>{{range .LinkPages.Categories}}<option value="{{.}}" {{if eq . $.LinkPages.Category}}selected{{end}}>{{.}}</option>{{end}}</select></label>
+    {{if .LinkPages.Board.Switcher}}<label><span class="sr-only">展示样式</span><select data-select-ui="soft" name="style" aria-label="展示样式"><option value="cards" {{if eq .LinkPages.Style "cards"}}selected{{end}}>卡片</option><option value="list" {{if eq .LinkPages.Style "list"}}selected{{end}}>列表</option><option value="wall" {{if eq .LinkPages.Style "wall"}}selected{{end}}>图标墙</option></select></label>{{end}}
+    <button class="links-button" type="submit">筛选</button><span class="links-count">{{len .LinkPages.Items}} 个站点</span>
+  </form>
+  <div class="links-collection" data-style="{{.LinkPages.Style}}">
+  {{range .LinkPages.Items}}<a class="links-card" href="{{.URL}}" {{if $.LinkPages.Board.NewTab}}target="_blank"{{end}} rel="noopener noreferrer external" aria-label="访问 {{.Name}}">
+    <span class="links-logo">{{if .Icon}}<img src="{{.Icon}}" alt="" width="56" height="56" loading="lazy">{{else}}<span>{{.Initial}}</span>{{end}}</span>
+    <div class="links-card-copy"><div class="links-card-title"><h2>{{.Name}}</h2>{{if .Featured}}<span class="links-recommended">推荐</span>{{end}}</div><p>{{.Description}}</p><div class="links-card-meta"><span>{{.Host}}</span>{{if .Category}}<span>{{.Category}}</span>{{end}}</div></div><span class="links-arrow" aria-hidden="true">{{template "service-icon" "external-link"}}</span>
+  </a>{{else}}<div class="links-empty"><span aria-hidden="true">{{template "service-icon" "globe-2"}}</span><h2>这里还没有匹配的站点</h2><p>换个关键词，或者稍后再来看看。</p><a href="/links/{{.LinkPages.Board.Slug}}/">查看全部资源</a></div>{{end}}
+  </div><footer class="links-endnote"><span>点击站点卡片访问对应网站。</span><span>站点信息由管理员维护</span></footer>
+  {{else}}
+  <div class="links-directories">{{range .LinkPages.Boards}}<a class="links-directory" href="/links/{{.Slug}}/"><span>精选站点 {{template "service-icon" "chevron-right"}}</span><h2>{{.Name}}</h2><p>{{.Description}}</p></a>{{else}}<div class="links-empty"><h2>暂无资源页面</h2><p>资源页面开放后会显示在这里。</p></div>{{end}}</div>
+  {{end}}
+</section>
+{{end}}

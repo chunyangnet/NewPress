@@ -1,0 +1,15 @@
+{{define "home-faq"}}
+{{$s := .Settings}}
+{{if and $s.show_faq (or (and $s.faq_1_question $s.faq_1_answer) (and $s.faq_2_question $s.faq_2_answer) (and $s.faq_3_question $s.faq_3_answer) (and $s.faq_4_question $s.faq_4_answer))}}
+<section class="faq-section section-shell" id="faq" data-home-section="faq" aria-labelledby="faq-title">
+  <div class="section-heading"><div><h2 id="faq-title">{{if $s.faq_title}}{{$s.faq_title}}{{else}}常见问题{{end}}</h2>{{if $s.faq_description}}<p class="rich-description">{{$s.faq_description}}</p>{{end}}</div></div>
+  <div class="faq-list">
+    {{template "home-faq-item" (dict "Question" $s.faq_1_question "Answer" $s.faq_1_answer "Page" .)}}
+    {{template "home-faq-item" (dict "Question" $s.faq_2_question "Answer" $s.faq_2_answer "Page" .)}}
+    {{template "home-faq-item" (dict "Question" $s.faq_3_question "Answer" $s.faq_3_answer "Page" .)}}
+    {{template "home-faq-item" (dict "Question" $s.faq_4_question "Answer" $s.faq_4_answer "Page" .)}}
+  </div>
+</section>
+{{end}}
+{{end}}
+{{define "home-faq-item"}}{{if and .Question .Answer}}<details class="faq-item"><summary><span>{{.Question}}</span>{{template "icon-chevron" .Page}}</summary><div class="faq-answer"><p>{{.Answer}}</p></div></details>{{end}}{{end}}

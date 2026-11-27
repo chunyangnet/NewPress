@@ -1,0 +1,11 @@
+{{define "home-strengths"}}
+<section data-home-section="strengths" class="strengths-section" id="strengths" aria-labelledby="strengths-title">
+  <div class="section-heading"><div><h2 id="strengths-title">{{.Settings.strengths_title}}</h2><p>{{.Settings.strengths_subtitle}}</p></div>{{template "nexora-action-link" (dict "Page" . "URL" "/#business" "Label" "查看业务" "Class" "text-link")}}</div>
+  <div class="strengths-grid">
+    <div class="strength">{{template "icon-chip" .}}<h3>{{.Settings.strength_1_title}}</h3><p>{{.Settings.strength_1_text}}</p></div>
+    <div class="strength">{{template "icon-globe" .}}<h3>{{.Settings.strength_2_title}}</h3><p>{{.Settings.strength_2_text}}</p></div>
+    <div class="strength">{{template "icon-diamond" .}}<h3>{{.Settings.strength_3_title}}</h3><p>{{.Settings.strength_3_text}}</p></div>
+    <div class="strength">{{template "icon-people" .}}<h3>{{.Settings.strength_4_title}}</h3><p>{{.Settings.strength_4_text}}</p></div>
+  </div>
+</section>
+{{end}}

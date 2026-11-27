@@ -1,0 +1,82 @@
+{{define "content"}}
+<section class="admin-page currency-admin" data-currency-admin data-currency-key="{{.Currency.Key}}" data-csrf="{{.Admin.CSRFToken}}" data-user-id="{{.Admin.Principal.UserID}}" data-read-only="{{.Admin.ReadOnly}}">
+  <header class="admin-page-heading currency-heading">
+    <div><h1>虚拟币与奖励</h1></div>
+    <a class="admin-button admin-button-secondary" href="/account/?view=wallet&amp;currency={{.Currency.Key}}" target="_blank" rel="noopener">{{template "icon" "external-link"}}打开我的钱包</a>
+  </header>
+  {{if .FeatureStatus}}{{template "admin-feature-status" .}}{{end}}
+  <p class="currency-message" data-currency-status role="status" aria-live="polite" {{if not .Currency.Notice}}hidden{{end}}>{{.Currency.Notice}}</p>
+  {{if .Admin.ReadOnly}}<p class="currency-message">当前为只读模式，登录管理员账号后可以修改规则和调整余额。</p>{{end}}
+  <div class="currency-catalog-bar">
+    <form method="get" action="/admin/currency/" class="currency-switch" data-currency-switch>
+      <label for="currency-select">正在管理的货币<select id="currency-select" name="currency" data-currency-select>{{range .Currency.Currencies}}<option value="{{.Key}}" {{if eq .Key $.Currency.Key}}selected{{end}}>{{.Settings.Name}} · {{.Key}}{{if not .Settings.Enabled}}（已关闭）{{end}}</option>{{end}}</select></label>
+      <button type="submit" class="admin-button admin-button-secondary">切换货币</button>
+    </form>
+  </div>
+  <details class="currency-create currency-section" data-currency-create-panel>
+    <summary>{{template "icon" "coins"}}新增货币<span>先创建，再配置模块</span></summary>
+    <form method="post" action="/admin/currency/?currency={{.Currency.Key}}" data-currency-create>
+      <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><input type="hidden" name="action" value="create"><input type="hidden" name="request_id" value="{{.Currency.CreateRequestID}}">
+      <fieldset {{if .Admin.ReadOnly}}disabled{{end}}>
+        <div class="currency-fields">
+          <label>唯一标识<input name="key" maxlength="32" pattern="[a-z]([a-z0-9\-]{0,30}[a-z0-9])?" required placeholder="例如：gold" autocomplete="off" autocapitalize="none" spellcheck="false"><small>小写字母开头，可含数字和连字符；创建后固定。</small></label>
+          <label>货币名称<input name="name" maxlength="40" required placeholder="例如：金币"><small>名称可随时修改，已有余额不变。</small></label>
+          <label>展示符号 / 单位<input name="symbol" maxlength="12" required placeholder="例如：枚"></label>
+          <label>小数位数<input type="number" name="precision" value="1" min="0" max="6" step="1" required><small>1 位小数支持 0.1；首次记账后固定。</small></label>
+        </div>
+        <footer class="currency-module-footer"><p>新货币默认关闭，从零余额开始。停用可在货币定义中设置。</p><button type="submit" class="admin-button admin-button-primary">创建货币</button></footer>
+      </fieldset>
+      <p class="currency-message" data-currency-create-status role="status" aria-live="polite" hidden></p>
+    </form>
+  </details>
+  <button type="button" class="admin-button admin-button-quiet" data-currency-reload>重新载入</button><div class="currency-admin-layout admin-settings-layout">
+    <aside class="currency-outline admin-settings-nav">
+      <div class="currency-preview"><span>{{template "icon" "coins"}} 独立货币 <code>{{.Currency.Key}}</code></span><strong data-currency-preview-name>{{.Currency.Settings.Name}}</strong><p><b data-currency-preview-symbol>{{.Currency.Settings.Symbol}}</b><span data-currency-preview-state>{{if .Currency.Settings.Enabled}}已启用{{else}}未启用{{end}}</span></p></div>
+      <nav aria-label="货币设置模块">{{range .Currency.Modules}}{{template "admin-settings-nav-item" (dict "Target" (printf "currency-%s" .Key) "Title" .Title)}}{{end}}{{template "admin-settings-nav-item" (dict "Target" "currency-ledger" "Title" "账号流水")}}</nav>
+      
+    </aside>
+    <div class="currency-admin-main">
+      <form method="post" action="/admin/currency/?currency={{.Currency.Key}}" id="currency-settings-form" class="currency-settings" data-currency-settings>
+        <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><input type="hidden" name="action" value="settings"><input type="hidden" name="version" value="{{.Currency.Settings.Version}}">
+        <fieldset {{if .Admin.ReadOnly}}disabled{{end}}>
+          {{range .Currency.Modules}}
+          <section class="currency-section currency-module" id="currency-{{.Key}}" data-currency-module="{{.Key}}" data-settings-section>
+            <header><div><h2>{{.Title}}</h2><p>{{.Description}}</p></div><span class="currency-module-state" data-currency-module-state></span></header>
+            {{range .Fields}}{{if eq .Kind "toggle"}}{{template "admin-switch" (dict "Name" .Key "Label" .Label "Help" .Help "Checked" .Checked "CurrencyField" .Kind)}}{{end}}{{end}}
+            <div class="currency-fields">
+              {{range .Fields}}{{if ne .Kind "toggle"}}
+              <label>{{.Label}}{{if eq .Kind "schedule"}}<select name="{{.Key}}" data-currency-field="{{.Kind}}"><option value="interval" {{if eq .Value "interval"}}selected{{end}}>距离上次签到指定时长</option><option value="calendar_day" {{if eq .Value "calendar_day"}}selected{{end}}>按自然天（零点重置）</option></select>{{else}}<input name="{{.Key}}" value="{{.Value}}" data-currency-field="{{.Kind}}" required {{if eq .Kind "integer"}}type="number" min="{{.Min}}" max="{{.Max}}" step="1"{{else}}type="text" {{if eq .Kind "amount"}}inputmode="decimal" maxlength="27"{{else}}maxlength="{{.Max}}"{{end}}{{end}} {{if .Locked}}readonly{{end}} {{if eq .Key "precision"}}data-currency-precision{{end}}>{{end}}
+                {{if eq .Kind "amount"}}<small data-currency-unit>{{$.Currency.Settings.Symbol}}</small>{{end}}
+                {{if .Help}}<small {{if eq .Key "precision"}}data-currency-precision-help{{end}}>{{.Help}}</small>{{end}}
+              </label>{{end}}{{end}}
+            </div>
+            <footer class="currency-module-footer"><p data-currency-module-message role="status"></p><button type="submit" name="module" value="{{.Key}}" formnovalidate class="admin-button admin-button-secondary" data-currency-module-save>保存此模块</button></footer>
+          </section>
+          {{end}}
+{{template "admin-savebar" (dict "FormID" "currency-settings-form" "ReadOnly" .Admin.ReadOnly "Label" "保存全部规则")}}
+        </fieldset>
+      </form>
+      <section class="currency-section" id="currency-ledger" data-settings-section>
+        <header><div><h2>账号流水</h2><p>查看余额与收支记录，或按原因发放、扣减。</p></div></header>
+        <form method="get" action="/admin/currency/#currency-ledger" class="currency-lookup" data-currency-lookup><input type="hidden" name="currency" value="{{.Currency.Key}}"><label><span>完整用户名</span><input type="search" name="username" value="{{.Currency.Username}}" maxlength="80" placeholder="例如：reader" required autocomplete="off" {{if .Admin.ReadOnly}}disabled{{end}}></label><button class="admin-button admin-button-secondary" type="submit" {{if .Admin.ReadOnly}}disabled{{end}}>{{template "icon" "search"}}查询账号</button></form>
+        <p class="currency-message" data-currency-account-status role="status" hidden></p>
+        <div class="currency-account-summary" data-currency-account {{if not .Currency.Wallet}}hidden{{end}}>
+          <div><small data-currency-account-username>{{with .Currency.Wallet}}@{{.Username}}{{end}}</small><strong data-currency-account-name>{{with .Currency.Wallet}}{{.DisplayName}}{{end}}</strong><span data-currency-account-state>{{with .Currency.Wallet}}{{if eq .Status "active"}}正常账号{{else}}已停用账号{{end}}{{end}}</span></div>
+          <div><small>当前余额</small><strong><span data-currency-account-balance>{{with .Currency.Wallet}}{{.Balance}}{{end}}</span> <em data-currency-unit>{{.Currency.Settings.Symbol}}</em></strong></div>
+        </div>
+        <form method="post" action="/admin/currency/?currency={{.Currency.Key}}" class="currency-adjust" data-currency-adjust>
+          <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><input type="hidden" name="action" value="adjust"><input type="hidden" name="version" value="{{.Currency.Settings.Version}}"><input type="hidden" name="request_id" value="{{.Currency.RequestID}}">
+          <fieldset {{if .Admin.ReadOnly}}disabled{{end}}><div class="currency-fields"><label>用户编号<input type="text" inputmode="numeric" name="user_id" value="{{with .Currency.Wallet}}{{.UserID}}{{end}}" maxlength="19" pattern="[1-9][0-9]*" placeholder="查询账号后自动填入" required></label><label>调整金额<input type="text" inputmode="decimal" name="delta" maxlength="28" placeholder="正数发放，负数扣减" required><small data-currency-unit>{{.Currency.Settings.Symbol}}</small></label></div><label>调整原因<textarea name="reason" maxlength="200" rows="2" placeholder="例如：活动奖励补发、错误发放更正" required></textarea></label><button class="admin-button admin-button-secondary" type="submit">{{template "icon" "pen-line"}}核对并调整余额</button><p class="currency-help" data-currency-adjust-status role="status">每次调整都会保留原因和流水，重复提交同一笔不会再次扣款或入账。</p></fieldset>
+        </form>
+        <div class="currency-history" data-currency-admin-history>
+          {{with .Currency.Wallet}}{{template "currency-ledger-table" (dict "Entries" .Entries "Timezone" $.Site.Timezone)}}{{else}}<p class="currency-empty">先查询一个账号，在这里查看收支记录。</p>{{end}}
+        </div>
+        <form method="get" action="/admin/currency/#currency-ledger" data-currency-more-form {{if not .Currency.Wallet}}hidden{{else}}{{if not .Currency.Wallet.NextBefore}}hidden{{end}}{{end}}><input type="hidden" name="currency" value="{{.Currency.Key}}"><input type="hidden" name="username" value="{{.Currency.Username}}"><input type="hidden" name="before" value="{{with .Currency.Wallet}}{{.NextBefore}}{{end}}"><button type="submit" class="admin-button admin-button-secondary">更早的流水 {{template "icon" "arrow-down"}}</button></form>
+      </section>
+    </div>
+  </div>
+</section>
+{{end}}
+{{define "currency-ledger-table"}}
+{{if .Entries}}<div class="currency-table-scroll"><table><thead><tr><th>交易事项</th><th>变动</th><th>余额</th></tr></thead><tbody>{{range .Entries}}<tr><td><strong>{{.Label}}{{if .Peer}} · @{{.Peer}}{{end}}</strong>{{if .Reason}}<p>{{.Reason}}</p>{{end}}<small><time datetime="{{.CreatedAt.UTC.Format "2006-01-02T15:04:05Z07:00"}}">{{datetimeIn .CreatedAt $.Timezone}}</time> · #{{.ID}}</small></td><td class="{{if .Incoming}}currency-in{{else}}currency-out{{end}}">{{if .Incoming}}+{{end}}{{.Delta}}</td><td>{{.Balance}}</td></tr>{{end}}</tbody></table></div>{{else}}<p class="currency-empty">这个账号还没有收支记录。</p>{{end}}
+{{end}}

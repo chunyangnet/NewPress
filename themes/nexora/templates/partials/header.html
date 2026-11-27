@@ -1,0 +1,41 @@
+{{define "header"}}
+<header class="site-header{{if and (eq .Kind "home") (ne .Settings.show_hero false)}} has-hero{{end}}" data-header data-sticky="{{if eq .Settings.header_sticky false}}false{{else}}true{{end}}">
+  <a class="brand" href="/" aria-label="{{.Site.Title}} 首页">{{if .Settings.logo_image}}<img class="custom-logo" src="{{.Settings.logo_image}}" alt="" width="32" height="34">{{else}}{{template "brand-mark" .}}{{end}}<span>{{.Site.Title}}</span></a>
+  <nav class="primary-nav" id="primary-nav" aria-label="主导航">
+    {{with index .Navigation "primary"}}{{if .Configured}}{{range .Items}}{{template "nav-link" .}}{{end}}{{else}}{{template "default-nav" $}}{{end}}{{else}}{{template "default-nav" .}}{{end}}
+  </nav>
+  <div class="header-actions">
+    <span class="sr-only" data-menu-unread hidden>有未读消息</span>
+    <a class="icon-button" href="/account/" aria-label="客户中心">{{template "service-icon" "user-round"}}</a>
+    <details class="nexora-account-menu nav-group" data-account-menu{{if not .Account.Authenticated}} hidden{{end}}><summary aria-label="账号菜单"><span data-account-avatar>{{.Account.Initial}}</span><span class="sr-only" data-account-name>{{.Account.Name}}</span></summary><div class="nav-dropdown"><a href="/account/">客户中心</a>{{if index .Modules "feedback"}}<a href="/feedback/">咨询与反馈</a>{{end}}<button type="button" data-drawer-open="notification-drawer">通知中心</button>{{if index $.Modules "messaging"}}<button type="button" data-drawer-open="message-drawer">我的私信</button>{{end}}<a href="/admin/content/new/" data-account-publish hidden>发布内容</a><a href="/admin/" data-account-admin hidden>管理后台</a><button type="button" data-account-logout>退出登录</button></div></details>
+    {{if ne .Settings.show_header_search false}}<a class="icon-button search-trigger" href="/explore/" aria-label="搜索" aria-haspopup="dialog" aria-controls="site-search" data-search-open>{{template "icon-search" .}}</a>{{end}}
+    {{template "nexora-action-link" (dict "Page" . "URL" .Settings.contact_link "Label" .Settings.header_contact_label "Class" "outline-button contact-button")}}
+    <button class="icon-button menu-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="展开主导航" data-menu-toggle>{{template "icon-menu" .}}</button>
+  </div>
+</header>
+{{end}}
+
+{{define "default-nav"}}
+  <a href="/"{{if eq .Kind "home"}} aria-current="page"{{end}}>首页</a>
+  {{if ne .Settings.show_about false}}<a href="/#about">关于我们</a>{{end}}
+  {{$cases := and .Settings.show_cases (or .Settings.case_1_title .Settings.case_2_title .Settings.case_3_title)}}
+  {{$resources := and .Settings.show_resources (or (and .Settings.resource_1_title .Settings.resource_1_url) (and .Settings.resource_2_title .Settings.resource_2_url) (and .Settings.resource_3_title .Settings.resource_3_url))}}
+  {{if or $cases $resources}}<details class="nav-group"><summary>业务与成果</summary><div class="nav-dropdown">{{if ne .Settings.show_business false}}<a href="/#business">核心业务</a>{{end}}{{if $cases}}<a href="/#cases">客户案例</a>{{end}}{{if $resources}}<a href="/#resources">资料中心</a>{{end}}</div></details>{{else if ne .Settings.show_business false}}<a href="/#business">核心业务</a>{{end}}
+  {{if ne .Settings.show_innovation false}}<a href="/#innovation">技术创新</a>{{end}}
+  <a href="/explore/"{{if or (eq .Kind "explore") (eq .Kind "archive") (eq .Kind "author") (eq .Kind "single")}} aria-current="page" data-nav-section{{end}}>新闻中心</a>
+  {{if ne .Settings.show_careers false}}<a href="/#careers">加入我们</a>{{end}}
+{{end}}
+
+{{define "nav-link"}}
+  {{if .Children}}
+    <details class="nav-group{{if .Active}} is-active{{end}}">
+      <summary>{{.Label}}</summary>
+      <div class="nav-dropdown">
+        <a href="{{.URL}}"{{if .NewWindow}} target="_blank" rel="noopener noreferrer"{{else if .Rel}} rel="{{.Rel}}"{{end}}>{{.Label}}</a>
+        {{range .Children}}{{template "nav-link" .}}{{end}}
+      </div>
+    </details>
+  {{else}}
+    <a href="{{.URL}}"{{if .Active}} aria-current="page"{{end}}{{if .NewWindow}} target="_blank" rel="noopener noreferrer"{{else if .Rel}} rel="{{.Rel}}"{{end}}>{{.Label}}</a>
+  {{end}}
+{{end}}

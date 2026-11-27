@@ -1,0 +1,37 @@
+.ai-pro-max { --aipm-brand:var(--admin-brand); max-width:1280px; margin-inline:auto; color:var(--ink); }
+.ai-pro-max .icon { width:16px; height:16px; flex-shrink:0; }
+.aipm-header, .aipm-section-heading, .aipm-queue-subhead { display:flex; align-items:center; justify-content:space-between; gap:12px 20px; flex-wrap:wrap; }
+.aipm-header { padding:4px 0 18px; border-bottom:2px solid var(--ink); }
+.aipm-header h1 { margin:0; font-size:30px; line-height:1.2; font-weight:650; letter-spacing:0; }
+.aipm-eyebrow, .aipm-period, .aipm-card-label, .aipm-queue-topic small, .aipm-queue-timing time, .aipm-queue-subhead, .aipm-provider-card small, .aipm-status-card p { color:var(--muted); font-size:12px; }
+.aipm-eyebrow { margin:0 0 4px; }.aipm-section-heading h2 { margin:0; font-size:19px; line-height:1.4; letter-spacing:0; }
+.aipm-header-actions, .aipm-queue-tools, .aipm-queue-actions, .aipm-queue-actions form { display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; }
+.aipm-queue, .aipm-status, .aipm-tools { margin-block:24px; scroll-margin-top:72px; }
+.aipm-section-heading { margin-bottom:12px; }.aipm-notice { display:flex; gap:12px; flex-wrap:wrap; margin-block:12px; padding:10px; border-inline-start:3px solid var(--aipm-brand); }
+.aipm-notice a, .aipm-queue-empty a, .aipm-text-link, .aipm-status-card a, .aipm-tool-card h3 a { color:var(--aipm-brand); text-decoration:none; }
+.aipm-text-link, .aipm-status-card a, .aipm-tool-card h3 a, .aipm-queue-actions button { display:inline-flex; align-items:center; gap:5px; }
+.ai-pro-max a:hover { text-decoration:underline; }.ai-pro-max :is(a,button,summary,input,textarea,select):focus-visible { outline:2px solid var(--aipm-brand); outline-offset:2px; }
+.aipm-text-link, .aipm-status-card a, .aipm-queue-state { font-size:12px; font-weight:600; }.aipm-queue-state { color:var(--aipm-brand); }.aipm-queue-state[data-paused="true"] { color:var(--muted); }
+.aipm-plan { border-block:1px solid var(--line); padding-block:12px; }.aipm-plan summary { width:fit-content; cursor:pointer; font-size:14px; font-weight:620; }.aipm-plan summary .icon { vertical-align:middle; margin-inline:4px; }
+.aipm-plan-form { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:end; gap:12px 16px; margin-block:14px 4px; }
+.aipm-plan-form label { display:grid; gap:4px; min-width:0; font-size:13px; font-weight:600; }.aipm-plan-topics { grid-column:1/-1; }
+.aipm-plan-form small, .aipm-queue-empty { color:var(--muted); font-size:12px; font-weight:400; }
+.aipm-plan-form :is(textarea,input,select) { box-sizing:border-box; width:100%; min-width:0; padding:8px 10px; border:1px solid var(--line); border-radius:5px; color:var(--ink); background:var(--paper); font:inherit; font-weight:400; }.aipm-plan-form textarea { resize:vertical; }
+.aipm-plan-submit { justify-self:end; }.aipm-queue-subhead { margin-block:15px 5px; }.aipm-queue-empty { margin:0; padding-block:15px; }
+.aipm-topic-picker { grid-column:1/-1; }.aipm-topic-picker [role="status"] { margin-inline-start:8px; color:var(--muted); font-size:12px; }.aipm-topic-picker ul { list-style:none; margin:4px 0 0; padding:0; }.aipm-topic-picker li button { text-align:start; overflow-wrap:anywhere; color:var(--aipm-brand); background:transparent; border:0; padding:5px 0; font:inherit; cursor:pointer; }
+.aipm-queue-list, .aipm-provider-card ul { margin:0; padding:0; list-style:none; }.aipm-queue-list li { display:grid; grid-template-columns:132px minmax(0,1fr) auto; align-items:center; gap:8px 16px; padding-block:12px; border-block-start:1px solid var(--line); }
+.aipm-queue-timing, .aipm-queue-topic { display:grid; gap:4px; overflow-wrap:anywhere; }.aipm-queue-timing span { font-size:12px; font-weight:650; }.aipm-queue-timing [data-status="succeeded"] { color:var(--aipm-brand); }
+.aipm-period, .aipm-queue-timing time, .aipm-queue-subhead, .aipm-status-card > strong { font-variant-numeric:tabular-nums; }
+.aipm-queue-topic strong { font-size:14px; }.aipm-queue-topic p { margin:0; font-size:12px; }.aipm-queue-actions button { cursor:pointer; background:transparent; border:0; padding:6px 2px; color:var(--ink); font:inherit; font-size:12px; }
+.aipm-status-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; border-block:1px solid var(--line); }
+.aipm-status-card { min-width:0; padding:12px 0; }.aipm-card-label, .aipm-provider-card li { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.aipm-status-card > strong { display:block; margin-top:3px; font:600 24px/1.25 "Barlow Semi Condensed",Consolas,monospace; }.aipm-status-card p { margin:2px 0 8px; }
+.aipm-provider-card li { margin-block:5px; font-size:12px; }.aipm-provider-card li > span { display:grid; min-width:0; overflow-wrap:anywhere; }.aipm-provider-card em { color:var(--muted); font-size:11px; font-style:normal; }
+.aipm-tool-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 24px; }
+.aipm-tool-card { display:grid; grid-template-columns:22px minmax(0,1fr) auto; gap:8px; align-items:center; min-height:46px; border-top:1px solid var(--line); }
+.aipm-tool-icon { display:flex; color:var(--aipm-brand); }.aipm-tool-card h3 { grid-column:2; grid-row:1; margin:0; font-size:14px; font-weight:600; overflow-wrap:anywhere; }.aipm-tool-card.is-planned :is(h3,.aipm-tool-icon) { color:var(--muted); }
+.aipm-tool-status { grid-column:3; grid-row:1; font-size:11px; color:var(--aipm-brand); }.aipm-tool-status[data-state="planned"] { color:var(--muted); }
+@media (max-width:860px) { .aipm-status-grid,.aipm-plan-form { grid-template-columns:repeat(2,minmax(0,1fr)); }.aipm-queue-list li { grid-template-columns:110px minmax(0,1fr); }.aipm-queue-actions { grid-column:2; } }
+@media (max-width:600px) { .aipm-header h1 { font-size:25px; }.aipm-queue-list li,.aipm-plan-form,.aipm-tool-grid { grid-template-columns:minmax(0,1fr); }.aipm-queue-actions { grid-column:1; }.aipm-queue-timing { display:flex; gap:12px; }.aipm-plan-submit { justify-self:start; }.aipm-header-actions .admin-button { min-height:38px; } }
+
+.aipm-plan-form fieldset{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:.65rem 1.2rem;border:1px solid var(--admin-border,#dce2e7);border-radius:.6rem;padding:.8rem 1rem}.aipm-plan-form legend{padding:0 .35rem;font-weight:600}.aipm-plan-form label:has(input[type=checkbox]){display:flex;align-items:center;flex-direction:row;gap:.45rem}.aipm-plan-form input[type=checkbox]{width:1rem;height:1rem;min-height:0;padding:0}.aipm-plan+.aipm-plan{margin-top:.65rem}

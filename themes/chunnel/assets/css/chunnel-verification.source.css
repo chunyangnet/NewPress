@@ -1,0 +1,14 @@
+.verification-box { box-sizing: border-box; min-width: 0; width: 100%; grid-column: 1 / -1; margin: 16px 0; padding: 16px; scroll-margin-block: 88px 110px; border: 1px solid var(--line); border-radius: 8px; background: var(--tone-surface, var(--white, #fff)); color: var(--ink); }
+.verification-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px; font-size: 14px; }
+.verification-heading span, .verification-status { font-size: 12px; color: var(--muted); line-height: 1.7; }
+.verification-status { margin: 12px 0 0; }
+.verification-status[data-error=true] { color: var(--control-danger, #b83b32); }
+.verification-widget { min-width: 0; }
+.verification-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.verification-local { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; }
+.verification-local img { display: block; max-width: 100%; width: 190px; height: 60px; border: 1px solid var(--line); border-radius: 5px; }
+.verification-local label { display: grid; flex: 1; min-width: 125px; gap: 6px; margin: 0; font-size: 12px; }
+.verification-local input { box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 7px; background: var(--tone-surface, var(--white, #fff)); color: var(--ink); font: inherit; font-size: 16px; }
+.verification-box :is(button,input):focus-visible { outline: 2px solid var(--primary-readable); outline-offset: 3px; }
+.verification-box [hidden] { display: none !important; }
+@media(max-width: 380px) { .verification-box { padding: 12px; } .verification-local label { flex-basis: 100%; } }

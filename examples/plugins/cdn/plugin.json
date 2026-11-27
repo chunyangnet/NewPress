@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "slug": "cdn",
+  "name": "CDN 加速",
+  "version": "1.1.1",
+  "description": "六类 CDN 缓存管理与测速，新增 Cloudflare SaaS 接入、阿里云/DNSPod 地区分流、健康回退和可预览的 DNS 回滚。",
+  "category": "integration",
+  "tags": [
+    "CDN",
+    "缓存",
+    "Cloudflare",
+    "节点优选"
+  ],
+  "author": "NewPress 官方",
+  "license": "Apache-2.0",
+  "newpress": "builtin/cdn-v2",
+  "runtime": "builtin/cdn-v2",
+  "entry": "builtin.json",
+  "capabilities": [
+    "settings.read",
+    "settings.write",
+    "http.outbound",
+    "cache",
+    "jobs.enqueue"
+  ]
+}

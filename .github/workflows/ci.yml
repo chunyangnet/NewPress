@@ -1,0 +1,108 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18.4-bookworm@sha256:882236b897e39051d2368c5ccc6cda944904723506b2dfc97f2a8f5bc9afa382
+        env:
+          POSTGRES_DB: newpress_test
+          POSTGRES_USER: newpress
+          POSTGRES_PASSWORD: newpress-ci-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U newpress -d newpress_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Public source boundary
+        run: |
+          python3 -m unittest discover -s scripts -p 'test_check_public_source.py' -v
+          python3 scripts/check_public_source.py
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Frontend regression tests
+        run: |
+          npm ci --ignore-scripts
+          npm run typecheck:frontend
+          npm run check:frontend
+          npm run test:frontend
+      - name: Screenshot network isolation
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:security:browser
+      - name: Independent theme contracts
+        run: |
+          npm run build:theme -- --source themes/starter --check
+          npm run check:theme -- --source themes/starter
+      - name: Deployment script checks
+        run: |
+          bash -n install.sh
+          bash -n scripts/deploy.sh
+          bash -n scripts/bootstrap-python.sh
+          python3 -m unittest discover -s scripts -p 'test_deploy*.py' -v
+          python3 -m unittest discover -s scripts -p 'test_install*.py' -v
+          python3 -m unittest discover -s scripts -p 'test_build_update.py' -v
+      - name: Licenses and format
+        # Licensing is checked before compilation so standalone executables and
+        # immutable OTA archives always carry the current dependency notices.
+        run: |
+          go mod download all
+          python3 scripts/collect_licenses.py --check
+          python3 -m unittest discover -s scripts -p 'test_build_extension.py' -v
+          test -z "$(gofmt -l .)"
+      - name: Test
+        env:
+          NEWPRESS_TEST_DATABASE_URL: postgres://newpress:newpress-ci-password@127.0.0.1:5432/newpress_test?sslmode=disable
+        run: go test -race -coverprofile=coverage.out ./...
+      - name: Vet
+        run: go vet ./...
+      - name: Public request URL fuzz smoke
+        run: go test ./internal/safehttp -run '^$' -fuzz '^FuzzPublicURLBoundary$' -fuzztime=10s -parallel=2
+      - name: Vulnerability scan
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+      - name: Build
+        run: CGO_ENABLED=0 go build -trimpath -buildvcs=false ./cmd/newpress
+
+  core-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Validate the deployment with the optional OTA secrets
+        run: |
+          docker compose -f compose.yaml -f deploy/compose.update-recovery.yaml config --quiet
+          docker compose -f compose.yaml -f deploy/compose.updates-secret.yaml config --quiet
+      - name: Build the production image and run signed core OTA
+        run: |
+          if ! pg_bin="$(pg_config --bindir)" || ! test -x "$pg_bin/initdb"; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql postgresql-client libpq-dev
+            pg_bin="$(pg_config --bindir)"
+          fi
+          test -x "$pg_bin/pg_restore"
+          go mod download all
+          docker build -t newpress:ota-ci .
+          python3 scripts/test_core_release_smoke.py --pg-bin "$pg_bin" --docker-image newpress:ota-ci

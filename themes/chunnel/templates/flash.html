@@ -1,0 +1,50 @@
+{{define "content"}}
+<link rel="stylesheet" href="/core-assets/css/chunnel-flash.css"><script src="/core-assets/js/chunnel-flash.js" defer></script>
+<div class="shell portal-page flash-page flash-feed-page">
+  <nav class="portal-breadcrumb" aria-label="当前位置"><a href="/">首页</a><span aria-current="page">快报</span></nav>
+  <header class="flash-heading flash-list-heading">
+    <div><h1>快报</h1><p>简短的消息，完整的来处。</p></div>
+    <a class="ui-button ui-button-primary" href="/flash/submit/">发布快报</a>
+  </header>
+  <div class="flash-layout">
+    <section aria-label="快报时间线">
+      <form class="flash-feed-tools" method="get" action="/flash/" role="search">
+        <div class="flash-search"><input type="search" name="q" maxlength="80" value="{{.Flash.Query}}" placeholder="搜索快报" aria-label="搜索快报关键词"><button name="filter" value="{{.Flash.Filter}}" class="ui-button">搜索</button></div>
+        <div class="flash-tabs" aria-label="快报范围">
+          <button name="filter" value="" {{if not .Flash.Filter}}aria-current="true"{{end}}>全部快报</button>
+          <button name="filter" value="important" {{if eq .Flash.Filter "important"}}aria-current="true"{{end}}>重要快报</button>
+        </div>
+      </form>
+      <div class="flash-result-summary"><span>{{if or .Flash.Query .Flash.Filter}}找到 {{.Flash.Total}} 条快报{{else}}共 {{.Flash.Total}} 条快报{{end}}</span>{{if or .Flash.Query .Flash.Filter}}<a href="/flash/">清除筛选</a>{{else}}<span>按发布时间排列</span>{{end}}</div>
+      <div class="flash-timeline">
+        {{$day := ""}}{{range .Flash.Items}}
+        {{if ne $day .Day}}<h2 class="flash-day"><span>{{.Day}}</span></h2>{{$day = .Day}}{{end}}
+        <article class="flash-item {{if .Important}}flash-item-important{{end}}" data-flash-id="{{.ID}}">
+          <time>{{.Time}}</time>
+          <div class="flash-copy">
+            <h3>{{if .Important}}<span class="flash-important">重要</span>{{end}}<a href="{{.URL}}">{{.Title}}</a></h3>
+            <div class="flash-body">{{safeHTML .HTML}}</div>
+            {{if .SourceURL}}<a class="flash-source" href="{{.SourceURL}}" target="_blank" rel="noopener noreferrer">来源：{{if .SourceName}}{{.SourceName}}{{else}}查看原文{{end}}</a>{{else if .SourceName}}<p class="flash-source">来源：{{.SourceName}}</p>{{end}}
+            <footer class="flash-actions">
+              <button type="button" data-flash-engagement="like" aria-pressed="false">点赞 <span></span></button>
+              <button type="button" data-flash-engagement="bookmark" aria-pressed="false">收藏</button>
+              {{if .Comments}}<a href="{{.URL}}#comments">评论</a>{{end}}
+              <button type="button" data-flash-share="{{.URL}}">分享</button>
+              <a class="flash-read-link" href="{{.URL}}">阅读详情</a>
+            </footer>
+          </div>
+        </article>
+        {{else}}
+        <div class="flash-list-empty"><h2>{{if or .Flash.Query .Flash.Filter}}没有找到匹配的快报{{else}}第一条消息，等你分享{{end}}</h2><p>{{if or .Flash.Query .Flash.Filter}}试试其他关键词，或清除筛选查看全部快报。{{else}}分享简短、有来源的资讯，审核通过后会显示在这里。{{end}}</p>{{if or .Flash.Query .Flash.Filter}}<a class="ui-button" href="/flash/">查看全部快报</a>{{else}}<a class="ui-button ui-button-primary" href="/flash/submit/">发布快报</a>{{end}}</div>
+        {{end}}
+      </div>
+      <nav class="flash-pagination" aria-label="快报分页">{{if .Flash.PreviousURL}}<a href="{{.Flash.PreviousURL}}">上一页</a>{{end}}{{if .Flash.NextURL}}<a href="{{.Flash.NextURL}}">下一页</a>{{end}}</nav>
+    </section>
+    <aside class="flash-aside">
+      <section class="flash-aside-note"><h2>消息之外，保留来源</h2><p>用几句话了解事件，再从原始来源读到更多。</p><p>发现值得关注的消息？写清事件、时间与出处，让更多人看到。</p><a href="/flash/submit/">我的投稿</a></section>
+      <nav aria-label="更多阅读"><h2>继续阅读</h2><a href="/explore/">发现文章</a>{{if .Site.PublicAPIEnabled}}<a href="/flash/feed.xml">订阅快报 RSS</a>{{end}}</nav>
+    </aside>
+  </div>
+  <p role="status" aria-live="polite" data-flash-status></p>
+</div>
+{{end}}

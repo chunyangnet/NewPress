@@ -1,0 +1,27 @@
+{{define "sidebar"}}
+<aside class="sidebar" id="site-navigation" aria-label="站点导航">
+  <div class="sidebar-heading"><a class="brand" href="/">{{template "logo" .}}<span>{{.Site.Title}}</span></a><button class="icon-button sidebar-close" data-sidebar-close type="button" aria-label="关闭导航">{{template "icon" "close"}}</button></div>
+  {{$nav := index .Navigation "primary"}}{{if or (not $nav.Configured) $nav.Items}}<nav class="primary-nav" aria-label="主导航">
+    {{if $nav.Configured}}{{range $nav.Items}}{{template "nav-item" .}}{{end}}{{else}}
+    <a data-nav-link href="/" {{if eq .Kind "home"}}aria-current="page"{{end}}>{{template "icon" "home"}}<span>首页</span></a>
+    <a data-nav-link href="{{index .Settings "start_link"}}">{{template "icon" "rocket"}}<span>快速开始</span></a>
+    <a data-nav-link data-nav-kinds="explore archive author single" href="/explore/" {{if eq .Kind "explore"}}aria-current="page"{{end}}>{{template "icon" "book"}}<span>{{with index .Settings "listing_title"}}{{.}}{{else}}文档与教程{{end}}</span></a>
+    {{if and (index .Modules "series") (ne (index .Settings "show_series_navigation") false)}}<a data-nav-link data-nav-kinds="series" href="/series/"{{if eq .Kind "series"}} aria-current="page"{{end}}>{{template "icon" "layers"}}<span>{{with index .Settings "series_title"}}{{.}}{{else}}学习系列{{end}}</span></a>{{end}}
+    <a data-nav-link href="{{index .Settings "api_link"}}">{{template "icon" "code"}}<span>API 参考</span></a>
+    <a data-nav-link href="{{index .Settings "practice_link"}}">{{template "icon" "edit"}}<span>最佳实践</span></a>
+    <a data-nav-link href="{{index .Settings "faq_link"}}">{{template "icon" "help"}}<span>常见问题</span></a>
+    <a data-nav-link href="{{index .Settings "changelog_link"}}">{{template "icon" "history"}}<span>更新日志</span></a>
+    {{end}}
+  </nav>{{end}}
+  {{$utility := index .Navigation "utility"}}{{if and (ne (index .Settings "show_utility_navigation") false) (or (not $utility.Configured) $utility.Items)}}<div class="nav-divider"></div><p class="nav-label">更多</p>
+  <nav class="secondary-nav" aria-label="更多资源">
+    {{if $utility.Configured}}{{range $utility.Items}}{{template "nav-item" .}}{{end}}{{else}}
+    {{if or (index .Modules "community") (ne .Settings.community_link "/community/")}}<a data-nav-link href="{{index .Settings "community_link"}}">{{template "icon" "chat"}}<span>社区交流</span></a>{{end}}
+    <a data-nav-link href="{{index .Settings "projects_link"}}">{{template "icon" "box"}}<span>开源项目</span></a>
+    <a data-nav-link href="{{index .Settings "about_link"}}">{{template "icon" "user"}}<span>关于我们</span></a>
+    {{end}}
+  </nav>{{end}}
+  {{template "service-navigation" .}}
+  {{if ne (index .Settings "allow_color_switch") false}}<div class="appearance-controls" data-appearance-controls hidden><div class="nav-divider"></div>
+  <div class="color-switch" role="group" aria-label="外观模式"><button type="button" data-color-mode="light" aria-label="浅色模式" title="浅色模式" aria-pressed="false">{{template "icon" "sun"}}</button><button type="button" data-color-mode="dark" aria-label="深色模式" title="深色模式" aria-pressed="false">{{template "icon" "moon"}}</button><button type="button" data-color-mode="system" aria-label="跟随系统" title="跟随系统" aria-pressed="false"><span>自动</span></button></div></div>{{end}}
+</aside>{{end}}

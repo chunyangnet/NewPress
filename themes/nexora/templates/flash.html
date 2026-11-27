@@ -1,0 +1,14 @@
+{{define "content"}}
+<link rel="stylesheet" href="/core-assets/css/chunnel-flash.css">{{if not .IsPreview}}<script src="/core-assets/js/chunnel-flash.js" defer></script>{{end}}
+<div class="shell portal-page flash-page">
+<nav class="portal-breadcrumb" aria-label="当前位置"><a href="/">首页</a><span aria-current="page">技术快讯</span></nav>
+<header class="flash-heading"><div><h1>技术快讯</h1><p>读短资讯，追溯来源，参与讨论。</p></div><a class="flash-publish" href="/flash/submit/">发布技术快讯</a></header>
+<div class="flash-layout"><section>
+<form class="flash-filters" method="get" action="/flash/" role="search"><label><span class="sr-only">搜索技术快讯</span><input type="search" name="q" maxlength="80" value="{{.Flash.Query}}" placeholder="搜索技术快讯关键词"></label><select data-select-ui="soft" name="filter" aria-label="技术快讯范围"><option value="">全部技术快讯</option><option value="important" {{if eq .Flash.Filter "important"}}selected{{end}}>重要技术快讯</option></select><button class="ui-button ui-button-primary">搜索</button></form>
+<p class="flash-muted">{{.Flash.Total}} 条技术快讯 {{if or .Flash.Query .Flash.Filter}}<a href="/flash/">清除筛选</a>{{end}}</p>
+<div class="flash-timeline">{{$day := ""}}{{range .Flash.Items}}{{if ne $day .Day}}<h2 class="flash-day">{{.Day}}</h2>{{$day = .Day}}{{end}}
+<article class="flash-item" data-flash-id="{{.ID}}"><time>{{.Time}}</time><div class="flash-copy"><h3><a href="{{.URL}}">{{.Title}}</a>{{if .Important}}<span class="flash-important">重要</span>{{end}}</h3><div class="flash-body">{{safeHTML .HTML}}</div>{{if .SourceURL}}<a class="flash-source" href="{{.SourceURL}}" target="_blank" rel="noopener noreferrer">来源：{{if .SourceName}}{{.SourceName}}{{else}}查看原文{{end}}</a>{{else if .SourceName}}<p class="flash-muted">来源：{{.SourceName}}</p>{{end}}<footer class="flash-actions"><button type="button" data-flash-engagement="like" aria-pressed="false">点赞 <span></span></button><button type="button" data-flash-engagement="bookmark" aria-pressed="false">收藏</button><a href="{{.URL}}#comments">评论</a><button type="button" data-flash-share="{{.URL}}">分享</button><a href="{{.URL}}">阅读全文</a></footer></div></article>
+{{else}}<div class="portal-empty"><h2>暂无匹配技术快讯</h2><p>换个关键词，或提交第一条有来源的资讯。</p><a class="flash-publish" href="/flash/submit/">发布技术快讯</a></div>{{end}}</div>
+<nav class="flash-pagination" aria-label="技术快讯分页">{{if .Flash.PreviousURL}}<a href="{{.Flash.PreviousURL}}">上一页</a>{{end}}{{if .Flash.NextURL}}<a href="{{.Flash.NextURL}}">下一页</a>{{end}}</nav>
+</section><aside class="flash-aside"><h2>分享有价值的消息</h2><p>写清事件和来源，投稿经编辑审核后公开。</p><a href="/flash/submit/">我的投稿</a><a href="/explore/">发现文章</a>{{if .Site.PublicAPIEnabled}}<a href="/flash/feed.xml">订阅技术快讯 RSS</a>{{end}}</aside></div><p role="status" aria-live="polite" data-flash-status></p>
+</div>{{end}}

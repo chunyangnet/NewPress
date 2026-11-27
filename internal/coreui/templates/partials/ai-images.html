@@ -1,0 +1,38 @@
+{{define "ai-images"}}
+{{if and (not .Admin.ReadOnly) (.Admin.CanWrite "media:write") (.Admin.Can "media:read")}}
+<dialog class="ai-editor ai-image-editor" data-ai-image-dialog aria-labelledby="ai-image-title" aria-describedby="ai-image-description">
+  <div class="ai-image-frame">
+    <header class="ai-topbar"><div class="ai-brand"><span class="ai-brand-icon">{{template "icon" "image"}}</span><div><h2 id="ai-image-title">AI 生图</h2></div><span class="ai-beta">视觉工作台</span></div><button class="ai-close" type="button" data-ai-image-close aria-label="关闭 AI 生图">{{template "icon" "x"}}</button></header>
+    <div class="ai-image-workspace">
+      <form class="ai-image-controls" data-ai-image-form>
+        <fieldset data-ai-image-fields>
+          <div class="ai-image-section-label"><span>01 / 画面设定</span><small>每次生成一张</small></div>
+          <label for="ai-image-prompt">画面描述<textarea id="ai-image-prompt" data-ai-image-prompt rows="6" maxlength="4000" required placeholder="描述主体、场景、构图与光线。例如：雨后的街角书店，暖色灯光映在湿润路面，胶片摄影，留出上方空间，不添加文字。"></textarea></label>
+          <button class="ai-link-button" type="button" data-ai-image-from-title>用文章标题起稿</button>
+          <div class="ai-image-section-label"><span>02 / 模型与画幅</span><button class="ai-link-button" type="button" data-ai-image-refresh>刷新</button></div>
+          <label for="ai-image-provider">生图接口<select id="ai-image-provider" data-ai-image-provider required><option value="">正在加载…</option></select></label>
+          <label for="ai-image-model">生图模型<select id="ai-image-model" data-ai-image-model required></select></label>
+          <div class="ai-image-option-grid"><label for="ai-image-ratio">画幅比例<select id="ai-image-ratio" data-ai-image-ratio></select></label><label for="ai-image-quality" data-ai-image-quality-field>画质<select id="ai-image-quality" data-ai-image-quality><option value="auto">自动</option><option value="low">快速</option><option value="medium">标准</option><option value="high">精细</option></select></label><label for="ai-image-resolution" data-ai-image-resolution-field hidden>分辨率<select id="ai-image-resolution" data-ai-image-resolution></select></label></div>
+          <p class="ai-help" data-ai-image-model-help></p>
+          <p class="ai-help" data-ai-image-empty-config hidden>请先在“AI 接口与模型”中添加生图接口。</p>
+          {{if .Admin.Can "settings:manage"}}<a class="ai-image-settings-link" href="/admin/settings/#site-settings-ai" target="_blank" rel="noopener">管理接口与模型 {{template "icon" "external-link"}}</a>{{end}}
+        </fieldset>
+        <div class="ai-image-run"><button class="admin-button admin-button-primary" type="submit" data-ai-image-generate disabled>{{template "icon" "image"}}<span>生成图片</span></button><button class="admin-button admin-button-quiet" type="button" data-ai-image-stop hidden>停止等待</button></div>
+        <p id="ai-image-description" class="ai-help">生成后自动保存到媒体库。选择图片，再设为封面或插入正文。</p>
+      </form>
+      <section class="ai-image-stage" aria-label="生成图片预览">
+        <div class="ai-image-canvas" data-ai-image-canvas>
+          <div class="ai-image-placeholder" data-ai-image-placeholder><div class="ai-image-orbit" aria-hidden="true"><i></i><i></i><i></i><b>{{template "icon" "image"}}</b></div><h3 data-ai-image-stage-title>生成文章配图</h3><p data-ai-image-stage-detail>从构图、光线和细节开始。</p></div>
+          <img class="ai-image-result" data-ai-image-preview alt="生成图片预览" hidden>
+          <div class="ai-image-loading-label" data-ai-image-loading hidden><span class="ai-status-dot" aria-hidden="true"></span><span data-ai-image-phase>正在生成画面</span><small data-ai-image-elapsed></small></div>
+        </div>
+        <div class="ai-image-strip" data-ai-image-gallery role="group" aria-label="本次打开页面生成的图片"></div>
+        <div class="ai-image-info"><span data-ai-image-info>图片会显示在这里</span><a href="/admin/media/" target="_blank" rel="noopener">打开媒体库 {{template "icon" "external-link"}}</a></div>
+        <div class="ai-image-caption-fields"><label for="ai-image-alt">图片说明（替代文本）<input id="ai-image-alt" data-ai-image-alt maxlength="250" placeholder="描述图片中的内容，方便无法看到图片的读者"></label><label for="ai-image-caption">图注（可选）<input id="ai-image-caption" data-ai-image-caption maxlength="2000" placeholder="显示在正文图片下方"></label></div>
+      </section>
+    </div>
+    <footer class="ai-image-footer"><p role="status" aria-live="polite" data-ai-image-status>选择接口并描述你想要的画面。</p><div><button type="button" class="admin-button admin-button-quiet" data-ai-image-cover disabled>{{template "icon" "image"}}设为封面</button><button type="button" class="admin-button admin-button-primary" data-ai-image-insert disabled>{{template "icon" "plus"}}插入正文</button></div></footer>
+  </div>
+</dialog>
+{{end}}
+{{end}}

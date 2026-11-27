@@ -1,0 +1,37 @@
+{{define "admin-feature-status"}}
+{{with .FeatureStatus}}
+<section class="feature-status{{if eq .Feature "article-comments"}} feature-status-inline{{end}}" data-feature-status data-state="{{.Overview.State}}" data-endpoint="{{.Endpoint}}" data-status="{{.JSON}}" data-csrf="{{$.Admin.CSRFToken}}" aria-label="业务生效状态">
+  <div class="feature-status-brief" data-feature-brief data-state="{{.Overview.State}}">
+    {{with .Overview}}{{template "admin-feature-status-brief" .}}{{end}}
+  </div>
+  <details class="feature-status-overview" data-feature-overview>
+    <summary class="feature-status-toggle"><span data-feature-more>{{if .Overview.Additional}}还有 {{.Overview.Additional}} 项待处理{{else}}查看详情{{end}}</span><span class="feature-status-close">收起详情</span></summary>
+    <div class="feature-status-panel">
+      <header class="feature-status-heading"><p>按已保存配置显示 · 作用范围见各项说明</p><button type="button" class="admin-button admin-button-quiet" data-feature-refresh>重新检测</button></header>
+      <div class="feature-status-items" data-feature-items>
+      {{range .Items}}{{template "admin-feature-status-item" .}}{{end}}
+      </div>
+      <noscript><p>当前显示页面加载时的状态。启用 JavaScript 后可就地操作和重新检测。</p></noscript>
+    </div>
+  </details>
+  <span class="feature-status-draft" data-feature-draft hidden role="status">未保存修改 · 生效状态仍按已保存配置显示</span>
+  <span class="feature-status-stale" data-feature-stale hidden>上次检测结果，可能已过期</span>
+  <p class="feature-status-feedback" data-feature-feedback role="status" aria-live="polite" aria-atomic="true"></p>
+</section>
+{{end}}
+{{end}}
+{{define "admin-feature-status-brief"}}
+<div class="feature-status-brief-copy"><div class="feature-status-title"><span class="feature-status-badge">{{.Label}}</span>{{if .Title}}<strong>{{.Title}}</strong>{{end}}</div>{{if .Summary}}<p>{{.Summary}}</p>{{end}}</div>{{with .Action}}{{template "admin-feature-status-action" .}}{{end}}
+{{end}}
+{{define "admin-feature-status-editor-alert"}}
+{{with .FeatureStatus}}<aside class="feature-status-editor-alert" data-feature-editor-alert {{if not .Overview.GlobalBlock}}hidden{{end}} aria-label="全站评论提醒"><p><strong>全站评论受限</strong><span data-feature-editor-reason>{{if .Overview.GlobalBlock}}{{.Overview.Summary}}{{end}}</span></p><a class="admin-button admin-button-quiet" href="#editor-publication-panel" data-feature-open-settings>查看评论设置</a></aside>{{end}}
+{{end}}
+{{define "admin-feature-status-item"}}
+<article class="feature-status-item" data-feature-id="{{.ID}}" data-state="{{.State}}">
+  <div class="feature-status-summary"><div class="feature-status-copy"><div class="feature-status-title"><strong>{{.Title}}</strong><span class="feature-status-badge">{{.Label}}</span><small>{{.Scope}}</small></div><p>{{.Summary}}</p>{{if .Mode}}<span class="feature-status-mode">{{.Mode}}</span>{{end}}</div>{{with .Action}}{{template "admin-feature-status-action" .}}{{end}}</div>
+  {{if .Checks}}<details class="feature-status-details"><summary>查看全部条件与处理步骤 <span>{{len .Checks}} 项</span></summary><ol>{{range .Checks}}<li data-check-state="{{.State}}"><div><strong>{{.Label}}</strong><p>{{.Reason}}</p></div>{{with .Action}}{{template "admin-feature-status-action" .}}{{end}}</li>{{end}}</ol></details>{{end}}
+</article>
+{{end}}
+{{define "admin-feature-status-action"}}
+{{if .Allowed}}{{if .Module}}<button type="button" class="admin-button admin-button-secondary" data-feature-module="{{.Module}}" title="影响全站，立即保存">{{.Label}}</button><noscript><a href="{{.URL}}">前往模块中心</a></noscript>{{else}}<a class="admin-button admin-button-quiet" href="{{.URL}}" {{if .Target}}data-feature-target="{{.Target}}"{{end}}>{{.Label}}</a>{{end}}{{else}}<span class="feature-status-restriction">{{.Restriction}}</span>{{end}}
+{{end}}

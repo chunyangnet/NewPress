@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "locale": "zh-CN",
+  "messages": {
+    "accessibility.skip_content": "跳到正文",
+    "navigation.primary": "主导航",
+    "navigation.home": "首页",
+    "navigation.explore": "发现",
+    "navigation.account": "账号",
+    "site.legal": "网站备案信息",
+    "common.back_home": "返回首页",
+    "search.label": "搜索内容",
+    "search.submit": "搜索",
+    "pagination.label": "文章分页",
+    "pagination.previous": "上一页",
+    "pagination.next": "下一页",
+    "comments.label": "评论",
+    "comments.title": "评论（{count}）",
+    "comments.author": "称呼",
+    "comments.email": "邮箱",
+    "comments.submit": "提交评论",
+    "comments.login": "登录后评论"
+  }
+}

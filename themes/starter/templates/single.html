@@ -1,0 +1,11 @@
+{{define "content"}}<article>{{if .Post.ArticleBadge.Kind}}<small class="starter-article-badge{{if .Post.ArticleBadge.HideOnMobile}} hide-on-mobile{{end}}">{{.Post.ArticleBadge.Text}}</small>{{end}}<h1>{{.Post.Title}}</h1><p><a href="{{.Post.AuthorURL}}">{{.Post.AuthorName}}</a> · {{date .Post.PublishedAt}}</p><div class="prose">{{safeHTML .Post.ContentHTML}}</div></article>
+{{if not .IsPreview}}<section aria-label="{{t "comments.label"}}"><h2>{{t "comments.title" (dict "count" .Comments.Total)}}</h2>{{range .Comments.Items}}{{template "comment" .}}{{end}}
+{{if .Comments.Notice}}<p role="status">{{.Comments.Notice}}</p>{{end}}
+{{if and .Comments.Open (not .Comments.LoginRequired)}}<form action="/posts/{{.Post.Slug}}/comments" method="post">
+<input type="hidden" name="form_token" value="{{.Comments.FormToken}}"><input type="hidden" name="parent_id" value="0">
+<input type="hidden" name="website" value="">
+<label>{{t "comments.author"}}<input name="author_name" maxlength="80" value="{{.Comments.Form.AuthorName}}" required></label>
+<label>{{t "comments.email"}}<input type="email" name="email" value="{{.Comments.Form.AuthorEmail}}" required></label>
+<label>{{t "comments.label"}}<textarea name="content" maxlength="{{.Comments.MaxLength}}" required>{{.Comments.Form.Content}}</textarea></label>
+{{range .Comments.FieldErrors}}<p role="alert">{{.}}</p>{{end}}<p>{{.Comments.PrivacyNotice}}</p><p>{{.Comments.ModerationNotice}}</p><button>{{t "comments.submit"}}</button></form>{{else}}<p>{{.Comments.ClosedReason}}</p>{{if .Comments.LoginRequired}}<a href="/account/">{{t "comments.login"}}</a>{{end}}{{end}}</section>{{end}}{{end}}
+{{define "comment"}}<article><b>{{.AuthorName}}</b><small> · {{date .CreatedAt}}</small><div>{{safeHTML .ContentHTML}}</div>{{range .Children}}{{template "comment" .}}{{end}}</article>{{end}}

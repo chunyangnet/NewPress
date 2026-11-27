@@ -1,0 +1,26 @@
+{{define "content"}}
+<section class="shared-review webhook-review" data-webhook-review data-user-id="{{.Admin.Principal.UserID}}" data-available="{{.PluginWebhooks.Available}}">
+  <header class="shared-review-heading"><div><p class="shared-review-eyebrow">插件 · 外部发送</p><h1>Webhook 核对</h1><p>查看发送进度，对无法确认的结果记录人工核对结论。</p></div><a class="admin-button admin-button-secondary" href="/admin/plugin-records/">{{template "icon" "arrow-left"}}其他运行记录</a></header>
+  <div class="shared-review-context"><span class="shared-review-tag">{{if .PluginWebhooks.Enabled}}本站实例已开启{{else}}本站实例发送关闭{{end}}</span><p>只有源任务成功后，已授权的意图才可领取发送。HTTP 已确认表示收到完整的 2xx 响应；接收方的业务是否完成仍需自行核对。待核对结果不会自动重发。</p></div>
+  {{if .PluginWebhooks.Available}}
+  <form class="shared-review-filters" data-webhook-filters aria-label="筛选 Webhook" autocomplete="off">
+    <div class="shared-review-fields">
+      <label>结果状态<select name="state"><option value="">全部状态</option><option value="uncertain">待人工核对</option><option value="pending">等待源任务成功</option><option value="sending">发送已领取</option><option value="http_confirmed">HTTP 已确认</option><option value="cancelled">发送前已取消</option><option value="reviewed_received">人工确认已收到</option><option value="reviewed_not_received">人工确认未收到</option></select></label>
+      <label>插件标识<input name="plugin" value="{{.PluginWebhooks.Plugin}}" minlength="3" maxlength="64" pattern="[a-z0-9][a-z0-9\-]{1,62}[a-z0-9]" placeholder="全部插件" autocapitalize="none" spellcheck="false"></label>
+      <label class="shared-review-job">任务 ID<input name="job" value="{{.PluginWebhooks.Job}}" maxlength="64" pattern="[a-f0-9]{64}" placeholder="完整任务 ID（可选）" autocapitalize="none" spellcheck="false"></label>
+      <label>每页<select name="limit"><option value="20">20 条</option><option value="50">50 条</option><option value="100">100 条</option></select></label>
+      <button type="submit" class="admin-button admin-button-primary">{{template "icon" "search"}}查询</button>
+    </div>
+  </form>
+  <p class="shared-review-status" data-webhook-status role="status" aria-live="polite" aria-atomic="true">正在读取记录…</p>
+  <div class="shared-review-access" data-webhook-access hidden><a class="admin-button admin-button-secondary" href="/admin/plugin-webhooks/">重新核对登录账号</a></div>
+  <section class="shared-review-results" aria-labelledby="webhook-results-title" data-webhook-results aria-busy="false">
+    <header class="shared-review-results-heading"><h2 id="webhook-results-title">发送记录</h2><p data-webhook-summary>尚未取得结果</p></header>
+    <ol class="shared-review-list" data-webhook-list></ol>
+    <nav class="shared-review-pagination" aria-label="Webhook 结果分页"><button type="button" class="admin-button admin-button-secondary" data-webhook-prev disabled>上一页</button><span data-webhook-page>—</span><button type="button" class="admin-button admin-button-secondary" data-webhook-next disabled>下一页</button></nav>
+  </section>
+  <noscript><p class="shared-review-status">启用 JavaScript 后可查询并核对 Webhook。</p></noscript>
+  {{else}}<div class="shared-review-empty" role="status"><h2>当前存储不提供 Webhook</h2><p>持久发送与结果核对适用于 PostgreSQL 模式。</p></div>{{end}}
+  <details class="shared-review-guide"><summary>核对依据与重新发送</summary><p>将操作 ID 提供给接收方核对。页面仅展示目标域名与请求摘要，路径、查询参数、正文和发送凭据不会显示。</p><p>人工确认未收到也不会重发原操作。需要重新发送时，应在确认风险后创建独立的新任务；新的操作身份不能保证接收方将它与旧请求去重。</p><p>关闭发送只限制当前实例的新意图与领取。撤销插件授权可阻止尚未领取的意图；已经领取或已经发送的请求无法立即召回。恢复数据库会取消未领取意图，将发送中记录保留为待核对。</p></details>
+</section>
+{{end}}

@@ -1,0 +1,6 @@
+{{define "home-business"}}
+<section data-home-section="business" class="business-section section-shell" id="business" aria-labelledby="business-title">
+  <div class="section-heading"><div><h2 id="business-title">{{.Settings.business_title}}</h2></div><p class="section-intro">{{.Settings.business_description}}</p></div>
+  <div class="business-grid"><article><span class="business-number">01</span>{{template "icon-chip" .}}<h3>{{.Settings.business_1_title}}</h3><p>{{.Settings.business_1_text}}</p>{{template "nexora-action-link" (dict "Page" . "URL" .Settings.business_1_link "Label" "了解更多" "Class" "text-link")}}</article><article><span class="business-number">02</span>{{template "icon-globe" .}}<h3>{{.Settings.business_2_title}}</h3><p>{{.Settings.business_2_text}}</p>{{template "nexora-action-link" (dict "Page" . "URL" .Settings.business_2_link "Label" "了解更多" "Class" "text-link")}}</article><article><span class="business-number">03</span>{{template "icon-diamond" .}}<h3>{{.Settings.business_3_title}}</h3><p>{{.Settings.business_3_text}}</p>{{template "nexora-action-link" (dict "Page" . "URL" .Settings.business_3_link "Label" "了解更多" "Class" "text-link")}}</article></div>
+</section>
+{{end}}

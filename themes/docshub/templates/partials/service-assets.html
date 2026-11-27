@@ -1,0 +1,53 @@
+{{define "service-styles"}}
+{{if eq .BodyClass "is-page is-announcements"}}<link rel="stylesheet" href="{{asset "css/docshub-announcements.css"}}">{{end}}
+<link rel="stylesheet" href="/core-assets/css/chunnel-ui.css">
+<link rel="stylesheet" href="/core-assets/css/chunnel-interactions.css">
+<link rel="stylesheet" href="/core-assets/css/chunnel-dialogs.css">
+<link rel="stylesheet" href="/core-assets/css/newpress-article-badges.css">
+{{if or (eq .Kind "account") (eq .Kind "account-access") (eq .Kind "notification-unsubscribe")}}<link rel="stylesheet" href="/core-assets/css/chunnel-account.css"><link rel="stylesheet" href="/core-assets/css/chunnel-access.css">{{end}}
+{{if eq .Kind "account"}}<link rel="stylesheet" href="/core-assets/css/chunnel-currency.css"><link rel="stylesheet" href="/core-assets/css/chunnel-progression.css">{{end}}
+{{if eq .Kind "billing"}}<link rel="stylesheet" href="/core-assets/css/chunnel-billing.css">{{end}}
+{{if eq .Kind "shop"}}<link rel="stylesheet" href="/core-assets/css/newpress-shop.css">{{end}}
+{{if eq .Kind "questions"}}<link rel="stylesheet" href="/core-assets/css/newpress-questions.css">{{end}}
+{{if eq .Kind "circles"}}<link rel="stylesheet" href="{{asset "css/docshub-circles.css"}}">{{end}}
+{{if or (eq .Kind "questions") (eq .Kind "circles")}}<link rel="stylesheet" href="{{asset "css/docshub-channels.css"}}"><link rel="stylesheet" href="/core-assets/css/newpress-community-compose.css">{{end}}
+{{if eq .Kind "feedback"}}<link rel="stylesheet" href="/core-assets/css/chunnel-feedback.css">{{end}}
+{{if eq .Kind "links"}}<link rel="stylesheet" href="/core-assets/css/chunnel-links.css">{{end}}
+
+{{if or (eq .Kind "single") (eq .Kind "account") (eq .Kind "author")}}<link rel="stylesheet" href="/core-assets/css/newpress-recognition.css">{{end}}
+{{if .VerificationEnabled}}<link rel="stylesheet" href="/core-assets/css/chunnel-verification.css">{{end}}
+{{if index .Settings "cookie_consent_enabled"}}<link rel="stylesheet" href="{{asset "css/docshub-consent.css"}}"><script src="{{asset "js/docshub-consent.js"}}" defer></script>{{end}}
+{{end}}
+
+{{define "service-scripts"}}
+{{if not .IsPreview}}
+<script src="/core-assets/js/chunnel-time.js" defer></script>
+<script src="/core-assets/js/chunnel.js" defer></script>
+<script src="/core-assets/js/chunnel-emoji.js" defer></script>
+<script src="/core-assets/js/newpress-client.js" defer></script>
+{{if .VerificationEnabled}}<script src="/core-assets/js/chunnel-verification.js" defer></script>{{end}}
+<script src="/core-assets/js/chunnel-interactions.js" defer></script>
+<script src="/core-assets/js/chunnel-engagement.js" defer></script>
+{{if and (eq .Kind "home") (index .Settings "use_home_layout") .Home.CheckIn.Enabled}}<script src="/core-assets/js/chunnel-currency-shared.js" defer></script><script src="{{asset "js/docshub-checkin.js"}}" defer></script>{{end}}
+{{if eq .Kind "account"}}
+<script src="/core-assets/js/chunnel-account-nav.js" defer></script>
+<script src="/core-assets/js/chunnel-notifications.js" defer></script>
+<script src="/core-assets/js/chunnel-currency-shared.js" defer></script>
+<script src="/core-assets/js/chunnel-wallet.js" defer></script>
+<script src="/core-assets/js/chunnel-progression-shared.js" defer></script>
+<script src="/core-assets/js/chunnel-progression.js" defer></script>
+<script src="/core-assets/js/chunnel-account.js" defer></script>
+<script src="/core-assets/js/chunnel-account-import.js" defer></script>
+{{end}}
+{{if eq .Kind "account-access"}}<script src="/core-assets/js/chunnel-registration.js" defer></script>{{end}}
+{{if eq .Kind "billing"}}<script src="/core-assets/js/chunnel-currency-shared.js" defer></script><script src="/core-assets/js/chunnel-billing.js" defer></script>{{end}}
+{{if eq .Kind "shop"}}<script src="/core-assets/js/newpress-shop-services.js" defer></script><script src="/core-assets/js/newpress-shop.js" defer></script>{{end}}
+{{if eq .Kind "questions"}}<script src="/core-assets/js/newpress-questions.js" defer></script>{{end}}
+{{if eq .Kind "circles"}}<script src="/core-assets/js/chunnel-circles.js" defer></script>{{end}}
+{{if or (eq .Kind "questions") (eq .Kind "circles")}}<script src="/core-assets/js/newpress-community-compose.js" defer></script>{{end}}
+{{if eq .Kind "feedback"}}<script src="/core-assets/js/chunnel-feedback.js" defer></script>{{end}}
+{{if eq .Kind "links"}}<script src="/core-assets/js/chunnel-links.js" defer></script>{{end}}
+
+{{if or (eq .Kind "single") (eq .Kind "account") (eq .Kind "author")}}<script src="/core-assets/js/chunnel-progression-badges.js" defer></script><script src="/core-assets/js/newpress-recognition.js" defer></script>{{end}}
+{{end}}
+{{end}}

@@ -1,0 +1,10 @@
+{{define "home-aside"}}
+<aside class="home-aside" aria-label="社区与学习路径">
+  {{if index .Settings "show_community"}}<section class="community-card">{{if index .Settings "show_community_artwork"}}<img src="{{asset "images/community-mountains.webp"}}" alt="" width="283" height="140" loading="lazy">{{end}}{{template "icon" "users"}}<div><h2>{{if index .Settings "community_title"}}{{index .Settings "community_title"}}{{else}}社区交流{{end}}</h2>{{with index .Settings "community_description"}}<p>{{.}}</p>{{end}}{{if and (index .Settings "community_link") (or (index .Modules "community") (ne .Settings.community_link "/community/"))}}<a href="{{index .Settings "community_link"}}">{{index .Settings "community_button_label"}} {{template "icon" "arrow"}}</a>{{end}}</div></section>{{end}}
+  {{if index .Settings "show_learning_path"}}<section class="learning-path"><div class="path-heading"><h2>{{index .Settings "learning_path_title"}}</h2>{{if and (index .Modules "series") (index .Settings "show_learning_series_link")}}<a href="/series/">全部系列 {{template "icon" "arrow"}}</a>{{end}}</div><ol>
+    <li><a href="{{if index .Settings "start_link"}}{{index .Settings "start_link"}}{{else}}/explore/{{end}}"><strong>{{index .Settings "learning_start_title"}}</strong>{{with index .Settings "learning_start_description"}}<span>{{.}}</span>{{end}}</a></li>
+    <li><a href="{{if index .Settings "advanced_link"}}{{index .Settings "advanced_link"}}{{else}}/explore/{{end}}"><strong>{{index .Settings "learning_advanced_title"}}</strong>{{with index .Settings "learning_advanced_description"}}<span>{{.}}</span>{{end}}</a></li>
+    <li><a href="{{if index .Settings "practice_link"}}{{index .Settings "practice_link"}}{{else}}/explore/{{end}}"><strong>{{index .Settings "learning_practice_title"}}</strong>{{with index .Settings "learning_practice_description"}}<span>{{.}}</span>{{end}}</a></li>
+  </ol></section>{{end}}
+</aside>
+{{end}}

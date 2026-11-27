@@ -1,0 +1,54 @@
+/* Public core service controls, presented in Nexora's enterprise palette. */
+:root{--page:var(--surface,#fff);--panel:var(--paper);--white:var(--surface,#fff);--paper-deep:var(--line);--primary:var(--accent);--primary-readable:var(--accent);--primary-dark:color-mix(in srgb,var(--accent) 80%,#172640);--primary-soft:var(--accent-soft);--primary-tint:var(--accent-soft);--primary-line:var(--line);--primary-ring:color-mix(in srgb,var(--accent) 30%,transparent);--cyan:var(--accent);--cyan-dark:var(--primary-dark);--focus:var(--accent);--ink-soft:var(--muted);--line-dark:var(--line);--tone-surface:var(--surface,#fff);--tone-soft:var(--paper);--tone-line:var(--line);--tone-accent:var(--accent);--tone-solid:var(--accent);--tone-text:var(--ink);--tone-muted:var(--muted);--tone-green:#248466;--tone-red:#c84e4e;--tone-amber:#b37827;--control-danger:#c84e4e;--control-success:#248466;--font-ui:var(--sans);--font-display:var(--serif);--font-metric:var(--sans);--community-font:var(--sans);--font-scale:1;--type-body:14px;--type-ui:14px;--type-caption:12px;--type-meta:12px;--radius:6px;--radius-lg:8px;--control-radius:6px;--control-field-radius:4px;--card-radius:6px;--shadow-soft:0 8px 28px #1827470a;--shadow-heavy:0 20px 65px #18274726;--motion-fast:140ms;--motion-normal:220ms;--motion-ease:ease}
+.nexora .icon{display:inline-block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;vertical-align:middle}
+.nexora .icon-sprite{position:absolute;width:0;height:0;overflow:hidden}
+.nexora-account-menu .nav-dropdown{left:auto;right:0}.nexora-account-menu button{display:block;padding:8px 4px;font-size:13px;text-align:left;width:100%}
+.nexora-account-menu .nav-dropdown{position:absolute;min-width:190px;max-width:calc(100vw - 40px);max-height:calc(100dvh - 100px);overflow:auto;background:var(--surface);color:var(--ink);padding:12px;box-shadow:var(--shadow-heavy);border:1px solid var(--line);border-radius:6px}
+.nexora-account-menu .nav-dropdown :is(a,button){min-height:44px;padding:10px 12px;border-radius:4px}.nexora-account-menu .nav-dropdown :is(a,button):hover{background:var(--accent-soft)}
+.nexora #main>.shell,.nexora #main>.qa-page{width:100%;max-width:1440px;margin-inline:auto;padding:54px var(--gutter) 72px;min-height:55vh}
+.nexora :is(.portal-breadcrumb,.account-breadcrumb,.billing-breadcrumb){display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:26px;font-size:12px;color:var(--muted)}
+.nexora :is(.portal-heading,.qa-heading,.flash-heading,.links-masthead,.feedback-heading) h1{font-family:var(--serif);font-size:clamp(28px,3.5vw,44px);line-height:1.4}
+.nexora .ui-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:9px 18px;border:1px solid var(--line);border-radius:var(--control-radius);font:inherit;line-height:1.5;cursor:pointer;text-decoration:none}
+.nexora .ui-button-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.nexora :is(.ui-button-secondary,.ui-button-outline){background:var(--surface);color:var(--ink)}
+.nexora .ui-button:disabled{opacity:.55;cursor:not-allowed}
+.nexora .ui-button{min-height:44px;box-shadow:none;border-radius:var(--button-radius);font-size:14px;letter-spacing:0;transform:none}
+.nexora .ui-button:not(:disabled):hover{box-shadow:none;transform:none;border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.nexora .ui-button-primary:not(:disabled):hover{background:var(--primary-dark);color:#fff}
+.nexora :is(.ui-button,input,select,textarea):focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.nexora :is(.shell,.qa-page,.ui-modal,.ui-drawer) :is(input,select,textarea){max-width:100%;font:inherit;color:var(--ink);border-color:var(--line)}
+.nexora :is(.ui-modal,.ui-drawer)>section{background:var(--surface);color:var(--ink);font-family:var(--sans)}
+.nexora .account-profile-cover{height:120px;background:linear-gradient(120deg,var(--accent),#172a40);overflow:hidden}
+.docs-account-cover-text{display:block;padding:30px;color:#fff;font-size:clamp(16px,3vw,32px);letter-spacing:.14em;text-align:right;opacity:.6}
+.nexora :is(.account-profile-card,.account-library,.account-side-card,.account-rail,.access-card){background:var(--surface);box-shadow:none;border-radius:6px}
+.nexora .access-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:start}
+.nexora .access-story{padding:36px;background:var(--accent);color:#fff;border-radius:6px}
+.nexora .access-story p{color:#e4ecf5}.nexora .access-story a{color:#fff}
+.nexora .access-story h1{font-size:clamp(28px,3.5vw,44px);line-height:1.4;margin-bottom:18px}
+.nexora .access-photo{margin:28px 0;overflow:hidden;border-radius:4px}
+.nexora .access-card{padding:32px;border:1px solid var(--line)}
+.nexora .account-welcome{padding:60px 24px;text-align:center;background:var(--surface);border:1px solid var(--line)}
+.nexora .account-welcome h1{font-size:36px;margin-bottom:18px}
+.nexora .account-room-layout{grid-template-columns:200px minmax(0,1fr);align-items:start}
+.nexora .account-side{grid-column:2;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.nexora .shop-page{--shop-bg:var(--paper);--shop-surface:var(--surface);--shop-ink:var(--ink);--shop-muted:var(--muted);--shop-line:var(--line);--shop-accent:var(--accent)}
+.nexora .channel-index{--channel-surface:var(--surface);--channel-soft:var(--paper)}
+.nexora{--community-radius:6px;--community-shadow:none;--control-danger-soft:#fbebeb;--control-success-soft:#eaf5ef;--control-warning-soft:#fff5df;--control-success-line:#24846640;--control-warning-line:#b3782740;--shade-ink:var(--ink);--shade-ink-soft:var(--muted)}
+.nexora :is(.channel-masthead,.billing-heading,.shop-heading,.announcement-document-head) h1{font-family:var(--serif);font-size:clamp(28px,3.5vw,44px);font-weight:400;line-height:1.4;letter-spacing:0}
+.nexora :is(.channel-panel,.channel-hero,.feedback-card,.feedback-detail,.feedback-side-panel,.feedback-discussion,.feedback-compose,.billing-card,.links-card){border-radius:6px;box-shadow:none}
+.nexora .announcement-banner :is(h1,.announcement-banner-title){font-family:var(--serif);font-weight:400}
+.nexora .announcement-document-meta{row-gap:12px}.nexora .announcement-banner{margin-bottom:24px}
+.nexora .account-profile-cover{box-shadow:none}.nexora .account-room-layout{gap:24px}
+.nexora .ui-modal,.nexora .ui-drawer{max-width:100vw;max-height:100dvh}
+.nexora .ui-modal>section{max-height:calc(100dvh - 40px);overflow-y:auto}
+.nexora .comments-section .comment{display:block;min-width:0}.nexora .comments-section .comment-content{min-width:0;overflow-wrap:anywhere}.nexora .comments-section .comment header{display:flex}
+.nexora .flash-detail .comments-section{margin:32px 0 0;max-width:none}.nexora #main>.flash-detail{max-width:1100px}
+.nexora .site-header{box-shadow:none}
+.nexora-density-compact .enterprise-section{padding-block:44px}
+.nexora-density-compact #main>.shell,.nexora-density-compact #main>.qa-page{padding-block:36px 48px}
+.nexora .flash-layout{grid-template-columns:minmax(0,1fr) 240px}
+.nexora :is(.feedback-shell,.billing-room,.shop-room,.account-room,.access-room,.qa-page,.circle-page,.flash-page,.links-page){overflow-wrap:anywhere}
+.nexora :is(.feedback-detail-main,.feedback-board-main,.account-library,.access-card){min-width:0}
+@media(max-width:900px){.nexora .account-room-layout,.nexora .access-layout,.nexora .flash-layout{grid-template-columns:minmax(0,1fr)}.nexora .account-side{grid-column:auto}.nexora .access-story{padding:26px}.nexora .access-photo{display:none}}
+@media(max-width:600px){.nexora #main>.shell,.nexora #main>.qa-page{padding:30px 20px 48px}.nexora .access-card{padding:22px}.nexora .account-side{grid-template-columns:1fr}.nexora .account-welcome h1{font-size:28px}}
+@media(max-width:760px){.nexora .header-actions{gap:0}.nexora .header-actions>.icon-button{width:36px}.nexora .header-actions:has([data-account-menu]:not([hidden]))>a[aria-label="客户中心"]{display:none}.nexora-account-menu>summary{min-width:36px;min-height:44px;display:flex;align-items:center;justify-content:center!important;font-size:14px!important;padding:8px!important;border:0!important}.nexora .nexora-account-menu .nav-dropdown{position:absolute;background:var(--surface);color:var(--ink)}.nexora :is(.shell,.qa-page,.ui-modal,.ui-drawer) :is(input,select,textarea){font-size:16px}.nexora :is(.channel-search,.feedback-filter-options){flex-wrap:wrap}.nexora .channel-search input[type=search]{min-width:100px}.nexora .ui-modal>section{max-height:calc(100dvh - 24px)}.nexora-density-compact .enterprise-section{padding-block:32px}}

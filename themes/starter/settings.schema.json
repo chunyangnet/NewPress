@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "accent": {
+      "type": "string",
+      "title": "链接颜色",
+      "default": "#2563eb",
+      "pattern": "^#[0-9a-fA-F]{6}$",
+      "x-newpress": { "control": "color", "group": "appearance", "css_variable": "--accent" }
+    }
+  },
+  "x-newpress": { "version": 1, "groups": [{ "id": "appearance", "title": "外观", "icon": "palette", "order": 1 }] }
+}

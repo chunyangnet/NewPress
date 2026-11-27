@@ -1,0 +1,6 @@
+{{define "content"}}
+<h1>{{if .Archive.Name}}{{.Archive.Name}}{{else if .Author.Name}}{{.Author.Name}}{{else if eq .Kind "home"}}{{t "starter.latest"}}{{else}}{{t "starter.discover"}}{{end}}</h1>
+<form action="/explore/" method="get" role="search"><label for="query">{{t "search.label"}}</label><input id="query" type="search" name="q" value="{{.SearchQuery}}"><button>{{t "search.submit"}}</button></form>
+{{range .Posts}}<article>{{if .ArticleBadge.Kind}}<small class="starter-article-badge{{if .ArticleBadge.HideOnMobile}} hide-on-mobile{{end}}">{{.ArticleBadge.Text}}</small>{{end}}<h2><a href="{{.URL}}">{{.Title}}</a></h2><p>{{.Excerpt}}</p><small><a href="{{.AuthorURL}}">{{.AuthorName}}</a> · {{date .PublishedAt}}</small></article>{{else}}<p>{{t "starter.empty"}}</p>{{end}}
+{{with .Pagination}}<nav aria-label="{{t "pagination.label"}}">{{if .HasPrevious}}<a href="{{.PreviousURL}}">{{t "pagination.previous"}}</a>{{end}}{{if .Pages}}<span>{{.Page}} / {{.Pages}}</span>{{end}}{{if .HasNext}}<a href="{{.NextURL}}">{{t "pagination.next"}}</a>{{end}}</nav>{{end}}
+{{end}}

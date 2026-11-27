@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "locale": "ja",
+  "messages": {
+    "starter.latest": "最新の記事",
+    "starter.discover": "コンテンツを探す",
+    "starter.empty": "まだコンテンツがありません。"
+  }
+}

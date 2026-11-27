@@ -1,0 +1,96 @@
+{{define "content"}}
+<div class="shell shop-room" data-shop>
+  <nav class="portal-breadcrumb" data-shop-store-crumb aria-label="当前位置"><a href="/">首页</a>{{template "service-icon" "chevron-right"}}<a href="/shop/" aria-current="page">商城</a></nav>
+  <header class="shop-heading" data-shop-store-heading>
+    <div>{{if .ShopProductKey}}<h2>产品与服务</h2>{{else}}<h1>产品与服务</h1>{{end}}<p>查看产品说明、购买方案与交付内容</p></div>
+    <a class="ui-button ui-button-secondary" href="/shop/orders/" data-shop-orders-link>{{template "service-icon" "shopping-bag"}}我的订单<span data-shop-order-count></span></a>
+  </header>
+  <div class="shop-tabs" data-shop-store-tabs aria-label="商城页面"><a href="/shop/" data-shop-tab="catalog">商品</a><a href="/shop/orders/" data-shop-tab="orders">我的订单</a><span data-shop-availability>正在读取商品…</span></div>
+  <p class="shop-message" role="status" aria-live="polite" data-shop-message hidden></p>
+  <section data-shop-catalog aria-label="商品目录">
+    <div class="shop-market-header"><a class="shop-market-name" href="/shop/">商城</a><form role="search" data-shop-search><label class="sr-only" for="shop-search">搜索商品</label>{{template "service-icon" "search"}}<input id="shop-search" type="search" placeholder="搜索你想要的商品" maxlength="100" autocomplete="off"><button type="submit">搜索</button></form><a class="shop-market-orders" href="/shop/orders/" aria-label="我的订单">{{template "service-icon" "shopping-bag"}}</a></div>
+    <nav class="shop-categories" data-shop-categories aria-label="商品分类"></nav>
+    <section class="shop-featured" data-shop-featured aria-label="商品推荐" hidden><div data-shop-featured-content></div><div class="shop-featured-controls"><button type="button" data-shop-featured-prev aria-label="上一个推荐商品">{{template "service-icon" "chevron-left"}}</button><div data-shop-featured-dots></div><button type="button" data-shop-featured-next aria-label="下一个推荐商品">{{template "service-icon" "chevron-right"}}</button></div></section>
+    <nav class="shop-market-shortcuts" data-shop-shortcuts aria-label="商城快捷入口"></nav>
+    <dialog class="shop-market-coupons shop-coupon-dialog" id="shop-market-coupons" data-shop-market-coupons aria-labelledby="shop-coupon-title">
+      <header><div><span class="shop-coupon-eyebrow">为喜欢的商品，领一份优惠</span><h2 id="shop-coupon-title">领券中心</h2><p>先领券，结算时选择使用。</p></div><button type="button" data-shop-coupons-close aria-label="关闭领券中心">{{template "service-icon" "x"}}</button></header>
+      <nav class="shop-coupon-tabs" aria-label="优惠券分类"><button type="button" data-shop-coupon-tab="available" aria-pressed="true">可领取</button><button type="button" data-shop-coupon-tab="claimed" aria-pressed="false">我的优惠券</button></nav>
+      <p class="shop-coupon-feedback" data-shop-coupon-message role="status" aria-live="polite"></p><div class="shop-coupon-list" data-shop-market-coupon-list></div>
+      <footer>优惠券的适用商品、门槛与有效期以券面说明为准。</footer>
+    </dialog>
+    <div class="shop-market-sort"><div class="shop-sort-options" role="group" aria-label="商品排序"><button type="button" data-shop-sort="featured" aria-pressed="true">综合</button><button type="button" data-shop-sort="sales" aria-pressed="false">销量</button><button type="button" data-shop-sort="low" aria-pressed="false">价格 ↑</button><button type="button" data-shop-sort="high" aria-pressed="false">价格 ↓</button><button type="button" data-shop-sort="rating" aria-pressed="false">评分</button></div><button type="button" class="shop-filter-toggle" data-shop-filter-toggle aria-controls="shop-market-filter-panel" aria-expanded="false">筛选 {{template "service-icon" "sliders-horizontal"}}</button><button type="button" class="shop-density-toggle" data-shop-density aria-label="切换为紧凑商品网格" aria-pressed="false">{{template "service-icon" "layout-grid"}}</button></div>
+    <div class="shop-market-filter-panel" id="shop-market-filter-panel" hidden>
+    <nav class="shop-filters" aria-label="商品类型" data-shop-filters><button type="button" data-shop-filter="all" aria-pressed="true">全部商品</button><button type="button" data-shop-filter="virtual" aria-pressed="false">虚拟商品</button><button type="button" data-shop-filter="physical" aria-pressed="false">实物商品</button><button type="button" data-shop-filter="cdk" aria-pressed="false">卡密 / CDK</button><button type="button" data-shop-filter="donation" aria-pressed="false">捐赠</button><button type="button" data-shop-filter="raffle" aria-pressed="false">抽奖码</button><button type="button" data-shop-filter="bundle" aria-pressed="false">组合套装</button></nav>
+    <nav class="shop-mode-filters" aria-label="购买方案"><span>购买方案</span><button type="button" data-shop-mode-filter="" aria-pressed="true">全部</button><button type="button" data-shop-mode-filter="group" aria-pressed="false">拼团</button><button type="button" data-shop-mode-filter="presale" aria-pressed="false">预售</button><button type="button" data-shop-mode-filter="deposit" aria-pressed="false">定金</button><button type="button" data-shop-mode-filter="installment" aria-pressed="false">分期</button></nav>
+    <div class="shop-currency-filters" data-shop-currency-filters role="group" aria-label="结算货币"></div><label class="shop-stock-filter"><input type="checkbox" data-shop-instock>仅看有货商品</label>
+    </div>
+    <div class="shop-results-heading"><h2 data-shop-results-title>全部商品</h2><span data-shop-results-count></span><button type="button" class="shop-text-button" data-shop-reset hidden>清除筛选</button></div>
+    <div class="shop-grid" data-shop-products aria-busy="true"><p class="shop-empty">正在加载商品…</p></div>
+  </section>
+  <section data-shop-orders hidden aria-label="我的订单"><header class="shop-results-heading"><h2>订单与交付</h2><button type="button" class="ui-button ui-button-secondary" data-shop-orders-refresh>刷新订单</button></header><p class="shop-note">查看付款记录、交付内容、物流与开奖结果。</p><div data-shop-order-list></div></section>
+  <section class="shop-product-page" data-shop-product-page hidden aria-labelledby="shop-detail-title">
+    <nav class="shop-product-breadcrumb" aria-label="当前位置"><a href="/">首页</a>{{template "service-icon" "chevron-right"}}<a href="/shop/">商城</a>{{template "service-icon" "chevron-right"}}<span data-shop-breadcrumb-title>商品详情</span></nav>
+    <p class="shop-share-status" data-shop-share-status role="status" aria-live="polite" hidden></p>
+    <div class="shop-detail-loading" data-shop-detail-loading role="status">正在读取商品信息…</div>
+    <div class="shop-product-missing" data-shop-product-missing hidden><div class="shop-empty"><strong>商品暂不可用</strong><p>商品可能已下架，返回商城继续浏览。</p><a class="ui-button ui-button-secondary" href="/shop/">返回商城</a></div></div>
+    <div class="shop-detail-grid" data-shop-detail-content hidden>
+      <div class="shop-product-gallery">
+        <div class="shop-gallery-stage" data-shop-gallery-stage tabindex="0" role="group" aria-label="商品图片，使用左右方向键切换">
+          <div class="shop-detail-visual" data-shop-detail-visual></div>
+          <a class="shop-gallery-back" href="/shop/" aria-label="返回商城">{{template "service-icon" "chevron-left"}}</a>
+          <button class="shop-gallery-share" type="button" data-shop-gallery-share title="分享商品" aria-label="分享商品"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3m-4 4 4-4 4 4M7 10H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-2"/></svg></button>
+          <details class="shop-gallery-menu"><summary aria-label="更多商品操作">{{template "service-icon" "more-horizontal"}}</summary><nav aria-label="商品操作"><a href="/shop/orders/">我的订单</a><a href="#shop-product-rules">购买须知</a></nav></details>
+          <span class="shop-gallery-count" data-shop-gallery-count aria-live="polite"></span>
+        </div>
+        <div class="shop-gallery-thumbnails-wrap" data-shop-gallery-wrap hidden><div class="shop-gallery-thumbnails" data-shop-gallery-thumbnails role="group" aria-label="商品图片"></div><button class="shop-gallery-next" type="button" data-shop-gallery-next aria-label="查看下一张商品图片">{{template "service-icon" "chevron-right"}}</button></div>
+      </div>
+      <div class="shop-detail-copy">
+        {{if .ShopProductKey}}<h1 id="shop-detail-title"></h1>{{else}}<h2 id="shop-detail-title"></h2>{{end}}
+        <p class="shop-detail-subtitle" data-shop-subtitle></p>
+        <a class="shop-detail-rating" href="#shop-product-reviews" data-shop-detail-rating></a>
+        <div class="shop-price-band"><span class="shop-price-label" data-shop-price-label>商品价格</span><strong data-shop-detail-price></strong><del data-shop-compare-price hidden></del><span class="shop-price-discount" data-shop-discount hidden></span></div>
+        <div class="shop-tags shop-detail-badges" data-shop-detail-tags></div>
+        <div class="shop-detail-offer" data-shop-detail-offer hidden></div>
+        <section class="shop-raffle-pool" data-shop-raffle-pool aria-label="本期奖池" hidden></section>
+        <form data-shop-purchase>
+          <fieldset class="shop-fields"><legend class="sr-only">购买选项</legend>
+            <fieldset class="shop-choice-field" data-shop-variant-field hidden><legend>选择规格</legend><input type="hidden" name="variant" value=""><div class="shop-choice-list" data-shop-variant-choices></div></fieldset>
+            <fieldset class="shop-choice-field" data-shop-mode-field><legend>购买方式</legend><input type="hidden" name="mode" value=""><div class="shop-choice-list" data-shop-mode-choices></div></fieldset>
+            <div class="shop-mode-note" data-shop-mode-note></div>
+            <fieldset class="shop-choice-field shop-coupon-field" data-shop-coupon-field hidden><legend>优惠券</legend><input type="hidden" name="coupon" value=""><div class="shop-choice-list" data-shop-coupon-choices></div></fieldset>
+            <div class="shop-quantity-row" role="group" aria-labelledby="shop-quantity-label">
+              <div class="shop-quantity-heading"><label id="shop-quantity-label" for="shop-quantity">数量</label><small id="shop-quantity-stock" class="shop-quantity-stock" data-shop-stock></small></div>
+              <div class="shop-quantity-stepper"><button type="button" data-shop-quantity-step="-1" aria-label="减少数量"><span aria-hidden="true">−</span></button><input id="shop-quantity" name="quantity" type="number" inputmode="numeric" min="1" max="99" value="1" step="1" aria-describedby="shop-quantity-stock" required><button type="button" data-shop-quantity-step="1" aria-label="增加数量"><span aria-hidden="true">+</span></button></div>
+              <div class="shop-quantity-range-wrap" data-shop-quantity-range-wrap><input id="shop-quantity-range" class="shop-quantity-range" data-shop-quantity-range type="range" min="1" max="99" value="1" step="1" aria-label="拖动调整购买数量" aria-describedby="shop-quantity-stock"><div class="shop-quantity-range-limits"><span>1 件</span><output data-shop-quantity-value for="shop-quantity shop-quantity-range" aria-live="off">已选 1 件</output><span data-shop-quantity-max>上限 99 件</span></div></div>
+            </div>
+            <label data-shop-group-field hidden>参团编号<input name="group_id" maxlength="100" placeholder="留空发起新团；也可粘贴朋友的团号"></label>
+            <div data-shop-groups></div>
+            <fieldset class="shop-address" data-shop-address hidden><legend>收货信息</legend><label>收货人<input name="recipient" maxlength="80" autocomplete="shipping name"></label><label>联系电话<input name="phone" maxlength="40" autocomplete="shipping tel" inputmode="tel"></label><label>详细地址<textarea name="address" maxlength="500" autocomplete="shipping street-address" rows="2"></textarea></label></fieldset>
+          </fieldset>
+          <p class="shop-message" data-shop-detail-message role="status" aria-live="polite" hidden></p>
+          <div class="shop-detail-service" data-shop-detail-service></div>
+          <a class="shop-detail-policy" href="#shop-product-rules">{{template "service-icon" "shield-check"}}<span>购买须知与退款说明</span><span>查看{{template "service-icon" "chevron-right"}}</span></a>
+          <div class="shop-purchase-bar"><nav class="shop-purchase-shortcuts" aria-label="购买快捷操作"><a href="/shop/">{{template "service-icon" "store"}}<span>商城</span></a><a href="/shop/orders/">{{template "service-icon" "shopping-bag"}}<span>订单</span></a><button type="button" data-shop-gallery-share>{{template "service-icon" "share-2"}}<span>分享</span></button></nav><div class="shop-purchase-total"><small>当前单价</small><b data-shop-purchase-price></b></div><button type="submit" class="ui-button ui-button-primary" data-shop-buy>立即购买</button></div>
+        </form>
+      </div>
+      <section class="shop-product-information" aria-label="商品信息">
+        <div class="shop-product-info-tabs" role="tablist" aria-label="商品信息">
+          <a id="shop-info-tab-description" href="#shop-product-description" role="tab" aria-controls="shop-product-description" aria-selected="true" tabindex="0">商品详情</a>
+          <a id="shop-info-tab-reviews" href="#shop-product-reviews" role="tab" aria-controls="shop-product-reviews" aria-selected="false" tabindex="-1">买家评价</a>
+          <a id="shop-info-tab-specifications" href="#shop-product-specifications" role="tab" aria-controls="shop-product-specifications" aria-selected="false" tabindex="-1">商品参数</a>
+          <a id="shop-info-tab-rules" href="#shop-product-rules" role="tab" aria-controls="shop-product-rules" aria-selected="false" tabindex="-1">购买须知</a>
+        </div>
+        <div class="shop-product-description" id="shop-product-description" data-shop-info-panel role="tabpanel" aria-labelledby="shop-info-tab-description" tabindex="0"><div class="shop-detail-images" data-shop-detail-images></div><div class="shop-detail-description" data-shop-description data-shop-description-product="{{.ShopProductKey}}" {{if .ShopProductKey}}data-shop-rich="true"{{end}}>{{safeHTML .ShopDescriptionHTML}}</div></div>
+        <section class="shop-reviews" id="shop-product-reviews" data-shop-info-panel role="tabpanel" aria-labelledby="shop-info-tab-reviews" tabindex="0" hidden><header><h2 id="shop-reviews-title">买家评价 <span data-shop-review-count></span></h2><a href="/shop/orders/">购买后评价 {{template "service-icon" "chevron-right"}}</a></header><div data-shop-review-summary></div><div class="shop-review-filters" data-shop-review-filters role="group" aria-label="筛选商品评价"></div><p data-shop-review-status role="status" hidden></p><div data-shop-review-list></div><div class="shop-review-pagination" data-shop-review-pagination></div></section>
+        <section class="shop-product-specifications" id="shop-product-specifications" data-shop-info-panel role="tabpanel" aria-labelledby="shop-info-tab-specifications" tabindex="0" hidden><h2 id="shop-specifications-title">商品参数</h2><dl data-shop-specifications></dl></section>
+        <section class="shop-product-rules" id="shop-product-rules" data-shop-info-panel role="tabpanel" aria-labelledby="shop-info-tab-rules" tabindex="0" hidden><h2 id="shop-product-rules-title">购买与交付</h2><div class="shop-rule" data-shop-rules></div></section>
+      </section>
+    </div>
+    <div class="shop-detail-end"><a class="ui-button ui-button-secondary" href="/shop/">继续浏览商品</a></div>
+  </section>
+  <nav class="shop-floating-nav" aria-label="商城快捷导航"><a href="/shop/" data-shop-rail="catalog">{{template "service-icon" "store"}}<span>商城</span></a><button type="button" data-shop-rail-coupons>{{template "service-icon" "tags"}}<span>优惠券</span></button><a href="/shop/orders/" data-shop-rail="orders">{{template "service-icon" "shopping-bag"}}<span>订单</span></a><a href="/" aria-label="返回站点首页">{{template "service-icon" "home"}}<span>首页</span></a><button type="button" data-shop-top aria-label="回到顶部" title="回到顶部">{{template "service-icon" "arrow-up"}}<span>顶部</span></button></nav>
+  <noscript><p class="shop-message">请启用 JavaScript，以浏览商品、核对购买方案和查看订单。</p></noscript>
+  <dialog class="shop-dialog shop-checkout-dialog" data-shop-checkout aria-labelledby="shop-checkout-title"><button type="button" class="shop-close" data-shop-checkout-close aria-label="关闭订单核对">{{template "service-icon" "x"}}</button><h2 id="shop-checkout-title">核对订单</h2><div data-shop-quote></div><form data-shop-confirm><fieldset class="shop-choice-field shop-payment-choices"><legend>支付方式</legend><input type="hidden" name="channel" value=""><div class="shop-choice-list" data-shop-channel-choices></div></fieldset><p class="shop-note" data-shop-refund-policy></p><label class="shop-consent"><input type="checkbox" name="accepted" required><span>我已核对商品、付款安排与交付说明，并同意上述购买及退款规则。</span></label><p class="shop-message" data-shop-checkout-message role="status" aria-live="polite" hidden></p><button class="ui-button ui-button-primary shop-full" data-shop-confirm-button type="submit">确认订单并前往付款</button></form></dialog>
+  <dialog class="shop-dialog shop-order-dialog" data-shop-order-dialog aria-labelledby="shop-order-title"><button type="button" class="shop-close" data-shop-order-close aria-label="关闭订单">{{template "service-icon" "x"}}</button><h2 id="shop-order-title">订单详情</h2><div data-shop-order-detail></div><section class="shop-order-review" data-shop-order-review aria-label="订单评价"></section><p class="shop-message" role="status" aria-live="polite" data-shop-order-message hidden></p><div class="shop-payment" data-shop-payment></div><div class="shop-order-actions"><button type="button" class="ui-button ui-button-secondary" data-shop-order-sync>同步支付与进度</button><button type="button" class="ui-button ui-button-quiet" data-shop-order-cancel>取消未付款订单</button></div></dialog>
+</div>
+{{end}}

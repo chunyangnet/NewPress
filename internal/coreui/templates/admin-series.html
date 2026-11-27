@@ -1,0 +1,34 @@
+{{define "content"}}
+<section class="admin-page series-admin">
+  <header class="series-admin-heading"><div><h1>{{if .Series.Editing}}{{if .Series.Current.ID}}编辑选集{{else}}新建选集{{end}}{{else}}专题与系列{{end}}</h1></div><a class="admin-button" href="{{if .Series.Editing}}/admin/series/{{else}}/series/{{end}}">{{if .Series.Editing}}返回列表{{else}}查看公开选集 {{template "icon" "chevron-right"}}{{end}}</a></header>
+  {{if .FeatureStatus}}{{template "admin-feature-status" .}}{{end}}
+  {{if .Admin.ReadOnly}}<div class="admin-callout admin-callout-warning" role="status"><span>{{template "icon" "triangle-alert"}}</span><div><strong>当前为只读预览</strong><p>不能保存变更。</p></div></div>{{end}}
+  {{if .Series.Editing}}
+  <noscript><p>请启用 JavaScript 后编排与保存目录。</p></noscript>
+  <form id="series-editor-form" data-series-editor data-user-id="{{.Admin.Principal.UserID}}" data-id="{{.Series.Current.ID}}" data-version="{{.Series.Current.Version}}" data-read-only="{{.Admin.ReadOnly}}">
+    <input type="hidden" data-series-selection data-admin-value>
+    <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}">
+    <fieldset class="series-editor-fields" {{if .Admin.ReadOnly}}disabled{{end}}><legend class="sr-only">阅读选集编辑器</legend>
+    <div class="series-editor-layout"><aside class="series-metadata">
+      <label>封面地址<input name="cover_url" data-media-input data-media-title="选集封面" data-media-upload-source="series-cover" value="{{.Series.Current.CoverURL}}" maxlength="2048" placeholder="/media/…" autocomplete="off"></label>
+      <label>形式<select name="kind"><option value="series" {{if eq .Series.Current.Kind "series"}}selected{{end}}>系列 · 按章节连续阅读</option><option value="topic" {{if eq .Series.Current.Kind "topic"}}selected{{end}}>专题 · 围绕主题关联阅读</option></select></label>
+      <label>标题<input name="title" value="{{.Series.Current.Title}}" required maxlength="120" placeholder="例如：从零搭建个人网站"></label>
+      <label>访问别名<input name="slug" value="{{.Series.Current.Slug}}" required maxlength="160" placeholder="build-a-personal-site" spellcheck="false" autocomplete="off"><small>公开地址：/series/访问别名/</small></label>
+      <label>介绍<textarea name="description" rows="5" maxlength="2000" placeholder="介绍这份选集的内容和阅读顺序。">{{.Series.Current.Description}}</textarea></label>
+      <label>可见性<select name="status"><option value="draft" {{if eq .Series.Current.Status "draft"}}selected{{end}}>草稿 · 仅后台可见</option><option value="publish" {{if eq .Series.Current.Status "publish"}}selected{{end}}>公开 · 展示在专题与系列</option></select></label>
+    </aside><div class="series-chapter-workspace">
+      <header><div><h2>安排阅读顺序</h2></div><span data-series-count>{{len .Series.Chapters}} / 200 篇</span></header><p class="series-help">用上下箭头、拖动或 Alt + ↑ / ↓ 调整顺序。草稿与私密文章仅在此处显示。</p>
+      <ol class="series-editor-chapters" data-series-chapters aria-label="已选文章">{{range .Series.Chapters}}<li data-series-chapter data-id="{{.ID}}" data-status="{{.Status}}"><span data-series-chapter-title>{{.Title}}</span></li>{{end}}</ol>
+      <div class="series-picker"><h3>添加文章</h3><div class="series-picker-search"><label class="sr-only" for="series-post-search">搜索要添加的文章</label><input id="series-post-search" type="search" maxlength="100" placeholder="搜索标题、作者或关键词" data-series-search data-admin-transient><button type="button" class="admin-button" data-series-find>查找文章</button></div><p data-series-picker-status role="status"></p><div class="series-source-list" data-series-sources></div><div class="series-picker-pages"><button type="button" class="admin-button" data-series-source-prev hidden>上一页</button><button type="button" class="admin-button" data-series-source-next hidden>下一页</button></div></div>
+    </div></div>
+    <p data-series-status role="status" aria-live="polite"></p>{{if .Series.Current.ID}}<button type="button" class="admin-button admin-button-quiet" data-series-reload>重新载入</button>{{end}}{{template "admin-savebar" (dict "FormID" "series-editor-form" "ReadOnly" .Admin.ReadOnly "Label" "保存选集")}}
+    {{if .Series.Current.ID}}<div class="series-delete-row">{{if eq .Series.Current.Status "publish"}}<a href="{{.Series.Current.URL}}" target="_blank" rel="noopener">查看公开目录 {{template "icon" "external-link"}}</a>{{end}}<button type="button" class="admin-button admin-button-danger" data-series-delete>删除选集</button></div>{{end}}
+    </fieldset>
+  </form>
+  {{else}}
+  <div class="series-admin-tools"><form action="/admin/series/" role="search"><label class="sr-only" for="admin-series-query">搜索选集</label><input id="admin-series-query" type="search" name="q" value="{{.Series.Search}}" maxlength="100" placeholder="搜索标题或介绍"><label class="sr-only" for="admin-series-kind">选集类型</label><select name="kind" id="admin-series-kind"><option value="">全部类型</option><option value="series" {{if eq .Series.Kind "series"}}selected{{end}}>系列</option><option value="topic" {{if eq .Series.Kind "topic"}}selected{{end}}>专题</option></select><button class="admin-button" type="submit">搜索</button></form>{{if .Admin.CanWrite "taxonomy:manage"}}<a class="admin-button admin-button-primary" href="/admin/series/?edit=new">新建选集</a>{{end}}</div>
+  <div class="series-admin-list">{{range .Series.Items}}<article><div class="series-admin-thumb">{{if .CoverURL}}<img src="{{.CoverURL}}" alt="" loading="lazy">{{else}}<span>{{.Label}}</span>{{end}}</div><div><small>{{.Label}} · {{if eq .Status "publish"}}公开{{else}}草稿{{end}} · {{.Count}} 篇已编排</small><h2><a href="/admin/series/?edit={{.ID}}">{{.Title}}</a></h2><p>{{.Description}}</p></div><a class="admin-button" href="/admin/series/?edit={{.ID}}">编辑目录</a></article>{{else}}<div class="series-empty"><h2>{{if .Series.Search}}没有找到匹配的选集{{else}}还没有选集{{end}}</h2><p>添加封面与介绍，按阅读顺序添加文章。</p>{{if .Admin.CanWrite "taxonomy:manage"}}<a href="/admin/series/?edit=new">{{template "icon" "plus"}}建立第一份选集 </a>{{end}}</div>{{end}}</div>
+  {{template "series-pagination" .Series}}
+  {{end}}
+</section>
+{{end}}

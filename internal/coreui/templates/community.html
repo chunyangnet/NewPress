@@ -1,0 +1,34 @@
+{{define "content"}}
+<section class="shell portal-page portal-community-intro">
+  <nav class="portal-breadcrumb" aria-label="当前位置"><a href="/">首页</a>{{template "icon" "chevron-right"}}<span aria-current="page">社区讨论</span></nav>
+  <header class="portal-heading"><div><h1>社区讨论<span class="portal-count">{{.Community.Total}}</span></h1><p>浏览最新文章，发布话题或参与评论。</p></div><button class="ui-button ui-button-primary" type="button" data-composer-open>{{template "icon" "plus"}}发起话题</button></header>
+  {{template "portal-navigation" .}}
+</section>
+
+<section class="shell community-layout">
+  <div class="community-main">
+    <section id="questions" class="surface discussion-panel">
+      <header class="discussion-head"><div><span class="panel-kicker">社区内容</span><h2>讨论列表</h2><small data-discussion-count>{{len .Posts}} 条讨论</small></div><div class="discussion-actions"><select data-select-ui="soft" class="interaction-select" aria-label="讨论范围" data-discussion-filter><option value="all">本页全部</option><option value="liked">本页已赞</option><option value="mine">本页我的话题</option></select><select data-select-ui="soft" class="interaction-select" aria-label="讨论排序" data-discussion-sort><option value="newest">最新发布</option><option value="oldest">最早发布</option></select><button class="ui-button ui-button-primary" type="button" data-composer-open>{{template "icon" "plus"}}发起话题</button></div></header>
+      <div class="composer-teaser"><span class="avatar avatar-violet">你</span><button type="button" data-composer-open>今天有什么想分享的？<b>写下你的想法…</b></button><span class="composer-tools">{{template "icon" "image"}}{{template "icon" "paperclip"}}{{template "icon" "smile"}}</span></div>
+      <form class="community-composer" data-community-composer hidden aria-label="发布讨论">
+        <div class="community-composer-head"><span class="avatar avatar-violet">你</span><div><b>发布讨论</b><small>公开可见 · 最多 500 字</small></div><button type="button" class="icon-button" aria-label="收起编辑器" data-composer-close>{{template "icon" "x"}}</button></div>
+        <textarea id="community-content" name="content" maxlength="500" rows="4" required data-emoji-input placeholder="分享一个想法、问题或进展…" data-community-content></textarea>
+        <footer><div class="composer-toolbar"><button type="button" aria-label="添加表情" data-emoji-trigger data-emoji-target="community-content">{{template "icon" "smile"}}</button><button type="button" aria-label="在完整编辑器中继续" title="完整编辑器" data-composer-editor>{{template "icon" "pen-line"}}</button><span data-community-count>0 / 500</span></div><button class="ui-button ui-button-primary ui-button-small" type="submit" data-community-submit>{{template "icon" "send"}}发布讨论</button></footer>
+      </form>
+      <div class="discussion-list">
+        {{range .Posts}}
+        <article id="discussion-{{.ID}}" class="discussion-card discussion-post-card" tabindex="-1" data-content-url="{{$.ContentURL .}}" data-content-title="{{.Title}}" data-post-id="{{.ID}}" data-author-id="{{.AuthorID}}" data-published="{{.PublishedAt.Unix}}"><header><span class="avatar avatar-gold">N</span><div><a href="{{.AuthorURL}}"><b>{{.AuthorName}}</b></a><small>发布了新文章 · {{dateIn .PublishedAt $.Site.Timezone}}</small></div></header><p>{{.Excerpt}}</p><a class="discussion-post-link" href="{{$.ContentURL .}}"><img {{with index $.Images .CoverURL}}src="{{.CardSrc}}" srcset="{{.CardSrcSet}}" sizes="180px"{{else}}src="{{assetOr .CoverURL "images/cover-core.svg"}}"{{end}} alt="" width="180" height="100" loading="lazy"><span><b>{{.Title}}</b><small class="icon-text">{{.Category}} · 查看全文 {{template "icon" "arrow-right"}}</small></span></a><footer><button class="icon-text reaction-button" type="button" data-reaction="{{.ID}}" aria-pressed="false">{{template "icon" "heart"}}<span>赞</span></button><button class="icon-text" type="button" data-discussion-url="{{$.ContentURL .}}#comments">{{template "icon" "message-circle"}}参与讨论</button><button class="icon-text" type="button" data-share>{{template "icon" "share-2"}}分享</button></footer></article>
+        {{end}}
+      </div>
+      <footer class="taxonomy-pagination community-pagination"><span>{{.Community.Total}} 条讨论 · 第 {{.Community.Page}} / {{.Community.Pages}} 页</span><nav aria-label="讨论分页">{{if .Community.HasPrevious}}<a data-community-page href="{{.Community.PreviousURL}}">{{template "icon" "arrow-left"}}上一页</a>{{else}}<span aria-disabled="true">{{template "icon" "arrow-left"}}上一页</span>{{end}}{{if .Community.HasNext}}<a data-community-page href="{{.Community.NextURL}}">下一页{{template "icon" "arrow-right"}}</a>{{else}}<span aria-disabled="true">下一页{{template "icon" "arrow-right"}}</span>{{end}}</nav></footer>
+      <a class="load-more" href="/explore/">发现更多内容 {{template "icon" "arrow-right"}}</a>
+    </section>
+  </div>
+
+  <aside class="community-sidebar">
+    <section class="surface online-card"><img class="portal-community-photo" src="{{asset "images/editorial/cover-community-small.webp"}}" alt="" width="768" height="512" loading="lazy"><h3>参与社区讨论</h3><p>登录后可以发布话题、点赞和回复。</p><button class="ui-button ui-button-primary" type="button" data-account-login>登录加入</button></section>
+    <section class="surface mission-card"><header><span class="panel-kicker">参与方式</span>{{template "icon" "message-circle"}}</header><h2>文章与评论</h2><p>打开文章可阅读全文，并在评论区提问或回复。</p><footer><a class="icon-text" href="#questions">浏览讨论 {{template "icon" "arrow-right"}}</a></footer></section>
+    <section class="surface active-creator-card"><header><div><span class="panel-kicker">作者动态</span><h2>最近的分享</h2></div><a class="icon-text" href="/explore/">更多 {{template "icon" "chevron-right"}}</a></header>{{range $index, $post := .Posts}}{{if lt $index 3}}<a class="creator-line" href="{{.AuthorURL}}"><span class="avatar avatar-cyan">N</span><span><b>{{.AuthorName}}</b><small>{{.Title}}</small></span><strong class="icon-text">主页 {{template "icon" "chevron-right"}}</strong></a>{{end}}{{else}}<p>暂无公开分享。</p>{{end}}</section>
+  </aside>
+</section>
+{{end}}

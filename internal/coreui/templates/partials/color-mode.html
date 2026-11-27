@@ -1,0 +1,6 @@
+{{define "color-mode"}}
+<div class="color-mode-control" data-color-mode-control="{{asset "js/chunnel-color-reveal.js"}}" role="group" aria-label="外观模式" hidden>
+  <button type="button" data-color-mode="light" aria-label="浅色模式" title="浅色模式" aria-pressed="false">{{template "icon" "sun"}}</button>
+  <button type="button" data-color-mode="dark" aria-label="深色模式" title="深色模式" aria-pressed="false">{{template "icon" "moon"}}</button>
+</div>
+{{end}}

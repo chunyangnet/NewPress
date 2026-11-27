@@ -1,0 +1,20 @@
+{{define "admin-navigation-badge-fields"}}
+<details class="admin-nav-badge-editor" {{if .Badge.Text}}open{{end}}>
+  <summary><span>导航角标</span><small>文字、风格与配色</small>{{template "icon" "chevron-down"}}</summary>
+  <div class="admin-nav-badge-stage" aria-label="角标桌面效果预览"><span class="nav-link-label"><span data-badge-preview-label>导航文字</span><span data-badge-preview class="nav-badge" hidden></span></span></div>
+  <div class="admin-nav-badge-visibility">{{template "admin-switch" (dict "NavField" "badge_show_on_mobile" "Label" "移动端显示角标" "Checked" (not .Badge.HideOnMobile) "Help" "关闭后，手机上的导航角标隐藏；电脑端仍显示。")}}</div>
+  <div class="admin-nav-badge-fields">
+    <label><span>角标文字</span><input type="text" maxlength="12" data-nav-field="badge_text" value="{{.Badge.Text}}" placeholder="例如：交流、最新、HOT"><small>留空即可关闭角标，最多 12 个字符。</small></label>
+    <label><span>显示位置</span><select data-nav-field="badge_placement"><option value="corner" {{if ne .Badge.Placement "inline"}}selected{{end}}>右上角</option><option value="inline" {{if eq .Badge.Placement "inline"}}selected{{end}}>文字旁</option></select><small>移动底栏统一显示在图标右上方，自动适配字号与偏移；建议使用 2–3 个字。</small></label>
+    <label><span>样式</span><select data-nav-field="badge_style"><option value="bubble" {{if or (not .Badge.Style) (eq .Badge.Style "bubble")}}selected{{end}}>气泡</option><option value="solid" {{if eq .Badge.Style "solid"}}selected{{end}}>实色</option><option value="pill" {{if eq .Badge.Style "pill"}}selected{{end}}>胶囊</option><option value="outline" {{if eq .Badge.Style "outline"}}selected{{end}}>描边</option><option value="soft" {{if eq .Badge.Style "soft"}}selected{{end}}>柔和</option><option value="gradient" {{if eq .Badge.Style "gradient"}}selected{{end}}>渐变</option><option value="ribbon" {{if eq .Badge.Style "ribbon"}}selected{{end}}>飘带</option></select></label>
+    <label><span>字号（px）</span><input type="number" min="10" max="16" step="1" value="{{or .Badge.FontSize 11}}" data-nav-field="badge_font_size"></label>
+    <label><span>背景色</span><input type="color" value="{{or .Badge.Background "#D14343"}}" data-nav-field="badge_background"></label>
+    <label><span>文字色</span><input type="color" value="{{or .Badge.Color "#FFFFFF"}}" data-nav-field="badge_color"></label>
+    <label><span>边框色</span><input type="color" value="{{or .Badge.BorderColor "#D14343"}}" data-nav-field="badge_border_color"></label>
+    <label><span>渐变结束色</span><input type="color" value="{{or .Badge.GradientTo "#EF7C3E"}}" data-nav-field="badge_gradient_to"></label>
+    <label><span>圆角（px）</span><input type="number" min="0" max="20" step="1" value="{{if .Badge.Text}}{{.Badge.Radius}}{{else}}4{{end}}" data-nav-field="badge_radius"><small>胶囊与飘带使用各自的轮廓。</small></label>
+    <label><span>水平偏移（px）</span><input type="number" min="-12" max="12" step="1" value="{{or .Badge.OffsetX 0}}" data-nav-field="badge_offset_x"></label>
+    <label><span>垂直偏移（px）</span><input type="number" min="-12" max="12" step="1" value="{{or .Badge.OffsetY 0}}" data-nav-field="badge_offset_y"></label>
+  </div>
+</details>
+{{end}}

@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "slug": "starter",
+  "name": "NewPress Starter",
+  "version": "1.0.0",
+  "description": "独立公共主题示例，使用 public/v1 展示契约。后台和账号流程由核心提供。",
+  "author": "NewPress Project",
+  "license": "Apache-2.0",
+  "engine": "go-template/v1",
+  "newpress": ">=0.1.0",
+  "view": "public/v1",
+  "default_locale": "zh-CN",
+  "templates": {
+    "home": "list.html",
+    "single": "single.html",
+    "page": "single.html",
+    "explore": "list.html",
+    "archive": "list.html",
+    "author": "list.html",
+    "404": "error.html",
+    "maintenance": "error.html"
+  },
+  "settings_schema": "settings.schema.json"
+}

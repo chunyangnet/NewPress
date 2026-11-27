@@ -1,0 +1,19 @@
+{{define "content"}}
+<section class="listing page-content" data-discovery data-category="{{.CategorySlug}}" data-view="{{index .Settings "list_default_view"}}" data-default-view="{{index .Settings "list_default_view"}}">
+  <nav class="breadcrumbs" aria-label="当前位置"><a href="/">首页</a>{{template "icon" "chevron"}}{{if or .Archive.Name .Author.Name}}<a href="/explore/">文档与教程</a>{{template "icon" "chevron"}}<span aria-current="page">{{if .Archive.Name}}{{.Archive.Name}}{{else}}{{.Author.Name}}{{end}}</span>{{else}}<span aria-current="page">文档与教程</span>{{end}}</nav>
+  <header class="page-intro">
+    {{if .Author.Name}}<div class="author-summary">{{if .Author.AvatarURL}}<img src="{{.Author.AvatarURL}}" alt="" width="56" height="56">{{else}}<span class="author-avatar" aria-hidden="true">{{if .Author.Initial}}{{.Author.Initial}}{{else}}{{template "icon" "user"}}{{end}}</span>{{end}}<div><p class="eyebrow">文档作者</p><h1>{{.Author.Name}}</h1></div></div>{{else}}<p class="eyebrow">{{if .SearchQuery}}搜索结果{{else if .Archive.Name}}内容归档{{else}}文档中心{{end}}</p><h1>{{if .SearchQuery}}搜索「{{.SearchQuery}}」{{else if .Archive.Name}}{{.Archive.Name}}{{else}}{{index .Settings "listing_title"}}{{end}}</h1>{{end}}
+    {{if or .Author.Description .SearchQuery .Archive.Name (index .Settings "listing_description")}}<p>{{if .Author.Description}}{{.Author.Description}}{{else if .SearchQuery}}找到 {{.Pagination.Total}} 篇相关内容{{else if .Archive.Description}}{{.Archive.Description}}{{else if .Archive.Name}}浏览「{{.Archive.Name}}」下的全部公开文档。{{else}}{{index .Settings "listing_description"}}{{end}}</p>{{end}}
+  </header>
+  {{if and (eq .Kind "author") (gt .Author.ID 0)}}{{template "author-actions" .}}{{end}}
+  {{if and (eq .Kind "explore") (not (index .Settings "show_search"))}}<form class="listing-search" data-listing-search action="/explore/" method="get" role="search" aria-label="文档中心搜索"><label class="sr-only" for="listing-query">搜索文档</label><input id="listing-query" name="q" type="search" value="{{.SearchQuery}}" maxlength="80" placeholder="{{index .Settings "search_placeholder"}}">{{if .CategorySlug}}<input name="category" type="hidden" value="{{.CategorySlug}}">{{end}}<button class="button button-primary" type="submit">搜索 {{template "icon" "search"}}</button></form>{{end}}
+  {{if and (eq .Kind "explore") (index .Settings "show_category_filters")}}{{template "discovery-filters" .}}{{end}}
+  {{template "discovery-toolbar" .}}
+  <div class="tutorial-grid listing-grid" id="document-results">
+    {{range $i, $post := .Posts}}{{template "tutorial-card" (dict "Post" $post "Index" $i "Images" $.Images "Settings" $.Settings)}}{{else}}
+    <div class="empty-state"><span class="empty-icon">{{template "icon" "search"}}</span><h2>{{if or .SearchQuery .CategorySlug}}暂时没有找到相关文档{{else}}暂无文档{{end}}</h2><p>{{if or .SearchQuery .CategorySlug}}试试更简短的关键词，或清除筛选条件。{{else}}发布后的文章和教程会出现在这里。{{end}}</p><a class="button button-secondary" href="/explore/">查看全部文档 {{template "icon" "arrow"}}</a></div>
+    {{end}}
+  </div>
+  {{template "pagination" .}}
+</section>
+{{end}}

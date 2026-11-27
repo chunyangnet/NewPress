@@ -1,0 +1,140 @@
+[
+  {
+    "name": "stable",
+    "version": "1.2.3",
+    "valid": true,
+    "builder": true
+  },
+  {
+    "name": "prerelease",
+    "version": "1.2.3-rc.1",
+    "valid": true,
+    "builder": true
+  },
+  {
+    "name": "numeric_zero",
+    "version": "1.2.3-0",
+    "valid": true,
+    "builder": true
+  },
+  {
+    "name": "alphanumeric_zero",
+    "version": "1.2.3-01a",
+    "valid": true,
+    "builder": true
+  },
+  {
+    "name": "hyphen_identifier",
+    "version": "1.2.3--",
+    "valid": true,
+    "builder": true
+  },
+  {
+    "name": "legacy_v_prefix",
+    "version": "v1.2.3",
+    "valid": true,
+    "builder": false
+  },
+  {
+    "name": "large_major",
+    "version": "18446744073709551616.0.0",
+    "valid": true,
+    "builder": true
+  },
+  {
+    "name": "large_prerelease",
+    "version": "1.0.0-1000000000000000000000",
+    "valid": true,
+    "builder": true
+  },
+  {
+    "name": "exact_length",
+    "version": "111111111111111111111111111111111111111111111111111111111111.0.0",
+    "valid": true,
+    "builder": true
+  },
+  {
+    "name": "empty",
+    "version": "",
+    "valid": false,
+    "builder": false
+  },
+  {
+    "name": "missing_component",
+    "version": "1.2",
+    "valid": false,
+    "builder": false
+  },
+  {
+    "name": "core_leading_zero",
+    "version": "01.2.3",
+    "valid": false,
+    "builder": false
+  },
+  {
+    "name": "numeric_leading_zero",
+    "version": "1.0.0-01",
+    "valid": false,
+    "builder": false
+  },
+  {
+    "name": "nested_leading_zero",
+    "version": "1.0.0-rc.01",
+    "valid": false,
+    "builder": false
+  },
+  {
+    "name": "empty_middle_identifier",
+    "version": "1.0.0-rc..1",
+    "valid": false,
+    "builder": false
+  },
+  {
+    "name": "empty_first_identifier",
+    "version": "1.0.0-.1",
+    "valid": false,
+    "builder": false
+  },
+  {
+    "name": "empty_last_identifier",
+    "version": "1.0.0-rc.",
+    "valid": false,
+    "builder": false
+  },
+  {
+    "name": "only_dot",
+    "version": "1.0.0-.",
+    "valid": false,
+    "builder": false
+  },
+  {
+    "name": "empty_prerelease",
+    "version": "1.0.0-",
+    "valid": false,
+    "builder": false
+  },
+  {
+    "name": "build_metadata",
+    "version": "1.0.0+build.1",
+    "valid": false,
+    "builder": false
+  },
+  {
+    "name": "trailing_newline",
+    "version": "1.0.0\n",
+    "valid": false,
+    "builder": false
+  },
+  {
+    "name": "non_ascii",
+    "version": "1.0.0-中文",
+    "valid": false,
+    "builder": false
+  },
+  {
+    "name": "excess_length",
+    "version": "1111111111111111111111111111111111111111111111111111111111111.0.0",
+    "valid": false,
+    "builder": false
+  }
+]

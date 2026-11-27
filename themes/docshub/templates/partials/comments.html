@@ -1,0 +1,27 @@
+{{define "comments"}}
+<section class="comments-section" id="comments" aria-labelledby="comments-title">
+  <div class="section-heading"><h2 id="comments-title">{{index .Settings "comments_title"}} <small>{{.Comments.Total}}</small></h2></div>
+  {{with index .Settings "comments_intro"}}<p class="comments-intro">{{.}}</p>{{end}}
+  {{if .Comments.Notice}}<p class="form-notice" role="status">{{.Comments.Notice}}</p>{{end}}
+  {{range .Comments.Items}}{{template "comment-item" .}}{{else}}<p class="comments-empty">暂无评论{{if .Comments.Open}}，欢迎分享你的使用经验。{{else}}。{{end}}</p>{{end}}
+  {{if or .Comments.PreviousURL .Comments.NextURL}}<nav class="pagination" aria-label="评论分页">{{if .Comments.PreviousURL}}<a rel="prev" href="{{.Comments.PreviousURL}}">上一页</a>{{end}}<span>第 {{.Comments.Page}} / {{.Comments.Pages}} 页</span>{{if .Comments.NextURL}}<a rel="next" href="{{.Comments.NextURL}}">下一页</a>{{end}}</nav>{{end}}
+  {{if and .Comments.Open (not .Comments.LoginRequired)}}
+  <form class="comment-form" id="comment-form" data-comment-form action="{{.Comments.FormURL}}" method="post">
+    <input type="hidden" name="form_token" value="{{.Comments.FormToken}}"><input type="hidden" name="parent_id" value="{{.Comments.Form.ParentID}}"><input type="hidden" name="website" value="">
+    <div class="reply-context" data-reply-context hidden><span data-reply-label></span><button type="button" data-reply-cancel>取消回复 {{template "icon" "close"}}</button></div>
+    {{if .Comments.AccountName}}<input type="hidden" name="author_name" value=""><input type="hidden" name="email" value=""><p class="comment-identity">{{template "icon" "user"}}以 <strong>{{.Comments.AccountName}}</strong> 的身份发表评论</p>{{else}}
+    <div class="form-row"><label for="comment-name">称呼<input id="comment-name" name="author_name" value="{{.Comments.Form.AuthorName}}" maxlength="80" autocomplete="name" required{{if index .Comments.FieldErrors "author_name"}} aria-invalid="true" aria-describedby="comment-name-error"{{end}}>{{with index .Comments.FieldErrors "author_name"}}<span class="form-error" id="comment-name-error">{{.}}</span>{{end}}</label><label for="comment-email">邮箱<input id="comment-email" name="email" value="{{.Comments.Form.AuthorEmail}}" type="email" autocomplete="email" required{{if index .Comments.FieldErrors "email"}} aria-invalid="true" aria-describedby="comment-email-error"{{end}}>{{with index .Comments.FieldErrors "email"}}<span class="form-error" id="comment-email-error">{{.}}</span>{{end}}</label></div>
+    {{end}}
+    <label for="comment-content">分享你的观点<textarea id="comment-content" name="content" placeholder="{{index .Settings "comments_placeholder"}}" maxlength="{{.Comments.MaxLength}}" rows="5" required aria-describedby="comment-help{{if index .Comments.FieldErrors "content"}} comment-content-error{{end}}"{{if index .Comments.FieldErrors "content"}} aria-invalid="true"{{end}}>{{.Comments.Form.Content}}</textarea></label>
+    {{with index .Comments.FieldErrors "content"}}<p class="form-error" id="comment-content-error" role="alert">{{.}}</p>{{end}}
+    {{range $key, $message := .Comments.FieldErrors}}{{if and (ne $key "author_name") (ne $key "email") (ne $key "content")}}<p class="form-error" role="alert">{{$message}}</p>{{end}}{{end}}
+    <p class="form-help" id="comment-help">{{.Comments.PrivacyNotice}} {{.Comments.ModerationNotice}}</p>
+    <div class="comment-submit"><button class="button button-primary" type="submit">提交评论 {{template "icon" "arrow"}}</button><span data-comment-count></span></div>
+    {{if .VerificationEnabled}}<noscript><p class="form-help">本站已开启安全验证，提交评论需要启用 JavaScript。</p></noscript>{{end}}
+  </form>
+  {{else}}<div class="comments-access"><p class="form-help">{{if .Comments.ClosedReason}}{{.Comments.ClosedReason}}{{else if .Comments.LoginRequired}}登录后参与讨论，交流阅读中遇到的问题。{{else}}评论已关闭。{{end}}</p>{{if and .Comments.Open .Comments.LoginRequired}}<a class="button button-secondary" href="/account/">登录后评论 {{template "icon" "arrow"}}</a>{{end}}</div>{{end}}
+</section>
+{{end}}
+{{define "comment-item"}}
+<article class="comment" id="comment-{{.ID}}"><header><strong>{{.AuthorName}}</strong>{{if .StaffReply}}<span class="staff-label">官方回复</span>{{end}}<time datetime="{{date .CreatedAt}}">{{date .CreatedAt}}</time></header><div>{{safeHTML .ContentHTML}}</div>{{if .CanReply}}<button type="button" class="comment-reply" data-comment-reply="{{.ID}}" data-reply-author="{{.AuthorName}}" aria-pressed="false" hidden>回复</button>{{end}}{{range .Children}}{{template "comment-item" .}}{{end}}</article>
+{{end}}

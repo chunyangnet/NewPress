@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "slug": "background-reader",
+  "name": "Background reader",
+  "version": "1.0.0",
+  "runtime": "wasm/core-v1",
+  "entry": "plugin.wasm",
+  "capabilities": ["settings.read"],
+  "hooks": {
+    "task.execute.v1": ["np_handle"],
+    "event.deliver.v1": ["np_handle"]
+  }
+}

@@ -1,0 +1,26 @@
+{{define "home-hero"}}
+{{$single := eq .Settings.hero_mode "single"}}
+{{$count := "3"}}{{if $single}}{{$count = "1"}}{{end}}
+<h1 class="sr-only">{{.Site.Title}} · {{.Settings.hero_title}} {{.Settings.hero_title_second}}</h1>
+<section data-home-section="hero" id="hero" class="hero" aria-label="企业介绍"{{if not $single}} aria-roledescription="轮播"{{end}} data-hero data-autoplay="{{eq .Settings.hero_autoplay true}}" data-interval="{{.Settings.hero_interval}}" data-motion="{{ne .Settings.motion_enabled false}}">
+  <div class="hero-slide" id="hero-slide-1" role="group" aria-roledescription="幻灯片" aria-label="第 1 张，共 {{$count}} 张" data-slide>
+    {{if .Settings.hero_mobile_image}}<picture><source media="(max-width: 760px)" srcset="{{.Settings.hero_mobile_image}}">{{end}}
+    <img class="hero-image" src="{{assetOr .Settings.hero_image "images/headquarters.webp"}}"{{if and (not .Settings.hero_image) (not .Settings.hero_mobile_image)}} srcset="{{asset "images/headquarters-mobile.webp"}} 960w, {{asset "images/headquarters.webp"}} 1881w" sizes="(max-width: 760px) 1440px, 100vw"{{end}} alt="{{if .Settings.hero_image_alt}}{{.Settings.hero_image_alt}}{{else if and (not .Settings.hero_image) (not .Settings.hero_mobile_image)}}暮色中的玻璃科技园区与水面倒影{{end}}" width="1920" height="919" fetchpriority="high">
+    {{if .Settings.hero_mobile_image}}</picture>{{end}}
+    <div class="hero-copy"><h2><span>{{.Settings.hero_title}}</span><span>{{.Settings.hero_title_second}}</span></h2><p>{{.Settings.hero_subtitle}}</p>{{template "nexora-action-link" (dict "Page" . "URL" .Settings.hero_link "Label" .Settings.hero_button "Class" "outline-button")}}</div>
+  </div>
+  {{if not $single}}
+  {{$secondImage := .Settings.second_image}}{{if not $secondImage}}{{$secondImage = .Settings.about_image}}{{end}}
+  {{$thirdImage := .Settings.third_image}}{{if not $thirdImage}}{{$thirdImage = .Settings.innovation_image}}{{end}}
+  <div class="hero-slide" id="hero-slide-2" role="group" aria-roledescription="幻灯片" aria-label="第 2 张，共 3 张" data-slide hidden>
+    <img class="hero-image hero-image-towers" src="{{assetOr $secondImage "images/about-architecture.webp"}}" alt="{{if .Settings.second_image_alt}}{{.Settings.second_image_alt}}{{else if not $secondImage}}向天空延伸的玻璃建筑{{end}}" width="1116" height="482" loading="lazy">
+    <div class="hero-shade"></div><div class="hero-copy"><h2><span>{{.Settings.second_title}}</span><span>{{.Settings.second_title_second}}</span></h2><p>{{.Settings.second_subtitle}}</p>{{template "nexora-action-link" (dict "Page" . "URL" .Settings.second_link "Label" .Settings.second_button "Class" "outline-button")}}</div>
+  </div>
+  <div class="hero-slide" id="hero-slide-3" role="group" aria-roledescription="幻灯片" aria-label="第 3 张，共 3 张" data-slide hidden>
+    <img class="hero-image" src="{{assetOr $thirdImage "images/innovation-mountains.webp"}}" alt="{{if .Settings.third_image_alt}}{{.Settings.third_image_alt}}{{else if not $thirdImage}}晨光中层叠的青蓝色山峦{{end}}" width="1920" height="919" loading="lazy">
+    <div class="hero-shade"></div><div class="hero-copy"><h2><span>{{.Settings.third_title}}</span><span>{{.Settings.third_title_second}}</span></h2><p>{{.Settings.third_subtitle}}</p>{{template "nexora-action-link" (dict "Page" . "URL" .Settings.third_link "Label" .Settings.third_button "Class" "outline-button")}}</div>
+  </div>
+  <div class="hero-controls" data-hero-controls hidden><span class="hero-count"><b data-current-slide>01</b><span>/ 03</span></span><div class="hero-tabs" aria-label="选择幻灯片"><button type="button" aria-label="切换至第 1 张" aria-controls="hero-slide-1" aria-pressed="true" data-slide-to="0"></button><button type="button" aria-label="切换至第 2 张" aria-controls="hero-slide-2" aria-pressed="false" data-slide-to="1"></button><button type="button" aria-label="切换至第 3 张" aria-controls="hero-slide-3" aria-pressed="false" data-slide-to="2"></button></div><button class="icon-button hero-previous" type="button" aria-label="上一张" data-slide-step="-1">{{template "icon-chevron" .}}</button><button class="icon-button hero-next" type="button" aria-label="下一张" data-slide-step="1">{{template "icon-chevron" .}}</button><button class="hero-playback" type="button" data-slide-playback hidden>暂停轮播</button><span class="sr-only" aria-live="polite" aria-atomic="true" data-slide-status></span></div>
+  {{end}}
+</section>
+{{end}}

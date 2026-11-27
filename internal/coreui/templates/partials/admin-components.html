@@ -1,0 +1,40 @@
+{{define "admin-switch"}}
+<label class="admin-switch{{if .Label}} admin-switch-field{{end}}"{{if .ID}} for="{{.ID}}"{{end}}>
+  <input type="checkbox" role="switch"{{if .ID}} id="{{.ID}}"{{end}}{{if .Name}} name="{{.Name}}"{{end}} value="{{if .Value}}{{.Value}}{{else}}true{{end}}"{{if .Checked}} checked{{end}}{{if .Disabled}} disabled{{end}}{{if .AccessibleLabel}} aria-label="{{.AccessibleLabel}}"{{end}}{{if .SettingType}} data-setting-type="{{.SettingType}}"{{end}}{{if .Grant}} data-runtime-grant="{{.Grant}}"{{end}}{{if .Rule}} data-rule="{{.Rule}}"{{end}}{{if .CurrencyField}} data-currency-field="{{.CurrencyField}}"{{end}}{{if .NavField}} data-nav-field="{{.NavField}}"{{end}}{{if .Recovery}} data-browser-recovery-toggle{{end}}{{if .UpdateFollow}} data-update-follow{{end}}{{if .SystemAuto}} data-system-auto{{end}}{{if .WechatDraft}} data-wechat-draft-enable{{end}}>
+  <span class="admin-switch-track" aria-hidden="true"><i></i></span>
+  {{if .Label}}<span class="admin-switch-copy"><b>{{.Label}}</b>{{if .Help}}<small>{{.Help}}</small>{{end}}</span>{{else if .ShowState}}<b data-switch-state>{{if .Checked}}开启{{else}}关闭{{end}}</b>{{end}}
+</label>
+{{end}}
+
+{{define "admin-savebar"}}
+<footer class="admin-savebar admin-save-dock" data-admin-savebar data-form-id="{{.FormID}}"{{if .Settings}} data-settings-savebar{{end}}{{if .Navigation}} data-navigation-savebar{{end}}{{if .ReadOnly}} data-readonly="true"{{end}}>
+  <p class="admin-save-feedback" data-save-state role="status" aria-live="polite"{{if .Notice}} data-initial-message="{{.Notice}}" data-tone="{{.Tone}}"{{end}}>{{if .ReadOnly}}只读{{else if .Notice}}{{.Notice}}{{end}}</p>
+  <div class="admin-savebar-actions"><button class="admin-button admin-button-quiet" type="button" data-admin-discard{{if .Settings}} data-settings-discard{{end}}{{if .Wechat}} data-wechat-discard{{end}} hidden>放弃修改</button><button class="admin-button admin-button-primary" type="{{if .Manual}}button{{else}}submit{{end}}"{{if not .Manual}} form="{{.FormID}}"{{end}}{{if .ReadOnly}} disabled{{end}}{{if .SubmitName}} name="{{.SubmitName}}" value="{{.SubmitValue}}"{{end}} data-admin-save>{{if .Label}}{{.Label}}{{else}}保存更改{{end}}</button></div>
+</footer>
+{{end}}
+
+{{define "admin-settings-nav"}}
+<aside class="admin-settings-nav" aria-label="设置分组"><nav data-settings-nav aria-label="设置分组">{{range .Groups}}{{template "admin-settings-nav-item" (dict "Target" (printf "%s%s" $.Prefix .ID) "Title" .Title "Icon" .Icon)}}{{end}}{{if .Access}}{{template "admin-settings-nav-item" (dict "Target" "site-settings-access" "Title" "登录与短信" "Icon" "key-round")}}{{end}}{{if .Verification}}{{template "admin-settings-nav-item" (dict "Target" "site-settings-captcha" "Title" "人机验证" "Icon" "shield-check")}}{{end}}{{if .AI}}{{template "admin-settings-nav-item" (dict "Target" "site-settings-ai" "Title" "AI 接口与模型" "Icon" "cpu")}}{{end}}</nav></aside>
+{{end}}
+
+{{define "admin-settings-nav-item"}}<button type="button" aria-controls="{{.Target}}" data-settings-target="{{.Target}}">{{if .Icon}}<span class="admin-settings-nav-icon" aria-hidden="true">{{template "icon" .Icon}}</span>{{end}}<span class="admin-settings-nav-title"><b>{{.Title}}</b></span></button>{{end}}
+
+{{define "admin-notice"}}
+{{if .Message}}<p class="admin-inline-notice" data-tone="{{.Tone}}" role="{{if eq .Tone "error"}}alert{{else}}status{{end}}">{{.Message}}</p>{{end}}
+{{end}}
+
+{{define "admin-setting-input"}}
+{{$field := .Field}}{{$id := printf "%s%s" .Prefix .Field.Key}}
+{{with .Field}}
+  {{if eq .Control "toggle"}}{{template "admin-switch" (dict "ID" $id "Name" .Key "Checked" .BoolValue "ShowState" true)}}
+  {{else if eq .Control "color"}}<div class="admin-color-control"><span><input id="{{$id}}" type="color" name="{{.Key}}" value="{{.StringValue}}" data-color-input></span><output for="{{$id}}" data-color-output>{{.StringValue}}</output><button type="button" aria-label="复制{{.Title}}颜色值" data-copy-value="{{.StringValue}}">{{template "icon" "copy"}}</button></div>
+  {{else if eq .Control "range"}}<div class="admin-range-control"><div><input id="{{$id}}" type="range" name="{{.Key}}" value="{{.StringValue}}" min="{{.Min}}" max="{{.Max}}" step="{{.Step}}" data-range-input></div><output for="{{$id}}"><b data-range-output>{{.StringValue}}</b>{{.Unit}}</output></div>
+  {{else if eq .Control "textarea"}}<textarea id="{{$id}}" name="{{.Key}}" rows="4"{{if $.MaxLength}} maxlength="{{$.MaxLength}}"{{end}} placeholder="{{.Placeholder}}"{{if .Required}} required{{end}}>{{.StringValue}}</textarea>
+  {{else if eq .Control "image"}}<input id="{{$id}}" type="text" inputmode="url" name="{{.Key}}" value="{{.StringValue}}" data-media-input data-media-title="{{.Title}}"{{if $.MaxLength}} maxlength="{{$.MaxLength}}"{{end}} placeholder="{{.Placeholder}}" autocomplete="off" spellcheck="false"{{if .Required}} required{{end}}>
+  {{else if eq .Control "segmented"}}<div class="admin-segmented" role="radiogroup" aria-label="{{.Title}}">{{range .Options}}<label><input type="radio" name="{{$field.Key}}" value="{{.Value}}"{{if eq $field.StringValue .Value}} checked{{end}}><span>{{.Label}}</span></label>{{end}}</div>
+  {{else if eq .Control "radio-card"}}<div class="admin-radio-cards" role="radiogroup" aria-label="{{.Title}}">{{range .Options}}<label><input type="radio" name="{{$field.Key}}" value="{{.Value}}"{{if eq $field.StringValue .Value}} checked{{end}}><span><i>{{template "icon" "check"}}</i><b>{{.Label}}</b>{{if .Description}}<small>{{.Description}}</small>{{end}}</span></label>{{end}}</div>
+  {{else if eq .Control "select"}}<div class="admin-select"><select id="{{$id}}" name="{{.Key}}"{{if .Required}} required{{end}}>{{range .Options}}<option value="{{.Value}}"{{if eq $field.StringValue .Value}} selected{{end}}>{{.Label}}</option>{{end}}</select></div>
+  {{else}}<input id="{{$id}}" type="{{if eq $.InputMode "password"}}password{{else}}text{{end}}" name="{{.Key}}" value="{{.StringValue}}"{{if $.MaxLength}} maxlength="{{$.MaxLength}}"{{end}}{{if and $.InputMode (ne $.InputMode "password")}} inputmode="{{$.InputMode}}"{{end}} placeholder="{{.Placeholder}}"{{if .Options}} list="{{$id}}-options"{{end}}{{if .Required}} required{{end}}>{{if .Options}}<datalist id="{{$id}}-options">{{range .Options}}<option value="{{.Value}}">{{.Label}}</option>{{end}}</datalist>{{end}}
+  {{end}}
+{{end}}
+{{end}}

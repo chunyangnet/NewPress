@@ -1,0 +1,60 @@
+{{define "content"}}
+<div class="system-workspace" data-system-status data-endpoint="/api/v1/admin/system-status" data-collected-at="{{.SystemStatus.CollectedAt.Format "2006-01-02T15:04:05.000Z07:00"}}">
+  <header class="system-heading">
+    <div><h1>系统状态</h1></div>
+    <div class="system-actions">
+      <a class="system-action" href="/admin/system/" data-system-refresh>{{template "icon" "refresh-cw"}}<span>刷新状态</span></a>
+      <a class="system-action system-action-primary" href="/api/v1/admin/system-status" download="newpress-system-status.json">{{template "icon" "arrow-down-to-line"}}<span>导出快照</span></a>
+    </div>
+  </header>
+
+  <div class="system-toolbar">
+    <nav class="system-section-nav" aria-label="系统状态分区"><a href="#system-overview">运行总览</a><a href="#system-services">服务检查</a><a href="#system-details">详细信息</a></nav>
+    <div class="system-refresh-meta"><span>更新于 <time data-system-updated>{{.SystemStatus.CollectedLabel}}</time> <span class="system-timezone" data-system-timezone>{{.SystemStatus.Timezone}}</span></span><span data-system-auto-control hidden>{{template "admin-switch" (dict "SystemAuto" true "Checked" true "Label" "自动刷新 · 15 秒")}}</span></div>
+  </div>
+  <p class="system-feedback" role="status" aria-live="polite" data-system-feedback hidden></p>
+
+  <section class="system-overview" id="system-overview" aria-label="运行总览">
+    <div class="system-hero" data-system-health="{{.SystemStatus.Status}}">
+      <div class="system-hero-content">
+        <h2 data-system-status-label>{{.SystemStatus.StatusLabel}}</h2>
+        <p data-system-status-detail>{{.SystemStatus.StatusDetail}}</p>
+        <div class="system-hero-meta"><span>{{template "icon" "shield-check"}}<b data-system-healthy>{{.SystemStatus.Healthy}}</b> / <span data-system-total>{{.SystemStatus.Total}}</span> 项检查通过</span><span>NewPress <b data-system-version>{{.SystemStatus.Version}}</b></span></div>
+      </div>
+    </div>
+    <article class="system-uptime system-panel">
+      <header><span>{{template "icon" "clock-3"}}应用持续运行</span></header>
+      <strong data-system-uptime>{{.SystemStatus.Uptime}}</strong>
+      <p>启动于 <time data-system-started>{{.SystemStatus.StartedAt}}</time></p>
+      <div class="system-instance"><span class="system-instance-icon">{{template "icon" "terminal"}}</span><div><b data-system-hostname>{{.SystemStatus.Hostname}}</b><span data-system-platform>{{.SystemStatus.Platform}}</span></div><span class="system-instance-dot" aria-hidden="true"></span></div>
+    </article>
+  </section>
+
+  <section class="system-metrics" aria-label="服务器资源监测">
+    {{range .SystemStatus.Metrics}}<article class="system-metric system-panel" data-system-metric="{{.ID}}" data-tone="{{.Tone}}">
+      <header><h2>{{.Label}}</h2><span class="system-metric-icon">{{template "icon" .Icon}}</span></header>
+      <div class="system-metric-body"><div class="system-metric-number"><strong data-metric-value>{{.Value}}</strong><span data-metric-unit>{{.Unit}}</span></div>
+        {{if .Ring}}<svg class="system-gauge" viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="23"/><circle class="system-gauge-fill" cx="28" cy="28" r="23" pathLength="100" stroke-dasharray="{{.Percent}} 100" data-metric-gauge/><circle class="system-gauge-center" cx="28" cy="28" r="3"/></svg>{{else}}<span class="system-process-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>{{end}}
+      </div>
+      <p data-metric-detail>{{.Detail}}</p>
+      <footer><span class="system-metric-note"><i aria-hidden="true"></i><span data-metric-note>{{.Note}}</span></span><span>{{if eq .ID "cpu"}}CPU{{else if eq .ID "memory"}}内存{{else if eq .ID "disk"}}磁盘{{else}}进程{{end}}</span></footer>
+    </article>{{end}}
+  </section>
+
+  <section class="system-services system-panel" id="system-services" aria-labelledby="system-services-title">
+    <header class="system-panel-heading"><div><h2 id="system-services-title">服务健康检查</h2><p>逐项检查核心存储与服务的就绪状态。</p></div><span class="system-health-count" data-system-health="{{.SystemStatus.Status}}">{{template "icon" "shield-check"}}<b data-system-healthy>{{.SystemStatus.Healthy}}</b> / <span data-system-total>{{.SystemStatus.Total}}</span> 正常</span></header>
+    <div class="system-checks">
+      {{range .SystemStatus.Checks}}<article class="system-check" data-system-check="{{.ID}}" data-status="{{.Status}}"><span class="system-check-icon">{{template "icon" .Icon}}</span><div class="system-check-description"><h3>{{.Label}}</h3><p data-check-detail>{{.Detail}}</p></div><div class="system-check-result"><span class="system-check-state"><i aria-hidden="true"></i><span data-check-status>{{.StatusLabel}}</span></span><small data-check-latency>{{.Latency}}</small></div></article>{{end}}
+    </div>
+    <footer class="system-services-footer"><span>{{template "icon" "circle-help"}}耗时为服务就绪检查耗时，不代表公网访问延迟。</span><a href="/health/ready" target="_blank" rel="noopener">查看就绪探针 {{template "icon" "external-link"}}</a></footer>
+  </section>
+
+  <div class="system-details-heading" id="system-details"><div><h2>运行详情</h2></div><p>当前实例的软硬件信息与服务配置</p></div>
+  <div class="system-details-grid">
+    {{range .SystemStatus.Groups}}<section class="system-detail system-panel system-detail-{{.ID}}" aria-labelledby="system-{{.ID}}-title"><header class="system-detail-heading"><span class="system-detail-icon">{{template "icon" .Icon}}</span><div><h3 id="system-{{.ID}}-title">{{.Title}}</h3></div></header><dl>{{range .Rows}}<div><dt>{{.Label}}</dt><dd data-system-row="{{.ID}}">{{.Value}}</dd></div>{{end}}</dl></section>{{end}}
+  </div>
+
+  <details class="system-method system-panel"><summary>{{template "icon" "circle-help"}}指标说明<span>数据范围与刷新方式 {{template "icon" "chevron-down"}}</span></summary><div><p>服务器资源来自操作系统。CPU 为两次采样之间的平均使用率；首次打开时需等待下一次采样。系统内存按总量减可用量计算，磁盘表示数据目录所在卷的占用情况，不是站点文件大小。</p><p>应用驻留内存（RSS）是当前进程驻留在物理内存中的部分；Go 堆与保留内存是运行时指标，不能等同于整个服务器的内存用量。容器或虚拟机中展示操作系统可见的资源范围，可能与部署配额不同。</p><p>开启自动刷新后，页面可见时每 15 秒更新一次；离开页面会暂停请求。服务端快照最多缓存 2 秒，导出的 JSON 包含采样时间和原始数值。未返回的指标显示为暂不可用。</p></div></details>
+  <noscript><p class="system-noscript">当前为页面加载时的状态快照。点击「刷新状态」重新获取最新信息。</p></noscript>
+</div>
+{{end}}

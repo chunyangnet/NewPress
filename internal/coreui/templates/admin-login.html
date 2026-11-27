@@ -1,0 +1,32 @@
+{{define "content"}}
+<section class="admin-login-shell">
+  <div class="admin-login-story">
+    <picture class="admin-login-photo">
+      <source media="(max-width: 780px)" srcset="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=">
+      <img src="{{asset "images/editorial/cover-community.webp"}}" srcset="{{asset "images/editorial/cover-community-small.webp"}} 640w, {{asset "images/editorial/cover-community.webp"}} 1024w" sizes="55vw" alt="暖阳照在木质织机上，珊瑚色的羊毛线一束束铺开。" width="1024" height="683" fetchpriority="high">
+    </picture>
+    <span class="admin-login-edition">内容管理 <i></i> 后台登录</span>
+    <div class="admin-login-story-copy">
+      <span>站点内容与运营</span>
+      <h2>管理文章、评论<br>与站点设置</h2>
+      <p>登录后可以发布内容、审核评论、维护导航和调整站点配置。</p>
+    </div>
+  </div>
+  <div class="admin-login-panel">
+    <div class="admin-login-heading"><a class="admin-login-brand" href="/"><span class="admin-brand-mark"><img src="{{asset "images/brand/logo-mark-84.webp"}}?v={{.UIAssetVersion}}" alt="" width="42" height="42"></span><span><strong>{{.Site.Title}}</strong><small>内容管理</small></span></a>{{template "color-mode" .}}</div>
+    <div class="admin-login-form-wrap">
+      <h1>登录管理后台</h1>
+      <p>使用管理员账号登录。</p>
+      {{if .Admin.Notice}}<div class="admin-login-error" role="alert">{{template "icon" "triangle-alert"}}<span><b>验证未通过</b>{{.Admin.Notice}}</span></div>{{end}}
+      <form class="admin-login-form" action="/admin/login/" method="post">
+        <input type="hidden" name="next" value="{{.Admin.Next}}">
+        <label><span>账号</span><div class="fluent-input-group">{{template "icon" "user-round"}}<input type="text" name="username" autocomplete="username" maxlength="80" required autofocus placeholder="输入管理员账号"></div></label>
+        <label><span>密码</span><div class="fluent-input-group">{{template "icon" "diamond"}}<input type="password" name="password" autocomplete="current-password" maxlength="1024" required placeholder="输入密码"><button type="button" aria-label="显示密码" aria-pressed="false" data-password-toggle>{{template "icon" "eye"}}</button></div></label>
+        <button class="admin-login-submit" type="submit"><span>登录</span>{{template "icon" "arrow-right"}}</button>
+      </form>
+      <p class="admin-login-note">使用公共设备时，请在离开前退出登录。</p>
+    </div>
+    <footer><a href="/">← 返回站点</a><span>NewPress {{.Version}}</span></footer>
+  </div>
+</section>
+{{end}}

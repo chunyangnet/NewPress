@@ -1,0 +1,28 @@
+{{define "content"}}
+<section class="import-page" data-content-import data-csrf="{{.Admin.CSRFToken}}" data-readonly="{{.Admin.ReadOnly}}">
+  <header class="admin-page-heading"><h1>内容导入</h1></header>
+  {{if .FeatureStatus}}{{template "admin-feature-status" .}}{{end}}
+  <div class="import-workspace">
+    <form class="import-setup" data-import-form>
+      <div class="import-section-heading"><span>01</span><div><h2>准备来源</h2><p>每批最多 100 篇，源文件共 8 MiB。</p></div></div>
+      <fieldset {{if .Admin.ReadOnly}}disabled{{end}}>
+        <label>内容格式<select name="format"><option value="markdown">Markdown 文件</option><option value="wordpress">WordPress WXR 1.2</option></select></label>
+        <label>来源标识<input name="source" required maxlength="80" pattern="[a-z0-9][a-z0-9._\-]{0,79}" placeholder="例如 my-old-blog" autocomplete="off"><small>同一来源再次导入时使用相同标识，便于识别已迁入内容。</small></label>
+        <label class="import-file-label">选择文件<input name="files" type="file" accept=".md,.markdown" multiple required><small data-import-files>支持 Markdown 常用格式及 YAML 元信息。</small></label>
+        <label>导入后的状态<select name="state"><option value="draft">先保存为草稿</option><option value="preserve">保留支持的来源状态</option></select><small>带密码内容始终转为私密。保留发布状态会使对应内容公开。</small></label>
+        <button class="admin-button admin-button-primary" type="submit" data-import-preview>生成预览</button>
+      </fieldset>
+      <div class="import-footnote"><b>来源文件保留在你的设备上</b><p>预览不会创建文章。确认时整批保存；已导入的内容保留当前修改。远程图片需映射到本站媒体，评论与附件文件会列入待处理报告。</p><a href="/admin/media/" target="_blank" rel="noopener">打开媒体库 {{template "icon" "external-link"}}</a></div>
+    </form>
+    <div class="import-review">
+      <div class="import-section-heading"><span>02</span><div><h2>核对迁入内容</h2><p>先看清哪些能迁入，哪些需要整理。</p></div></div>
+      <p class="import-status" data-import-status role="status" aria-live="polite">选择文件后，转换结果会显示在这里。</p>
+      <div class="import-mappings" data-import-mappings hidden><h3>作者与图片映射</h3><p>默认归属当前账号。填写账号编号或选择建议；调整后重新生成预览。</p><datalist id="import-account-options"></datalist><div data-import-authors></div><div data-import-media></div></div>
+      <div class="import-summary" data-import-summary></div>
+      <div class="import-results" data-import-results><div class="import-empty"><span aria-hidden="true">↳</span><h3>还没有预览结果</h3><p>选择文件后，标题、正文、分类、作者和旧路径会逐项展示。</p></div></div>
+      <div class="import-actions" data-import-actions hidden><button class="admin-button admin-button-primary" type="button" data-import-apply>确认迁入</button><button class="admin-button" type="button" data-import-download>下载核对报告</button></div>
+    </div>
+  </div>
+  <noscript><p class="import-status">内容迁入需要 JavaScript 来读取文件、展示预览并提交确认。</p></noscript>
+</section>
+{{end}}

@@ -1,0 +1,30 @@
+{{define "content"}}
+<section class="admin-page design-workspace" data-layout-designer>
+  <header class="admin-page-heading"><div><h1>可视化布局</h1><p>拖动模块调整首页，预览会随修改更新。保存后应用到站点。</p></div><div class="admin-heading-actions"><a class="admin-button admin-button-quiet" href="/admin/announcements/">{{template "icon" "megaphone"}}公告管理</a><a class="admin-button admin-button-quiet" href="/admin/modules/">{{template "icon" "boxes"}}模块中心</a><a class="admin-button admin-button-quiet" href="/admin/appearance/">{{template "icon" "sliders-horizontal"}}主题设置</a><a class="admin-button admin-button-quiet" href="/" target="_blank" rel="noopener">{{template "icon" "external-link"}}查看首页</a></div></header>
+  {{template "theme-settings-identity" .Admin.Settings}}
+  {{if .FeatureStatus}}{{template "admin-feature-status" .}}{{end}}
+  {{template "admin-notice" (dict "Message" .Admin.Notice "Tone" .Admin.NoticeTone)}}
+  {{if .Admin.FieldErrors}}<div class="admin-callout admin-callout-warning" role="alert"><ul>{{range $key,$message := .Admin.FieldErrors}}<li>{{$message}}（{{$key}}）</li>{{end}}</ul></div>{{end}}
+  <div class="design-toolbar"><span class="design-page-label">{{template "icon" "home"}}首页画布</span><div class="design-history"><button class="admin-button admin-button-quiet" type="button" data-layout-undo disabled>{{template "icon" "undo-2"}}撤销</button><button class="admin-button admin-button-quiet" type="button" data-layout-redo disabled>{{template "icon" "redo-2"}}重做</button><button class="admin-button admin-button-quiet" type="button" data-layout-defaults {{if .Admin.ReadOnly}}disabled{{end}}>恢复布局</button></div></div>
+  <div class="layout-designer-grid">
+    <form id="theme-settings-form" class="layout-canvas-form" action="/admin/appearance/layout/" method="post" data-settings-form data-layout-form>
+      <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><input type="hidden" name="revision" value="{{.Admin.Settings.Revision}}">
+      <fieldset {{if .Admin.ReadOnly}}disabled{{end}}>
+        <div hidden>{{range .LayoutFields}}{{if .Boolean}}<input type="checkbox" name="{{.Key}}" value="true" {{if .Checked}}checked{{end}}>{{else}}<input type="hidden" name="{{.Key}}" {{if eq .Key "home_custom_blocks"}}data-admin-value value="{{$.HomeCustomBlocks}}"{{else}}value="{{.Value}}"{{end}}>{{end}}{{end}}</div>
+        <div class="layout-options">{{range .LayoutOptions}}<div data-setting-field="{{.Key}}"><label for="setting-{{.Key}}">{{.Title}}</label>{{template "theme-setting-source" .}}{{template "admin-setting-input" (dict "Field" . "Prefix" "setting-")}}</div>{{end}}</div>
+        <div class="layout-board">{{range .HomeEditor}}<section class="layout-region layout-region-{{.Key}}" aria-label="{{.Title}}"><header><h2>{{.Title}}</h2><span>{{if eq .Key "top"}}全宽{{else if eq .Key "main"}}主栏{{else}}侧栏{{end}}</span></header>{{template "home-module-editor" (dict "Region" . "Settings" $.HomeModuleSettings "Errors" $.Admin.FieldErrors)}}</section>{{end}}</div>
+        <p class="layout-hint" data-sidebar-state role="status" {{if index .Admin.Settings.Values "sidebar_enabled"}}hidden{{end}}>侧栏已关闭：侧栏中的模块即使设为显示也不会出现在首页。<button type="button" class="admin-button admin-button-quiet" data-sidebar-enable>开启侧栏</button>，或将模块移到主栏。保存布局后生效。</p>
+        <p class="layout-hint">模块可以跨区域移动。手机上可拖动把手，也可使用位置和上移、下移按钮。没有公开内容的模块会在实际页面中收起。</p>
+      </fieldset>
+    </form>
+    <aside class="admin-theme-preview layout-live-preview" data-appearance-preview data-preview-url="/admin/appearance/preview/" data-preview-readonly="{{.Admin.ReadOnly}}">
+      <div class="admin-preview-heading"><h2>实时预览</h2><button type="button" class="appearance-preview-refresh" data-preview-refresh aria-label="刷新预览">{{template "icon" "refresh-cw"}}</button></div>
+      <div class="appearance-preview-toolbar"><div class="appearance-preview-toggle" role="group" aria-label="预览页面"><button type="button" data-preview-page="home" aria-pressed="true">首页</button></div><div class="appearance-preview-toggle" role="group" aria-label="预览尺寸"><button type="button" data-preview-device="desktop" aria-pressed="true">桌面</button><button type="button" data-preview-device="mobile" aria-pressed="false">手机</button></div></div>
+      <div class="appearance-preview-context"><span data-preview-context>首页</span><span data-preview-viewport>1440 px</span></div>
+      <div class="appearance-preview-stage" data-preview-stage aria-busy="true"><div class="appearance-preview-canvas" data-preview-canvas></div><div class="appearance-preview-empty" data-preview-empty><span>{{template "icon" "eye"}}</span><strong>正在载入预览</strong><p>使用当前布局和公开内容</p></div></div>
+      <p class="appearance-preview-status" data-preview-status role="status" aria-live="polite">正在加载预览…</p>
+    </aside>
+  </div>
+  {{template "admin-savebar" (dict "FormID" "theme-settings-form" "Settings" true "ReadOnly" .Admin.ReadOnly "Notice" .Admin.Notice "Tone" .Admin.NoticeTone)}}
+</section>
+{{end}}

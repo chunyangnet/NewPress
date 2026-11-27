@@ -1,0 +1,80 @@
+/* Native dialogs keep their own close/focus semantics. Motion is progressive:
+   older engines get an entrance; discrete display/overlay support adds exits. */
+:root { --dialog-rise: 8px; --dialog-scale: .985; }
+.theme-popup-lively { --dialog-rise: 16px; --dialog-scale: .96; --popup-ease: var(--motion-spring); }
+dialog:not([data-modal], [data-drawer], [open]) { pointer-events: none; }
+@keyframes chunnel-dialog-in {
+  from { opacity: 0; transform: translateY(var(--dialog-rise)) scale(var(--dialog-scale)); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes chunnel-dialog-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* Removing a duration alone does not cancel an already running transition. */
+body:is(.theme-popup-off, .theme-force-reduced-motion, .theme-motion-minimal) {
+  & dialog:not([data-modal], [data-drawer]),
+  & dialog:not([data-modal], [data-drawer])::backdrop,
+  & .admin-import-dialog > section { animation: none !important; transition: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  dialog:not([data-modal], [data-drawer]),
+  dialog:not([data-modal], [data-drawer])::backdrop,
+  .admin-import-dialog > section { animation: none !important; transition: none !important; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body:not(.theme-popup-off, .theme-force-reduced-motion, .theme-motion-minimal) {
+    & dialog:not([data-modal], [data-drawer]):where(:not(.admin-import-dialog))[open],
+    & .admin-import-dialog[open] > section {
+      animation: chunnel-dialog-in var(--popup-duration, 260ms) var(--popup-ease, var(--motion-ease));
+      transform-origin: center;
+    }
+    & dialog:not([data-modal], [data-drawer])[open]::backdrop {
+      animation: chunnel-dialog-backdrop-in calc(var(--popup-duration, 260ms) * .7) ease-out;
+    }
+
+    @supports (overlay: auto) and (transition-behavior: allow-discrete) {
+      & dialog:not([data-modal], [data-drawer]) {
+        --dialog-time: calc(var(--popup-duration, 260ms) * .7);
+        opacity: 0;
+        transform: translateY(var(--dialog-rise)) scale(var(--dialog-scale));
+        animation: none;
+        transition: opacity var(--dialog-time) ease-out,
+          transform var(--dialog-time) var(--popup-ease, var(--motion-ease)),
+          display var(--dialog-time) allow-discrete, overlay var(--dialog-time) allow-discrete;
+      }
+      & dialog:not([data-modal], [data-drawer])[open] {
+        --dialog-time: var(--popup-duration, 260ms);
+        opacity: 1;
+        transform: none;
+        animation: none;
+      }
+      & dialog:not([data-modal], [data-drawer])::backdrop {
+        opacity: 0;
+        animation: none;
+        transition: opacity var(--dialog-time) ease-out,
+          display var(--dialog-time) allow-discrete, overlay var(--dialog-time) allow-discrete;
+      }
+      & dialog:not([data-modal], [data-drawer])[open]::backdrop { opacity: 1; animation: none; }
+
+      /* The import dialog covers the viewport: move only its content panel. */
+      & dialog.admin-import-dialog { opacity: 1; transform: none; }
+      & .admin-import-dialog > section {
+        opacity: 0;
+        transform: translateY(var(--dialog-rise)) scale(var(--dialog-scale));
+        animation: none;
+        transition: opacity var(--dialog-time) ease-out,
+          transform var(--dialog-time) var(--popup-ease, var(--motion-ease));
+      }
+      & .admin-import-dialog[open] > section { opacity: 1; transform: none; animation: none; }
+
+      @starting-style {
+        & dialog:not([data-modal], [data-drawer], .admin-import-dialog)[open],
+        & .admin-import-dialog[open] > section {
+          opacity: 0;
+          transform: translateY(var(--dialog-rise)) scale(var(--dialog-scale));
+        }
+        & dialog:not([data-modal], [data-drawer])[open]::backdrop { opacity: 0; }
+      }
+    }
+  }
+}

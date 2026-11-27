@@ -1,0 +1,209 @@
+html[data-mode=dark] {
+  color-scheme: dark;
+  --ink:#e7ebfa;
+  --muted:#a0abc8;
+  --subtle:#808caa;
+  --page:#111523;
+  --panel:#1a2032;
+  --line:#252d43;
+}
+html[data-mode=dark] .sidebar {
+  background:
+    linear-gradient(
+      150deg,
+      #1a2238,
+      #141a2c 60%);
+  border-color: #283048;
+}
+html[data-mode=dark] .primary-nav > a,
+html[data-mode=dark] .secondary-nav > a,
+html[data-mode=dark] .nav-item > a {
+  color: #a9b5d4;
+}
+html[data-mode=dark] .primary-nav [aria-current=page],
+html[data-mode=dark] .primary-nav > a:hover,
+html[data-mode=dark] .secondary-nav > a:hover,
+html[data-mode=dark] .nav-item > a:hover {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+html[data-mode=dark] .nav-divider {
+  background: #293149;
+}
+html[data-mode=dark] .color-switch {
+  background: #20283d;
+}
+html[data-mode=dark] .color-switch button[aria-pressed=true] {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+html[data-mode=dark] .hero {
+  background: #19233d;
+}
+html[data-mode=dark] .hero-art {
+  filter: brightness(.6) saturate(1.15);
+  mix-blend-mode: luminosity;
+  opacity: .4;
+}
+html[data-mode=dark] .hero h1 {
+  color: #eef2ff;
+}
+html[data-mode=dark] .hero p {
+  color: #c5d0ef;
+}
+html[data-mode=dark] .search-form {
+  background: #232c45a0;
+  border-color: #b2c7ff0d;
+}
+html[data-mode=dark] .search-form input::placeholder,
+html[data-mode=dark] .search-form button {
+  color: #b8c5e5;
+}
+html[data-mode=dark] .login-button {
+  background: #bacfff20;
+}
+html[data-mode=dark] .button-primary {
+  background: #dbe6ff;
+  color: #18223c;
+  border-color: #dbe6ff;
+}
+html[data-mode=dark] .button-secondary {
+  background: #b4c9ff0d;
+  border-color: #566380;
+  color: #ccd7f3;
+}
+html[data-mode=dark] .quick-links {
+  background:
+    linear-gradient(
+      125deg,
+      #1e273d,
+      #1a2134);
+  border-color: #7382ae18;
+}
+html[data-mode=dark] .quick-links > a {
+  border-color: #313b55;
+}
+html[data-mode=dark] .quick-icon,
+html[data-mode=dark] .quick-links > a > .icon {
+  color: var(--accent);
+}
+html[data-mode=dark] .quick-links small {
+  color: #99a7c9;
+}
+html[data-mode=dark] .tutorial-card,
+html[data-mode=dark] .learning-path {
+  background:
+    linear-gradient(
+      135deg,
+      #1c2337,
+      #181f31);
+}
+html[data-mode=dark] .tutorial-image img {
+  filter: brightness(.72);
+}
+html[data-mode=dark] .category-badge {
+  background: #303b58;
+  color: #bdcbed;
+}
+html[data-mode=dark] .tutorial-body > p,
+html[data-mode=dark] .tutorial-meta,
+html[data-mode=dark] .document-row time,
+html[data-mode=dark] .section-heading > a {
+  color: #96a4c5;
+}
+html[data-mode=dark] .document-icon {
+  background: #22345b;
+}
+html[data-mode=dark] .row-1 .document-icon {
+  background: var(--accent-soft);
+}
+html[data-mode=dark] .row-2 .document-icon {
+  background: #30214e;
+}
+html[data-mode=dark] .row-3 .document-icon {
+  background: #3f2d26;
+}
+html[data-mode=dark] .learning-path li:before {
+  background: #2a344d;
+  color: #bac6e4;
+}
+html[data-mode=dark] .learning-path li:after {
+  background: #303c57;
+}
+html[data-mode=dark] .learning-path li:first-child:before,
+html[data-mode=dark] .learning-path li:first-child:after {
+  background: var(--accent);
+  color: #15223e;
+}
+html[data-mode=dark] .prose {
+  color: #b6c1db;
+}
+html[data-mode=dark] .prose code {
+  background: #27334c;
+  color: #a4bcff;
+}
+html[data-mode=dark] .prose pre code {
+  background: transparent;
+  color: #d7e4ff;
+}
+html[data-mode=dark] .prose blockquote,
+html[data-mode=dark] .prose .callout {
+  background: #1d2b47;
+  color: #adbfdf;
+}
+html[data-mode=dark] .comment-form input,
+html[data-mode=dark] .comment-form textarea {
+  border-color: #37415b;
+}
+html[data-mode=dark] .empty-icon,
+html[data-mode=dark] .category-filters a[aria-current=page] {
+  background: var(--accent-soft);
+}
+html[data-mode=dark] .error-number {
+  color: #293c65;
+}
+html[data-mode=dark] {
+  --accent-soft: var(--panel);
+  --accent-line: var(--accent);
+  --focus-ring: var(--accent);
+}
+@supports (color: color-mix(in srgb, red, white)) {
+  html[data-mode=dark] {
+    --accent-soft: color-mix(in srgb,var(--accent) 15%,var(--page));
+    --accent-line: color-mix(in srgb,var(--accent) 40%,var(--page));
+    --focus-ring: color-mix(in srgb,var(--accent) 72%,white);
+  }
+}
+html[data-mode=dark] .sidebar [data-nav-link][aria-current] {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+}
+html[data-mode=dark] .category-filters a[aria-current=page],
+html[data-mode=dark] .empty-icon {
+  background: var(--accent-soft);
+}
+html[data-mode=dark] .form-notice {
+  background: #1d3048;
+  color: #bedaff;
+}
+html[data-mode=dark] .preview-notice {
+  background: #352c1c;
+  border-color: #57472b;
+  color: #e0c894;
+}
+html[data-mode=dark] .staff-label {
+  background: var(--accent-soft);
+}
+html[data-mode=dark] .form-error {
+  color: #ff9aa7;
+}
+html[data-mode=dark] .button-secondary:hover {
+  background: var(--accent-soft);
+}
+html[data-mode=dark] .login-button:hover {
+  background: var(--accent-soft);
+}
+html[data-mode=dark] .series-card:hover {
+  background: var(--panel);
+}

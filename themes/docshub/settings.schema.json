@@ -1,0 +1,3363 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "accent": {
+      "type": "string",
+      "title": "强调色",
+      "description": "用于选中态、链接、边框和焦点提示。",
+      "default": "#4c82ff",
+      "pattern": "^#[0-9a-fA-F]{6}$",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "visual",
+        "control": "color",
+        "order": 0,
+        "css_variable": "--accent"
+      }
+    },
+    "hero_title": {
+      "type": "string",
+      "title": "首屏标题 · 第一行",
+      "default": "开发文档",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 20
+      },
+      "description": "留空时使用站点名称。"
+    },
+    "hero_title_second": {
+      "type": "string",
+      "title": "首屏标题 · 第二行",
+      "default": "与使用教程",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 30
+      },
+      "description": "可留空；首屏标题第二行。"
+    },
+    "hero_description": {
+      "type": "string",
+      "title": "首屏介绍 · 第一行",
+      "default": "查阅安装步骤、功能说明和接口用法，",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 40
+      },
+      "description": "可留空；首屏介绍第一行。"
+    },
+    "hero_description_second": {
+      "type": "string",
+      "title": "首屏介绍 · 第二行",
+      "default": "也可以按章节阅读教程和示例。",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 50
+      },
+      "description": "可留空；首屏介绍第二行。"
+    },
+    "tutorials_title": {
+      "type": "string",
+      "title": "教程区标题",
+      "default": "教程推荐",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "home_content",
+        "control": "text",
+        "order": 10
+      },
+      "description": "教程推荐区的标题；留空使用“教程推荐”。"
+    },
+    "community_title": {
+      "type": "string",
+      "title": "社区卡片标题",
+      "default": "社区交流",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "learning",
+        "control": "text",
+        "order": 10
+      },
+      "description": "社区卡片标题；留空使用“社区交流”。"
+    },
+    "start_link": {
+      "type": "string",
+      "title": "快速开始链接",
+      "default": "/explore/?q=入门",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "links",
+        "control": "text",
+        "order": 70
+      },
+      "format": "uri-reference"
+    },
+    "advanced_link": {
+      "type": "string",
+      "title": "进阶教程链接",
+      "default": "/explore/?q=进阶",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "links",
+        "control": "text",
+        "order": 80
+      },
+      "format": "uri-reference"
+    },
+    "api_link": {
+      "type": "string",
+      "title": "API 参考链接",
+      "default": "/explore/?q=API",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "links",
+        "control": "text",
+        "order": 90
+      },
+      "format": "uri-reference"
+    },
+    "practice_link": {
+      "type": "string",
+      "title": "最佳实践链接",
+      "default": "/explore/?q=实战",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "links",
+        "control": "text",
+        "order": 100
+      },
+      "format": "uri-reference"
+    },
+    "tools_link": {
+      "type": "string",
+      "title": "开发工具链接",
+      "default": "/explore/",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "links",
+        "control": "text",
+        "order": 110
+      },
+      "format": "uri-reference"
+    },
+    "faq_link": {
+      "type": "string",
+      "title": "常见问题链接",
+      "default": "/explore/?q=常见问题",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "links",
+        "control": "text",
+        "order": 120
+      },
+      "format": "uri-reference"
+    },
+    "changelog_link": {
+      "type": "string",
+      "title": "更新日志链接",
+      "default": "/explore/?q=更新",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "links",
+        "control": "text",
+        "order": 130
+      },
+      "format": "uri-reference"
+    },
+    "community_link": {
+      "type": "string",
+      "title": "社区入口链接",
+      "default": "/community/",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "links",
+        "control": "text",
+        "order": 140
+      },
+      "format": "uri-reference"
+    },
+    "projects_link": {
+      "type": "string",
+      "title": "开源项目链接",
+      "default": "/explore/?q=开源",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "links",
+        "control": "text",
+        "order": 150
+      },
+      "format": "uri-reference"
+    },
+    "about_link": {
+      "type": "string",
+      "title": "关于我们链接",
+      "default": "/explore/?q=关于",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "links",
+        "control": "text",
+        "order": 160
+      },
+      "format": "uri-reference"
+    },
+    "demo_link": {
+      "type": "string",
+      "title": "演示教程链接",
+      "default": "/#tutorials",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "links",
+        "control": "text",
+        "order": 170
+      },
+      "format": "uri-reference"
+    },
+    "show_quick_links": {
+      "type": "boolean",
+      "title": "显示快捷入口",
+      "default": true,
+      "x-newpress": {
+        "group": "modules",
+        "control": "toggle",
+        "order": 0
+      }
+    },
+    "show_tutorials": {
+      "type": "boolean",
+      "title": "显示教程推荐",
+      "default": true,
+      "x-newpress": {
+        "group": "modules",
+        "control": "toggle",
+        "order": 10
+      }
+    },
+    "show_latest": {
+      "type": "boolean",
+      "title": "显示最新文档",
+      "default": true,
+      "x-newpress": {
+        "group": "modules",
+        "control": "toggle",
+        "order": 20
+      }
+    },
+    "show_community": {
+      "type": "boolean",
+      "title": "显示社区卡片",
+      "default": true,
+      "x-newpress": {
+        "group": "modules",
+        "control": "toggle",
+        "order": 30
+      }
+    },
+    "show_learning_path": {
+      "type": "boolean",
+      "title": "显示学习路径",
+      "default": true,
+      "x-newpress": {
+        "group": "modules",
+        "control": "toggle",
+        "order": 40
+      }
+    },
+    "hero_eyebrow": {
+      "type": "string",
+      "title": "首屏眉题",
+      "default": "",
+      "maxLength": 60,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 10
+      },
+      "description": "显示在主标题上方的短说明；留空不显示。"
+    },
+    "show_hero_artwork": {
+      "type": "boolean",
+      "title": "显示玻璃丝带插画",
+      "default": true,
+      "x-newpress": {
+        "group": "hero",
+        "control": "toggle",
+        "order": 60
+      },
+      "description": "关闭后使用随强调色变化的简洁背景，首屏内容保持可见。"
+    },
+    "hero_primary_label": {
+      "type": "string",
+      "title": "首屏主按钮文字",
+      "default": "开始阅读",
+      "maxLength": 24,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 70
+      },
+      "minLength": 1,
+      "pattern": "\\S",
+      "description": "使用“导航与学习入口”中的快速开始链接。"
+    },
+    "show_hero_secondary": {
+      "type": "boolean",
+      "title": "显示首屏次按钮",
+      "default": true,
+      "x-newpress": {
+        "group": "hero",
+        "control": "toggle",
+        "order": 80
+      }
+    },
+    "hero_secondary_label": {
+      "type": "string",
+      "title": "首屏次按钮文字",
+      "default": "浏览教程",
+      "maxLength": 24,
+      "x-newpress": {
+        "group": "hero",
+        "control": "text",
+        "order": 90
+      },
+      "minLength": 1,
+      "pattern": "\\S",
+      "description": "使用演示教程链接；关闭教程推荐后，默认锚点自动转到文档中心。"
+    },
+    "tutorials_description": {
+      "type": "string",
+      "title": "教程区说明",
+      "default": "",
+      "maxLength": 200,
+      "x-newpress": {
+        "group": "home_content",
+        "control": "text",
+        "order": 20
+      },
+      "description": "显示在教程区标题下方；留空不显示。"
+    },
+    "tutorials_count": {
+      "type": "integer",
+      "title": "推荐教程数量",
+      "default": 4,
+      "minimum": 1,
+      "maximum": 8,
+      "description": "最多展示 1–8 篇，文章不足时按实际数量展示；数据范围由站点设置中的首页文章数决定。",
+      "x-newpress": {
+        "group": "home_content",
+        "control": "range",
+        "order": 30,
+        "step": 1,
+        "unit": "篇"
+      }
+    },
+    "tutorials_more_label": {
+      "type": "string",
+      "title": "教程区更多链接文字",
+      "default": "查看全部",
+      "maxLength": 24,
+      "x-newpress": {
+        "group": "home_content",
+        "control": "text",
+        "order": 40
+      },
+      "description": "留空隐藏更多链接。"
+    },
+    "tutorials_more_link": {
+      "type": "string",
+      "title": "教程区更多链接",
+      "default": "/explore/",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "home_content",
+        "control": "text",
+        "order": 50
+      },
+      "description": "支持站内路径或完整网址；留空隐藏此区块的“查看全部”入口。",
+      "format": "uri-reference"
+    },
+    "latest_title": {
+      "type": "string",
+      "title": "最新文档标题",
+      "default": "最新文档",
+      "maxLength": 80,
+      "x-newpress": {
+        "group": "home_content",
+        "control": "text",
+        "order": 60
+      },
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "latest_description": {
+      "type": "string",
+      "title": "最新文档说明",
+      "default": "",
+      "maxLength": 200,
+      "x-newpress": {
+        "group": "home_content",
+        "control": "text",
+        "order": 70
+      },
+      "description": "显示在最新文档标题下方；留空不显示。"
+    },
+    "latest_count": {
+      "type": "integer",
+      "title": "最新文档数量",
+      "default": 4,
+      "minimum": 1,
+      "maximum": 8,
+      "description": "最多展示 1–8 篇，文章不足时按实际数量展示；数据范围由站点设置中的首页文章数决定。",
+      "x-newpress": {
+        "group": "home_content",
+        "control": "range",
+        "order": 80,
+        "step": 1,
+        "unit": "篇"
+      }
+    },
+    "latest_more_label": {
+      "type": "string",
+      "title": "最新文档更多链接文字",
+      "default": "查看全部",
+      "maxLength": 24,
+      "x-newpress": {
+        "group": "home_content",
+        "control": "text",
+        "order": 90
+      },
+      "description": "留空隐藏更多链接。"
+    },
+    "latest_more_link": {
+      "type": "string",
+      "title": "最新文档更多链接",
+      "default": "/explore/?sort=published",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "home_content",
+        "control": "text",
+        "order": 100
+      },
+      "description": "支持站内路径或完整网址；留空隐藏此区块的“查看全部”入口。",
+      "format": "uri-reference"
+    },
+    "show_latest_excerpt": {
+      "type": "boolean",
+      "title": "显示最新文档摘要",
+      "default": true,
+      "x-newpress": {
+        "group": "home_content",
+        "control": "toggle",
+        "order": 110
+      }
+    },
+    "show_latest_date": {
+      "type": "boolean",
+      "title": "显示最新文档日期",
+      "default": true,
+      "x-newpress": {
+        "group": "home_content",
+        "control": "toggle",
+        "order": 120
+      }
+    },
+    "relative_dates": {
+      "type": "boolean",
+      "title": "最新文档使用相对时间",
+      "default": true,
+      "x-newpress": {
+        "group": "home_content",
+        "control": "toggle",
+        "order": 130
+      },
+      "description": "开启时显示“几小时前”等时间；关闭时显示完整日期。仅影响首页最新文档。"
+    },
+    "quick_start_title": {
+      "type": "string",
+      "title": "快捷入口 1 · 标题",
+      "default": "快速上手",
+      "maxLength": 24,
+      "x-newpress": {
+        "group": "quick_links",
+        "control": "text",
+        "order": 10
+      },
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "quick_start_description": {
+      "type": "string",
+      "title": "快捷入口 1 · 说明",
+      "default": "环境准备与基础操作",
+      "maxLength": 80,
+      "x-newpress": {
+        "group": "quick_links",
+        "control": "text",
+        "order": 20
+      },
+      "description": "留空不显示说明；链接沿用“导航与学习入口”中的对应地址。"
+    },
+    "quick_advanced_title": {
+      "type": "string",
+      "title": "快捷入口 2 · 标题",
+      "default": "进阶教程",
+      "maxLength": 24,
+      "x-newpress": {
+        "group": "quick_links",
+        "control": "text",
+        "order": 30
+      },
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "quick_advanced_description": {
+      "type": "string",
+      "title": "快捷入口 2 · 说明",
+      "default": "功能用法与实现示例",
+      "maxLength": 80,
+      "x-newpress": {
+        "group": "quick_links",
+        "control": "text",
+        "order": 40
+      },
+      "description": "留空不显示说明；链接沿用“导航与学习入口”中的对应地址。"
+    },
+    "quick_api_title": {
+      "type": "string",
+      "title": "快捷入口 3 · 标题",
+      "default": "API 参考",
+      "maxLength": 24,
+      "x-newpress": {
+        "group": "quick_links",
+        "control": "text",
+        "order": 50
+      },
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "quick_api_description": {
+      "type": "string",
+      "title": "快捷入口 3 · 说明",
+      "default": "接口参数与调用示例",
+      "maxLength": 80,
+      "x-newpress": {
+        "group": "quick_links",
+        "control": "text",
+        "order": 60
+      },
+      "description": "留空不显示说明；链接沿用“导航与学习入口”中的对应地址。"
+    },
+    "quick_tools_title": {
+      "type": "string",
+      "title": "快捷入口 4 · 标题",
+      "default": "开发工具",
+      "maxLength": 24,
+      "x-newpress": {
+        "group": "quick_links",
+        "control": "text",
+        "order": 70
+      },
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "quick_tools_description": {
+      "type": "string",
+      "title": "快捷入口 4 · 说明",
+      "default": "工具安装与配置说明",
+      "maxLength": 80,
+      "x-newpress": {
+        "group": "quick_links",
+        "control": "text",
+        "order": 80
+      },
+      "description": "留空不显示说明；链接沿用“导航与学习入口”中的对应地址。"
+    },
+    "community_description": {
+      "type": "string",
+      "title": "社区卡片说明",
+      "default": "提交问题，交流使用经验。",
+      "maxLength": 200,
+      "x-newpress": {
+        "group": "learning",
+        "control": "text",
+        "order": 20
+      },
+      "description": "留空不显示说明。"
+    },
+    "community_button_label": {
+      "type": "string",
+      "title": "社区按钮文字",
+      "default": "前往社区",
+      "maxLength": 24,
+      "x-newpress": {
+        "group": "learning",
+        "control": "text",
+        "order": 30
+      },
+      "minLength": 1,
+      "pattern": "\\S",
+      "description": "使用社区入口链接；链接留空时不显示按钮。"
+    },
+    "show_community_artwork": {
+      "type": "boolean",
+      "title": "显示社区山景插画",
+      "default": true,
+      "x-newpress": {
+        "group": "learning",
+        "control": "toggle",
+        "order": 40
+      }
+    },
+    "learning_path_title": {
+      "type": "string",
+      "title": "学习路径标题",
+      "default": "学习路径",
+      "maxLength": 48,
+      "x-newpress": {
+        "group": "learning",
+        "control": "text",
+        "order": 50
+      },
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "show_learning_series_link": {
+      "type": "boolean",
+      "title": "显示“全部系列”入口",
+      "default": true,
+      "x-newpress": {
+        "group": "learning",
+        "control": "toggle",
+        "order": 60
+      },
+      "description": "仅在核心启用系列模块时显示。"
+    },
+    "learning_start_title": {
+      "type": "string",
+      "title": "学习步骤 1 · 标题",
+      "default": "快速入门",
+      "maxLength": 32,
+      "x-newpress": {
+        "group": "learning",
+        "control": "text",
+        "order": 70
+      },
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "learning_start_description": {
+      "type": "string",
+      "title": "学习步骤 1 · 说明",
+      "default": "了解基本概念与环境搭建",
+      "maxLength": 120,
+      "x-newpress": {
+        "group": "learning",
+        "control": "text",
+        "order": 80
+      },
+      "description": "留空不显示说明；沿用快速开始、进阶教程、最佳实践对应链接。"
+    },
+    "learning_advanced_title": {
+      "type": "string",
+      "title": "学习步骤 2 · 标题",
+      "default": "进阶提升",
+      "maxLength": 32,
+      "x-newpress": {
+        "group": "learning",
+        "control": "text",
+        "order": 90
+      },
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "learning_advanced_description": {
+      "type": "string",
+      "title": "学习步骤 2 · 说明",
+      "default": "了解功能用法与配置方法",
+      "maxLength": 120,
+      "x-newpress": {
+        "group": "learning",
+        "control": "text",
+        "order": 100
+      },
+      "description": "留空不显示说明；沿用快速开始、进阶教程、最佳实践对应链接。"
+    },
+    "learning_practice_title": {
+      "type": "string",
+      "title": "学习步骤 3 · 标题",
+      "default": "实战应用",
+      "maxLength": 32,
+      "x-newpress": {
+        "group": "learning",
+        "control": "text",
+        "order": 110
+      },
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "learning_practice_description": {
+      "type": "string",
+      "title": "学习步骤 3 · 说明",
+      "default": "参考项目示例与操作步骤",
+      "maxLength": 120,
+      "x-newpress": {
+        "group": "learning",
+        "control": "text",
+        "order": 120
+      },
+      "description": "留空不显示说明；沿用快速开始、进阶教程、最佳实践对应链接。"
+    },
+    "default_color_mode": {
+      "type": "string",
+      "title": "默认外观",
+      "description": "首次访问的显示模式；允许切换时，读者已保存的偏好优先。跟随系统在浏览器脚本运行后解析，无脚本时使用浅色。",
+      "default": "light",
+      "oneOf": [
+        {
+          "const": "light",
+          "title": "浅色"
+        },
+        {
+          "const": "dark",
+          "title": "深色"
+        },
+        {
+          "const": "system",
+          "title": "跟随系统"
+        }
+      ],
+      "x-newpress": {
+        "group": "visual",
+        "control": "segmented",
+        "order": 10
+      }
+    },
+    "allow_color_switch": {
+      "type": "boolean",
+      "title": "允许访客切换外观",
+      "description": "显示浅色、深色和自动按钮并保存偏好。关闭后统一使用上方默认外观，忽略浏览器旧偏好。",
+      "default": true,
+      "x-newpress": {
+        "group": "visual",
+        "control": "toggle",
+        "order": 20
+      }
+    },
+    "content_width": {
+      "type": "integer",
+      "title": "内容区域最大宽度",
+      "description": "超宽屏幕的内容上限，不包含左侧导航；小屏幕自动收缩。",
+      "minimum": 960,
+      "maximum": 1800,
+      "default": 1600,
+      "x-newpress": {
+        "group": "visual",
+        "control": "range",
+        "order": 30,
+        "step": 20,
+        "unit": "px",
+        "css_variable": "--docshub-shell-width",
+        "css_unit": "px"
+      }
+    },
+    "sidebar_width": {
+      "type": "integer",
+      "title": "桌面侧栏宽度",
+      "description": "在 1180px 以上屏幕生效；平板与手机保留适合设备的导航宽度。",
+      "minimum": 190,
+      "maximum": 280,
+      "default": 218,
+      "x-newpress": {
+        "group": "visual",
+        "control": "range",
+        "order": 40,
+        "step": 2,
+        "unit": "px",
+        "css_variable": "--docshub-sidebar-width",
+        "css_unit": "px"
+      }
+    },
+    "navigation_density": {
+      "type": "string",
+      "title": "桌面导航密度",
+      "description": "紧凑模式缩小导航项目间距；手机保留足够的触摸区域。",
+      "default": "comfortable",
+      "oneOf": [
+        {
+          "const": "comfortable",
+          "title": "舒展"
+        },
+        {
+          "const": "compact",
+          "title": "紧凑"
+        }
+      ],
+      "x-newpress": {
+        "group": "visual",
+        "control": "segmented",
+        "order": 50,
+        "class_prefix": "docshub-nav-"
+      }
+    },
+    "reduce_motion": {
+      "type": "boolean",
+      "title": "减少动态效果",
+      "description": "关闭主题过渡、悬浮位移和平滑滚动。即使不开启，主题仍尊重系统的减少动画偏好。",
+      "default": false,
+      "x-newpress": {
+        "group": "visual",
+        "control": "toggle",
+        "order": 60
+      }
+    },
+    "sticky_header": {
+      "type": "boolean",
+      "title": "固定顶部工具栏",
+      "description": "滚动时保留搜索和账号入口；关闭后工具栏随页面滚动。",
+      "default": true,
+      "x-newpress": {
+        "group": "header",
+        "control": "toggle",
+        "order": 0
+      }
+    },
+    "show_search": {
+      "type": "boolean",
+      "title": "显示顶部搜索",
+      "description": "控制所有公共页面的顶部搜索框。关闭后仍可进入文档中心检索。",
+      "default": true,
+      "x-newpress": {
+        "group": "header",
+        "control": "toggle",
+        "order": 10
+      }
+    },
+    "search_placeholder": {
+      "type": "string",
+      "title": "搜索框提示语",
+      "description": "留空时使用默认提示语。",
+      "default": "搜索文档、教程或关键词…",
+      "maxLength": 80,
+      "x-newpress": {
+        "group": "header",
+        "control": "text",
+        "order": 20
+      }
+    },
+    "show_search_shortcut": {
+      "type": "boolean",
+      "title": "显示搜索快捷键提示",
+      "description": "显示 Ctrl K 或 ⌘ K 提示；隐藏提示后快捷键仍可使用。",
+      "default": true,
+      "x-newpress": {
+        "group": "header",
+        "control": "toggle",
+        "order": 30
+      }
+    },
+    "show_help": {
+      "type": "boolean",
+      "title": "显示桌面帮助菜单",
+      "description": "帮助菜单提供快速开始、常见问题和社区入口。",
+      "default": true,
+      "x-newpress": {
+        "group": "header",
+        "control": "toggle",
+        "order": 40
+      }
+    },
+    "show_language": {
+      "type": "boolean",
+      "title": "显示桌面语言信息",
+      "description": "展示核心配置的站点语言，不创建额外的翻译页面。",
+      "default": true,
+      "x-newpress": {
+        "group": "header",
+        "control": "toggle",
+        "order": 50
+      }
+    },
+    "show_account": {
+      "type": "boolean",
+      "title": "显示账号入口",
+      "description": "访客显示登录，已登录用户显示账号名称。",
+      "default": true,
+      "x-newpress": {
+        "group": "header",
+        "control": "toggle",
+        "order": 60
+      }
+    },
+    "show_utility_navigation": {
+      "type": "boolean",
+      "title": "显示更多资源导航",
+      "description": "控制侧栏的更多资源区域。配置为空的菜单不会生成空标题和分隔线。",
+      "default": true,
+      "x-newpress": {
+        "group": "header",
+        "control": "toggle",
+        "order": 70
+      }
+    },
+    "show_series_navigation": {
+      "type": "boolean",
+      "title": "默认导航显示学习系列",
+      "description": "仅在未配置主菜单且系列模块开启时生效。自定义主菜单由菜单管理维护。",
+      "default": true,
+      "x-newpress": {
+        "group": "header",
+        "control": "toggle",
+        "order": 80
+      }
+    },
+    "announcement_text": {
+      "type": "string",
+      "title": "公告内容",
+      "description": "纯文本，最多 240 个字符；留空隐藏整个公告。",
+      "default": "",
+      "maxLength": 240,
+      "x-newpress": {
+        "group": "announcement",
+        "control": "textarea",
+        "order": 0
+      }
+    },
+    "announcement_link": {
+      "type": "string",
+      "title": "公告详情链接",
+      "description": "可填站内路径或 HTTPS 地址；留空只展示公告内容。",
+      "default": "",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "x-newpress": {
+        "group": "announcement",
+        "control": "text",
+        "order": 10
+      }
+    },
+    "announcement_link_label": {
+      "type": "string",
+      "title": "公告链接文字",
+      "description": "填写公告链接后显示，留空使用“查看详情”。",
+      "default": "查看详情",
+      "maxLength": 40,
+      "x-newpress": {
+        "group": "announcement",
+        "control": "text",
+        "order": 20
+      }
+    },
+    "footer_description": {
+      "type": "string",
+      "title": "页脚站点说明",
+      "description": "核心未填写自定义版权时，显示在站点名称后。留空只显示站点名称。",
+      "default": "文档与教程",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "footer",
+        "control": "text",
+        "order": 0
+      }
+    },
+    "show_footer_navigation": {
+      "type": "boolean",
+      "title": "显示页脚导航",
+      "description": "优先展示配置的页脚菜单；没有配置时使用下方默认入口。",
+      "default": true,
+      "x-newpress": {
+        "group": "footer",
+        "control": "toggle",
+        "order": 10
+      }
+    },
+    "show_footer_rss": {
+      "type": "boolean",
+      "title": "默认页脚显示 RSS 订阅",
+      "description": "仅在公开 API 开启且未配置页脚菜单时显示。",
+      "default": true,
+      "x-newpress": {
+        "group": "footer",
+        "control": "toggle",
+        "order": 20
+      }
+    },
+    "show_theme_credit": {
+      "type": "boolean",
+      "title": "默认页脚显示主题名称",
+      "description": "未配置页脚菜单时显示 DocsHub 链接；核心的隐藏署名设置优先。",
+      "default": true,
+      "x-newpress": {
+        "group": "footer",
+        "control": "toggle",
+        "order": 30
+      }
+    },
+    "show_back_to_top": {
+      "type": "boolean",
+      "title": "显示悬浮返回顶部",
+      "description": "页面向下滚动后出现，支持键盘操作并将焦点返回主内容。",
+      "default": true,
+      "x-newpress": {
+        "group": "footer",
+        "control": "toggle",
+        "order": 40
+      }
+    },
+    "listing_title": {
+      "type": "string",
+      "title": "文档中心标题",
+      "default": "文档与教程",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "listing",
+        "control": "text",
+        "order": 0
+      },
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "listing_description": {
+      "type": "string",
+      "title": "文档中心介绍",
+      "default": "按分类浏览文档，或搜索你需要的操作步骤与示例。",
+      "maxLength": 300,
+      "x-newpress": {
+        "group": "listing",
+        "control": "textarea",
+        "order": 10
+      },
+      "description": "可留空。搜索、分类和作者页面使用各自内容说明。"
+    },
+    "list_default_view": {
+      "type": "string",
+      "title": "默认展示方式",
+      "default": "grid",
+      "oneOf": [
+        {
+          "const": "grid",
+          "title": "卡片"
+        },
+        {
+          "const": "list",
+          "title": "列表"
+        }
+      ],
+      "x-newpress": {
+        "group": "listing",
+        "control": "segmented",
+        "order": 20
+      },
+      "description": "文档中心、作者和归档页使用此默认值；地址中明确指定的 view 参数优先。无 JavaScript 时显示此默认方式。"
+    },
+    "show_category_filters": {
+      "type": "boolean",
+      "title": "显示分类筛选",
+      "default": true,
+      "x-newpress": {
+        "group": "listing",
+        "control": "toggle",
+        "order": 30
+      },
+      "description": "控制文档中心的分类入口；当前已选条件仍可单独清除。"
+    },
+    "show_sort_control": {
+      "type": "boolean",
+      "title": "显示排序控件",
+      "default": true,
+      "x-newpress": {
+        "group": "listing",
+        "control": "toggle",
+        "order": 40
+      },
+      "description": "控制文档中心和作者页的排序入口，已有链接中的排序仍有效。"
+    },
+    "show_view_switch": {
+      "type": "boolean",
+      "title": "显示视图切换",
+      "default": true,
+      "x-newpress": {
+        "group": "listing",
+        "control": "toggle",
+        "order": 50
+      }
+    },
+    "card_cover": {
+      "type": "string",
+      "title": "文档卡片封面",
+      "default": "all",
+      "oneOf": [
+        {
+          "const": "all",
+          "title": "真实或装饰封面"
+        },
+        {
+          "const": "real",
+          "title": "仅真实封面"
+        },
+        {
+          "const": "none",
+          "title": "不显示"
+        }
+      ],
+      "x-newpress": {
+        "group": "listing",
+        "control": "segmented",
+        "order": 60
+      },
+      "description": "同时用于首页推荐与文档列表；没有封面时自动收回图片区域。"
+    },
+    "show_card_category": {
+      "type": "boolean",
+      "title": "显示卡片分类",
+      "default": true,
+      "x-newpress": {
+        "group": "listing",
+        "control": "toggle",
+        "order": 70
+      }
+    },
+    "show_card_excerpt": {
+      "type": "boolean",
+      "title": "显示卡片摘要",
+      "default": true,
+      "x-newpress": {
+        "group": "listing",
+        "control": "toggle",
+        "order": 80
+      }
+    },
+    "card_meta": {
+      "type": "string",
+      "title": "卡片底部信息",
+      "default": "full",
+      "oneOf": [
+        {
+          "const": "full",
+          "title": "日期与阅读提示"
+        },
+        {
+          "const": "date",
+          "title": "仅发布日期"
+        },
+        {
+          "const": "none",
+          "title": "不显示"
+        }
+      ],
+      "x-newpress": {
+        "group": "listing",
+        "control": "segmented",
+        "order": 90
+      }
+    },
+    "show_toc": {
+      "type": "boolean",
+      "title": "显示文章目录",
+      "default": true,
+      "x-newpress": {
+        "group": "reading",
+        "control": "toggle",
+        "order": 0
+      },
+      "description": "根据正文标题生成桌面与手机目录；正文没有对应标题时自动隐藏。"
+    },
+    "toc_depth": {
+      "type": "string",
+      "title": "目录层级",
+      "default": "h3",
+      "oneOf": [
+        {
+          "const": "h2",
+          "title": "二级标题"
+        },
+        {
+          "const": "h3",
+          "title": "二至三级"
+        },
+        {
+          "const": "h4",
+          "title": "二至四级"
+        }
+      ],
+      "x-newpress": {
+        "group": "reading",
+        "control": "segmented",
+        "order": 10
+      },
+      "description": "只有开启文章目录时显示；正文锚点保持稳定。"
+    },
+    "show_reading_progress": {
+      "type": "boolean",
+      "title": "显示阅读进度",
+      "default": true,
+      "x-newpress": {
+        "group": "reading",
+        "control": "toggle",
+        "order": 20
+      }
+    },
+    "show_reading_time": {
+      "type": "boolean",
+      "title": "显示预计阅读时间",
+      "default": true,
+      "x-newpress": {
+        "group": "reading",
+        "control": "toggle",
+        "order": 30
+      },
+      "description": "由实际正文长度估算，依赖 JavaScript。"
+    },
+    "show_code_copy": {
+      "type": "boolean",
+      "title": "显示代码复制按钮",
+      "default": true,
+      "x-newpress": {
+        "group": "reading",
+        "control": "toggle",
+        "order": 40
+      },
+      "description": "关闭后代码仍支持横向滚动和键盘访问。"
+    },
+    "show_copy_link": {
+      "type": "boolean",
+      "title": "显示复制文章链接",
+      "default": true,
+      "x-newpress": {
+        "group": "reading",
+        "control": "toggle",
+        "order": 50
+      }
+    },
+    "show_article_author": {
+      "type": "boolean",
+      "title": "显示文章作者",
+      "default": true,
+      "x-newpress": {
+        "group": "reading",
+        "control": "toggle",
+        "order": 60
+      }
+    },
+    "show_article_date": {
+      "type": "boolean",
+      "title": "显示最后更新日期",
+      "default": true,
+      "x-newpress": {
+        "group": "reading",
+        "control": "toggle",
+        "order": 70
+      }
+    },
+    "show_article_excerpt": {
+      "type": "boolean",
+      "title": "显示文章摘要",
+      "default": true,
+      "x-newpress": {
+        "group": "reading",
+        "control": "toggle",
+        "order": 80
+      }
+    },
+    "show_article_tags": {
+      "type": "boolean",
+      "title": "显示文章标签",
+      "default": true,
+      "x-newpress": {
+        "group": "reading",
+        "control": "toggle",
+        "order": 90
+      }
+    },
+    "show_reading_help": {
+      "type": "boolean",
+      "title": "显示阅读帮助入口",
+      "default": true,
+      "x-newpress": {
+        "group": "reading",
+        "control": "toggle",
+        "order": 100
+      },
+      "description": "桌面阅读侧栏的社区链接，地址使用“社区入口链接”。"
+    },
+    "reading_help_label": {
+      "type": "string",
+      "title": "阅读帮助文案",
+      "default": "遇到问题？到社区聊聊",
+      "maxLength": 80,
+      "x-newpress": {
+        "group": "reading",
+        "control": "text",
+        "order": 110
+      },
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "show_reading_back_to_top": {
+      "type": "boolean",
+      "title": "显示阅读侧栏返回顶部",
+      "default": true,
+      "x-newpress": {
+        "group": "reading",
+        "control": "toggle",
+        "order": 120
+      },
+      "description": "桌面文章侧栏显示返回顶部链接。"
+    },
+    "reading_font_size": {
+      "type": "integer",
+      "title": "正文字号",
+      "default": 15,
+      "minimum": 14,
+      "maximum": 20,
+      "x-newpress": {
+        "group": "reading",
+        "control": "range",
+        "order": 130,
+        "step": 1,
+        "css_variable": "--reading-font-size",
+        "css_unit": "px",
+        "unit": "px"
+      },
+      "description": "手机端自动缩小 1px，标题与代码使用各自字号。"
+    },
+    "reading_line_height": {
+      "type": "number",
+      "title": "正文行高",
+      "default": 1.95,
+      "minimum": 1.5,
+      "maximum": 2.4,
+      "x-newpress": {
+        "group": "reading",
+        "control": "range",
+        "order": 140,
+        "step": 0.05,
+        "css_variable": "--reading-line-height",
+        "css_unit": "",
+        "unit": ""
+      }
+    },
+    "reading_width": {
+      "type": "integer",
+      "title": "阅读区域最大宽度",
+      "default": 1240,
+      "minimum": 960,
+      "maximum": 1440,
+      "x-newpress": {
+        "group": "reading",
+        "control": "range",
+        "order": 150,
+        "step": 20,
+        "css_variable": "--reading-width",
+        "css_unit": "px",
+        "unit": "px"
+      },
+      "description": "包含正文和右侧目录。所有侧栏内容关闭时自动收窄为单栏；窄屏始终适应窗口。"
+    },
+    "series_title": {
+      "type": "string",
+      "title": "系列索引标题",
+      "default": "学习系列",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "series",
+        "control": "text",
+        "order": 0
+      },
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "series_description": {
+      "type": "string",
+      "title": "系列默认介绍",
+      "default": "按主题整理的文档，可按章节顺序阅读。",
+      "maxLength": 300,
+      "x-newpress": {
+        "group": "series",
+        "control": "textarea",
+        "order": 10
+      },
+      "description": "可留空；具体系列已有介绍时优先使用内容中的介绍。"
+    },
+    "show_series_search": {
+      "type": "boolean",
+      "title": "显示系列搜索",
+      "default": true,
+      "x-newpress": {
+        "group": "series",
+        "control": "toggle",
+        "order": 20
+      },
+      "description": "只控制系列索引搜索框，已有查询仍可清除。"
+    },
+    "show_chapter_excerpt": {
+      "type": "boolean",
+      "title": "显示章节摘要",
+      "default": true,
+      "x-newpress": {
+        "group": "series",
+        "control": "toggle",
+        "order": 30
+      }
+    },
+    "show_chapter_meta": {
+      "type": "boolean",
+      "title": "显示章节分类与日期",
+      "default": true,
+      "x-newpress": {
+        "group": "series",
+        "control": "toggle",
+        "order": 40
+      }
+    },
+    "show_reading_series": {
+      "type": "boolean",
+      "title": "显示系列上下篇与阅读位置",
+      "default": true,
+      "x-newpress": {
+        "group": "series",
+        "control": "toggle",
+        "order": 50
+      },
+      "description": "文章属于系列且核心系列模块启用时显示。"
+    },
+    "show_series_related": {
+      "type": "boolean",
+      "title": "显示同系列推荐文档",
+      "default": false,
+      "x-newpress": {
+        "group": "series",
+        "control": "toggle",
+        "order": 60
+      },
+      "description": "使用核心提供的同系列文档，最多三篇；没有推荐内容时不显示。"
+    },
+    "comments_title": {
+      "type": "string",
+      "title": "讨论区标题",
+      "description": "",
+      "default": "交流与讨论",
+      "maxLength": 80,
+      "x-newpress": {
+        "group": "discussion",
+        "control": "text",
+        "order": 0
+      },
+      "minLength": 1
+    },
+    "comments_intro": {
+      "type": "string",
+      "title": "讨论区说明",
+      "description": "可选的纯文本说明。讨论开关、登录要求和审核策略由核心站点设置管理。",
+      "default": "",
+      "maxLength": 400,
+      "x-newpress": {
+        "group": "discussion",
+        "control": "textarea",
+        "order": 10
+      }
+    },
+    "comments_placeholder": {
+      "type": "string",
+      "title": "评论输入提示",
+      "description": "可选提示语，不替代正文输入框标签。",
+      "default": "",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "discussion",
+        "control": "text",
+        "order": 20
+      }
+    },
+    "not_found_title": {
+      "type": "string",
+      "title": "未找到页面的标题",
+      "description": "",
+      "default": "文档不存在",
+      "maxLength": 80,
+      "x-newpress": {
+        "group": "utility",
+        "control": "text",
+        "order": 30
+      },
+      "minLength": 1
+    },
+    "not_found_description": {
+      "type": "string",
+      "title": "未找到页面的说明",
+      "description": "只影响 404 页面；维护信息来自核心站点设置。",
+      "default": "这篇文档可能已被移动。搜索关键词，或从文档中心继续浏览。",
+      "maxLength": 300,
+      "x-newpress": {
+        "group": "utility",
+        "control": "textarea",
+        "order": 40
+      }
+    },
+    "show_error_search": {
+      "type": "boolean",
+      "title": "404 页面显示搜索",
+      "description": "维护页面始终隐藏搜索，避免给出不可用的入口。",
+      "default": true,
+      "x-newpress": {
+        "group": "utility",
+        "control": "toggle",
+        "order": 60
+      }
+    },
+    "show_service_navigation": {
+      "type": "boolean",
+      "title": "显示服务导航",
+      "default": true,
+      "x-newpress": {
+        "group": "services",
+        "control": "toggle",
+        "order": 321
+      }
+    },
+    "show_home_services": {
+      "type": "boolean",
+      "title": "首页学习与服务入口",
+      "default": true,
+      "x-newpress": {
+        "group": "services",
+        "control": "toggle",
+        "order": 322
+      }
+    },
+    "show_reading_history": {
+      "type": "boolean",
+      "title": "本机继续阅读",
+      "default": true,
+      "x-newpress": {
+        "group": "reading",
+        "control": "toggle",
+        "order": 323
+      }
+    },
+    "show_reading_actions": {
+      "type": "boolean",
+      "title": "文档收藏、点赞和关注",
+      "default": true,
+      "x-newpress": {
+        "group": "reading",
+        "control": "toggle",
+        "order": 324
+      }
+    },
+    "show_reading_feedback": {
+      "type": "boolean",
+      "title": "文档纠错与提问入口",
+      "default": true,
+      "x-newpress": {
+        "group": "reading",
+        "control": "toggle",
+        "order": 325
+      }
+    },
+    "show_reading_focus": {
+      "type": "boolean",
+      "title": "专注阅读开关",
+      "default": true,
+      "x-newpress": {
+        "group": "reading",
+        "control": "toggle",
+        "order": 326
+      }
+    },
+    "show_reading_print": {
+      "type": "boolean",
+      "title": "打印文档",
+      "default": true,
+      "x-newpress": {
+        "group": "reading",
+        "control": "toggle",
+        "order": 327
+      }
+    },
+    "show_mobile_navigation": {
+      "type": "boolean",
+      "title": "移动端底部导航",
+      "default": true,
+      "x-newpress": {
+        "group": "header",
+        "control": "toggle",
+        "order": 328
+      }
+    },
+    "cookie_consent_enabled": {
+      "type": "boolean",
+      "title": "启用可选 Cookie 授权",
+      "default": false,
+      "x-newpress": {
+        "group": "privacy",
+        "control": "toggle",
+        "order": 329
+      }
+    },
+    "cookie_privacy_url": {
+      "type": "string",
+      "title": "隐私政策链接",
+      "default": "",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "privacy",
+        "control": "text",
+        "order": 20
+      }
+    },
+    "show_shop_navigation": {
+      "type": "boolean",
+      "title": "显示学习资源商城入口",
+      "default": true,
+      "x-newpress": {
+        "group": "services",
+        "control": "toggle",
+        "order": 220
+      }
+    },
+    "use_home_layout": {
+      "type": "boolean",
+      "title": "使用可编排首页",
+      "description": "开启后使用首页布局编辑器配置模块、位置和显示设备；关闭时使用 DocsHub 的文档入口首页。",
+      "default": false,
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "toggle",
+        "order": 0
+      }
+    },
+    "feed_columns": {
+      "type": "string",
+      "title": "内容列数",
+      "description": "桌面信息流的默认排列方式。",
+      "default": "grid",
+      "oneOf": [
+        {
+          "const": "list",
+          "title": "横向列表",
+          "description": "适合摘要较长的内容站。"
+        },
+        {
+          "const": "grid",
+          "title": "双列卡片",
+          "description": "适合封面驱动的杂志与资源站。"
+        }
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "segmented",
+        "order": 20
+      }
+    },
+    "sidebar_enabled": {
+      "type": "boolean",
+      "title": "首页侧栏",
+      "description": "开启后可在首页编排中调整各个侧栏小工具。",
+      "default": true,
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "toggle",
+        "order": 30,
+        "class_when_false": "theme-sidebar-off"
+      }
+    },
+    "home_top_order": {
+      "type": "string",
+      "title": "首屏与频道",
+      "description": "在可视化布局中跨区域拖动模块，或使用上下按钮和位置选项调整。隐藏模块请设置显示设备。",
+      "default": "hero,reading_guide,notice,channels,categories",
+      "maxLength": 1024,
+      "pattern": "^(focus_list|topic_banner|entry_cards|image_grid|notice_list|reading_guide|updated|carousel|search_banner|custom(?:_[a-z0-9]{1,32})?|hero|notice|channels|categories|feed|series|spotlight|community|welcome|checkin|recent|authors|tags|stats|subscribe)?(,\\s*(focus_list|topic_banner|entry_cards|image_grid|notice_list|reading_guide|updated|carousel|search_banner|custom(?:_[a-z0-9]{1,32})?|hero|notice|channels|categories|feed|series|spotlight|community|welcome|checkin|recent|authors|tags|stats|subscribe))*$",
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "text",
+        "order": 1
+      }
+    },
+    "home_hero_visibility": {
+      "type": "string",
+      "title": "封面精选显示设备",
+      "default": "both",
+      "enum": [
+        "both",
+        "desktop",
+        "mobile",
+        "hidden"
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "hidden": true
+      }
+    },
+    "home_notice_visibility": {
+      "type": "string",
+      "title": "社区公告显示设备",
+      "default": "both",
+      "enum": [
+        "both",
+        "desktop",
+        "mobile",
+        "hidden"
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "hidden": true
+      }
+    },
+    "home_channels_visibility": {
+      "type": "string",
+      "title": "快捷频道显示设备",
+      "default": "hidden",
+      "enum": [
+        "both",
+        "desktop",
+        "mobile",
+        "hidden"
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "hidden": true
+      }
+    },
+    "home_categories_visibility": {
+      "type": "string",
+      "title": "分类导航显示设备",
+      "default": "hidden",
+      "enum": [
+        "both",
+        "desktop",
+        "mobile",
+        "hidden"
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "hidden": true
+      }
+    },
+    "home_main_order": {
+      "type": "string",
+      "title": "内容区域",
+      "description": "在可视化布局中跨区域拖动模块，或使用上下按钮和位置选项调整。隐藏模块请设置显示设备。",
+      "default": "feed,series,spotlight,community",
+      "maxLength": 1024,
+      "pattern": "^(focus_list|topic_banner|entry_cards|image_grid|notice_list|reading_guide|updated|carousel|search_banner|custom(?:_[a-z0-9]{1,32})?|hero|notice|channels|categories|feed|series|spotlight|community|welcome|checkin|recent|authors|tags|stats|subscribe)?(,\\s*(focus_list|topic_banner|entry_cards|image_grid|notice_list|reading_guide|updated|carousel|search_banner|custom(?:_[a-z0-9]{1,32})?|hero|notice|channels|categories|feed|series|spotlight|community|welcome|checkin|recent|authors|tags|stats|subscribe))*$",
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "text",
+        "order": 2
+      }
+    },
+    "home_feed_visibility": {
+      "type": "string",
+      "title": "文章信息流显示设备",
+      "default": "both",
+      "enum": [
+        "both",
+        "desktop",
+        "mobile",
+        "hidden"
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "hidden": true
+      }
+    },
+    "home_series_visibility": {
+      "type": "string",
+      "title": "专题与系列显示设备",
+      "default": "both",
+      "enum": [
+        "both",
+        "desktop",
+        "mobile",
+        "hidden"
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "hidden": true
+      }
+    },
+    "home_spotlight_visibility": {
+      "type": "string",
+      "title": "推荐阅读显示设备",
+      "default": "hidden",
+      "enum": [
+        "both",
+        "desktop",
+        "mobile",
+        "hidden"
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "hidden": true
+      }
+    },
+    "home_community_visibility": {
+      "type": "string",
+      "title": "发现圈子显示设备",
+      "default": "both",
+      "enum": [
+        "both",
+        "desktop",
+        "mobile",
+        "hidden"
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "hidden": true
+      }
+    },
+    "home_aside_order": {
+      "type": "string",
+      "title": "侧栏小工具",
+      "description": "在可视化布局中跨区域拖动模块，或使用上下按钮和位置选项调整。隐藏模块请设置显示设备。",
+      "default": "welcome,updated,checkin,notice_list,tags,subscribe,recent,authors,stats",
+      "maxLength": 1024,
+      "pattern": "^(focus_list|topic_banner|entry_cards|image_grid|notice_list|reading_guide|updated|carousel|search_banner|custom(?:_[a-z0-9]{1,32})?|hero|notice|channels|categories|feed|series|spotlight|community|welcome|checkin|recent|authors|tags|stats|subscribe)?(,\\s*(focus_list|topic_banner|entry_cards|image_grid|notice_list|reading_guide|updated|carousel|search_banner|custom(?:_[a-z0-9]{1,32})?|hero|notice|channels|categories|feed|series|spotlight|community|welcome|checkin|recent|authors|tags|stats|subscribe))*$",
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "text",
+        "order": 3
+      }
+    },
+    "home_welcome_visibility": {
+      "type": "string",
+      "title": "欢迎名片显示设备",
+      "default": "both",
+      "enum": [
+        "both",
+        "desktop",
+        "mobile",
+        "hidden"
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "hidden": true
+      }
+    },
+    "home_recent_visibility": {
+      "type": "string",
+      "title": "最近发布显示设备",
+      "default": "hidden",
+      "enum": [
+        "both",
+        "desktop",
+        "mobile",
+        "hidden"
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "hidden": true
+      }
+    },
+    "home_authors_visibility": {
+      "type": "string",
+      "title": "遇见创作者显示设备",
+      "default": "hidden",
+      "enum": [
+        "both",
+        "desktop",
+        "mobile",
+        "hidden"
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "hidden": true
+      }
+    },
+    "home_tags_visibility": {
+      "type": "string",
+      "title": "探索标签显示设备",
+      "default": "both",
+      "enum": [
+        "both",
+        "desktop",
+        "mobile",
+        "hidden"
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "hidden": true
+      }
+    },
+    "home_stats_visibility": {
+      "type": "string",
+      "title": "站点一览显示设备",
+      "default": "hidden",
+      "enum": [
+        "both",
+        "desktop",
+        "mobile",
+        "hidden"
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "hidden": true
+      }
+    },
+    "home_subscribe_visibility": {
+      "type": "string",
+      "title": "订阅更新显示设备",
+      "default": "both",
+      "enum": [
+        "both",
+        "desktop",
+        "mobile",
+        "hidden"
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "hidden": true
+      }
+    },
+    "home_notice_title": {
+      "type": "string",
+      "title": "公告标题",
+      "default": "文档与社区",
+      "maxLength": 24,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 80
+      }
+    },
+    "home_notice_text": {
+      "type": "string",
+      "title": "公告内容",
+      "description": "留空时自动隐藏公告模块。",
+      "default": "遇到问题时，带上复现步骤和配置示例，一起找到答案。",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "textarea",
+        "order": 81
+      }
+    },
+    "home_notice_url": {
+      "type": "string",
+      "title": "公告链接",
+      "description": "点击公告右侧入口时打开的页面。",
+      "format": "uri-reference",
+      "default": "/questions/",
+      "maxLength": 2048,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 82
+      }
+    },
+    "home_notice_link_label": {
+      "type": "string",
+      "title": "公告链接文字",
+      "default": "前往问答",
+      "maxLength": 16,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 83
+      }
+    },
+    "home_featured_ids": {
+      "type": "string",
+      "title": "推荐文章",
+      "description": "填写文章编号，以英文逗号分隔，按填写顺序推荐。留空采用最新发布；草稿、私密和已删除文章不会显示。最多 12 个编号。",
+      "default": "",
+      "maxLength": 240,
+      "pattern": "^$|^[1-9][0-9]{0,17}(\\s*,\\s*[1-9][0-9]{0,17}){0,11}$",
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "text",
+        "order": 52,
+        "placeholder": "例如：12,8,5"
+      }
+    },
+    "home_category_count": {
+      "type": "integer",
+      "title": "分类导航数量",
+      "default": 4,
+      "minimum": 1,
+      "maximum": 8,
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "range",
+        "order": 71,
+        "step": 1,
+        "unit": "个"
+      }
+    },
+    "home_series_count": {
+      "type": "integer",
+      "title": "专题展示数量",
+      "default": 4,
+      "minimum": 1,
+      "maximum": 8,
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "range",
+        "order": 72,
+        "step": 1,
+        "unit": "个"
+      }
+    },
+    "home_feed_title": {
+      "type": "string",
+      "title": "文章流标题",
+      "default": "最近更新的文档",
+      "minLength": 1,
+      "maxLength": 32,
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "text",
+        "order": 1
+      }
+    },
+    "home_feed_sort": {
+      "type": "string",
+      "title": "首页默认排序",
+      "default": "updated",
+      "oneOf": [
+        {
+          "const": "published",
+          "title": "最新发布"
+        },
+        {
+          "const": "updated",
+          "title": "最近更新"
+        },
+        {
+          "const": "oldest",
+          "title": "最早发布"
+        }
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "segmented",
+        "order": 2
+      }
+    },
+    "home_module_gap": {
+      "type": "integer",
+      "title": "首页模块间距",
+      "description": "桌面模块之间的留白，手机端自动收窄。",
+      "default": 20,
+      "minimum": 12,
+      "maximum": 32,
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "range",
+        "order": 90,
+        "step": 4,
+        "unit": "px",
+        "css_variable": "--home-layout-gap",
+        "css_unit": "px"
+      }
+    },
+    "home_sidebar_width": {
+      "type": "integer",
+      "title": "首页侧栏宽度",
+      "description": "仅影响宽屏布局，平板与手机自动重排。",
+      "default": 292,
+      "minimum": 260,
+      "maximum": 360,
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "range",
+        "order": 31,
+        "step": 4,
+        "unit": "px",
+        "css_variable": "--home-layout-sidebar",
+        "css_unit": "px"
+      }
+    },
+    "home_carousel_visibility": {
+      "type": "string",
+      "title": "图片轮播显示设备",
+      "default": "hidden",
+      "enum": [
+        "both",
+        "desktop",
+        "mobile",
+        "hidden"
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "order": 90,
+        "hidden": true
+      }
+    },
+    "home_search_banner_visibility": {
+      "type": "string",
+      "title": "背景搜索栏显示设备",
+      "default": "hidden",
+      "enum": [
+        "both",
+        "desktop",
+        "mobile",
+        "hidden"
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "order": 90,
+        "hidden": true
+      }
+    },
+    "home_carousel_animation": {
+      "type": "string",
+      "title": "切换动画",
+      "description": "轮播至少有两张图片时生效。",
+      "default": "slide",
+      "oneOf": [
+        {
+          "const": "slide",
+          "title": "横向滑动"
+        },
+        {
+          "const": "fade",
+          "title": "淡入式"
+        },
+        {
+          "const": "rotate-3d",
+          "title": "3D 旋转"
+        },
+        {
+          "const": "stack",
+          "title": "卡片堆叠"
+        },
+        {
+          "const": "accordion",
+          "title": "手风琴画廊"
+        },
+        {
+          "const": "page-turn",
+          "title": "翻页式"
+        }
+      ],
+      "x-newpress": {
+        "group": "home_carousel",
+        "control": "select",
+        "order": 0
+      }
+    },
+    "home_carousel_autoplay": {
+      "type": "boolean",
+      "title": "自动播放",
+      "default": true,
+      "x-newpress": {
+        "group": "home_carousel",
+        "control": "toggle",
+        "order": 1
+      }
+    },
+    "home_carousel_interval": {
+      "type": "integer",
+      "title": "播放间隔",
+      "default": 3,
+      "minimum": 2,
+      "maximum": 15,
+      "x-newpress": {
+        "group": "home_carousel",
+        "control": "range",
+        "order": 2,
+        "step": 1,
+        "unit": "秒"
+      }
+    },
+    "home_carousel_autohide": {
+      "type": "boolean",
+      "title": "控件自动隐藏",
+      "description": "轮播空闲后隐藏箭头和分页点，操作或键盘聚焦时重新显示。",
+      "default": true,
+      "x-newpress": {
+        "group": "home_carousel",
+        "control": "toggle",
+        "order": 3
+      }
+    },
+    "home_slide_1_title": {
+      "type": "string",
+      "title": "第 1 张 · 标题",
+      "default": "",
+      "maxLength": 80,
+      "x-newpress": {
+        "group": "home_carousel",
+        "control": "text",
+        "order": 10
+      }
+    },
+    "home_slide_1_summary": {
+      "type": "string",
+      "title": "第 1 张 · 简介",
+      "default": "",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "home_carousel",
+        "control": "text",
+        "order": 11
+      }
+    },
+    "home_slide_1_image": {
+      "type": "string",
+      "title": "第 1 张 · 图片",
+      "default": "",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "pattern": "^$|^/[^/\\\\\\s][^\\\\\\s]*$",
+      "description": "使用媒体库或主题中的站内地址，以 / 开头。",
+      "x-newpress": {
+        "group": "home_carousel",
+        "control": "image",
+        "order": 12
+      }
+    },
+    "home_slide_1_url": {
+      "type": "string",
+      "title": "第 1 张 · 链接",
+      "default": "",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "x-newpress": {
+        "group": "home_carousel",
+        "control": "text",
+        "order": 13
+      }
+    },
+    "home_slide_2_title": {
+      "type": "string",
+      "title": "第 2 张 · 标题",
+      "default": "",
+      "maxLength": 80,
+      "x-newpress": {
+        "group": "home_carousel",
+        "control": "text",
+        "order": 20
+      }
+    },
+    "home_slide_2_summary": {
+      "type": "string",
+      "title": "第 2 张 · 简介",
+      "default": "",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "home_carousel",
+        "control": "text",
+        "order": 21
+      }
+    },
+    "home_slide_2_image": {
+      "type": "string",
+      "title": "第 2 张 · 图片",
+      "default": "",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "pattern": "^$|^/[^/\\\\\\s][^\\\\\\s]*$",
+      "description": "使用媒体库或主题中的站内地址，以 / 开头。",
+      "x-newpress": {
+        "group": "home_carousel",
+        "control": "image",
+        "order": 22
+      }
+    },
+    "home_slide_2_url": {
+      "type": "string",
+      "title": "第 2 张 · 链接",
+      "default": "",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "x-newpress": {
+        "group": "home_carousel",
+        "control": "text",
+        "order": 23
+      }
+    },
+    "home_slide_3_title": {
+      "type": "string",
+      "title": "第 3 张 · 标题",
+      "default": "",
+      "maxLength": 80,
+      "x-newpress": {
+        "group": "home_carousel",
+        "control": "text",
+        "order": 30
+      }
+    },
+    "home_slide_3_summary": {
+      "type": "string",
+      "title": "第 3 张 · 简介",
+      "default": "",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "home_carousel",
+        "control": "text",
+        "order": 31
+      }
+    },
+    "home_slide_3_image": {
+      "type": "string",
+      "title": "第 3 张 · 图片",
+      "default": "",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "pattern": "^$|^/[^/\\\\\\s][^\\\\\\s]*$",
+      "description": "使用媒体库或主题中的站内地址，以 / 开头。",
+      "x-newpress": {
+        "group": "home_carousel",
+        "control": "image",
+        "order": 32
+      }
+    },
+    "home_slide_3_url": {
+      "type": "string",
+      "title": "第 3 张 · 链接",
+      "default": "",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "x-newpress": {
+        "group": "home_carousel",
+        "control": "text",
+        "order": 33
+      }
+    },
+    "home_slide_4_title": {
+      "type": "string",
+      "title": "第 4 张 · 标题",
+      "default": "",
+      "maxLength": 80,
+      "x-newpress": {
+        "group": "home_carousel",
+        "control": "text",
+        "order": 40
+      }
+    },
+    "home_slide_4_summary": {
+      "type": "string",
+      "title": "第 4 张 · 简介",
+      "default": "",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "home_carousel",
+        "control": "text",
+        "order": 41
+      }
+    },
+    "home_slide_4_image": {
+      "type": "string",
+      "title": "第 4 张 · 图片",
+      "default": "",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "pattern": "^$|^/[^/\\\\\\s][^\\\\\\s]*$",
+      "description": "使用媒体库或主题中的站内地址，以 / 开头。",
+      "x-newpress": {
+        "group": "home_carousel",
+        "control": "image",
+        "order": 42
+      }
+    },
+    "home_slide_4_url": {
+      "type": "string",
+      "title": "第 4 张 · 链接",
+      "default": "",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "x-newpress": {
+        "group": "home_carousel",
+        "control": "text",
+        "order": 43
+      }
+    },
+    "home_search_title": {
+      "type": "string",
+      "title": "搜索标题",
+      "default": "查找你的下一个答案",
+      "maxLength": 80,
+      "x-newpress": {
+        "group": "home_search",
+        "control": "text",
+        "order": 1
+      }
+    },
+    "home_search_summary": {
+      "type": "string",
+      "title": "搜索说明",
+      "default": "搜索文档、教程和实践记录。",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "home_search",
+        "control": "text",
+        "order": 2
+      }
+    },
+    "home_search_placeholder": {
+      "type": "string",
+      "title": "输入框提示",
+      "default": "输入功能、接口或错误关键词",
+      "maxLength": 48,
+      "x-newpress": {
+        "group": "home_search",
+        "control": "text",
+        "order": 3
+      }
+    },
+    "home_search_terms": {
+      "type": "string",
+      "title": "热门关键词",
+      "default": "入门,API,配置",
+      "maxLength": 240,
+      "description": "用逗号分隔，最多显示 6 个关键词。",
+      "x-newpress": {
+        "group": "home_search",
+        "control": "text",
+        "order": 4
+      }
+    },
+    "home_search_background": {
+      "type": "string",
+      "title": "背景样式",
+      "default": "gradient",
+      "oneOf": [
+        {
+          "const": "gradient",
+          "title": "动态渐变"
+        },
+        {
+          "const": "image",
+          "title": "图片 / GIF"
+        },
+        {
+          "const": "video",
+          "title": "视频"
+        }
+      ],
+      "x-newpress": {
+        "group": "home_search",
+        "control": "select",
+        "order": 5
+      }
+    },
+    "home_search_poster": {
+      "type": "string",
+      "title": "静态封面",
+      "default": "",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "pattern": "^$|^/[^/\\\\\\s][^\\\\\\s]*$",
+      "description": "使用媒体库或主题中的站内地址，以 / 开头。",
+      "x-newpress": {
+        "group": "home_search",
+        "control": "image",
+        "order": 6
+      }
+    },
+    "home_search_image": {
+      "type": "string",
+      "title": "图片 / GIF 地址",
+      "default": "",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "pattern": "^$|^/[^/\\\\\\s][^\\\\\\s]*$",
+      "description": "使用媒体库或主题中的站内地址，以 / 开头。",
+      "x-newpress": {
+        "group": "home_search",
+        "control": "image",
+        "order": 7
+      }
+    },
+    "home_search_video": {
+      "type": "string",
+      "title": "视频地址（MP4 / WebM）",
+      "default": "",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "pattern": "^$|^/[^/\\\\\\s][^\\\\\\s]*$",
+      "description": "使用媒体库或主题中的站内地址，以 / 开头。",
+      "x-newpress": {
+        "group": "home_search",
+        "control": "text",
+        "order": 8
+      }
+    },
+    "home_search_motion": {
+      "type": "boolean",
+      "title": "允许背景动画",
+      "default": true,
+      "description": "访客可暂停；减少动态效果或节省流量时默认显示静态封面。",
+      "x-newpress": {
+        "group": "home_search",
+        "control": "toggle",
+        "order": 9
+      }
+    },
+    "home_custom_blocks": {
+      "type": "string",
+      "title": "自定义 HTML 组件",
+      "default": "",
+      "format": "home-html-blocks",
+      "maxLength": 65536,
+      "x-newpress": {
+        "group": "home_custom",
+        "hidden": true
+      }
+    },
+    "home_reading_guide_visibility": {
+      "type": "string",
+      "title": "入门导读显示设备",
+      "default": "both",
+      "enum": [
+        "both",
+        "desktop",
+        "mobile",
+        "hidden"
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "hidden": true
+      }
+    },
+    "home_updated_visibility": {
+      "type": "string",
+      "title": "最近更新显示设备",
+      "default": "both",
+      "enum": [
+        "both",
+        "desktop",
+        "mobile",
+        "hidden"
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "hidden": true
+      }
+    },
+    "home_guide_title": {
+      "type": "string",
+      "title": "导读标题",
+      "default": "从这里开始",
+      "maxLength": 60,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 200
+      }
+    },
+    "home_guide_description": {
+      "type": "string",
+      "title": "导读简介",
+      "default": "按你的目标选择阅读入口，逐步完成实践。",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 201
+      }
+    },
+    "home_guide_1_title": {
+      "type": "string",
+      "title": "导读入口 1标题",
+      "default": "快速开始",
+      "maxLength": 120,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 202
+      }
+    },
+    "home_guide_1_description": {
+      "type": "string",
+      "title": "导读入口 1说明",
+      "default": "找到安装与配置步骤",
+      "maxLength": 120,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 203
+      }
+    },
+    "home_guide_1_url": {
+      "type": "string",
+      "title": "导读入口 1链接",
+      "default": "/explore/?q=入门",
+      "maxLength": 500,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 204
+      },
+      "pattern": "^(?:$|/(?:[^/\\\\\\r\\n\\t][^\\\\\\r\\n\\t]*)?)$",
+      "description": "填写以 / 开头的站内路径；留空时不显示该入口。"
+    },
+    "home_guide_2_title": {
+      "type": "string",
+      "title": "导读入口 2标题",
+      "default": "系统学习",
+      "maxLength": 120,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 205
+      }
+    },
+    "home_guide_2_description": {
+      "type": "string",
+      "title": "导读入口 2说明",
+      "default": "按系列逐章学习",
+      "maxLength": 120,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 206
+      }
+    },
+    "home_guide_2_url": {
+      "type": "string",
+      "title": "导读入口 2链接",
+      "default": "/series/",
+      "maxLength": 500,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 207
+      },
+      "pattern": "^(?:$|/(?:[^/\\\\\\r\\n\\t][^\\\\\\r\\n\\t]*)?)$",
+      "description": "填写以 / 开头的站内路径；留空时不显示该入口。"
+    },
+    "home_guide_3_title": {
+      "type": "string",
+      "title": "导读入口 3标题",
+      "default": "解决问题",
+      "maxLength": 120,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 208
+      }
+    },
+    "home_guide_3_description": {
+      "type": "string",
+      "title": "导读入口 3说明",
+      "default": "查找解答与提问",
+      "maxLength": 120,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 209
+      }
+    },
+    "home_guide_3_url": {
+      "type": "string",
+      "title": "导读入口 3链接",
+      "default": "/questions/",
+      "maxLength": 500,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 210
+      },
+      "pattern": "^(?:$|/(?:[^/\\\\\\r\\n\\t][^\\\\\\r\\n\\t]*)?)$",
+      "description": "填写以 / 开头的站内路径；留空时不显示该入口。"
+    },
+    "home_updated_count": {
+      "type": "integer",
+      "title": "最近更新文章数量",
+      "default": 4,
+      "minimum": 3,
+      "maximum": 5,
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "number",
+        "order": 211
+      }
+    },
+    "home_focus_list_visibility": {
+      "type": "string",
+      "title": "图文焦点与列表显示设备",
+      "default": "hidden",
+      "enum": [
+        "both",
+        "desktop",
+        "mobile",
+        "hidden"
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "hidden": true
+      }
+    },
+    "home_topic_banner_visibility": {
+      "type": "string",
+      "title": "专题横幅显示设备",
+      "default": "hidden",
+      "enum": [
+        "both",
+        "desktop",
+        "mobile",
+        "hidden"
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "hidden": true
+      }
+    },
+    "home_entry_cards_visibility": {
+      "type": "string",
+      "title": "卡片入口显示设备",
+      "default": "hidden",
+      "enum": [
+        "both",
+        "desktop",
+        "mobile",
+        "hidden"
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "hidden": true
+      }
+    },
+    "home_image_grid_visibility": {
+      "type": "string",
+      "title": "网格图文推荐显示设备",
+      "default": "hidden",
+      "enum": [
+        "both",
+        "desktop",
+        "mobile",
+        "hidden"
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "hidden": true
+      }
+    },
+    "home_notice_list_visibility": {
+      "type": "string",
+      "title": "公告列表显示设备",
+      "default": "hidden",
+      "enum": [
+        "both",
+        "desktop",
+        "mobile",
+        "hidden"
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "hidden": true
+      }
+    },
+    "home_focus_title": {
+      "type": "string",
+      "title": "图文焦点标题",
+      "default": "推荐学习",
+      "maxLength": 120,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 10
+      }
+    },
+    "home_image_grid_title": {
+      "type": "string",
+      "title": "网格推荐标题",
+      "default": "动手实践",
+      "maxLength": 120,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 11
+      }
+    },
+    "home_topic_title": {
+      "type": "string",
+      "title": "专题横幅标题",
+      "default": "循序渐进，掌握新技能",
+      "maxLength": 80,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 12
+      }
+    },
+    "home_topic_summary": {
+      "type": "string",
+      "title": "专题横幅说明",
+      "default": "从基础概念到实践示例，按章节建立完整知识。",
+      "maxLength": 160,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 13
+      }
+    },
+    "home_topic_image": {
+      "type": "string",
+      "title": "专题横幅图片",
+      "default": "",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "description": "可填写媒体库或主题图片地址，留空使用主题色背景。",
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "image",
+        "order": 14
+      }
+    },
+    "home_topic_url": {
+      "type": "string",
+      "title": "专题横幅链接",
+      "default": "/series/",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 15
+      }
+    },
+    "home_entry_1_title": {
+      "type": "string",
+      "title": "入口 1 · 名称",
+      "default": "文档中心",
+      "maxLength": 20,
+      "description": "建议不超过六个字；名称或链接留空时隐藏该入口。",
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 16
+      }
+    },
+    "home_entry_1_url": {
+      "type": "string",
+      "title": "入口 1 · 链接",
+      "default": "/explore/",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 17
+      }
+    },
+    "home_entry_1_icon": {
+      "type": "string",
+      "title": "入口 1 · 图标",
+      "default": "compass",
+      "maxLength": 40,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "select",
+        "order": 18
+      },
+      "oneOf": [
+        {
+          "const": "compass",
+          "title": "发现"
+        },
+        {
+          "const": "library",
+          "title": "专题"
+        },
+        {
+          "const": "bookmark",
+          "title": "收藏"
+        },
+        {
+          "const": "rss",
+          "title": "订阅"
+        },
+        {
+          "const": "newspaper",
+          "title": "文章"
+        },
+        {
+          "const": "users",
+          "title": "用户"
+        },
+        {
+          "const": "message-circle",
+          "title": "交流"
+        },
+        {
+          "const": "layout-grid",
+          "title": "网格"
+        },
+        {
+          "const": "pencil",
+          "title": "编辑"
+        },
+        {
+          "const": "chart-no-axes-column",
+          "title": "统计"
+        }
+      ]
+    },
+    "home_entry_2_title": {
+      "type": "string",
+      "title": "入口 2 · 名称",
+      "default": "学习系列",
+      "maxLength": 20,
+      "description": "建议不超过六个字；名称或链接留空时隐藏该入口。",
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 19
+      }
+    },
+    "home_entry_2_url": {
+      "type": "string",
+      "title": "入口 2 · 链接",
+      "default": "/series/",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 20
+      }
+    },
+    "home_entry_2_icon": {
+      "type": "string",
+      "title": "入口 2 · 图标",
+      "default": "library",
+      "maxLength": 40,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "select",
+        "order": 21
+      },
+      "oneOf": [
+        {
+          "const": "compass",
+          "title": "发现"
+        },
+        {
+          "const": "library",
+          "title": "专题"
+        },
+        {
+          "const": "bookmark",
+          "title": "收藏"
+        },
+        {
+          "const": "rss",
+          "title": "订阅"
+        },
+        {
+          "const": "newspaper",
+          "title": "文章"
+        },
+        {
+          "const": "users",
+          "title": "用户"
+        },
+        {
+          "const": "message-circle",
+          "title": "交流"
+        },
+        {
+          "const": "layout-grid",
+          "title": "网格"
+        },
+        {
+          "const": "pencil",
+          "title": "编辑"
+        },
+        {
+          "const": "chart-no-axes-column",
+          "title": "统计"
+        }
+      ]
+    },
+    "home_entry_3_title": {
+      "type": "string",
+      "title": "入口 3 · 名称",
+      "default": "我的收藏",
+      "maxLength": 20,
+      "description": "建议不超过六个字；名称或链接留空时隐藏该入口。",
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 22
+      }
+    },
+    "home_entry_3_url": {
+      "type": "string",
+      "title": "入口 3 · 链接",
+      "default": "/account/",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 23
+      }
+    },
+    "home_entry_3_icon": {
+      "type": "string",
+      "title": "入口 3 · 图标",
+      "default": "bookmark",
+      "maxLength": 40,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "select",
+        "order": 24
+      },
+      "oneOf": [
+        {
+          "const": "compass",
+          "title": "发现"
+        },
+        {
+          "const": "library",
+          "title": "专题"
+        },
+        {
+          "const": "bookmark",
+          "title": "收藏"
+        },
+        {
+          "const": "rss",
+          "title": "订阅"
+        },
+        {
+          "const": "newspaper",
+          "title": "文章"
+        },
+        {
+          "const": "users",
+          "title": "用户"
+        },
+        {
+          "const": "message-circle",
+          "title": "交流"
+        },
+        {
+          "const": "layout-grid",
+          "title": "网格"
+        },
+        {
+          "const": "pencil",
+          "title": "编辑"
+        },
+        {
+          "const": "chart-no-axes-column",
+          "title": "统计"
+        }
+      ]
+    },
+    "home_entry_4_title": {
+      "type": "string",
+      "title": "入口 4 · 名称",
+      "default": "订阅更新",
+      "maxLength": 20,
+      "description": "建议不超过六个字；名称或链接留空时隐藏该入口。",
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 25
+      }
+    },
+    "home_entry_4_url": {
+      "type": "string",
+      "title": "入口 4 · 链接",
+      "default": "/feed.xml",
+      "maxLength": 2048,
+      "format": "uri-reference",
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 26
+      }
+    },
+    "home_entry_4_icon": {
+      "type": "string",
+      "title": "入口 4 · 图标",
+      "default": "rss",
+      "maxLength": 40,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "select",
+        "order": 27
+      },
+      "oneOf": [
+        {
+          "const": "compass",
+          "title": "发现"
+        },
+        {
+          "const": "library",
+          "title": "专题"
+        },
+        {
+          "const": "bookmark",
+          "title": "收藏"
+        },
+        {
+          "const": "rss",
+          "title": "订阅"
+        },
+        {
+          "const": "newspaper",
+          "title": "文章"
+        },
+        {
+          "const": "users",
+          "title": "用户"
+        },
+        {
+          "const": "message-circle",
+          "title": "交流"
+        },
+        {
+          "const": "layout-grid",
+          "title": "网格"
+        },
+        {
+          "const": "pencil",
+          "title": "编辑"
+        },
+        {
+          "const": "chart-no-axes-column",
+          "title": "统计"
+        }
+      ]
+    },
+    "home_notice_list_title": {
+      "type": "string",
+      "title": "公告列表标题",
+      "default": "文档公告",
+      "maxLength": 80,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "text",
+        "order": 28
+      }
+    },
+    "home_notice_list_count": {
+      "type": "integer",
+      "title": "首页公告显示条数",
+      "default": 4,
+      "minimum": 1,
+      "maximum": 8,
+      "x-newpress": {
+        "group": "home_sidebar",
+        "control": "number",
+        "order": 29
+      }
+    },
+    "home_checkin_visibility": {
+      "type": "string",
+      "title": "学习签到显示设备",
+      "default": "both",
+      "oneOf": [
+        {
+          "const": "both",
+          "title": "所有设备"
+        },
+        {
+          "const": "desktop",
+          "title": "仅桌面"
+        },
+        {
+          "const": "mobile",
+          "title": "仅移动端"
+        },
+        {
+          "const": "hidden",
+          "title": "隐藏"
+        }
+      ],
+      "x-newpress": {
+        "group": "home_layout",
+        "control": "select",
+        "order": 31
+      }
+    }
+  },
+  "x-newpress": {
+    "version": 1,
+    "groups": [
+      {
+        "id": "visual",
+        "title": "品牌与外观",
+        "description": "站点名称、站点图标由核心站点设置管理。这里设置访客界面的配色、外观偏好和导航密度。",
+        "icon": "palette",
+        "order": 0
+      },
+      {
+        "id": "header",
+        "title": "导航与搜索",
+        "description": "菜单内容仍由菜单管理维护。隐藏入口只影响展示，不停用对应功能。",
+        "icon": "panel-top",
+        "order": 10
+      },
+      {
+        "id": "announcement",
+        "title": "站点公告",
+        "description": "在页面顶部显示一条简短通知；公告内容留空时不占据空间。",
+        "icon": "megaphone",
+        "order": 20
+      },
+      {
+        "id": "hero",
+        "title": "首页首屏",
+        "description": "主标题、说明、插画和行动按钮。",
+        "icon": "panel-top",
+        "order": 30
+      },
+      {
+        "id": "modules",
+        "title": "首页模块",
+        "icon": "layout",
+        "order": 40
+      },
+      {
+        "id": "quick_links",
+        "title": "首页快捷入口",
+        "description": "四个学习入口的标题与说明。",
+        "icon": "link",
+        "order": 50
+      },
+      {
+        "id": "home_content",
+        "title": "首页文档内容",
+        "description": "教程推荐与最新文档的展示数量、文案和入口。",
+        "icon": "book-open",
+        "order": 60
+      },
+      {
+        "id": "learning",
+        "title": "社区与学习路径",
+        "description": "社区卡片和三步学习路径。",
+        "icon": "layers",
+        "order": 70
+      },
+      {
+        "id": "links",
+        "title": "导航与学习入口",
+        "icon": "link",
+        "order": 80
+      },
+      {
+        "id": "listing",
+        "title": "文档列表与卡片",
+        "description": "筛选、默认视图和首页共用卡片。",
+        "icon": "layout-grid",
+        "order": 90
+      },
+      {
+        "id": "reading",
+        "title": "文章阅读",
+        "description": "目录、阅读工具、元信息和正文排版。",
+        "icon": "book-open",
+        "order": 100
+      },
+      {
+        "id": "series",
+        "title": "学习系列",
+        "description": "系列索引、章节列表与连续阅读。",
+        "icon": "layers",
+        "order": 110
+      },
+      {
+        "id": "discussion",
+        "title": "讨论区",
+        "description": "自定义交流区域的文案，评论业务规则由核心管理。",
+        "icon": "message-circle",
+        "order": 120
+      },
+      {
+        "id": "utility",
+        "title": "错误与恢复",
+        "description": "为未找到的页面提供清晰说明和继续浏览的入口。",
+        "icon": "circle-help",
+        "order": 130
+      },
+      {
+        "id": "footer",
+        "title": "页脚与辅助入口",
+        "description": "版权、备案和自定义页脚内容继续来自核心站点设置。",
+        "icon": "panel-bottom",
+        "order": 140
+      },
+      {
+        "id": "services",
+        "title": "学习与社区服务",
+        "description": "控制文档站的服务入口；实际可用性仍由核心模块开关决定。",
+        "icon": "panels-top-left",
+        "order": 115
+      },
+      {
+        "id": "privacy",
+        "title": "隐私偏好",
+        "description": "可选的访问统计授权与隐私入口。",
+        "icon": "shield-check",
+        "order": 150
+      },
+      {
+        "id": "home_layout",
+        "title": "可编排首页与显示设备",
+        "description": "使用可编排首页时生效。",
+        "icon": "layout-grid",
+        "order": 160
+      },
+      {
+        "id": "home_carousel",
+        "title": "首页轮播",
+        "description": "使用可编排首页时生效。",
+        "icon": "layout-grid",
+        "order": 161
+      },
+      {
+        "id": "home_search",
+        "title": "首页背景搜索",
+        "description": "使用可编排首页时生效。",
+        "icon": "layout-grid",
+        "order": 162
+      },
+      {
+        "id": "home_sidebar",
+        "title": "首页导读与小工具",
+        "description": "使用可编排首页时生效。",
+        "icon": "layout-grid",
+        "order": 163
+      },
+      {
+        "id": "home_custom",
+        "title": "首页自定义内容",
+        "description": "使用可编排首页时生效。",
+        "icon": "layout-grid",
+        "order": 164
+      }
+    ]
+  },
+  "title": "DocsHub 主题设置",
+  "description": "配置文档站的外观、首页、阅读工具和内容展示。站点身份、内容数量上限、菜单及讨论策略由核心管理。"
+}

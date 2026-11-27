@@ -1,0 +1,13 @@
+{{define "progression-panel"}}
+<section class="progression-panel" data-progression-panel data-user-id="{{.Account.ID}}" hidden aria-label="成长与会员">
+  <div class="progression-toolbar"><p>查看经验值、会员方案与变动记录。</p><button type="button" class="ui-button ui-button-secondary ui-button-small" data-progression-refresh>同步状态</button></div>
+  <p class="progression-status" data-progression-status role="status" aria-live="polite">正在加载成长记录…</p>
+  <div class="progression-summary" data-progression-summary></div>
+  <section class="progression-pending" data-progression-pending hidden><h3>有一笔购买待确认</h3><p data-progression-pending-description></p><div class="progression-actions"><button class="ui-button ui-button-primary" type="button" data-progression-retry>核对并重试原购买</button><button class="ui-button ui-button-secondary" type="button" data-progression-cancel>取消待付款订单</button></div><small>已扣款的订单会完成会员开通。同步状态不会发起扣款。</small></section>
+  <header class="progression-section-heading"><div><h3>会员方案</h3></div><a class="progression-billing-link" href="/billing/">支付中心与订单 →</a></header>
+  <p class="progression-help">权益随会员有效期生效。站内币开通与在线支付均为单次购买，不会自动续费。</p>
+  <div class="progression-plans" data-progression-plans></div>
+  <section class="progression-records"><header class="progression-section-heading"><div><h3>成长记录</h3></div><span>经验与会员变动</span></header><div data-progression-history></div><button type="button" class="ui-button ui-button-secondary ui-button-small" data-progression-more hidden>更早的记录</button></section>
+  <dialog class="progression-dialog" data-progression-dialog aria-labelledby="progression-confirm-title"><form method="dialog"><h3 id="progression-confirm-title">确认会员购买</h3><p data-progression-confirm></p><p class="progression-help">本次使用站内币单次支付，不会自动续费。有效会员续费累加当前期限；已到期会员从重新开通时起算。</p><p class="progression-status" data-progression-confirm-status role="status" hidden></p><div class="progression-actions"><button class="ui-button ui-button-secondary" value="cancel">返回核对</button><button class="ui-button ui-button-primary" type="button" data-progression-confirm-submit>确认并支付</button></div></form></dialog>
+</section>
+{{end}}

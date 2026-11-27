@@ -1,0 +1,57 @@
+{{define "header"}}
+<header class="site-header" data-header data-messaging-enabled="{{if $.ModuleEnabled "messaging"}}true{{else}}false{{end}}">
+  <div class="header-main">
+    <div class="header-inner shell">
+      <a class="brand" href="/" aria-label="{{.Site.Title}} 首页">
+        <span class="brand-mark" aria-hidden="true"><img src="{{asset "images/brand/logo-mark-84.webp"}}?v={{.Site.ThemeVersion}}" srcset="{{asset "images/brand/logo-mark-84.webp"}}?v={{.Site.ThemeVersion}} 1x, {{asset "images/brand/logo-mark-168.webp"}}?v={{.Site.ThemeVersion}} 2x" alt="" width="42" height="42" fetchpriority="high"></span>
+        <span class="brand-type"><b>{{.Site.Title}}</b><small>{{.Site.Tagline}}</small></span>
+      </a>
+      {{if index .ThemeValues "utility_nav"}}<nav class="utility-nav" aria-label="快捷入口">
+        {{if .Navigation.UtilityConfigured}}{{template "utility-navigation" .}}{{else}}
+        {{if and (.ModuleEnabled "community") (index .ThemeValues "community_nav")}}<a href="/community/">圈子 <em>交流</em></a>{{end}}
+        {{if .ModuleEnabled "questions"}}<a href="/questions/">问答 <em>最新</em></a>{{end}}
+        {{if .ModuleEnabled "flash"}}<a href="/flash/">快报</a>{{end}}
+        {{if index .ThemeValues "market_nav"}}<a href="/shop/">商城</a>{{end}}
+        {{end}}
+      </nav>{{end}}
+      {{if index .ThemeValues "search_enabled"}}<form id="header-search" class="header-search" action="/explore/" method="get" role="search" aria-label="全站快速搜索" data-search-box>
+        <span class="search-kind">文章</span>
+        <input type="search" name="q" value="{{.SearchQuery}}" placeholder="搜索标题、作者或关键词" aria-label="搜索" maxlength="80" data-search-input>
+        <button type="submit" aria-label="执行搜索">{{template "icon" "search"}}</button>
+      </form>{{end}}
+      {{if index .ThemeValues "search_enabled"}}<button class="header-search-toggle header-icon-action" type="button" aria-label="打开搜索" aria-controls="header-search" data-focus-search>{{template "icon" "search"}}</button>{{end}}
+      {{template "color-mode" .}}
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav header-account-actions" data-nav-toggle>
+        <span></span><span></span><span></span><b class="sr-only">展开菜单</b><i data-menu-unread hidden><b class="sr-only">有未读消息</b></i>
+      </button>
+      <div id="header-account-actions" class="account-actions">
+        <button class="header-icon-action" type="button" aria-label="打开收藏" data-tooltip="本机收藏" data-saved-open>{{template "icon" "bookmark"}}<span class="header-action-label">本机收藏</span></button>
+        {{if $.ModuleEnabled "messaging"}}<button class="header-icon-action" type="button" aria-label="打开私信" data-tooltip="私信" data-drawer-open="message-drawer">{{template "icon" "message-square"}}<span class="header-action-label">私信</span><i data-message-unread-count hidden></i></button>{{end}}
+        <button class="header-icon-action" type="button" aria-label="打开通知" data-tooltip="通知" data-drawer-open="notification-drawer">{{template "icon" "bell-ring"}}<span class="header-action-label">通知</span><i data-unread-count hidden></i></button>
+        <div class="account-entry">
+        <button class="ui-button login-link" type="button" data-account-login>登录</button>
+        <button class="ui-button ui-button-primary register-link" type="button" data-account-register>加入社区</button>
+        <details class="account-menu" data-account-menu hidden>
+          <summary aria-label="账号菜单"><span class="account-avatar" data-account-avatar></span><b data-account-name></b>{{template "icon" "chevron-down"}}</summary>
+          <div><a href="/account/">{{template "icon" "users"}}个人中心</a>{{if $.ModuleEnabled "messaging"}}<button type="button" data-drawer-open="message-drawer">{{template "icon" "message-square"}}我的私信</button>{{end}}<button type="button" data-drawer-open="notification-drawer">{{template "icon" "bell-ring"}}通知中心</button><button type="button" data-saved-open>{{template "icon" "bookmark"}}我的收藏</button><a href="/admin/content/new/" data-account-publish hidden>{{template "icon" "pen-line"}}撰写文章</a><a href="/admin/" data-account-admin hidden>{{template "icon" "layout-grid"}}管理后台</a><button type="button" data-account-logout>{{template "icon" "log-out"}}退出登录</button></div>
+        </details>
+        </div>
+      </div>
+      <noscript><span class="login-link">启用 JavaScript 后可登录</span></noscript>
+    </div>
+  </div>
+  <div class="nav-row">
+    <div class="shell nav-row-inner">
+      <nav id="primary-nav" class="primary-nav" aria-label="主导航" data-nav>
+        {{if .Navigation.PrimaryConfigured}}{{template "primary-navigation" .}}{{else}}
+        <a class="nav-home {{if eq .ActiveNav "home"}}is-active{{end}}" href="/">首页</a>
+        <a class="nav-explore {{if eq .ActiveNav "explore"}}is-active{{end}}" href="/explore/">发现</a>
+        {{if index .ThemeValues "market_nav"}}<a class="nav-shop {{if eq .ActiveNav "shop"}}is-active{{end}}" href="/shop/">商城</a>{{end}}
+        {{if and (.ModuleEnabled "community") (index .ThemeValues "community_nav")}}<a class="nav-community {{if eq .ActiveNav "community"}}is-active{{end}}" href="/community/">圈子</a>{{end}}
+        {{end}}
+      </nav>
+      {{if .ModuleEnabled "questions"}}<a class="ui-button ui-button-primary submit-link" href="/questions/new/"><span class="icon-text">{{template "icon" "message-circle"}}去提问</span></a>{{end}}
+    </div>
+  </div>
+</header>
+{{end}}

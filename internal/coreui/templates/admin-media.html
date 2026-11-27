@@ -1,0 +1,156 @@
+{{define "content"}}
+<section class="admin-page admin-media-page">
+  <header class="admin-page-heading admin-media-heading">
+    <div>
+      <h1>媒体库</h1><p>单文件上限 {{.Media.UploadLimit}}{{if .Admin.Can "settings:manage"}} · <a href="/admin/settings/#site-settings-media">调整上传限制</a>{{end}}</p>
+    </div>
+    <div class="admin-heading-actions">
+      <button class="admin-button admin-button-quiet" type="button" data-copy-value="{{.Site.PublicURL}}/media/">{{template "icon" "paperclip"}}复制媒体前缀</button>
+      {{if not .Admin.ReadOnly}}<a class="admin-button admin-button-primary" href="/admin/media/#media-upload">{{template "icon" "upload-cloud"}}上传资源</a>{{end}}
+    </div>
+  </header>
+
+  {{if .Admin.ReadOnly}}
+  <div class="admin-callout admin-callout-warning" role="status"><span>{{template "icon" "triangle-alert"}}</span><div><strong>当前媒体工作区为只读</strong></div></div>
+  {{end}}
+  {{if .Admin.Notice}}
+  <div class="admin-content-notice admin-content-notice-{{.Admin.NoticeTone}}" role="status"><span>{{if eq .Admin.NoticeTone "success"}}{{template "icon" "check-circle"}}{{else}}{{template "icon" "triangle-alert"}}{{end}}</span><div><strong>{{if eq .Admin.NoticeTone "success"}}媒体资源库已更新{{else}}上传或编辑需要处理{{end}}</strong><p>{{.Admin.Notice}}</p></div></div>
+  {{end}}
+
+  <nav class="admin-media-status-tabs" aria-label="媒体状态">{{range .Media.StatusFilters}}<a href="{{.URL}}" class="{{if .Active}}is-active{{end}}" {{if .Active}}aria-current="page"{{end}}>{{if eq .Value "trash"}}{{template "icon" "trash-2"}}{{else}}{{template "icon" "image"}}{{end}}{{.Label}}<b>{{.Count}}</b></a>{{end}}</nav>
+
+  {{if .Media.HasSelected}}
+  <section class="admin-media-inspector" aria-labelledby="media-inspector-title">
+    <header>
+      <div><span>资源 #{{.Media.Selected.Item.ID}}</span><h2 id="media-inspector-title">{{if .Media.Selected.IsTrashed}}回收站资源{{else}}资源详情{{end}}</h2></div>
+      <a href="{{.Media.ListURL}}">{{template "icon" "x"}}关闭检查台</a>
+    </header>
+    <div class="admin-media-inspector-grid">
+      <div class="admin-media-stage admin-media-stage-{{.Media.Selected.Item.Kind}}">
+        {{if .Media.Selected.IsImage}}<img src="{{.Media.Selected.PreviewURL}}" alt="{{.Media.Selected.Item.AltText}}" width="{{.Media.Selected.Item.Width}}" height="{{.Media.Selected.Item.Height}}">
+        {{else if .Media.Selected.IsAudio}}<div class="admin-media-file-mark">{{template "icon" "play"}}<b>音频</b></div><audio controls preload="metadata" src="{{.Media.Selected.PreviewURL}}"></audio>
+        {{else if .Media.Selected.IsVideo}}<video controls preload="metadata" src="{{.Media.Selected.PreviewURL}}"></video>
+        {{else}}<div class="admin-media-file-mark">{{template "icon" "file-archive"}}<b>文档</b><small>{{.Media.Selected.Item.MIMEType}}</small></div>{{end}}
+        <footer><span>{{.Media.Selected.KindLabel}}</span><b>{{.Media.Selected.SizeLabel}}</b><em>{{.Media.Selected.DimensionLabel}}</em></footer>
+      </div>
+      <form class="admin-media-meta-form" action="{{.Media.Selected.EditURL}}" method="post" data-media-editor>
+        <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}">
+        <input type="hidden" name="version" value="{{.Media.Selected.Item.Version}}">
+        <input type="hidden" name="action" value="save">
+        <label class="{{if index .Admin.FieldErrors "title"}}has-error{{end}}"><span>媒体标题 <em>*</em></span><input type="text" name="title" value="{{.Media.EditInput.Title}}" maxlength="160" required {{if .Admin.ReadOnly}}disabled{{end}}><small>{{if index .Admin.FieldErrors "title"}}{{index .Admin.FieldErrors "title"}}{{else}}用于后台检索和选择器，不会改变原始文件名与公开地址。{{end}}</small></label>
+        <label class="{{if index .Admin.FieldErrors "alt_text"}}has-error{{end}}"><span>替代文本</span><textarea name="alt_text" rows="3" maxlength="250" placeholder="描述图片表达的信息，而不是重复文件名" {{if .Admin.ReadOnly}}disabled{{end}}>{{.Media.EditInput.AltText}}</textarea><small>{{if index .Admin.FieldErrors "alt_text"}}{{index .Admin.FieldErrors "alt_text"}}{{else}}图片进入正文时用于无障碍阅读；装饰性图片可以留空。{{end}}</small></label>
+        <label class="{{if index .Admin.FieldErrors "caption"}}has-error{{end}}"><span>说明与版权</span><textarea name="caption" rows="5" maxlength="2000" placeholder="来源、版权、拍摄者、使用限制或编辑备注" {{if .Admin.ReadOnly}}disabled{{end}}>{{.Media.EditInput.Caption}}</textarea><small>{{if index .Admin.FieldErrors "caption"}}{{index .Admin.FieldErrors "caption"}}{{else}}保留素材语境，后续块编辑器可选择作为图注输出。{{end}}</small></label>
+        <div class="admin-media-meta-actions"><button class="admin-button admin-button-primary" type="submit" {{if .Admin.ReadOnly}}disabled{{end}}>{{template "icon" "check"}}保存元数据</button>{{if not .Media.Selected.IsTrashed}}<button class="admin-button admin-button-quiet" type="button" data-copy-value="{{.Media.Selected.Item.PublicURL}}">{{template "icon" "paperclip"}}复制公开地址</button>{{end}}<a class="admin-button admin-button-quiet" href="{{.Media.Selected.PreviewURL}}" target="_blank" rel="noopener">{{template "icon" "external-link"}}{{if .Media.Selected.IsTrashed}}预览原文件{{else}}打开文件{{end}}</a></div>
+      </form>
+      <aside class="admin-media-ledger">
+        <div><span>文件信息</span><strong>{{.Media.Selected.Item.Filename}}</strong><code>{{.Media.Selected.Item.PublicURL}}</code></div>
+        <dl>
+          <div><dt>MIME</dt><dd>{{.Media.Selected.Item.MIMEType}}</dd></div>
+          <div><dt>尺寸</dt><dd>{{.Media.Selected.DimensionLabel}}</dd></div>
+          <div><dt>体积</dt><dd>{{.Media.Selected.SizeLabel}}</dd></div>
+          <div><dt>上传者</dt><dd>{{if .Media.Selected.Item.UploadedBy}}{{.Media.Selected.Item.UploadedBy}}{{else}}—{{end}}</dd></div>
+          <div><dt>创建</dt><dd>{{.Media.Selected.CreatedLabel}}</dd></div>
+          {{if .Media.Selected.IsTrashed}}<div><dt>移入回收站</dt><dd>{{.Media.Selected.TrashedLabel}}</dd></div>{{end}}
+          <div><dt>版本</dt><dd>v{{.Media.Selected.Item.Version}}</dd></div>
+        </dl>
+        <div class="admin-media-digest"><span>SHA-256</span><code title="{{.Media.Selected.Item.ChecksumSHA256}}">{{.Media.Selected.ChecksumShort}}…</code><button type="button" data-copy-value="{{.Media.Selected.Item.ChecksumSHA256}}" aria-label="复制 SHA-256">{{template "icon" "paperclip"}}</button></div>
+        <div class="admin-media-lifecycle">
+          {{if .Media.Selected.IsTrashed}}<form action="{{.Media.Selected.EditURL}}" method="post">
+            <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><input type="hidden" name="version" value="{{.Media.Selected.Item.Version}}"><input type="hidden" name="action" value="restore"><input type="hidden" name="title" value="{{.Media.Selected.Item.Title}}"><input type="hidden" name="alt_text" value="{{.Media.Selected.Item.AltText}}"><input type="hidden" name="caption" value="{{.Media.Selected.Item.Caption}}">
+            <button class="admin-button admin-button-primary admin-media-restore" type="submit" {{if .Admin.ReadOnly}}disabled{{end}}>{{template "icon" "rotate-ccw"}}恢复媒体</button>
+          </form>{{end}}
+          <form action="{{.Media.Selected.EditURL}}" method="post" data-confirm="{{if .Media.Selected.IsTrashed}}永久删除这项媒体及原始文件？此操作不可撤销。{{else}}将这项媒体移入回收站？{{end}}">
+            <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><input type="hidden" name="version" value="{{.Media.Selected.Item.Version}}"><input type="hidden" name="action" value="{{if .Media.Selected.IsTrashed}}delete{{else}}trash{{end}}"><input type="hidden" name="title" value="{{.Media.Selected.Item.Title}}"><input type="hidden" name="alt_text" value="{{.Media.Selected.Item.AltText}}"><input type="hidden" name="caption" value="{{.Media.Selected.Item.Caption}}">
+            <button class="admin-media-delete" type="submit" {{if or .Admin.ReadOnly (not (or .Media.References.CanDelete .Media.References.CanTrash))}}disabled{{end}}>{{template "icon" "trash-2"}}{{if .Media.Selected.IsTrashed}}永久删除{{else}}移入回收站{{end}}</button>
+            {{if .Media.References.Unavailable}}<a class="admin-media-delete-state" href="#media-references">引用检查暂时不可用</a>{{else if .Media.References.Total}}<a class="admin-media-delete-state" href="#media-references">已被引用，暂不可移除 · {{.Media.References.Total}} 处</a>{{end}}
+          </form>
+        </div>
+      </aside>
+    </div>
+    {{if .Media.Selected.IsImage}}
+    <section class="media-image-workbench" id="media-image-processing" aria-labelledby="media-image-title">
+      <header><div><h3 id="media-image-title">生成多种尺寸的网页图片</h3><p>设置画面焦点，生成封面、缩略图与正文尺寸。</p></div><b>{{if .Media.Image.Processed}}已生成 · 6 组尺寸{{else}}尚未生成{{end}}</b></header>
+      {{if and .Media.Image.CanProcess (not .Admin.ReadOnly)}}
+      <form action="/admin/media/{{.Media.Selected.Item.ID}}/process/" method="post" data-image-process>
+        <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><input type="hidden" name="version" value="{{.Media.Selected.Item.Version}}">
+        <div class="media-focus-grid">
+          <div><div class="media-focus-source" data-focus-source><img src="{{.Media.Selected.PreviewURL}}" alt="{{.Media.Selected.Item.AltText}}" data-focus-image><i data-focus-mark aria-hidden="true"></i></div><p>点击画面设置焦点，或在右侧输入坐标。坐标以图片左上角为起点。</p></div>
+          <div class="media-focus-controls"><div class="media-focus-fields"><label>水平焦点 <span><input name="focal_x" type="number" min="0" max="100" step="1" value="{{.Media.FocalX}}" required> %</span></label><label>垂直焦点 <span><input name="focal_y" type="number" min="0" max="100" step="1" value="{{.Media.FocalY}}" required> %</span></label></div><button type="button" class="admin-button admin-button-quiet" data-focus-center>回到画面中心</button><div class="media-focus-previews"><figure><img src="{{.Media.Selected.PreviewURL}}" alt="方形裁剪预览" data-focus-crop="1"><figcaption>方形缩略图</figcaption></figure><figure><img src="{{.Media.Selected.PreviewURL}}" alt="横图裁剪预览" data-focus-crop="1.77777778"><figcaption>横图封面 · 16:9</figcaption></figure></div><p>正文图片保留完整比例。小图不会被放大。</p></div>
+        </div>
+        <footer><p>生成版本会清除拍摄位置等文件元数据，原图仍保留完整信息。<br>支持静态 JPEG / PNG / WebP，最多 32 MiB、1600 万像素、单边 8192 px。</p><button class="admin-button admin-button-primary" type="submit" data-image-submit>{{template "icon" "image"}}{{if .Media.Image.Processed}}重新生成图片{{else}}生成网页图片{{end}}</button><span role="status" data-image-status></span></footer>
+      </form>
+      {{else if .Media.Image.Unavailable}}<p class="media-image-unavailable">{{.Media.Image.Unavailable}}</p>{{end}}
+      {{if and .Media.Image.Processed (not .Media.Selected.IsTrashed)}}<div class="media-image-results"><header><h4>已生成的图片</h4><p>网页自动选择同尺寸中较小的文件。WebP 为无损编码，体积可能更大。</p></header><div class="media-image-result-grid">{{range .Media.Image.Variants}}<article><a href="{{.URL}}" target="_blank" rel="noopener"><img src="{{.URL}}" width="{{.Width}}" height="{{.Height}}" alt="{{.Label}}" loading="lazy"></a><h5>{{.Label}}</h5><p>{{.Width}} × {{.Height}} · {{.SizeLabel}}</p><div><button type="button" data-copy-value="{{.URL}}">复制地址</button><a href="{{.WebPURL}}" download>WebP · {{.WebPSizeLabel}}</a></div></article>{{end}}</div></div>{{end}}
+    </section>
+    {{end}}
+    <div class="admin-media-references" id="media-references" aria-labelledby="media-references-title">
+      <header><h3 id="media-references-title">引用位置{{if not .Media.References.Unavailable}} <span>{{.Media.References.Total}}</span>{{end}}</h3><a href="{{.Media.Selected.EditURL}}#media-references" aria-label="刷新引用位置" title="刷新引用位置">{{template "icon" "refresh-cw"}}</a></header>
+      {{if .Media.References.Unavailable}}
+      <p class="admin-media-reference-state" role="status">引用检查暂时不可用，文件已保留。</p>
+      {{else}}
+      {{if .Media.References.Items}}<ul>{{range .Media.References.Items}}<li><a href="{{.URL}}"><span><strong>{{.Title}}</strong><small>{{.Label}}</small></span>{{template "icon" "chevron-right"}}</a></li>{{end}}</ul>{{end}}
+      {{if .Media.References.Hidden}}<p class="admin-media-reference-state">另有 {{.Media.References.Hidden}} 处受权限保护的引用。</p>{{end}}
+      {{if not .Media.References.Total}}<p class="admin-media-reference-state">暂无已记录引用。</p>{{end}}
+      {{if or .Media.References.PreviousURL .Media.References.NextURL}}<nav aria-label="引用位置分页">{{if .Media.References.PreviousURL}}<a href="{{.Media.References.PreviousURL}}" aria-label="上一页引用" title="上一页引用">{{template "icon" "chevron-left"}}</a>{{end}}<span>{{.Media.References.Page}} / {{.Media.References.Pages}}</span>{{if .Media.References.NextURL}}<a href="{{.Media.References.NextURL}}" aria-label="下一页引用" title="下一页引用">{{template "icon" "chevron-right"}}</a>{{end}}</nav>{{end}}
+      {{end}}
+    </div>
+  </section>
+  {{end}}
+
+  {{if ne .Media.Status "trash"}}<div class="admin-media-intake-grid">
+    <form class="admin-media-upload" id="media-upload" action="/admin/media/upload/" method="post" enctype="multipart/form-data" data-media-upload>
+      <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}">
+      <header><div><h2>安全上传入口</h2></div><b>单文件上限 {{.Media.UploadLimit}}</b></header>
+      <label class="admin-media-dropzone {{if index .Admin.FieldErrors "file"}}has-error{{end}}" data-media-dropzone>
+        <input type="file" name="file" accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,audio/mpeg,audio/ogg,audio/wav,video/mp4,video/webm" required data-media-file {{if .Admin.ReadOnly}}disabled{{end}}>
+        <span>{{template "icon" "upload-cloud"}}</span>
+        <strong data-media-file-title>拖入文件，或点击选择</strong>
+        <small data-media-file-detail>{{if index .Admin.FieldErrors "file"}}{{index .Admin.FieldErrors "file"}}{{else}}不信任扩展名；服务端读取文件签名并拒绝 SVG、HTML 与未知二进制。{{end}}</small>
+      </label>
+      <div class="admin-media-upload-fields">
+        <label class="{{if index .Admin.FieldErrors "title"}}has-error{{end}}"><span>标题（可选）</span><input type="text" name="title" value="{{.Media.UploadInput.Title}}" maxlength="160" placeholder="留空时使用规范化文件名" {{if .Admin.ReadOnly}}disabled{{end}}><small>{{if index .Admin.FieldErrors "title"}}{{index .Admin.FieldErrors "title"}}{{else}}后台检索名称，可随时修改。{{end}}</small></label>
+        <label class="{{if index .Admin.FieldErrors "alt_text"}}has-error{{end}}"><span>替代文本</span><input type="text" name="alt_text" value="{{.Media.UploadInput.AltText}}" maxlength="250" placeholder="例如：深色控制台中的媒体卡片" {{if .Admin.ReadOnly}}disabled{{end}}><small>{{if index .Admin.FieldErrors "alt_text"}}{{index .Admin.FieldErrors "alt_text"}}{{else}}图片建议填写，文档和音视频可留空。{{end}}</small></label>
+        <label class="admin-media-upload-caption {{if index .Admin.FieldErrors "caption"}}has-error{{end}}"><span>说明与版权</span><textarea name="caption" rows="3" maxlength="2000" placeholder="素材来源、授权范围或内部备注" {{if .Admin.ReadOnly}}disabled{{end}}>{{.Media.UploadInput.Caption}}</textarea><small>{{if index .Admin.FieldErrors "caption"}}{{index .Admin.FieldErrors "caption"}}{{else}}与对象一同持久化，不写入文件本身。{{end}}</small></label>
+      </div>
+      <footer><p><i></i><span><b>原子提交</b><small>对象成功落盘后才更新索引</small></span></p><button class="admin-button admin-button-primary" type="submit" {{if .Admin.ReadOnly}}disabled{{end}}>{{template "icon" "upload-cloud"}}校验并上传</button></footer>
+    </form>
+
+    <aside class="admin-media-policy">
+      <header><h2>上传前会进行四项检查</h2></header>
+      <ol>
+        <li><b>01</b><div><strong>请求限制</strong><small>正文与单文件都受部署级上传上限约束。</small></div></li>
+        <li><b>02</b><div><strong>真实类型</strong><small>按魔数识别 MIME，拒绝主动内容和伪装扩展名。</small></div></li>
+        <li><b>03</b><div><strong>图像限制</strong><small>像素总量与边长设硬上限，降低解压炸弹风险。</small></div></li>
+        <li><b>04</b><div><strong>文件去重</strong><small>SHA-256 去重，0600 临时文件与原子 JSON 索引。</small></div></li>
+      </ol>
+      <div class="admin-media-policy-foot"><span><b>{{.Admin.MediaCount}}</b> 项资产</span><span><b>{{.Admin.MediaSize}}</b> 已占用</span><span><b>{{.Media.LibraryRevision}}</b> 索引修订</span></div>
+    </aside>
+  </div>{{end}}
+
+  <section class="admin-panel admin-media-library">
+    <header class="admin-media-toolbar">
+      <nav aria-label="媒体类型">{{range .Media.KindFilters}}<a class="{{if .Active}}is-active{{end}}" href="{{.URL}}">{{.Label}} <b>{{.Count}}</b></a>{{end}}</nav>
+      <form class="fluent-input-group" action="/admin/media/" method="get" role="search" aria-label="媒体检索"><input type="hidden" name="status" value="{{.Media.Status}}">{{if .Media.Kind}}<input type="hidden" name="kind" value="{{.Media.Kind}}">{{end}}{{template "icon" "search"}}<input type="search" name="q" value="{{.Media.Search}}" maxlength="100" placeholder="搜索标题、文件名、说明或上传者" aria-label="搜索媒体"><button type="submit" aria-label="搜索媒体" title="搜索媒体">{{template "icon" "search"}}</button></form>
+      <div class="admin-media-library-stat"><span>{{.Media.Total}} 项</span><b>{{.Media.TotalSize}}</b></div>
+    </header>
+    <div class="admin-media-grid">
+      {{range .Media.Rows}}
+      <article class="admin-media-card admin-media-card-{{.Item.Kind}}">
+        <a class="admin-media-thumb" href="{{.EditURL}}" aria-label="检查《{{.Item.Title}}》">
+          {{if .IsImage}}<img src="{{.PreviewURL}}" alt="" loading="lazy" width="{{.Item.Width}}" height="{{.Item.Height}}">
+          {{else if .IsVideo}}<span class="admin-media-card-mark">{{template "icon" "play"}}<b>视频</b></span>
+          {{else if .IsAudio}}<span class="admin-media-card-mark">{{template "icon" "activity"}}<b>音频</b></span>
+          {{else}}<span class="admin-media-card-mark">{{template "icon" "file-archive"}}<b>PDF</b></span>{{end}}
+          <span class="admin-media-kind">{{.KindLabel}}</span><em>{{.SizeLabel}}</em>
+        </a>
+        <div class="admin-media-card-copy"><h3><a href="{{.EditURL}}">{{.Item.Title}}</a></h3><code>{{.Item.Filename}}</code><p><span>{{.DimensionLabel}}</span><time>{{.CreatedLabel}}</time></p></div>
+        <footer><a href="{{.EditURL}}">{{if $.Admin.ReadOnly}}{{template "icon" "eye"}}检查{{else}}{{template "icon" "pen-line"}}编辑{{end}}</a>{{if .IsTrashed}}<span>回收站</span>{{else}}<button type="button" data-copy-value="{{.Item.PublicURL}}">{{template "icon" "paperclip"}}复制 URL</button>{{end}}<a href="{{.PreviewURL}}" target="_blank" rel="noopener" aria-label="打开《{{.Item.Title}}》">{{template "icon" "external-link"}}</a></footer>
+      </article>
+      {{else}}
+      <div class="admin-media-empty"><span>{{template "icon" "image"}}</span><strong>{{if or .Media.Search .Media.Kind}}没有匹配的媒体{{else if eq .Media.Status "trash"}}回收站为空{{else}}暂无媒体{{end}}</strong>{{if or .Media.Search .Media.Kind}}<a href="{{.Media.ListURL}}">清除筛选</a>{{else if and (not .Admin.ReadOnly) (ne .Media.Status "trash")}}<a class="admin-button admin-button-primary" href="#media-upload">{{template "icon" "upload-cloud"}}上传媒体</a>{{end}}</div>
+      {{end}}
+    </div>
+    <footer class="admin-content-pagination"><p>共 <b>{{.Media.Total}}</b> 项 · 第 {{.Media.Page}} / {{.Media.Pages}} 页</p><nav aria-label="媒体分页"><a class="{{if not .Media.HasPrevious}}is-disabled{{end}}" {{if .Media.HasPrevious}}href="{{.Media.PreviousURL}}"{{end}}>{{template "icon" "arrow-left"}}上一页</a><a class="{{if not .Media.HasNext}}is-disabled{{end}}" {{if .Media.HasNext}}href="{{.Media.NextURL}}"{{end}}>下一页{{template "icon" "arrow-right"}}</a></nav></footer>
+  </section>
+</section>
+{{end}}

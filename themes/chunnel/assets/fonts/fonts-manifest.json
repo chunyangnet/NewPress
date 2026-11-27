@@ -1,0 +1,60 @@
+{
+  "fonts": [
+    {
+      "file": "inter-variable.woff2",
+      "source": "https://raw.githubusercontent.com/google/fonts/0b58fb370093f9a9f4ff785d94405710b79de67c/ofl/inter/Inter%5Bopsz,wght%5D.ttf",
+      "source_sha256": "29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031",
+      "sha256": "13b4cddc57045d40b411008e61588c8f81aa0bd72fe884624831a0ff9c4d159a",
+      "license": "inter-OFL.txt"
+    },
+    {
+      "file": "inter-italic-variable.woff2",
+      "source": "https://raw.githubusercontent.com/google/fonts/0b58fb370093f9a9f4ff785d94405710b79de67c/ofl/inter/Inter-Italic%5Bopsz,wght%5D.ttf",
+      "source_sha256": "acd98e64795781b2058f07b18475e0ecee2a0fe2b42a49e2f9e37d0d6bf66ce6",
+      "sha256": "cad8fca9a8eee76c402bff11e14b95999d99cc7a64541785f94fabd25bea1dcf",
+      "license": "inter-OFL.txt"
+    },
+    {
+      "file": "barlow-semi-condensed-regular.woff2",
+      "source": "https://raw.githubusercontent.com/google/fonts/3218ae2acc5bce7ccd97c477965b5b4094241fb0/ofl/barlowsemicondensed/BarlowSemiCondensed-Regular.ttf",
+      "source_sha256": "e8c7242f612b13d026e18a94b63b0fd079e91a3faf009d1b6981dbb5f16d1153",
+      "sha256": "25316a3c8bbb0f4b75d08df7d7a7e417bbf5b10b4cb734cda42fac0c738eaa80",
+      "license": "barlowsemicondensed-OFL.txt"
+    },
+    {
+      "file": "barlow-semi-condensed-medium.woff2",
+      "source": "https://raw.githubusercontent.com/google/fonts/3218ae2acc5bce7ccd97c477965b5b4094241fb0/ofl/barlowsemicondensed/BarlowSemiCondensed-Medium.ttf",
+      "source_sha256": "4998b693a190b76f2b11315844345a8546c1e2e6a320905507a9eed04edf8b48",
+      "sha256": "d078fa1bb159f364e021d4a0cd55858bdfe76d5c803ec39ceb2313a2c5eb4ac0",
+      "license": "barlowsemicondensed-OFL.txt"
+    },
+    {
+      "file": "barlow-semi-condensed-semibold.woff2",
+      "source": "https://raw.githubusercontent.com/google/fonts/3218ae2acc5bce7ccd97c477965b5b4094241fb0/ofl/barlowsemicondensed/BarlowSemiCondensed-SemiBold.ttf",
+      "source_sha256": "bd299f4bc5b44d30be8d42e9bad3a5df7d66af1cd55d0ed72a8b8916360a1424",
+      "sha256": "2bc48c5424f2a0b71318cb4a4405c635a235e13cc5cd505a26353945cca9a452",
+      "license": "barlowsemicondensed-OFL.txt"
+    },
+    {
+      "file": "barlow-semi-condensed-bold.woff2",
+      "source": "https://raw.githubusercontent.com/google/fonts/3218ae2acc5bce7ccd97c477965b5b4094241fb0/ofl/barlowsemicondensed/BarlowSemiCondensed-Bold.ttf",
+      "source_sha256": "5bd6757e459a110da81b44532f0f43058e2dab2401688abca84f2fdbde193cbb",
+      "sha256": "ac2392fc1d008b27665be57515b1d03015a6ab3cf807e34fca98537ad505ecf4",
+      "license": "barlowsemicondensed-OFL.txt"
+    },
+    {
+      "file": "barlow-semi-condensed-extrabold.woff2",
+      "source": "https://raw.githubusercontent.com/google/fonts/3218ae2acc5bce7ccd97c477965b5b4094241fb0/ofl/barlowsemicondensed/BarlowSemiCondensed-ExtraBold.ttf",
+      "source_sha256": "a8096d0dc3ff22ea015d63f436a6856a69e402c12da9991f4a40f2c0bedf44ee",
+      "sha256": "7581612fb68152bb9ea223dd22d0c2c3526f80aa9d3dc1112f5f31ecc287209e",
+      "license": "barlowsemicondensed-OFL.txt"
+    },
+    {
+      "file": "barlow-semi-condensed-black.woff2",
+      "source": "https://raw.githubusercontent.com/google/fonts/3218ae2acc5bce7ccd97c477965b5b4094241fb0/ofl/barlowsemicondensed/BarlowSemiCondensed-Black.ttf",
+      "source_sha256": "171502596b584862a651426010f14878d8f7a87e6a080a621c0b1cd447a5fefc",
+      "sha256": "502dfd3129baa94f47afdf6bb125e945abfc16db45d599accf7a1572b502f4b9",
+      "license": "barlowsemicondensed-OFL.txt"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+{{define "article-badge"}}{{if .Kind}}<span class="np-article-badge{{if .HideOnMobile}} np-article-badge-mobile-hidden{{end}}" data-style="{{.Style}}" data-tone="{{.Tone}}" data-placement="{{.Placement}}">{{if and .Icon (ne .Icon "none")}}{{template "icon" .Icon}}{{end}}<span class="np-article-badge-text">{{.Text}}</span></span>{{end}}{{end}}
+{{define "article-badge-cover"}}{{if .Kind}}<span class="np-article-badge-position" data-placement="{{.Placement}}" data-shape="{{.Style}}">{{template "article-badge" .}}</span>{{end}}{{end}}
+{{define "article-badge-inline"}}{{if .Kind}}<span class="np-article-badge-inline">{{template "article-badge" .}}</span>{{end}}{{end}}

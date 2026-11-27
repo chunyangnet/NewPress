@@ -1,0 +1,35 @@
+{{define "level-badge-art"}}<span class="identity-level-art" aria-hidden="true"><span class="identity-level-prefix">LV</span><span class="identity-level-number">{{.}}</span></span>{{end}}
+{{define "progression-badges"}}{{range .}}{{if and (eq .Kind "level") (gt .Level 0)}}<span class="identity-badge identity-level" data-identity-kind="level" data-identity-color="{{.Color}}" title="LV{{.Level}} · {{.Name}}" aria-label="等级 {{.Level}} · {{.Name}}">{{template "level-badge-art" .Level}}</span>{{else}}<span class="progression-badge" data-progression-color="{{.Color}}">{{.Name}}</span>{{end}}{{end}}{{end}}
+{{define "identity-badges"}}{{if .}}<span class="identity-badges" aria-label="社区身份">{{range .}}
+{{if eq .Kind "medal"}}<button type="button" class="identity-badge identity-medal" data-medal-details data-identity-kind="{{.Kind}}" data-identity-style="{{.Style}}" data-identity-color="{{.Color}}" data-identity-background="{{.Background}}" data-identity-name="{{.Name}}" data-identity-description="{{.Description}}" data-identity-icon="{{.Icon}}" data-identity-image="{{.Image}}" data-identity-granted="{{.GrantedAt}}" data-identity-expires="{{.ExpiresAt}}" aria-label="{{.Name}} · 查看勋章详情" aria-haspopup="dialog" aria-expanded="false"><span class="identity-medal-art" aria-hidden="true">{{if .Image}}<img src="{{.Image}}" alt="" width="28" height="28" loading="lazy">{{else}}{{template "icon" .Icon}}{{end}}</span></button>
+{{else if and (eq .Kind "level") (gt .Level 0)}}<span class="identity-badge identity-level" data-identity-kind="level" data-identity-color="{{.Color}}" title="LV{{.Level}} · {{.Name}}" aria-label="等级 {{.Level}} · {{.Name}}">{{template "level-badge-art" .Level}}</span>
+{{else}}<span class="identity-badge" data-identity-kind="{{.Kind}}" data-identity-style="{{.Style}}" data-identity-color="{{.Color}}" data-identity-background="{{.Background}}" title="{{.Name}}{{if .Description}} · {{.Description}}{{end}}">{{if .Image}}<img src="{{.Image}}" alt="" width="20" height="20" loading="lazy">{{else}}{{template "icon" .Icon}}{{end}}<span>{{.Name}}</span></span>{{end}}
+{{end}}</span>{{end}}{{end}}
+
+{{define "article-recognition"}}
+{{if .Recognition.CopyrightText}}<aside class="article-copyright" aria-label="版权说明"><span class="recognition-mark" aria-hidden="true">{{template "icon" "shield-check"}}</span><div><h2>{{.Recognition.CopyrightTitle}}</h2><p>{{.Recognition.CopyrightText}}</p><a href="{{.Canonical}}">本文链接 {{template "icon" "link"}}</a></div></aside>{{end}}
+{{if .Recognition.TipsEnabled}}<section class="article-support" data-article-tips data-tip-api="{{.Recognition.TipAPI}}" data-tip-post="{{.Post.ID}}">
+  <div><span class="recognition-eyebrow">支持创作</span><h2>{{with index .ThemeValues "tip_heading"}}{{.}}{{else}}喜欢这篇内容？{{end}}</h2><p>{{with index .ThemeValues "tip_description"}}{{.}}{{else}}用一份小小的心意，鼓励作者继续分享。{{end}}</p></div>
+  <button class="ui-button ui-button-primary" type="button" data-tip-open>{{template "icon" "heart"}}打赏作者</button>
+  <p class="recognition-status" data-tip-result role="status" aria-live="polite"></p>
+  <dialog class="recognition-dialog" data-tip-dialog aria-labelledby="tip-dialog-title" aria-modal="true">
+    <header><div><span class="recognition-eyebrow">一份心意</span><h2 id="tip-dialog-title">支持 {{.Post.AuthorName}}</h2></div><button class="recognition-close" type="button" data-tip-close aria-label="关闭打赏弹窗">{{template "icon" "x"}}</button></header>
+    <p data-tip-status class="recognition-status" role="status" aria-live="polite">正在读取钱包…</p>
+    <a href="/account/" data-tip-login hidden>登录后继续打赏 →</a>
+    <form data-tip-form hidden><fieldset><label>支付方式<select name="currency" required></select></label><p class="recognition-wallet" data-tip-balance></p><div class="tip-presets" data-tip-presets aria-label="选择打赏金额"></div><label>打赏数值<input name="amount" type="text" inputmode="decimal" maxlength="24" autocomplete="off" required placeholder="输入数值"></label><label class="recognition-check" data-tip-hide-row><input name="hidden" type="checkbox">隐藏打赏数值<small>评论中仅显示“已打赏”</small></label></fieldset><p class="recognition-help" data-tip-confirm>确认后从当前钱包扣除，直接转给文章作者。</p><button class="ui-button ui-button-primary" type="submit">确认打赏</button></form>
+  </dialog>
+</section>{{end}}
+{{end}}
+
+{{define "identity-panel"}}
+<section class="identity-panel" hidden data-identity-panel data-identity-user="{{.Account.ID}}">
+  <header><div><span class="recognition-eyebrow">社区身份</span><h2>我的勋章与认证</h2></div>{{template "icon" "award"}}</header>
+  {{template "identity-badges" .Recognition.AccountBadges}}
+  <details data-identity-details open><summary>管理佩戴与认证 {{template "icon" "chevron-down"}}</summary>
+    <p class="recognition-status" data-identity-status role="status" aria-live="polite"></p>
+    <div data-identity-content hidden><form data-identity-equip><h3>勋章陈列</h3><p class="recognition-help" data-identity-limit></p><div class="identity-medal-list" data-identity-medals></div><button class="ui-button ui-button-secondary ui-button-small" type="submit">保存佩戴</button></form>
+      <section class="identity-application"><h3>创作者认证</h3><p data-identity-application-state></p><p class="recognition-help" data-identity-help></p><form data-identity-apply><label>认证类别<select name="key" required></select></label><label>公开认证说明<input name="label" maxlength="30" required placeholder="例如：摄影作者"></label><label>申请说明与作品链接<textarea name="evidence" rows="4" maxlength="1000" required placeholder="介绍你的创作经历，附上可核验的作品或主页链接"></textarea></label><small>申请说明仅你与管理员可见。</small><button class="ui-button ui-button-primary ui-button-small" type="submit">提交认证申请</button></form></section>
+    </div><button type="button" class="ui-button ui-button-secondary ui-button-small" data-identity-refresh>刷新状态</button>
+  </details>
+</section>
+{{end}}

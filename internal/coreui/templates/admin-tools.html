@@ -1,0 +1,329 @@
+{{define "content"}}
+<section class="admin-page admin-tools-page" data-release="NP / {{.Version}}">
+  <header class="admin-page-heading"><h1>工具与备份</h1>{{if (.Admin.Can "system:read")}}<a class="admin-button admin-button-secondary" href="/admin/tools/support-report.json" download>下载支持报告</a>{{end}}</header>
+
+  {{if .Admin.ReadOnly}}
+  <div class="admin-callout admin-callout-warning" role="status">
+    <span>{{template "icon" "triangle-alert"}}</span>
+    <div><strong>当前是本机只读预览</strong></div>
+    <a href="#deployment-envelope">查看部署环境</a>
+  </div>
+  {{end}}
+
+  {{if .Admin.Notice}}
+  <div class="admin-callout admin-callout-{{.Admin.NoticeTone}}" role="status">
+    <span>{{if eq .Admin.NoticeTone "success"}}{{template "icon" "check-circle"}}{{else}}{{template "icon" "triangle-alert"}}{{end}}</span>
+    <div><strong>{{if eq .Admin.NoticeTone "success"}}恢复操作已完成{{else if eq .Admin.NoticeTone "warning"}}导入计划需要重新确认{{else}}导航导入未执行{{end}}</strong><p>{{.Admin.Notice}}</p></div>
+  </div>
+  {{end}}
+
+<div class="tools-task-layout" data-tools-workspace data-tools-restore="{{if or .Tools.NavigationImport.HasPlan .Admin.Notice}}true{{else}}false{{end}}">
+<nav class="tools-task-nav" aria-label="工具任务">
+<a href="#tools-downloads" data-tools-target="tools-downloads">{{template "icon" "download"}}导出与下载</a>
+<a href="#tools-recovery" data-tools-target="tools-recovery">{{template "icon" "file-archive"}}备份与恢复</a>
+<a href="#tools-diagnostics" data-tools-target="tools-diagnostics">{{template "icon" "activity"}}诊断与记录</a>
+</nav><div class="tools-task-content">
+<section id="tools-downloads" data-tools-panel aria-label="导出与下载">
+  <section class="admin-tools-section admin-tools-export-section" aria-labelledby="tools-export-title">
+    <header class="admin-tools-section-heading">
+      <div><h2 id="tools-export-title">导出与下载</h2></div>
+    </header>
+    <div class="tools-download-list">
+      {{if (.Admin.Can "system:read")}}
+      <article class="tools-download-row is-support">
+        <header><span>{{template "icon" "activity"}}</span><div><h3>无敏感信息支持报告</h3></div></header>
+        <p>供排查问题时使用，包含版本、存储模式与运行状态，不包含账号或连接凭据。</p>
+        <footer>
+          <a href="/admin/tools/support-report.json" download>{{template "icon" "arrow-down-to-line"}}下载报告</a>
+          <button type="button" aria-label="复制支持报告地址" data-copy-value="/admin/tools/support-report.json">{{template "icon" "code-2"}}</button>
+        </footer>
+      </article>
+
+      <article class="tools-download-row is-audit">
+        <header><span>{{template "icon" "radar"}}</span><div><h3>脱敏审计事件导出</h3></div></header>
+        <p>下载最近 100 条已完成的管理操作记录，可继续分页获取更早记录。个人身份信息已隐藏。</p>
+        <footer>
+          <a href="{{.Tools.Audit.ExportURL}}" download>{{template "icon" "arrow-down-to-line"}}下载事件</a>
+          <button type="button" aria-label="复制审计导出地址" data-copy-value="/admin/tools/audit-events.json?limit=100">{{template "icon" "code-2"}}</button>
+        </footer>
+      </article>
+      {{end}}
+
+      {{if (.Admin.Can "settings:manage")}}
+      <article class="tools-download-row is-settings">
+        <header><span>{{template "icon" "sliders-horizontal"}}</span><div><h3>站点设置导出</h3></div></header>
+        <p>导出当前站点设置。</p>
+        <footer>
+          <a href="/admin/settings/export/" download>{{template "icon" "arrow-down-to-line"}}下载设置</a>
+          <button type="button" aria-label="复制站点设置导出地址" data-copy-value="/admin/settings/export/">{{template "icon" "code-2"}}</button>
+        </footer>
+      </article>
+      {{end}}
+
+      {{if (.Admin.Can "appearance:manage")}}
+      <article class="tools-download-row is-theme">
+        <header><span>{{template "icon" "diamond"}}</span><div><h3>Chunnel 主题设置</h3></div></header>
+        <p>恢复时需使用兼容的主题版本。</p>
+        <footer>
+          <a href="/admin/appearance/export/" download>{{template "icon" "arrow-down-to-line"}}下载主题设置</a>
+          <button type="button" aria-label="复制主题设置导出地址" data-copy-value="/admin/appearance/export/">{{template "icon" "code-2"}}</button>
+        </footer>
+      </article>
+      {{end}}
+
+      {{if (.Admin.Can "navigation:manage")}}
+      <article class="tools-download-row is-navigation">
+        <header><span>{{template "icon" "route"}}</span><div><h3>可移植导航导出</h3></div></header>
+        <p>导出菜单、链接、层级和展示位置。</p>
+        <footer>
+          <a href="/admin/tools/navigation-export.json" download>{{template "icon" "arrow-down-to-line"}}下载导航</a>
+          <button type="button" aria-label="复制导航导出地址" data-copy-value="/admin/tools/navigation-export.json">{{template "icon" "code-2"}}</button>
+        </footer>
+      </article>
+      {{end}}
+    </div>
+  </section>
+
+  {{if (.Admin.CanWrite "settings:manage")}}
+  <section class="admin-tools-section" aria-labelledby="tools-promotion-title">
+    <header class="admin-tools-section-heading"><div><h2 id="tools-promotion-title">网站宣传</h2></div></header>
+    <div class="tools-download-list">
+      <article class="tools-download-row is-theme">
+        <header><span>{{template "icon" "image"}}</span><div><h3>宣传截图</h3></div></header>
+        <p>把网站放进桌面、笔记本、平板和手机的设备外壳，制作主题展示与宣传配图。</p>
+        <footer><a href="/admin/tools/device-mockup/">{{template "icon" "image"}}制作宣传图</a></footer>
+      </article>
+    </div>
+  </section>
+  {{end}}
+
+</section>
+<section id="tools-recovery" data-tools-panel aria-label="备份与恢复">
+  <section class="admin-tools-section admin-tools-backup" id="backup-units" aria-labelledby="tools-backup-title">
+    <header class="admin-tools-section-heading">
+      <div><h2 id="tools-backup-title">备份范围与恢复</h2><p>{{.Tools.ContentPersistence}}。下面列出当前 <strong>{{.Tools.StorageMode}}</strong> 模式需要保存的恢复单元。</p></div>
+      <button type="button" data-copy-value="停止服务 → 校验归档 → 恢复到新目录 → 核对部署配置 → 启动 → ready/登录/内容/私信/媒体复核">{{template "icon" "terminal"}}复制恢复顺序</button>
+    </header>
+    {{if .Tools.LocalContentVolatile}}
+    <aside class="admin-tools-volatile-warning">
+      <span>{{template "icon" "triangle-alert"}}</span>
+      <div><b>当前使用临时内容仓库</b><p>此运行实例未接入文件内容仓库，离线备份命令无法保存内存中的内容。请通过标准服务入口启用本地持久仓库后再创建恢复点。</p></div>
+    </aside>
+    {{end}}
+    {{if .Tools.LocalBackupAvailable}}
+    <div class="admin-tools-secret-boundary">
+      <span>{{template "icon" "file-archive"}}</span>
+      <div><b>本地站点可通过命令创建完整归档</b><p>在主机终端停止服务，以相同的目录配置执行下列命令。归档包含内容、账号、评论、导航、私信、媒体、设置、主题和插件；创建与恢复都会在临时目录核验业务数据。归档包含密码哈希和私密正文，请按私密文件保管。</p></div>
+    </div>
+    <div class="admin-tools-command-deck">
+      <span>{{template "icon" "terminal"}}</span>
+      <div><small>01 / 停止服务后创建</small><code>newpress backup create site-backup.zip</code></div>
+      <button type="button" aria-label="复制创建备份命令" data-copy-value="newpress backup create site-backup.zip">{{template "icon" "code-2"}}</button>
+    </div>
+    <div class="admin-tools-command-deck">
+      <span>{{template "icon" "shield-check"}}</span>
+      <div><small>02 / 校验归档结构和全部文件摘要</small><code>newpress backup inspect site-backup.zip</code></div>
+      <button type="button" aria-label="复制校验备份命令" data-copy-value="newpress backup inspect site-backup.zip">{{template "icon" "code-2"}}</button>
+    </div>
+    <div class="admin-tools-command-deck">
+      <span>{{template "icon" "file-archive"}}</span>
+      <div><small>03 / 恢复到新目录，再按返回的环境配置启动</small><code>newpress backup restore site-backup.zip --destination restored-site</code></div>
+      <button type="button" aria-label="复制恢复备份命令" data-copy-value="newpress backup restore site-backup.zip --destination restored-site">{{template "icon" "code-2"}}</button>
+    </div>
+    <p>已有备份文件和非空恢复目录会被拒绝。命令不会更换当前站点；程序二进制、目录外的部署配置与 secrets 需单独保留。此页面提供命令说明，尚未执行备份。</p>
+    {{end}}
+    <div class="admin-tools-backup-grid">
+      {{range .Tools.BackupUnits}}
+      <article class="admin-tools-backup-unit is-{{.Tone}}">
+        <span>{{.Index}}</span>
+        <div><small>{{if .Required}}必需{{else}}建议{{end}}</small><h3>{{.Name}}</h3><code>{{.Artifact}}</code><p>{{.Detail}}</p></div>
+        <i>{{if .Required}}{{template "icon" "shield-check"}}{{else}}{{template "icon" "file-archive"}}{{end}}</i>
+      </article>
+      {{end}}
+    </div>
+  </section>
+
+    <section class="admin-tools-section admin-tools-restore" aria-labelledby="tools-restore-title">
+      <header class="admin-tools-section-heading">
+        <div><h2 id="tools-restore-title">恢复顺序</h2><p>先恢复控制权，再恢复关联数据，最后用探针和支持报告关闭恢复窗口。</p></div>
+      </header>
+      <ol class="admin-tools-restore-list">
+        {{range .Tools.RestoreSteps}}
+        <li><span>{{.Index}}</span><div><h3>{{.Name}}</h3><p>{{.Detail}}</p></div></li>
+        {{end}}
+      </ol>
+    </section>
+
+  {{if (.Admin.Can "navigation:manage")}}
+  <section class="admin-tools-section admin-tools-import" id="navigation-import" aria-labelledby="tools-import-title">
+    <header class="admin-tools-section-heading">
+      <div><h2 id="tools-import-title">恢复导航</h2><p>上传导航导出文件，预览变更后确认替换。</p></div>
+      <a href="/admin/tools/navigation-export.json" download>{{template "icon" "arrow-down-to-line"}}先下载当前导航</a>
+    </header>
+
+    <div class="admin-tools-import-stage">
+      <article class="admin-tools-import-upload">
+        <header><span>{{template "icon" "upload-cloud"}}</span><div><h3>上传导航文件</h3></div><em>256 KiB</em></header>
+        <p>使用本系统导出的导航 JSON 文件。</p>
+        <form action="/admin/tools/navigation-import/" method="post" enctype="multipart/form-data" data-navigation-import-preview>
+          <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}">
+          <input type="hidden" name="action" value="preview">
+          <fieldset class="admin-tools-object-policy">
+            <legend>对象引用策略</legend>
+            <label class="is-recommended">
+              <input type="radio" name="object_policy" value="detach" {{if or (not .Tools.NavigationImport.HasPlan) (eq .Tools.NavigationImport.ObjectPolicy "detach")}}checked{{end}} {{if .Admin.ReadOnly}}disabled{{end}}>
+              <span>{{template "icon" "shield-check"}}</span><b>跨站导入<small>解除源站数字 ID，保留文字和链接</small></b><em>推荐</em>
+            </label>
+            <label>
+              <input type="radio" name="object_policy" value="preserve" {{if eq .Tools.NavigationImport.ObjectPolicy "preserve"}}checked{{end}} {{if .Admin.ReadOnly}}disabled{{end}}>
+              <span>{{template "icon" "database"}}</span><b>同站恢复<small>保留与本站内容、分类的关联</small></b>
+            </label>
+          </fieldset>
+          <label class="admin-tools-import-file">
+            <span>{{template "icon" "file-archive"}}</span>
+            <b>选择导航 JSON<small>拖入或浏览本地文件 · 最大 256 KiB</small></b>
+            <input type="file" name="navigation_file" accept="application/json,.json" required data-tools-navigation-file {{if .Admin.ReadOnly}}disabled{{end}}>
+          </label>
+          <output data-tools-navigation-file-name>{{if .Tools.NavigationImport.FileName}}{{.Tools.NavigationImport.FileName}}{{else}}尚未选择文件{{end}}</output>
+          <button class="admin-tools-import-preview-button" type="submit" {{if .Admin.ReadOnly}}disabled{{end}}>{{template "icon" "git-compare"}}校验并生成差异</button>
+        </form>
+      </article>
+
+    </div>
+
+    {{if .Tools.NavigationImport.HasPlan}}
+    <section class="admin-tools-import-plan" aria-labelledby="navigation-import-plan-title">
+      <header>
+        <div><h3 id="navigation-import-plan-title">导入预览</h3><p><b>{{.Tools.NavigationImport.FileName}}</b> · {{.Tools.NavigationImport.ObjectPolicyLabel}}</p></div>
+        <code title="计划 SHA-256">SHA256 {{.Tools.NavigationImport.Digest}}</code>
+      </header>
+      <div class="admin-tools-import-summary">
+        <article><small>当前</small><b>{{.Tools.NavigationImport.CurrentMenuCount}}</b><span>菜单 · {{.Tools.NavigationImport.CurrentItemCount}} 项</span></article>
+        <article><small>导入后</small><b>{{.Tools.NavigationImport.ImportedMenuCount}}</b><span>菜单 · {{.Tools.NavigationImport.ImportedItemCount}} 项</span></article>
+        <article><small>展示位置</small><b>{{.Tools.NavigationImport.AssignedLocations}} / 4</b><span>位置将被占用</span></article>
+        <article><small>变更</small><b>+{{.Tools.NavigationImport.AddCount}} · ~{{.Tools.NavigationImport.UpdateCount}} · −{{.Tools.NavigationImport.DeleteCount}}</b><span>{{.Tools.NavigationImport.UnchangedCount}} 个保持结构</span></article>
+      </div>
+      <div class="admin-tools-import-source">
+        <span>{{template "icon" "file-json"}}</span>
+        <dl>
+          <div><dt>来源</dt><dd>{{.Tools.NavigationImport.SourceThemeSlug}} v{{.Tools.NavigationImport.SourceThemeVersion}}</dd></div>
+          <div><dt>导出时间</dt><dd>{{.Tools.NavigationImport.SourceExportedAt}}</dd></div>
+          <div><dt>源修订</dt><dd><code>{{.Tools.NavigationImport.SourceRevision}}</code></dd></div>
+          <div><dt>目标修订</dt><dd><code>{{.Tools.NavigationImport.CurrentRevision}}</code></dd></div>
+        </dl>
+      </div>
+      {{if .Tools.NavigationImport.Warnings}}
+      <div class="admin-tools-import-warnings">
+        {{range .Tools.NavigationImport.Warnings}}<p>{{template "icon" "triangle-alert"}}<span>{{.}}</span></p>{{end}}
+      </div>
+      {{end}}
+      <div class="admin-tools-import-changes">
+        {{range .Tools.NavigationImport.Changes}}
+        <article class="is-{{.Tone}}"><span>{{.Action}}</span><div><h4>{{.Name}}</h4><code>{{.Slug}}</code><p>{{.Detail}}</p></div><i>{{if eq .Tone "add"}}{{template "icon" "plus"}}{{else if eq .Tone "delete"}}{{template "icon" "trash-2"}}{{else if eq .Tone "update"}}{{template "icon" "refresh-cw"}}{{else}}{{template "icon" "check"}}{{end}}</i></article>
+        {{end}}
+      </div>
+      <form class="admin-tools-import-commit" action="/admin/tools/navigation-import/" method="post">
+        <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}">
+        <input type="hidden" name="action" value="apply">
+        <input type="hidden" name="expected_revision" value="{{.Tools.NavigationImport.CurrentRevision}}">
+        <input type="hidden" name="object_policy" value="{{.Tools.NavigationImport.ObjectPolicy}}">
+        <input type="hidden" name="document" value="{{.Tools.NavigationImport.EncodedDocument}}">
+        <label><input type="checkbox" name="confirm" value="replace" required><span>{{template "icon" "shield-check"}}</span><b>我已下载当前导航并核对新增、替换与删除项</b></label>
+        <button type="submit">{{template "icon" "refresh-cw"}}确认替换全部导航</button>
+      </form>
+    </section>
+    {{end}}
+  </section>
+  {{end}}
+
+</section>
+<section id="tools-diagnostics" data-tools-panel aria-label="诊断与记录">
+  {{if (.Admin.Can "system:read")}}
+  <section class="admin-tools-section admin-tools-integrity" aria-labelledby="tools-integrity-title">
+    <header class="admin-tools-section-heading">
+      <div><h2 id="tools-integrity-title">完整性检查</h2></div>
+      <a href="/health/ready" target="_blank" rel="noopener">打开就绪探针 {{template "icon" "external-link"}}</a>
+    </header>
+    <div class="admin-tools-check-grid">
+      {{range .Admin.Checks}}
+      <article class="admin-tools-check is-{{.Status}}">
+        <span>{{if eq .Status "pass"}}{{template "icon" "check"}}{{else if eq .Status "warning"}}{{template "icon" "triangle-alert"}}{{else}}{{template "icon" "circle-x"}}{{end}}</span>
+        <div><small>{{if eq .Status "pass"}}正常{{else if eq .Status "warning"}}待处理{{else}}异常{{end}}</small><h3>{{.Label}}</h3><p>{{.Detail}}</p></div>
+        <i></i>
+      </article>
+      {{end}}
+    </div>
+  </section>
+  {{else}}
+  <aside class="admin-tools-scope-note">
+    <span>{{template "icon" "shield-check"}}</span><div><b>完整性检查需要 <code>system:read</code></b><p>当前账号仍可使用已授权的配置导出与备份说明，系统计数和运行状态保持隐藏。</p></div>
+  </aside>
+  {{end}}
+
+  {{if (.Admin.Can "system:read")}}
+  <section class="admin-tools-section admin-tools-audit" id="audit-events" aria-labelledby="tools-audit-title">
+    <header class="admin-tools-section-heading">
+      <div><h2 id="tools-audit-title">操作记录</h2><p>只显示已完成的操作摘要，不包含请求细节、身份字段或正文内容。</p></div>
+      {{if .Tools.Audit.Available}}<b>{{.Tools.Audit.Total}}<small>已记录事件</small></b>{{else}}<b>—<small>读取不可用</small></b>{{end}}
+    </header>
+    {{if .Tools.Audit.Available}}
+    <form class="admin-tools-audit-filters" method="get" action="/admin/tools/">
+      <label><span>动作筛选</span><input type="text" name="audit_action" value="{{.Tools.Audit.FilterAction}}" maxlength="160" pattern="[A-Za-z0-9._:-]+" placeholder="例如 comment.edit"></label>
+      <label><span>对象筛选</span><input type="text" name="audit_object_type" value="{{.Tools.Audit.FilterObjectType}}" maxlength="160" pattern="[A-Za-z0-9._:-]+" placeholder="例如 comment"></label>
+      <button type="submit">{{template "icon" "filter"}}应用筛选</button>
+      {{if .Tools.Audit.FilterActive}}<a href="/admin/tools/#audit-events">清除</a>{{end}}
+    </form>
+    <div class="admin-tools-audit-toolbar">
+      <span>{{template "icon" "shield-check"}}仅显示已完成操作</span>
+      <div><a href="{{.Tools.Audit.APIURL}}" target="_blank" rel="noopener">{{template "icon" "code-2"}}打开 JSON API</a><a href="{{.Tools.Audit.ExportURL}}" download>{{template "icon" "arrow-down-to-line"}}下载最近 100 条</a></div>
+    </div>
+    {{if .Tools.Audit.Events}}
+    <div class="admin-tools-audit-list">
+      {{range .Tools.Audit.Events}}
+      <article class="admin-tools-audit-event is-{{.Tone}}">
+        <time datetime="{{.CreatedAt.UTC.Format "2006-01-02T15:04:05Z07:00"}}">{{dateIn .CreatedAt $.Site.Timezone}}</time>
+        <span class="admin-tools-audit-marker">{{template "icon" "activity"}}</span>
+        <div><b>{{.ActionLabel}}</b><p><span>{{.ObjectLabel}}</span>{{if .ObjectID}} <code>#{{.ObjectID}}</code>{{end}} · {{.ActorLabel}}</p></div>
+        <code class="admin-tools-audit-action">{{.Action}}</code>
+      </article>
+      {{end}}
+    </div>
+    <footer class="admin-tools-audit-pager">
+      <span>本页 {{len .Tools.Audit.Events}} 条</span>
+      {{if .Tools.Audit.HasMore}}<a href="{{.Tools.Audit.NextURL}}">加载更早事件 {{template "icon" "arrow-right"}}</a>{{else}}<em>已显示全部记录</em>{{end}}
+    </footer>
+    {{else}}
+    <div class="admin-tools-audit-empty">{{template "icon" "check-circle"}}当前筛选没有已提交事件</div>
+    {{end}}
+    {{else}}
+    <div class="admin-tools-audit-unavailable">{{template "icon" "triangle-alert"}}暂时无法读取操作记录，请检查系统状态。</div>
+    {{end}}
+  </section>
+  {{end}}
+
+    <section class="admin-tools-section admin-tools-envelope" id="deployment-envelope" aria-labelledby="tools-envelope-title">
+      <header class="admin-tools-section-heading">
+        <div><h2 id="tools-envelope-title">部署环境</h2><p>只展示可以安全进入支持报告的环境信息。密钥与绝对路径不会出现在页面上。</p></div>
+      </header>
+      <dl class="admin-tools-fact-list">
+        <div><dt>存储模式</dt><dd><b>{{.Tools.StorageMode}}</b><small>{{.Tools.StorageLabel}}</small></dd><dd class="is-locked">固定</dd></div>
+        <div><dt>上传上限</dt><dd><b>{{.Tools.MaxUpload}}</b><small>当前生效的单文件限制</small></dd><dd><a href="/admin/settings/#site-settings-media">调整上限</a></dd></div>
+        <div><dt>自动迁移</dt><dd><b>{{if .Tools.AutoMigrate}}已启用{{else}}未启用{{end}}</b><small>NEWPRESS_AUTO_MIGRATE</small></dd><dd class="{{if .Tools.AutoMigrate}}is-pass{{else}}is-muted{{end}}">{{if .Tools.AutoMigrate}}开{{else}}关{{end}}</dd></div>
+        <div><dt>演示种子</dt><dd><b>{{if .Tools.SeedDemo}}已启用{{else}}未启用{{end}}</b><small>NEWPRESS_SEED_DEMO</small></dd><dd class="{{if .Tools.SeedDemo}}is-warning{{else}}is-pass{{end}}">{{if .Tools.SeedDemo}}开{{else}}关{{end}}</dd></div>
+        <div><dt>站点设置修订</dt><dd><b>{{.Tools.SiteSettingsRevision}}</b><small>{{.Tools.SiteSettingsFields}} 个字段</small></dd><dd class="is-pass">已记录</dd></div>
+        <div><dt>主题设置修订</dt><dd><b>{{.Tools.ThemeSettingsRevision}}</b><small>{{.Tools.ThemeSettingsFields}} 个字段</small></dd><dd class="is-pass">已记录</dd></div>
+        <div><dt>导航修订</dt><dd><b>{{.Tools.NavigationRevision}}</b><small>{{.Admin.NavigationMenuCount}} 个菜单 · {{.Admin.NavigationItemCount}} 个入口</small></dd><dd class="is-pass">已记录</dd></div>
+      </dl>
+      <div class="admin-tools-command-deck">
+        <span>{{template "icon" "terminal"}}</span>
+        <div><small>恢复后检查</small><code>newpress healthcheck --ready</code></div>
+        <button type="button" aria-label="复制恢复后检查命令" data-copy-value="newpress healthcheck --ready">{{template "icon" "code-2"}}</button>
+      </div>
+      <aside class="admin-tools-secret-boundary">
+        <span>{{template "icon" "shield-check"}}</span>
+        <div><b>支持报告不包含</b><p>数据库 DSN · 数据目录绝对路径 · 用户名与邮箱 · 密码哈希 · Cookie · 会话 ID · CSRF · 完整请求来源</p></div>
+      </aside>
+    </section></section>
+</div></div>
+</section>
+{{end}}

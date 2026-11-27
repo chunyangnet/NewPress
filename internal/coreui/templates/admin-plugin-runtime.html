@@ -1,0 +1,73 @@
+{{define "content"}}
+<section class="admin-page admin-settings-page" data-runtime-admin data-slug="{{.PluginRuntime.Manifest.Slug}}" data-version="{{.PluginRuntime.Config.Version}}" data-user-id="{{.Admin.Principal.UserID}}" data-csrf="{{.Admin.CSRFToken}}">
+  <header class="admin-page-heading"><h1>{{.PluginRuntime.Manifest.Name}}</h1><a class="admin-button admin-button-quiet" href="/admin/plugins/">返回插件</a></header>
+  <div class="admin-settings-layout" data-settings-layout>
+    {{template "admin-settings-nav" (dict "Groups" .PluginRuntime.Groups "Prefix" "plugin-settings-")}}
+    <form id="plugin-runtime-form" class="admin-settings-form" data-runtime-form>
+      <fieldset {{if .Admin.ReadOnly}}disabled{{end}}>
+        {{range .PluginRuntime.Groups}}
+        <section id="plugin-settings-{{.ID}}" class="admin-setting-section" data-settings-section aria-labelledby="plugin-heading-{{.ID}}">
+          <header><div><h2 id="plugin-heading-{{.ID}}">{{.Title}}</h2></div></header>
+          {{if eq .ID "permissions"}}
+          <div class="admin-setting-fields">{{range $.PluginRuntime.Grants}}<article class="admin-setting-field"><div class="admin-setting-copy"><label for="plugin-grant-{{.Key}}">{{.Label}}</label></div><div class="admin-setting-control">{{template "admin-switch" (dict "ID" (printf "plugin-grant-%s" .Key) "Grant" .Key "Checked" .Granted "ShowState" true)}}</div></article>{{end}}</div>
+          {{if $.PluginRuntime.Manifest.OutboundHosts}}<p class="admin-inline-notice">允许访问：{{range $.PluginRuntime.Manifest.OutboundHosts}}<code>{{.}}</code> {{end}}</p>{{end}}
+          {{else if eq .ID "tasks"}}
+          <div data-plugin-tasks>
+            {{if and $.Admin.PersistentUsers (not $.Admin.ReadOnly)}}<p><a class="admin-button admin-button-secondary" href="/admin/plugin-records/?plugin={{$.PluginRuntime.Manifest.Slug}}">{{template "icon" "scan-search"}}核对内容结果与共享授权</a> <a class="admin-button admin-button-secondary" href="/admin/plugin-webhooks/?plugin={{$.PluginRuntime.Manifest.Slug}}">Webhook 核对</a></p>{{end}}
+            {{if $.PluginRuntime.EventEnabled}}<label><input type="checkbox" name="subscribe_events" data-event-subscription {{if $.PluginRuntime.EventSubscribed}}checked{{end}}>授权以当前账户订阅新事件</label><p>保存后仅接收新事件；重新启用或升级后需要重新保存确认。执行时会重新检查账户权限。</p>{{end}}
+            <p>后台任务采用至少一次执行。停用插件或变更授权后，旧任务不会使用新授权继续执行。</p>
+            {{if $.PluginRuntime.TaskEnabled}}<label>任务参数（JSON）<textarea data-task-payload data-admin-transient rows="4">{}</textarea></label><button type="button" class="admin-button admin-button-secondary" data-task-create>加入任务队列</button>{{end}}
+            <div class="plugin-task-tools">
+              <label>记录范围<select data-task-scope data-admin-transient><option value="live">队列保留记录</option><option value="archived">已归档历史</option></select></label>
+              <label>状态<select data-task-filter data-admin-transient><option value="">全部</option><option value="pending">等待</option><option value="running">执行中</option><option value="retry">等待重试</option><option value="failed">失败</option><option value="succeeded">成功</option><option value="cancelled">已取消</option></select></label>
+              <button type="button" class="admin-button admin-button-quiet" data-task-refresh>刷新任务</button>
+            </div>
+            <details class="plugin-task-retention">
+              <summary>归档与容量回收</summary>
+              <p>归档成功或已取消的任务可释放队列配额。历史保留摘要与去重记录，原任务参数会移除；旧请求不会因此再次执行。失败任务保留在队列中供核对和重试。</p>
+              <label>归档截止范围<select data-task-archive-age data-admin-transient><option value="30">30 天前</option><option value="7">7 天前</option><option value="90">90 天前</option><option value="0">截至现在</option></select></label>
+              <div class="plugin-task-tools">
+                <button type="button" class="admin-button admin-button-secondary" data-task-archive>归档本插件终态任务</button>
+                <button type="button" class="admin-button admin-button-quiet" data-fanout-archive>归档站点事件回执</button>
+              </div>
+              <p>每次最多归档 100 条。任务按最后更新时间筛选；站点事件回执按事件产生时间筛选，仅移动已完成入队或已取消的回执，并保留原收件人集合。历史也有保留上限，满额时归档会失败。</p>
+            </details>
+            <section class="plugin-task-review" data-task-review-panel hidden aria-labelledby="plugin-task-review-heading">
+              <header><h3 id="plugin-task-review-heading">任务核对</h3><button type="button" class="admin-button admin-button-quiet" data-task-review-close>关闭核对</button></header>
+              <p class="plugin-task-review-source" data-task-review-source></p>
+              <p class="plugin-task-review-audit" data-task-review-audit hidden></p>
+              <div class="plugin-task-reissue-fields" data-task-reissue-fields hidden>
+                <p>请重新核对业务参数及可能已经完成的操作。本次投递会创建独立任务，并保存来源任务、核对账户和原因。</p>
+                <label>重新投递参数（JSON）<textarea data-task-reissue-payload data-admin-transient rows="4" aria-required="true">{}</textarea></label>
+                <label>核对原因<textarea data-task-reissue-reason data-admin-transient rows="2" maxlength="512" aria-required="true" placeholder="说明为什么需要重新投递，以及已核对的业务结果"></textarea></label>
+                <label class="plugin-task-review-confirm"><input type="checkbox" data-task-reissue-confirm data-admin-transient>已核对新参数、当前授权和业务结果，确认重新投递</label>
+                <button type="button" class="admin-button admin-button-secondary" data-task-reissue-submit>核对后加入队列</button>
+              </div>
+            </section>
+            <p data-task-status role="status" aria-live="polite">{{$.PluginRuntime.TaskError}}</p>
+            <ul data-task-list>{{range $.PluginRuntime.Tasks.Items}}<li><code>{{.ID}}</code> · {{.Kind}} · {{.Status}} · 尝试 {{.Attempts}} 次{{if eq .Status "failed"}} <button type="button" class="admin-button admin-button-quiet" data-task-action="retry" data-task-id="{{.ID}}" data-task-version="{{.Version}}">重试</button>{{else if or (eq .Status "pending") (eq .Status "running") (eq .Status "retry")}} <button type="button" class="admin-button admin-button-quiet" data-task-action="cancel" data-task-id="{{.ID}}" data-task-version="{{.Version}}">取消</button>{{end}}{{if .CanReissue}} <button type="button" class="admin-button admin-button-quiet" data-task-review-open data-task-id="{{.ID}}">核对后重新投递</button>{{else if .Reissue}} <button type="button" class="admin-button admin-button-quiet" data-task-review-open data-task-id="{{.ID}}">投递来源</button>{{end}}</li>{{else}}<li>暂无任务记录</li>{{end}}</ul>
+            <button type="button" class="admin-button admin-button-quiet" data-task-prev disabled>上一页</button><button type="button" class="admin-button admin-button-quiet" data-task-next {{if le $.PluginRuntime.Tasks.Total 20}}disabled{{end}}>下一页</button>
+            <noscript><p>当前展示最近 20 条记录。入队、筛选和任务操作需要 JavaScript；禁用脚本不会提交任务。</p></noscript>
+          </div>
+          {{else if eq .ID "records"}}
+          <div class="admin-plugin-records"><p>调用 {{$.PluginRuntime.Status.Calls}} 次 · 失败 {{$.PluginRuntime.Status.Failures}} 次 · 最近耗时 {{$.PluginRuntime.Status.LastDurationMS}} ms</p>
+            {{if $.PluginRuntime.Status.LastError}}<p role="alert">{{$.PluginRuntime.Status.LastError}}</p>{{end}}
+            {{if $.PluginRuntime.Action}}<details class="plugin-runtime-advanced"><summary>操作参数</summary><label>参数<textarea data-runtime-payload data-admin-transient rows="4">{"action":"preview"}</textarea></label></details><button class="admin-button admin-button-secondary" type="button" data-runtime-run {{if $.Admin.ReadOnly}}disabled{{end}}>试运行</button><div class="plugin-runtime-preview" data-runtime-preview hidden role="status"><strong></strong><p></p></div><details class="plugin-runtime-advanced"><summary>返回数据</summary><pre data-runtime-result hidden></pre></details>{{end}}
+            <p data-runtime-status role="status" aria-live="polite" hidden></p>
+          </div>
+          {{else}}
+          <div class="admin-setting-fields">{{range .Fields}}<article class="admin-setting-field" data-setting-field="{{.Key}}"><div class="admin-setting-copy"><label for="plugin-field-{{.Key}}">{{.Label}}</label>{{if .Help}}<p id="plugin-help-{{.Key}}">{{.Help}}</p>{{end}}</div><div class="admin-setting-control">
+            {{if eq .Type "boolean"}}{{template "admin-switch" (dict "ID" (printf "plugin-field-%s" .Key) "Name" .Key "SettingType" "boolean" "Checked" .Checked "ShowState" true)}}
+            {{else if eq .Type "number"}}<input id="plugin-field-{{.Key}}" type="number" name="{{.Key}}" data-setting-type="number" value="{{.Value}}" min="{{.Min}}" max="{{.Max}}" required step="1">
+            {{else if gt .Max 120}}<textarea id="plugin-field-{{.Key}}" name="{{.Key}}" data-setting-type="text" rows="3" maxlength="{{.Max}}">{{.Value}}</textarea>
+            {{else}}<input id="plugin-field-{{.Key}}" type="text" name="{{.Key}}" data-setting-type="text" value="{{.Value}}" maxlength="{{.Max}}">{{end}}
+          </div></article>{{end}}</div>
+          {{end}}
+        </section>
+        {{end}}
+      </fieldset>
+    </form>
+  </div>
+  {{template "admin-savebar" (dict "FormID" "plugin-runtime-form" "ReadOnly" .Admin.ReadOnly)}}
+</section>
+{{end}}

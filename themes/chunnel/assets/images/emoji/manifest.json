@@ -1,0 +1,625 @@
+{
+  "schema": 1,
+  "recorded": "2026-11-23",
+  "provenance": "项目所有者提供，并确认由其本人使用 GPT 图像模型生成。具体模型版本、生成日期及原始提示词未提供。",
+  "rights": "CC BY 4.0 for rights the licensor may grant; third-party character and trademark rights are not granted or cleared.",
+  "license": "CC-BY-4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "attribution": "NewPress 项目贡献者",
+  "sources": [
+    {
+      "pack": "daily",
+      "file": "daily-source.png",
+      "sha256": "4ea95c47f3a26e61d1e56f735681a709d8167a002d3fdbeab7dddcae6ce1d2c4",
+      "notice": "GPT 生成"
+    },
+    {
+      "pack": "whale",
+      "file": "whale-source.png",
+      "sha256": "d848dcbbabf3e44adabee9d7e3f77ad6a0759b834a6e3a3501e7561af799534c",
+      "notice": "GPT 生成 · 社区二创 · 非官方"
+    }
+  ],
+  "assets": [
+    {
+      "pack": "daily",
+      "name": "得意",
+      "token": "[得意]",
+      "file": "images/emoji/daily-01.png",
+      "source_cell": 1,
+      "width": 128,
+      "height": 128,
+      "sha256": "723c02a5a5c33959bda0fe0eb7f47b8d5e92359c1ba2ac840f8e83ea3496508e"
+    },
+    {
+      "pack": "daily",
+      "name": "笑哭",
+      "token": "[笑哭]",
+      "file": "images/emoji/daily-02.png",
+      "source_cell": 2,
+      "width": 128,
+      "height": 128,
+      "sha256": "559475dc5aa2640638af9195f215fc8b57b7cce0d020471f8e5f7f13ed88043c"
+    },
+    {
+      "pack": "daily",
+      "name": "星星眼",
+      "token": "[星星眼]",
+      "file": "images/emoji/daily-03.png",
+      "source_cell": 3,
+      "width": 128,
+      "height": 128,
+      "sha256": "45f631b2ca1a6db4d3c0b7f770a4bdacbfe034720225df5a3da2790985aa2c6e"
+    },
+    {
+      "pack": "daily",
+      "name": "点赞",
+      "token": "[点赞]",
+      "file": "images/emoji/daily-04.png",
+      "source_cell": 4,
+      "width": 128,
+      "height": 128,
+      "sha256": "9fc71a179365afffe6039ba2474266f0102de9e0172b86efad12b5b4e7f220f7"
+    },
+    {
+      "pack": "daily",
+      "name": "OK",
+      "token": "[OK]",
+      "file": "images/emoji/daily-05.png",
+      "source_cell": 5,
+      "width": 128,
+      "height": 128,
+      "sha256": "7eaf73b49a143e9da15e58536f9b439ca3c708af695d90845283f2b0c78b5a3d"
+    },
+    {
+      "pack": "daily",
+      "name": "喜欢",
+      "token": "[喜欢]",
+      "file": "images/emoji/daily-06.png",
+      "source_cell": 6,
+      "width": 128,
+      "height": 128,
+      "sha256": "94b7087b1fe5d7d8a9e2f45897bda6c0dff01117d701a0f7da3c90a84b4c7c89"
+    },
+    {
+      "pack": "daily",
+      "name": "大哭",
+      "token": "[大哭]",
+      "file": "images/emoji/daily-07.png",
+      "source_cell": 7,
+      "width": 128,
+      "height": 128,
+      "sha256": "1ce87c43ff7479f5f15f9da65300e20c3b0e395768014a5dcc6734c418552225"
+    },
+    {
+      "pack": "daily",
+      "name": "生气",
+      "token": "[生气]",
+      "file": "images/emoji/daily-08.png",
+      "source_cell": 8,
+      "width": 128,
+      "height": 128,
+      "sha256": "714f1e7642970f9621c9f69080ede0b6b37ea03df5dd50fe245660443dc157c7"
+    },
+    {
+      "pack": "daily",
+      "name": "尴尬",
+      "token": "[尴尬]",
+      "file": "images/emoji/daily-09.png",
+      "source_cell": 9,
+      "width": 128,
+      "height": 128,
+      "sha256": "7ee674448e5ec5d4590cbc35007faf3ce7f8a830c3d6f64704c1849b0f332840"
+    },
+    {
+      "pack": "daily",
+      "name": "震惊",
+      "token": "[震惊]",
+      "file": "images/emoji/daily-10.png",
+      "source_cell": 10,
+      "width": 128,
+      "height": 128,
+      "sha256": "86ada9d5161deb5628453ce43db03ce9f069d1499504675f833aa944a46d5bcc"
+    },
+    {
+      "pack": "daily",
+      "name": "思考",
+      "token": "[思考]",
+      "file": "images/emoji/daily-11.png",
+      "source_cell": 11,
+      "width": 128,
+      "height": 128,
+      "sha256": "9f4a509072342f02f42a83bb3201485a5f6c3a0d4e901f6fc24e4c9117fb1af4"
+    },
+    {
+      "pack": "daily",
+      "name": "酷",
+      "token": "[酷]",
+      "file": "images/emoji/daily-12.png",
+      "source_cell": 12,
+      "width": 128,
+      "height": 128,
+      "sha256": "5dbcb74f15b7932f8265fc32e4ae0914fbf687d77eebc2749a5cdbbab7dc83af"
+    },
+    {
+      "pack": "daily",
+      "name": "叹气",
+      "token": "[叹气]",
+      "file": "images/emoji/daily-13.png",
+      "source_cell": 13,
+      "width": 128,
+      "height": 128,
+      "sha256": "35595eeeb29053d283be553c715cecde3c1a30eb892aa849a2bf60884f5cd9b6"
+    },
+    {
+      "pack": "daily",
+      "name": "睡觉",
+      "token": "[睡觉]",
+      "file": "images/emoji/daily-14.png",
+      "source_cell": 14,
+      "width": 128,
+      "height": 128,
+      "sha256": "b361380083c7c6438f2376032296a7e25142d01ac3b86c1a80d8d8c8d0f5b685"
+    },
+    {
+      "pack": "daily",
+      "name": "吃饭",
+      "token": "[吃饭]",
+      "file": "images/emoji/daily-15.png",
+      "source_cell": 15,
+      "width": 128,
+      "height": 128,
+      "sha256": "8a59fa10a778476e2fb22970cb2c8174bf57c87a8bf9bb68c041281176d30e8e"
+    },
+    {
+      "pack": "daily",
+      "name": "奶茶",
+      "token": "[奶茶]",
+      "file": "images/emoji/daily-16.png",
+      "source_cell": 16,
+      "width": 128,
+      "height": 128,
+      "sha256": "f746923d2ffb9590e1e17557caaeca04a449093da992bd04c4d3855f6dfe84b1"
+    },
+    {
+      "pack": "daily",
+      "name": "打call",
+      "token": "[打call]",
+      "file": "images/emoji/daily-17.png",
+      "source_cell": 17,
+      "width": 128,
+      "height": 128,
+      "sha256": "9a6d2f71ab8241405e457098e129ab7b3f195dc40b8901252774527f10818741"
+    },
+    {
+      "pack": "daily",
+      "name": "庆祝",
+      "token": "[庆祝]",
+      "file": "images/emoji/daily-18.png",
+      "source_cell": 18,
+      "width": 128,
+      "height": 128,
+      "sha256": "cc200607701644c0f07ec202bbb5b86f960fc3406c48e351aa0e4a6e81d44628"
+    },
+    {
+      "pack": "daily",
+      "name": "疑惑",
+      "token": "[疑惑]",
+      "file": "images/emoji/daily-19.png",
+      "source_cell": 19,
+      "width": 128,
+      "height": 128,
+      "sha256": "16204bd7c95a405986727c929a49b57882511544f2a5d3b610e5206de83f2fd9"
+    },
+    {
+      "pack": "daily",
+      "name": "灵感",
+      "token": "[灵感]",
+      "file": "images/emoji/daily-20.png",
+      "source_cell": 20,
+      "width": 128,
+      "height": 128,
+      "sha256": "5230e5971032ebc92475f38995c065eb164fb166cd9ec666e918d959bc59271e"
+    },
+    {
+      "pack": "daily",
+      "name": "发抖",
+      "token": "[发抖]",
+      "file": "images/emoji/daily-21.png",
+      "source_cell": 21,
+      "width": 128,
+      "height": 128,
+      "sha256": "e3e3100accd683d9065069fc25bed13af0eb13f2cda2754f590171393117afa4"
+    },
+    {
+      "pack": "daily",
+      "name": "无语",
+      "token": "[无语]",
+      "file": "images/emoji/daily-22.png",
+      "source_cell": 22,
+      "width": 128,
+      "height": 128,
+      "sha256": "06c7adfbe429cc2ebd176df4285293745e33dcc09a73194bc0a8e5c55daec972"
+    },
+    {
+      "pack": "daily",
+      "name": "捂脸",
+      "token": "[捂脸]",
+      "file": "images/emoji/daily-23.png",
+      "source_cell": 23,
+      "width": 128,
+      "height": 128,
+      "sha256": "67caf32b9ee893cb34118e694439b18b44b1d221bcca9c642a7a210e6586cfd9"
+    },
+    {
+      "pack": "daily",
+      "name": "晕",
+      "token": "[晕]",
+      "file": "images/emoji/daily-24.png",
+      "source_cell": 24,
+      "width": 128,
+      "height": 128,
+      "sha256": "1346fd93095ee80847b2cf716ced492611ce63f7c23cd59d658d0b73fa5ec58e"
+    },
+    {
+      "pack": "daily",
+      "name": "给心心",
+      "token": "[给心心]",
+      "file": "images/emoji/daily-25.png",
+      "source_cell": 25,
+      "width": 128,
+      "height": 128,
+      "sha256": "7943e9afd57eba3132a891984d5e129a53ae3590515c124ea385535914001b97"
+    },
+    {
+      "pack": "daily",
+      "name": "加油",
+      "token": "[加油]",
+      "file": "images/emoji/daily-26.png",
+      "source_cell": 26,
+      "width": 128,
+      "height": 128,
+      "sha256": "8918d3b9b0b54df2a094c48b2ff1716c0cbcd2df8f8c5deb885ccbcae1e50c30"
+    },
+    {
+      "pack": "daily",
+      "name": "敬礼",
+      "token": "[敬礼]",
+      "file": "images/emoji/daily-27.png",
+      "source_cell": 27,
+      "width": 128,
+      "height": 128,
+      "sha256": "6a24c04f073a3f329e1b5c6bf98d614e961b71c90391afab26a8fa4d018552e0"
+    },
+    {
+      "pack": "daily",
+      "name": "感动",
+      "token": "[感动]",
+      "file": "images/emoji/daily-28.png",
+      "source_cell": 28,
+      "width": 128,
+      "height": 128,
+      "sha256": "5cc412ad1f833b04d0d99f384028980d30be18d4b5ae61645ea66ff293be0ac1"
+    },
+    {
+      "pack": "daily",
+      "name": "喝茶",
+      "token": "[喝茶]",
+      "file": "images/emoji/daily-29.png",
+      "source_cell": 29,
+      "width": 128,
+      "height": 128,
+      "sha256": "9500427545aa75686e861f48245f03b3ffecf87e80b3b1b24c6459aa1b9aa1ab"
+    },
+    {
+      "pack": "daily",
+      "name": "躺平",
+      "token": "[躺平]",
+      "file": "images/emoji/daily-30.png",
+      "source_cell": 30,
+      "width": 128,
+      "height": 128,
+      "sha256": "f7c83c53debe4cb5134812ab996fd95d03bbef324056cb90bc04fecb1f2f8115"
+    },
+    {
+      "pack": "whale",
+      "name": "开心",
+      "token": "[鲸伴开心]",
+      "file": "images/emoji/whale-01.png",
+      "source_cell": 1,
+      "width": 128,
+      "height": 128,
+      "sha256": "895261eaac4e86d82b1bdba58ffaadb498f46207b788fe7a8c1eaddc2bc0f093"
+    },
+    {
+      "pack": "whale",
+      "name": "抱抱",
+      "token": "[鲸伴抱抱]",
+      "file": "images/emoji/whale-02.png",
+      "source_cell": 2,
+      "width": 128,
+      "height": 128,
+      "sha256": "8170df3af4a258ec60473be6cbc9994d6ad449b6550272eb37b4217e74356fb1"
+    },
+    {
+      "pack": "whale",
+      "name": "满足",
+      "token": "[鲸伴满足]",
+      "file": "images/emoji/whale-03.png",
+      "source_cell": 3,
+      "width": 128,
+      "height": 128,
+      "sha256": "886f7abd41eec23582d71450202cff3e3ee357676f9678d3744584f9e68b51c5"
+    },
+    {
+      "pack": "whale",
+      "name": "点赞",
+      "token": "[鲸伴点赞]",
+      "file": "images/emoji/whale-04.png",
+      "source_cell": 4,
+      "width": 128,
+      "height": 128,
+      "sha256": "2405ab1a2d186bb96feb511c00bb5161ba3be5018b6969783c23d12921354c86"
+    },
+    {
+      "pack": "whale",
+      "name": "期待",
+      "token": "[鲸伴期待]",
+      "file": "images/emoji/whale-05.png",
+      "source_cell": 5,
+      "width": 128,
+      "height": 128,
+      "sha256": "10ebf4a433edd69e188cdae25010f3067cb51bddd42b4a648b8a5b6adf743bc0"
+    },
+    {
+      "pack": "whale",
+      "name": "比心",
+      "token": "[鲸伴比心]",
+      "file": "images/emoji/whale-06.png",
+      "source_cell": 6,
+      "width": 128,
+      "height": 128,
+      "sha256": "8535ad1f33901f12282a2f78cab72f181ad7c4bd60d9e8470b9181ca49640c03"
+    },
+    {
+      "pack": "whale",
+      "name": "疑问",
+      "token": "[鲸伴疑问]",
+      "file": "images/emoji/whale-07.png",
+      "source_cell": 7,
+      "width": 128,
+      "height": 128,
+      "sha256": "1bdc98587a189c5908611b4b9b15108e97fc4126e370cd5106626bd8c8c1260c"
+    },
+    {
+      "pack": "whale",
+      "name": "思考",
+      "token": "[鲸伴思考]",
+      "file": "images/emoji/whale-08.png",
+      "source_cell": 8,
+      "width": 128,
+      "height": 128,
+      "sha256": "51a9b346cab1dbe4da64754a275879a0354027fc36247f9917202dae7acf648e"
+    },
+    {
+      "pack": "whale",
+      "name": "灵感",
+      "token": "[鲸伴灵感]",
+      "file": "images/emoji/whale-09.png",
+      "source_cell": 9,
+      "width": 128,
+      "height": 128,
+      "sha256": "3349c1902fe85a8e868aca06d4be66852df45cdb92b884be4333c4f389485afa"
+    },
+    {
+      "pack": "whale",
+      "name": "震惊",
+      "token": "[鲸伴震惊]",
+      "file": "images/emoji/whale-10.png",
+      "source_cell": 10,
+      "width": 128,
+      "height": 128,
+      "sha256": "be24f67788b3b985bd90dd707697fad3ff867fe03e43b6dc0d5737077e8a482b"
+    },
+    {
+      "pack": "whale",
+      "name": "汗颜",
+      "token": "[鲸伴汗颜]",
+      "file": "images/emoji/whale-11.png",
+      "source_cell": 11,
+      "width": 128,
+      "height": 128,
+      "sha256": "37007e07f8f83186958c81362f087097a5341e98caf24f9c277e13986b84927d"
+    },
+    {
+      "pack": "whale",
+      "name": "大哭",
+      "token": "[鲸伴大哭]",
+      "file": "images/emoji/whale-12.png",
+      "source_cell": 12,
+      "width": 128,
+      "height": 128,
+      "sha256": "55c23e69f35fc23f12ac5136ab6f54380649dbee7739cc0d5768547fcb122887"
+    },
+    {
+      "pack": "whale",
+      "name": "生气",
+      "token": "[鲸伴生气]",
+      "file": "images/emoji/whale-13.png",
+      "source_cell": 13,
+      "width": 128,
+      "height": 128,
+      "sha256": "75e7fe4cbf1075f0bd65eb8e22bb5398601b5db1347d28c5f273cf305ad7c9a2"
+    },
+    {
+      "pack": "whale",
+      "name": "哼",
+      "token": "[鲸伴哼]",
+      "file": "images/emoji/whale-14.png",
+      "source_cell": 14,
+      "width": 128,
+      "height": 128,
+      "sha256": "8b45b0a54335e024e9294d4917a2a5e089cb3721f912fb04c18276de18f7ebb7"
+    },
+    {
+      "pack": "whale",
+      "name": "无语",
+      "token": "[鲸伴无语]",
+      "file": "images/emoji/whale-15.png",
+      "source_cell": 15,
+      "width": 128,
+      "height": 128,
+      "sha256": "541b64f2e5c10b19bb095489616007ea0a029eba72a6eb6d5c02482297721b0e"
+    },
+    {
+      "pack": "whale",
+      "name": "酷",
+      "token": "[鲸伴酷]",
+      "file": "images/emoji/whale-16.png",
+      "source_cell": 16,
+      "width": 128,
+      "height": 128,
+      "sha256": "7d337ba2db7c2a22e125d617b1734e158db0a53b3fc0cd6ab738be60a718cbb9"
+    },
+    {
+      "pack": "whale",
+      "name": "喝茶",
+      "token": "[鲸伴喝茶]",
+      "file": "images/emoji/whale-17.png",
+      "source_cell": 17,
+      "width": 128,
+      "height": 128,
+      "sha256": "6aa0d7e28da600a30c31f4f86450c0bd9590b7ccb0b72cce18dbcb9a1b105a0c"
+    },
+    {
+      "pack": "whale",
+      "name": "吃饼",
+      "token": "[鲸伴吃饼]",
+      "file": "images/emoji/whale-18.png",
+      "source_cell": 18,
+      "width": 128,
+      "height": 128,
+      "sha256": "93bbdd1d78df9740ab6ea659d3c635c736fbf28e014dd0ae307ed88e2f13d8a8"
+    },
+    {
+      "pack": "whale",
+      "name": "晚安",
+      "token": "[鲸伴晚安]",
+      "file": "images/emoji/whale-19.png",
+      "source_cell": 19,
+      "width": 128,
+      "height": 128,
+      "sha256": "42abc85d909b02ca547884d2fcc47b9b4e9e67b409bba0646a6f42812698d08e"
+    },
+    {
+      "pack": "whale",
+      "name": "工作",
+      "token": "[鲸伴工作]",
+      "file": "images/emoji/whale-20.png",
+      "source_cell": 20,
+      "width": 128,
+      "height": 128,
+      "sha256": "d3301575c9fd12a57e594a3ed4bb07645ec116137ab3c6bbaf31eb65b6aa1182"
+    },
+    {
+      "pack": "whale",
+      "name": "写代码",
+      "token": "[鲸伴写代码]",
+      "file": "images/emoji/whale-21.png",
+      "source_cell": 21,
+      "width": 128,
+      "height": 128,
+      "sha256": "d31a99e679451577512ca6436290ca8286deb80df3f368a9cfd8185020cc4300"
+    },
+    {
+      "pack": "whale",
+      "name": "读书",
+      "token": "[鲸伴读书]",
+      "file": "images/emoji/whale-22.png",
+      "source_cell": 22,
+      "width": 128,
+      "height": 128,
+      "sha256": "474588b673a203854d925f5d3c9c19465b431dd0f5aaff7eef465f348a172e49"
+    },
+    {
+      "pack": "whale",
+      "name": "分析",
+      "token": "[鲸伴分析]",
+      "file": "images/emoji/whale-23.png",
+      "source_cell": 23,
+      "width": 128,
+      "height": 128,
+      "sha256": "507df1a2a8bdb65828889ccdc92fd9d8e5268a1f386786db64d2c28dc35f0a97"
+    },
+    {
+      "pack": "whale",
+      "name": "庆祝",
+      "token": "[鲸伴庆祝]",
+      "file": "images/emoji/whale-24.png",
+      "source_cell": 24,
+      "width": 128,
+      "height": 128,
+      "sha256": "3d62f2145d410b2beb50c82a9562d54d98f338bd5ad57a42182955058f3cd4a0"
+    },
+    {
+      "pack": "whale",
+      "name": "招手",
+      "token": "[鲸伴招手]",
+      "file": "images/emoji/whale-25.png",
+      "source_cell": 25,
+      "width": 128,
+      "height": 128,
+      "sha256": "074e060653440c85d7020023c8bd5d800e0b51fab6c82575a7d27f719cc29e7d"
+    },
+    {
+      "pack": "whale",
+      "name": "探头",
+      "token": "[鲸伴探头]",
+      "file": "images/emoji/whale-26.png",
+      "source_cell": 26,
+      "width": 128,
+      "height": 128,
+      "sha256": "28e296c1b55788a55cdf72361e54d68b4609bcc4d2f32b81170e8766f552303a"
+    },
+    {
+      "pack": "whale",
+      "name": "开箱",
+      "token": "[鲸伴开箱]",
+      "file": "images/emoji/whale-27.png",
+      "source_cell": 27,
+      "width": 128,
+      "height": 128,
+      "sha256": "82ede806e085f741a53d7d8445a011a07ff655512df918e635dd16c4e9fd99a9"
+    },
+    {
+      "pack": "whale",
+      "name": "躲藏",
+      "token": "[鲸伴躲藏]",
+      "file": "images/emoji/whale-28.png",
+      "source_cell": 28,
+      "width": 128,
+      "height": 128,
+      "sha256": "0bc091ef0d5d3d40a7282190880a42be78def14711c51b88d6f61ec4dd1df1e2"
+    },
+    {
+      "pack": "whale",
+      "name": "施法",
+      "token": "[鲸伴施法]",
+      "file": "images/emoji/whale-29.png",
+      "source_cell": 29,
+      "width": 128,
+      "height": 128,
+      "sha256": "62d4cd0b5b48df7e4965d2ab0418d53d352dbf22be4330fbbe568590ad696ec6"
+    },
+    {
+      "pack": "whale",
+      "name": "自闭",
+      "token": "[鲸伴自闭]",
+      "file": "images/emoji/whale-30.png",
+      "source_cell": 30,
+      "width": 128,
+      "height": 128,
+      "sha256": "6eb16123df1175bb0f33e4427a095148bfc5ca421e4be9bc3d17311064e218a5"
+    }
+  ]
+}

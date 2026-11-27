@@ -1,0 +1,23 @@
+{{define "access-settings"}}
+<section id="site-settings-access" class="admin-setting-section access-settings" aria-labelledby="site-settings-title-access" data-settings-section data-access-settings data-user-id="{{.Admin.Principal.UserID}}">
+  <header><span>{{template "icon" "key-round"}}</span><div><h2 id="site-settings-title-access">登录与短信</h2><p>应用凭据与验证码发送服务，在此配置并即时生效。</p></div></header>
+  <template data-access-config-switch>{{template "admin-switch" (dict "Label" "启用")}}</template>
+  <form data-access-config-form data-readonly="{{.Admin.ReadOnly}}" autocomplete="off">
+    <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}">
+    <fieldset data-access-config-fields disabled>
+      <div class="access-config-heading"><div><h3>第三方登录</h3><p>填写平台应用 ID 与密钥，复制回调地址到对应平台的应用设置。</p></div><span class="access-config-badge" data-access-config-count>6 个平台</span></div>
+      <label class="access-config-base">登录回调站点地址<input name="callback_base_url" type="url" maxlength="2048" spellcheck="false" placeholder="https://example.com"><small>留空沿用当前站点地址。生产站点使用 HTTPS；本地调试支持 HTTP localhost。访问本站和回调必须使用相同域名，才能携带授权 Cookie。</small></label>
+      <div class="access-config-providers" data-access-config-providers></div>
+      <p class="access-config-note">首次登录的注册条件与必填绑定信息，请在「注册与账号」中设置。密钥留空保留；更换应用 ID 后须重新填写。</p>
+      <div class="access-config-heading access-config-sms-heading"><div><h3>短信验证码</h3><p>用于注册、绑定手机号和验证码登录。</p></div><div class="access-config-toggle">{{template "admin-switch" (dict "Name" "sms_enabled" "Label" "启用短信发送")}}</div></div>
+      <div class="access-config-grid"><label>短信服务<select name="sms_provider" data-access-config-sms-provider></select></label><label>发送超时（秒）<input name="sms_timeout" type="number" min="3" max="20" step="1" value="8"></label></div>
+      <div class="access-config-provider-info"><p data-access-config-sms-description></p><a data-access-config-docs target="_blank" rel="noopener noreferrer" hidden>服务商接入文档 {{template "icon" "external-link"}}</a></div>
+      <div class="access-config-grid" data-access-config-sms-fields></div>
+      <p class="access-config-note">可用变量：<code>{code}</code> 验证码、<code>{phone}</code> 完整国际号码、<code>{phone_national}</code> 去掉 +86 的国内号码、<code>{purpose}</code> 用途、<code>{minutes}</code> 有效分钟数。自定义网关还可用 <code>{secret}</code> 传递密钥。JSON 参数中的变量须放在字符串内。</p>
+    </fieldset>
+    <div class="access-config-footer"><p data-access-config-status role="status" aria-live="polite">正在读取登录与短信配置…</p><div><button type="button" class="admin-button admin-button-quiet" data-access-config-reload>重新加载</button><button type="submit" class="admin-button admin-button-primary" data-access-config-save disabled>保存登录与短信配置</button></div></div>
+    <div class="access-config-test"><div><h3>测试短信发送</h3><p>使用已保存配置，发送一条真实短信，按服务商规则计费。测试码不能用于登录或注册。</p></div><label>接收手机号<input type="tel" data-access-config-test-phone autocomplete="off" placeholder="+8613800138000" maxlength="16" aria-label="测试短信接收手机号"></label><button type="button" class="admin-button admin-button-outline" data-access-config-test disabled>发送测试短信</button><p data-access-config-test-status role="status" aria-live="polite"></p></div>
+    <p class="access-config-note">登录与短信配置独立保存。密钥不会回显或包含在普通站点设置导出中，修改后无需重启服务。</p>
+  </form>
+</section>
+{{end}}

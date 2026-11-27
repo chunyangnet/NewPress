@@ -1,0 +1,29 @@
+/* Core UI defaults; independent of the active theme settings. */
+:root{
+  --cyan:#2563eb;
+  --cyan-dark:#1d4ed8;
+  --orange:#3b82f6;
+  --paper:#f7f9fc;
+  --ink:#17253d;
+  --focus:#2563eb;
+  --radius:12px;
+  --shell-max:1180px;
+  --font-scale:1;
+  --body-leading:1.65;
+  --header-blur:16px;
+  --article-width:720px;
+  --article-type:19px;
+  --popup-duration:260ms;
+  --home-gap:20px;
+  --home-sidebar-width:292px;
+  --home-member-angle:145;
+  --home-member-a:#181715;
+  --home-member-b:#252320;
+  --home-member-c:#1f1e1b;
+  --home-member-accent:#f1cf91;
+  --home-checkin-angle:142;
+  --home-checkin-a:#c0443d;
+  --home-checkin-b:#bb3e49;
+  --home-checkin-c:#a63646;
+  --home-checkin-ink:#8f2f39;
+}

@@ -1,0 +1,93 @@
+{{define "content"}}
+<div class="ai-pro-max" data-ai-pro-max>
+  <header class="aipm-header">
+    <div><p class="aipm-eyebrow">插件工作台</p><h1>AI Pro Max</h1></div>
+    <div class="aipm-header-actions">
+      <a class="admin-button admin-button-primary" href="/admin/content/new/">{{template "icon" "pen-line"}}开始创作</a>
+      <a class="admin-button admin-button-quiet" href="/admin/settings/#site-settings-ai">{{template "icon" "sliders-horizontal"}}配置 AI 接口</a>
+    </div>
+  </header>
+  {{if .FeatureStatus}}{{template "admin-feature-status" .}}{{end}}
+
+  {{if .AIProMax.Notice}}<p role="status" class="aipm-notice">{{.AIProMax.Notice}}</p>{{end}}
+  {{if not .AIProMax.Enabled}}<div class="aipm-notice" role="status"><strong>插件已安装，尚未启用。</strong><a href="/admin/plugins/">管理插件</a></div>{{end}}
+
+  {{with .AIProMax.Queue}}
+  <section class="aipm-queue" id="writing-queue" aria-labelledby="aipm-queue-title">
+    <div class="aipm-section-heading"><div><p class="aipm-eyebrow">内容排程</p><h2 id="aipm-queue-title">定时写作队列</h2></div>
+      {{if .Ready}}<div class="aipm-queue-tools"><span class="aipm-queue-state" data-paused="{{.Paused}}">{{if .Paused}}已暂停领取{{else if not .Models}}待配置模型{{else}}已启用{{end}}</span>
+        <form id="writing-queue-control" method="post" action="/admin/plugins/ai-pro-max/queue/"><input type="hidden" name="csrf_token" value="{{$.Admin.CSRFToken}}"><input type="hidden" name="epoch" value="{{.Epoch}}"><input type="hidden" name="id" value=""><input type="hidden" name="version" value="{{.ControlVersion}}">
+        {{if .Paused}}<button class="admin-button admin-button-quiet" name="action" value="resume">{{template "icon" "play"}}恢复队列</button>{{else}}<button class="admin-button admin-button-quiet" name="action" value="pause" title="正在生成的任务会继续执行">{{template "icon" "pause"}}暂停领取</button>{{end}}</form></div>{{end}}
+    </div>
+    <p class="aipm-queue-empty">启用条件：<a href="/admin/modules/#module-card-ai">AI 模块</a>、<a href="/admin/plugins/">AI Pro Max 插件</a>、<a href="/admin/settings/#site-settings-ai">文本模型配置</a>与队列领取状态。</p>
+    {{if .Status}}<p class="aipm-queue-empty" role="status">{{.Status}}</p>{{end}}
+    {{if .Message}}<p class="aipm-queue-empty">{{.Message}}</p>{{else}}
+    {{if .Models}}<details class="aipm-plan" {{if not .Rows}}open{{end}}><summary>{{template "icon" "plus"}}新建写作计划</summary>
+      <form method="post" action="/admin/plugins/ai-pro-max/queue/" class="aipm-plan-form">
+        <input type="hidden" name="action" value="plan"><input type="hidden" name="csrf_token" value="{{$.Admin.CSRFToken}}"><input type="hidden" name="epoch" value="{{.Epoch}}"><input type="hidden" name="key" value="{{.Key}}">
+        <label class="aipm-plan-topics">选题 <small>每行一个，最多 20 个</small><textarea name="topics" rows="5" required placeholder="例如：怎样整理文章中的参考资料？"></textarea></label>
+        <div class="aipm-topic-picker" data-topic-picker hidden>
+          <button class="admin-button admin-button-quiet" type="button" data-suggest-topics>{{template "icon" "sparkles"}}推荐选题</button>
+          <span role="status" aria-live="polite" data-topic-status></span><ul data-topic-options></ul>
+        </div>
+        <label>文章归类<select name="target"><option value="post">文章 · 由模型建议分类</option>{{range .Categories}}<option value="category:{{.ID}}">文章 · {{.Name}}</option>{{end}}<option value="page">独立页面</option></select></label>
+        <label>文本模型<select name="model">{{range .Models}}<option value="{{.Value}}" {{if .Selected}}selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+        <label>输出语言<select name="language">{{range $.AILanguages}}<option value="{{.Code}}">{{.Name}}</option>{{end}}</select></label>
+        <label>开始时间 <small>{{.Zone}} · 留空立即开始</small><input type="datetime-local" name="start"></label>
+        <label>选题间隔（分钟）<input type="number" name="interval" min="0" max="43200" step="1" value="0" required></label>
+        <div class="aipm-plan-submit"><button class="admin-button admin-button-primary" type="submit">{{template "icon" "list"}}加入队列</button></div>
+      </form></details>{{else}}<p class="aipm-queue-empty">还没有可用的文本模型。<a href="/admin/settings/#site-settings-ai">配置文本接口</a></p>{{end}}
+    <div class="aipm-queue-subhead"><span>{{len .Rows}} / 100 条任务记录</span><a class="aipm-text-link" href="/admin/plugins/ai-pro-max/">{{template "icon" "refresh-cw"}}刷新状态</a></div>
+    {{if .Rows}}<ol class="aipm-queue-list">{{range .Rows}}<li><div class="aipm-queue-timing"><span data-status="{{.Status}}">{{.Label}}</span><time>{{.Due}}</time></div>
+      <div class="aipm-queue-topic"><strong>{{.Topic}}</strong><small>{{.Detail}}{{if .Attempts}} · 尝试 {{.Attempts}} 次{{end}}</small>{{if .Result}}<p>{{.Result}}</p>{{end}}{{if .Priority}}<small>优先级 {{.Priority}}</small>{{end}}{{if .Problem}}<p>{{.Problem}}</p>{{end}}</div>
+      <div class="aipm-queue-actions">{{if and (not .Kind) (eq .Status "succeeded")}}<a class="aipm-text-link" href="/admin/plugins/ai-pro-max/queue/{{.ID}}/draft/">{{template "icon" "pen-line"}}打开草稿</a>{{end}}
+      <form method="post" action="/admin/plugins/ai-pro-max/queue/"><input type="hidden" name="csrf_token" value="{{$.Admin.CSRFToken}}"><input type="hidden" name="epoch" value="{{$.AIProMax.Queue.Epoch}}"><input type="hidden" name="id" value="{{.ID}}"><input type="hidden" name="version" value="{{.Version}}">
+      {{if eq .Status "queued"}}<button name="action" value="promote">优先执行</button><button name="action" value="advance">{{template "icon" "clock-3"}}提前至现在</button>{{end}}
+      {{if or (eq .Status "queued") (eq .Status "running")}}<button name="action" value="cancel">{{template "icon" "x"}}取消任务</button>{{else}}
+      {{if ne .Status "succeeded"}}<button name="action" value="retry" data-confirm-action="重新生成将发起新的模型请求，继续吗？">{{template "icon" "rotate-ccw"}}重新生成</button>{{end}}
+      <button name="action" value="remove" data-confirm-action="移除这条任务及其生成结果？">{{template "icon" "trash-2"}}移除记录</button>{{end}}</form></div>
+    </li>{{end}}</ol>{{else}}<p class="aipm-queue-empty">暂无写作任务。</p>{{end}}{{end}}
+  </section>{{end}}
+
+{{with .AIProMax.Queue}}{{if and .Ready .Models ($.Admin.Can "content:write")}}
+<section id="automation" class="aipm-queue" aria-labelledby="automation-heading"><div class="aipm-section-heading"><h2 id="automation-heading">自动化规则</h2><a class="aipm-text-link" href="/admin/content/">处理已有文章 →</a></div>
+<details class="aipm-plan"><summary>发布、图片与评论设置</summary><form class="aipm-plan-form" method="post" action="/admin/plugins/ai-pro-max/rules/"><input type="hidden" name="csrf_token" value="{{$.Admin.CSRFToken}}"><input type="hidden" name="epoch" value="{{.Epoch}}"><input type="hidden" name="action" value="rules"><input type="hidden" name="version" value="{{.Rules.Version}}">
+<label>文本模型<select name="model" required>{{range .Models}}<option value="{{.Value}}" {{if eq .Value (printf "%s:%s" $.AIProMax.Queue.Rules.Provider $.AIProMax.Queue.Rules.Model)}}selected{{end}}>{{.Label}}</option>{{end}}</select></label><label>输出语言<select name="language">{{range $.AILanguages}}<option value="{{.Code}}" {{if eq .Code $.AIProMax.Queue.Rules.Language}}selected{{end}}>{{.Name}}</option>{{end}}</select></label><label>适用分类<select name="category"><option value="0">全部分类</option>{{range .Categories}}<option value="{{.ID}}" {{if eq .ID $.AIProMax.Queue.Rules.CategoryID}}selected{{end}}>{{.Name}}</option>{{end}}</select></label><label><input type="checkbox" name="exclude" {{if .Rules.ExcludeCategory}}checked{{end}}> 排除选中分类</label>
+<fieldset><legend>触发条件</legend><label><input type="checkbox" name="auto_post" {{if .Rules.AutoPost}}checked{{end}}> 发布文章时运行</label><label><input type="checkbox" name="auto_page" {{if .Rules.AutoPage}}checked{{end}}> 发布页面时运行</label><label><input type="checkbox" name="safe" {{if .Rules.SafeUpdate}}checked{{end}}> 保护已公开的别名和分类</label></fieldset>
+<fieldset><legend>补全内容</legend><label><input type="checkbox" name="summary" {{if .Rules.Summary}}checked{{end}}> 摘要</label><label><input type="checkbox" name="tags" {{if .Rules.Tags}}checked{{end}}> 标签</label><label><input type="checkbox" name="slug" {{if .Rules.Slug}}checked{{end}}> 英文别名</label><label><input type="checkbox" name="classify" {{if .Rules.Category}}checked{{end}}> 智能分类</label><label><input type="checkbox" name="topics" {{if .Rules.Topics}}checked{{end}}> 相关话题</label><label><input type="checkbox" name="cover" {{if .Rules.Cover}}checked{{end}}> 生成封面</label><label><input type="checkbox" name="inline" {{if .Rules.Inline}}checked{{end}}> 生成正文配图</label><label><input type="checkbox" name="vision" {{if .Rules.Vision}}checked{{end}}> 识别已有图片</label></fieldset>
+<label>每篇相关话题上限<input type="number" name="topic_limit" min="1" max="10" value="{{if .Rules.TopicLimit}}{{.Rules.TopicLimit}}{{else}}3{{end}}"></label><label><input type="checkbox" name="topic_images" {{if .Rules.TopicImages}}checked{{end}}> 为每个话题单独配图</label><fieldset><legend>评论处理</legend><label><input type="checkbox" name="moderate" {{if .Rules.Moderate}}checked{{end}}> 审核待审评论</label><label><input type="checkbox" name="reply" {{if .Rules.Reply}}checked{{end}}> 回复顶层评论</label><label><input type="checkbox" name="followup" {{if .Rules.Followup}}checked{{end}}> 回复对话中的回评</label></fieldset>
+<label>AI 角色名称<input name="persona" value="{{.Rules.Persona}}" maxlength="100" placeholder="讨论助手"></label><label>角色唤醒词<input name="wake" value="{{.Rules.WakeWords}}" placeholder="@小编，@助手"></label><label>标为垃圾的词<textarea name="block" rows="2">{{.Rules.BlockWords}}</textarea></label><label>保留人工审核的词<textarea name="hold" rows="2">{{.Rules.HoldWords}}</textarea></label>
+<label>每篇预约评论数<input type="number" name="comments" min="0" max="100" value="{{.Rules.CommentsPerPost}}"></label><label>回复延迟 / 评论间隔（分钟）<input type="number" name="delay" min="0" max="86400" value="{{.Rules.DelayMinutes}}"></label><label>随机互动间隔（小时，0 为停用）<input type="number" name="random" min="0" max="8760" value="{{.Rules.RandomHours}}"></label><label>线路失败重试次数<input type="number" name="retry" min="0" max="3" value="{{.Rules.RetryLimit}}"></label><label><input type="checkbox" name="fallback" {{if .Rules.Fallback}}checked{{end}}> 线路异常时使用已配置的其他文本接口</label>
+<fieldset><legend>外部站点</legend><label><input type="checkbox" name="external" {{if .Rules.External}}checked{{end}}> 允许配对的 WordPress 站点提交任务</label></fieldset>
+<div class="aipm-plan-submit"><button class="admin-button admin-button-primary">保存自动化规则</button></div></form></details>
+<details class="aipm-plan"><summary>周期选题与写作</summary><form class="aipm-plan-form" method="post" action="/admin/plugins/ai-pro-max/rules/"><input type="hidden" name="csrf_token" value="{{$.Admin.CSRFToken}}"><input type="hidden" name="epoch" value="{{.Epoch}}"><input type="hidden" name="action" value="schedule"><input type="hidden" name="key" value="{{.Key}}"><label class="aipm-plan-topics">写作方向<textarea name="brief" required maxlength="500" placeholder="例如：为初学者讲解摄影构图，每篇围绕一个具体问题"></textarea></label><label>文本模型<select name="model" required>{{range .Models}}<option value="{{.Value}}" {{if .Selected}}selected{{end}}>{{.Label}}</option>{{end}}</select></label><label>输出语言<select name="language">{{range $.AILanguages}}<option value="{{.Code}}" {{if eq .Code $.AIProMax.Queue.Rules.Language}}selected{{end}}>{{.Name}}</option>{{end}}</select></label><label>文章分类<select name="category"><option value="0">模型选择</option>{{range .Categories}}<option value="{{.ID}}" {{if eq .ID $.AIProMax.Queue.Rules.CategoryID}}selected{{end}}>{{.Name}}</option>{{end}}</select></label><label>生成后<select name="destination"><option value="pending">保存为待审核文章</option><option value="publish">直接发布</option></select></label><label>写作风格<input name="style" maxlength="300" placeholder="例如：给初学者的操作指南"></label><label>每篇配图张数<input type="number" name="images" min="0" max="3" value="0"></label><label>选题池大小<input type="number" name="ahead" min="1" max="20" value="5"></label><label><input type="checkbox" name="search">联网检索资料</label><label><input type="checkbox" name="links">允许引用来源链接</label><label>首次运行（{{.Zone}}）<input type="datetime-local" name="start"></label><label>每隔几小时执行<input type="number" min="1" max="8760" name="hours" value="24" required></label><label>最多生成篇数<input type="number" min="1" max="10000" name="limit" value="7" required></label><div class="aipm-plan-submit"><button class="admin-button admin-button-primary">创建周期计划</button></div></form></details>
+{{if .Schedules}}<ol class="aipm-queue-list">{{range .Schedules}}<li><div class="aipm-queue-topic"><strong>{{.Brief}}</strong>{{if .Paused}}<small>此分类计划已暂停</small>{{end}}{{if .Titles}}<details><summary>待写选题（{{len .Titles}}）</summary><ul>{{range .Titles}}<li>{{.}}</li>{{end}}</ul></details>{{end}}<small>每 {{.Hours}} 小时 · 剩余 {{.Remaining}} 篇{{if .Remaining}} · 下次 {{.Next.Format "2006-01-02 15:04 MST"}}{{end}}</small></div><form method="post" action="/admin/plugins/ai-pro-max/rules/"><input type="hidden" name="csrf_token" value="{{$.Admin.CSRFToken}}"><input type="hidden" name="epoch" value="{{$.AIProMax.Queue.Epoch}}"><input type="hidden" name="id" value="{{.ID}}">{{if .Paused}}<button class="admin-button admin-button-quiet" name="action" value="resume-schedule">恢复</button>{{else}}<button class="admin-button admin-button-quiet" name="action" value="pause-schedule">暂停</button>{{end}}<button class="admin-button admin-button-quiet" name="action" value="unschedule">结束此计划</button></form></li>{{end}}</ol>{{end}}</section>{{end}}{{end}}
+  <section class="aipm-status" aria-labelledby="aipm-status-title">
+    <div class="aipm-section-heading"><div><p class="aipm-eyebrow">当前连接</p><h2 id="aipm-status-title">模型与近期用量</h2></div><span class="aipm-period">{{.AIProMax.PeriodStart}} — {{.AIProMax.PeriodEnd}}</span></div>
+    <div class="aipm-status-grid">
+      <article class="aipm-status-card aipm-provider-card"><div class="aipm-card-label"><span>文本模型</span>{{template "icon" "bot"}}</div><strong>{{.AIProMax.TextModels}}</strong><p>{{len .AIProMax.TextProviders}} 个接口已配置</p>
+        {{if .AIProMax.TextProviders}}<ul>{{range .AIProMax.TextProviders}}<li><span><b>{{.Name}}</b><small>{{.Model}}</small></span><em>{{.Status}}</em></li>{{end}}</ul>{{else}}<a href="/admin/settings/#site-settings-ai">{{template "icon" "plus"}}添加文本接口 </a>{{end}}
+      </article>
+      <article class="aipm-status-card aipm-provider-card"><div class="aipm-card-label"><span>图片模型</span>{{template "icon" "image"}}</div><strong>{{.AIProMax.ImageModels}}</strong><p>{{len .AIProMax.ImageProviders}} 个接口已配置</p>
+        {{if .AIProMax.ImageProviders}}<ul>{{range .AIProMax.ImageProviders}}<li><span><b>{{.Name}}</b><small>{{.Model}}</small></span><em>{{.Status}}</em></li>{{end}}</ul>{{else}}<a href="/admin/settings/#site-settings-ai">{{template "icon" "plus"}}添加图片接口 </a>{{end}}
+      </article>
+      <article class="aipm-status-card aipm-metric-card"><div class="aipm-card-label"><span>近 7 天请求</span>{{template "icon" "activity"}}</div><strong>{{.AIProMax.Requests}}</strong><p>{{.AIProMax.Successful}} 次成功 · {{.AIProMax.Failed}} 次未完成</p><a href="/admin/analytics/ai/">查看消耗明细 {{template "icon" "chevron-right"}}</a></article>
+      <article class="aipm-status-card aipm-metric-card"><div class="aipm-card-label"><span>已生成图片</span>{{template "icon" "image"}}</div><strong>{{.AIProMax.Images}}</strong><p>按已有请求记录统计</p><a href="/admin/media/">{{template "icon" "image"}}打开媒体库 </a></article>
+    </div>
+  </section>
+
+  <section class="aipm-tools" aria-labelledby="aipm-tools-title">
+    <div class="aipm-section-heading"><div><p class="aipm-eyebrow">工作台</p><h2 id="aipm-tools-title">选择一个任务</h2></div><a class="aipm-text-link" href="/admin/ai/">打开 AI 工作台 {{template "icon" "chevron-right"}}</a></div>
+    <div class="aipm-tool-grid">
+      {{range .AIProMax.Features}}
+      <article class="aipm-tool-card {{if not .Available}}is-planned{{end}}" title="{{.Description}}">
+        <div class="aipm-tool-icon">{{template "icon" .Icon}}</div>
+        <div class="aipm-tool-status" data-state="{{if .Available}}ready{{else}}planned{{end}}"><span></span>{{.Status}}</div>
+        <h3>{{if .Available}}<a href="{{.URL}}">{{.Title}} {{template "icon" "chevron-right"}}</a>{{else}}{{.Title}}{{end}}</h3>
+      </article>
+      {{end}}
+    </div>
+  </section>
+
+</div>
+{{end}}

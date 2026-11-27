@@ -1,0 +1,11 @@
+{$NEWPRESS_DOMAIN:localhost} {
+    encode zstd gzip
+    # reverse_proxy clears client-supplied forwarding headers and rebuilds
+    # them from the connection. If Caddy itself is behind another LB, configure
+    # that LB's exact CIDR/real-IP policy before enabling a trusted proxy CIDR
+    # in NewPress; never pass through the public request's X-Forwarded-For.
+    reverse_proxy app:8080
+    header {
+        -Server
+    }
+}

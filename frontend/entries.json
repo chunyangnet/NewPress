@@ -1,0 +1,1593 @@
+[
+  {
+    "name": "color-mode",
+    "source": "frontend/shared/color-mode.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-color-mode.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-color-mode.js"
+      }
+    ],
+    "pages": [
+      "core public/account/admin pages before styles",
+      "Chunnel public/account pages before styles"
+    ],
+    "composites": [
+      "chunnel-home.js",
+      "chunnel-home-glass.js"
+    ],
+    "tests": [
+      "tests/frontend/color-mode.test.cjs",
+      "tests/frontend/color-mode-browser.test.cjs",
+      "internal/httpserver/frontend_render_test.go"
+    ]
+  },
+  {
+    "name": "color-reveal",
+    "source": "frontend/shared/color-reveal.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-color-reveal.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-color-reveal.js"
+      }
+    ],
+    "pages": [
+      "color-mode controls (on interaction where supported)"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/color-mode.test.cjs",
+      "tests/frontend/color-mode-browser.test.cjs"
+    ]
+  },
+  {
+    "name": "selects",
+    "source": "frontend/shared/selects.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-selects.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-selects.js"
+      }
+    ],
+    "pages": [
+      "core public/account/admin forms",
+      "Chunnel forms and registration dialog"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/native-selects.test.cjs",
+      "tests/frontend/select-dropdowns.test.cjs",
+      "internal/httpserver/select_assets_test.go"
+    ]
+  },
+  {
+    "name": "choice-menu",
+    "source": "frontend/shared/choice-menu.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-choice-menu.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-choice-menu.js"
+      }
+    ],
+    "pages": [
+      "searchable, grouped and multiple select fields (on demand)"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/select-dropdowns.test.cjs"
+    ]
+  },
+  {
+    "name": "newpress-client",
+    "source": "frontend/shared/newpress-client-global.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-client.js"
+      }
+    ],
+    "pages": [
+      "public/account/admin pages using NewPressClient",
+      "Chunnel home (on demand)"
+    ],
+    "composites": [
+      "chunnel-home-features.js"
+    ],
+    "tests": [
+      "tests/frontend/newpress-client.test.cjs",
+      "tests/frontend/session-race.test.cjs"
+    ]
+  },
+  {
+    "name": "site-time",
+    "source": "frontend/shared/site-time-global.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-time.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-time.js"
+      }
+    ],
+    "pages": [
+      "core public/account/admin pages",
+      "Chunnel public/account pages"
+    ],
+    "composites": [
+      "chunnel-home-member.js",
+      "chunnel-home-features.js"
+    ],
+    "tests": [
+      "tests/frontend/site-time.test.cjs"
+    ]
+  },
+  {
+    "name": "analytics-loader",
+    "source": "frontend/analytics/loader.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-analytics-loader.js"
+      }
+    ],
+    "pages": [
+      "/admin/analytics/ (initial)"
+    ],
+    "composites": [],
+    "tests": [
+      "scripts/verify_analytics_browser.mjs"
+    ]
+  },
+  {
+    "name": "analytics",
+    "source": "frontend/analytics/main.tsx",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-analytics.js"
+      }
+    ],
+    "pages": [
+      "/admin/analytics/#interactive (explicit trial)"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/analytics-report.test.cjs",
+      "internal/httpserver/analytics_test.go",
+      "scripts/verify_analytics_browser.mjs"
+    ]
+  },
+  {
+    "name": "admin-ui",
+    "source": "frontend/core/admin-ui.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-admin-ui.js"
+      }
+    ],
+    "pages": [
+      "authenticated admin forms and workspaces"
+    ],
+    "composites": [
+      "chunnel-admin-workbench.js"
+    ],
+    "tests": [
+      "tests/frontend/admin-ui.test.cjs",
+      "tests/frontend/seo-workspace.test.cjs",
+      "tests/frontend/tools-workspace.test.cjs",
+      "scripts/verify_admin_workbench_browser.mjs"
+    ]
+  },
+  {
+    "name": "admin-navigation",
+    "source": "frontend/core/admin-navigation.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-admin-navigation.js"
+      }
+    ],
+    "pages": [
+      "admin lists, filters and native analytics report"
+    ],
+    "composites": [
+      "chunnel-admin-workbench.js"
+    ],
+    "tests": [
+      "tests/frontend/admin-navigation.test.cjs",
+      "scripts/verify_admin_workbench_browser.mjs"
+    ]
+  },
+  {
+    "name": "admin-workbench",
+    "source": "frontend/core/admin-workbench.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-admin-workbench.js"
+      }
+    ],
+    "pages": [
+      "all authenticated admin pages (time, UI, native navigation in order)"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/admin-ui.test.cjs",
+      "tests/frontend/admin-navigation.test.cjs",
+      "internal/httpserver/admin_resources_test.go",
+      "scripts/verify_admin_workbench_browser.mjs"
+    ]
+  },
+  {
+    "name": "media-picker",
+    "source": "frontend/core/media-picker.ts",
+    "outputs": [],
+    "pages": [
+      "admin editor, components, avatars and forms with media picker"
+    ],
+    "composites": [
+      "chunnel-admin-media.js"
+    ],
+    "tests": [
+      "tests/frontend/media-picker.test.cjs",
+      "tests/frontend/editor-dialogs.test.cjs",
+      "tests/frontend/editor-paste.test.cjs",
+      "internal/httpserver/settings_media_test.go",
+      "scripts/verify_media_picker_browser.mjs",
+      "scripts/verify_admin_workbench_browser.mjs"
+    ]
+  },
+  {
+    "name": "media-fields",
+    "source": "frontend/core/media-fields.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-media-fields.js"
+      }
+    ],
+    "pages": [
+      "admin forms with media picker"
+    ],
+    "composites": [
+      "chunnel-admin-media.js"
+    ],
+    "tests": [
+      "internal/httpserver/settings_media_test.go",
+      "scripts/verify_admin_workbench_browser.mjs"
+    ]
+  },
+  {
+    "name": "scroll",
+    "source": "frontend/shared/scroll.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-scroll.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-scroll.js"
+      }
+    ],
+    "pages": [
+      "public/account/admin scroll restoration"
+    ],
+    "composites": [
+      "chunnel-home.js",
+      "chunnel-home-glass.js"
+    ],
+    "tests": [
+      "tests/frontend/scroll-transaction.test.cjs",
+      "tests/frontend/scroll-stability.test.cjs"
+    ]
+  },
+  {
+    "name": "shell",
+    "source": "frontend/shared/shell.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-shell.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-shell.js"
+      }
+    ],
+    "pages": [
+      "public/account immediate navigation and search controls"
+    ],
+    "composites": [
+      "chunnel-home.js",
+      "chunnel-home-glass.js",
+      "chunnel-shell-glass.js"
+    ],
+    "tests": [
+      "tests/frontend/navigation-stability.test.cjs"
+    ]
+  },
+  {
+    "name": "mobile-nav",
+    "source": "frontend/shared/mobile-nav.ts",
+    "outputs": [],
+    "pages": [
+      "glass mobile navigation pointer controller"
+    ],
+    "composites": [
+      "chunnel-shell-glass.js",
+      "chunnel-home-glass.js"
+    ],
+    "tests": [
+      "tests/frontend/mobile-navigation.test.cjs"
+    ]
+  },
+  {
+    "name": "shell-glass",
+    "source": "frontend/shared/shell-glass.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-shell-glass.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-shell-glass.js"
+      }
+    ],
+    "pages": [
+      "glass public/account immediate controls and mobile navigation"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/mobile-navigation.test.cjs",
+      "tests/frontend/navigation-stability.test.cjs"
+    ]
+  },
+  {
+    "name": "motion",
+    "source": "frontend/shared/motion.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-motion.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-motion.js"
+      }
+    ],
+    "pages": [
+      "public dialog surface animations"
+    ],
+    "composites": [
+      "chunnel-home-features.js"
+    ],
+    "tests": [
+      "tests/frontend/motion.test.cjs"
+    ]
+  },
+  {
+    "name": "search",
+    "source": "frontend/shared/search.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-search.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-search.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-home-search.js"
+      }
+    ],
+    "pages": [
+      "public search preview (on focus on homepage)"
+    ],
+    "composites": [
+      "chunnel-home-search.js"
+    ],
+    "tests": [
+      "tests/frontend/search-lifecycle.test.cjs"
+    ]
+  },
+  {
+    "name": "cookie-consent",
+    "source": "frontend/shared/cookie-consent.ts",
+    "outputs": [
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/cookie-consent.js"
+      }
+    ],
+    "pages": [
+      "public cookie preferences when enabled"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/cookie-consent.test.cjs"
+    ]
+  },
+  {
+    "name": "admin",
+    "source": "frontend/core/admin.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-admin.js"
+      }
+    ],
+    "pages": [
+      "authenticated admin shell, navigation and feedback"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/admin-bundles.test.cjs",
+      "scripts/verify_admin_workbench_browser.mjs"
+    ]
+  },
+  {
+    "name": "admin-lists",
+    "source": "frontend/core/admin-lists.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-admin-lists.js"
+      }
+    ],
+    "pages": [
+      "admin content/comment lists and taxonomy forms"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/admin-business.test.cjs",
+      "scripts/verify_admin_business_browser.mjs"
+    ]
+  },
+  {
+    "name": "admin-comments",
+    "source": "frontend/core/admin-comments.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-admin-comments.js"
+      }
+    ],
+    "pages": [
+      "admin comment editing, reply and AI draft"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/ai-comment-draft.test.cjs",
+      "tests/frontend/admin-ui.test.cjs"
+    ]
+  },
+  {
+    "name": "admin-settings",
+    "source": "frontend/core/admin-settings.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-admin-settings.js"
+      }
+    ],
+    "pages": [
+      "admin appearance/layout/site settings and navigation import tools"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/admin-dialog.test.cjs",
+      "scripts/verify_admin_business_browser.mjs"
+    ]
+  },
+  {
+    "name": "admin-media-upload",
+    "source": "frontend/core/admin-media-upload.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-admin-media-upload.js"
+      }
+    ],
+    "pages": [
+      "admin media library upload"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/admin-business.test.cjs",
+      "scripts/verify_admin_business_browser.mjs"
+    ]
+  },
+  {
+    "name": "admin-login",
+    "source": "frontend/core/admin-login.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-admin-login.js"
+      }
+    ],
+    "pages": [
+      "admin login and setup"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/registration.test.cjs",
+      "scripts/verify_admin_business_browser.mjs"
+    ]
+  },
+  {
+    "name": "document-editor",
+    "source": "frontend/core/document-editor.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-document-editor.js"
+      }
+    ],
+    "pages": [
+      "core article and page editor"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/document-editor.test.cjs",
+      "tests/integration/document-editor-browser.test.cjs"
+    ]
+  },
+  {
+    "name": "editor-reuse",
+    "source": "frontend/core/editor-reuse.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-editor-reuse.js"
+      }
+    ],
+    "pages": [
+      "admin content editor"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/editor-tools.test.cjs",
+      "scripts/verify_editor_tools_browser.mjs"
+    ]
+  },
+  {
+    "name": "editor-widgets",
+    "source": "frontend/core/editor-widgets.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-editor-widgets.js"
+      }
+    ],
+    "pages": [
+      "admin content editor"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/article-widgets.test.cjs",
+      "tests/frontend/editor-tools.test.cjs",
+      "scripts/verify_editor_tools_browser.mjs"
+    ]
+  },
+  {
+    "name": "article-badge-editor",
+    "source": "frontend/core/article-badge-editor.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-article-badge-editor.js"
+      }
+    ],
+    "pages": [
+      "admin content editor"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/cover-preview-boundary.test.cjs",
+      "scripts/verify_editor_tools_browser.mjs"
+    ]
+  },
+  {
+    "name": "seo",
+    "source": "frontend/core/seo.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-seo.js"
+      }
+    ],
+    "pages": [
+      "admin SEO workspace and content editor"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/editor-tools.test.cjs",
+      "scripts/verify_editor_tools_browser.mjs"
+    ]
+  },
+  {
+    "name": "resource-editor",
+    "source": "frontend/core/resource-editor.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-resource-editor.js"
+      }
+    ],
+    "pages": [
+      "admin content editor after opening resource panel"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/resource-editor-preview.test.cjs",
+      "tests/frontend/resource-money.test.cjs",
+      "scripts/verify_editor_tools_browser.mjs"
+    ]
+  },
+  {
+    "name": "resource-loader",
+    "source": "frontend/core/resource-loader.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-resource-loader.js"
+      }
+    ],
+    "pages": [
+      "admin content editor"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/editor-tools.test.cjs",
+      "scripts/verify_editor_tools_browser.mjs"
+    ]
+  },
+  {
+    "name": "component-loader",
+    "source": "frontend/core/component-loader.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-component-loader.js"
+      }
+    ],
+    "pages": [
+      "admin content editor: component library on explicit open/edit"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/component-loader.test.cjs",
+      "scripts/verify_component_loading_browser.mjs"
+    ]
+  },
+  {
+    "name": "composer",
+    "source": "frontend/core/composer.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-composer.js"
+      }
+    ],
+    "pages": [
+      "shop product form block/source editor"
+    ],
+    "tests": [
+      "tests/frontend/composer.test.cjs",
+      "tests/integration/composer-browser.test.cjs",
+      "tests/integration/document-editor-browser.test.cjs",
+      "internal/httpserver/structured_editor_test.go",
+      "scripts/verify_composer_browser.mjs"
+    ]
+  },
+  {
+    "name": "home-editor",
+    "source": "frontend/core/home-editor.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-home-editor.js"
+      }
+    ],
+    "pages": [
+      "admin appearance and layout"
+    ],
+    "tests": [
+      "tests/frontend/home-module-settings.test.cjs",
+      "tests/frontend/layout-data.test.cjs",
+      "tests/frontend/appearance-preview.test.cjs",
+      "scripts/verify_layout_browser.mjs",
+      "internal/httpserver/home_custom_instances_test.go"
+    ]
+  },
+  {
+    "name": "design",
+    "source": "frontend/core/design.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-design.js"
+      }
+    ],
+    "pages": [
+      "admin modules and layout history"
+    ],
+    "tests": [
+      "tests/frontend/home-module-settings.test.cjs",
+      "tests/frontend/layout-data.test.cjs",
+      "tests/frontend/appearance-preview.test.cjs",
+      "scripts/verify_layout_browser.mjs",
+      "internal/httpserver/home_custom_instances_test.go"
+    ]
+  },
+  {
+    "name": "appearance-preview",
+    "source": "frontend/core/appearance-preview.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-appearance-preview.js"
+      }
+    ],
+    "pages": [
+      "admin appearance and layout"
+    ],
+    "tests": [
+      "tests/frontend/home-module-settings.test.cjs",
+      "tests/frontend/layout-data.test.cjs",
+      "tests/frontend/appearance-preview.test.cjs",
+      "scripts/verify_layout_browser.mjs",
+      "internal/httpserver/home_custom_instances_test.go"
+    ]
+  },
+  {
+    "name": "admin-menu",
+    "source": "frontend/core/admin-menu.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-admin-menu.js"
+      }
+    ],
+    "pages": [
+      "/admin/navigation/"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/navigation-icons.test.cjs",
+      "tests/frontend/navigation-badges.test.cjs",
+      "tests/frontend/explore-editor.test.cjs",
+      "internal/httpserver/navigation_admin_test.go",
+      "scripts/verify_navigation_browser.mjs"
+    ]
+  },
+  {
+    "name": "navigation-badges",
+    "source": "frontend/core/navigation-badges.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-navigation-badges.js"
+      }
+    ],
+    "pages": [
+      "/admin/navigation/"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/navigation-icons.test.cjs",
+      "tests/frontend/navigation-badges.test.cjs",
+      "tests/frontend/explore-editor.test.cjs",
+      "internal/httpserver/navigation_admin_test.go",
+      "scripts/verify_navigation_browser.mjs"
+    ]
+  },
+  {
+    "name": "home-controller",
+    "source": "frontend/themes/chunnel/home.ts",
+    "outputs": [],
+    "pages": [
+      "Chunnel homepage initial controls and readonly session"
+    ],
+    "composites": [
+      "chunnel-home.js",
+      "chunnel-home-glass.js"
+    ],
+    "tests": [
+      "tests/frontend/home-session.test.cjs",
+      "tests/frontend/home-resource-loader.test.cjs",
+      "tests/frontend/search-lifecycle.test.cjs",
+      "internal/httpserver/frontend_render_test.go",
+      "scripts/verify_home_browser.mjs"
+    ]
+  },
+  {
+    "name": "home-member",
+    "source": "frontend/themes/chunnel/home-member.ts",
+    "outputs": [
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-home-member.js"
+      }
+    ],
+    "pages": [
+      "authenticated homepage with progression widget"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/home-session.test.cjs",
+      "tests/frontend/home-member.test.cjs",
+      "internal/httpserver/progression_test.go",
+      "scripts/verify_home_browser.mjs"
+    ]
+  },
+  {
+    "name": "home-feed",
+    "source": "frontend/themes/chunnel/home-feed.ts",
+    "outputs": [
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-home-feed.js"
+      }
+    ],
+    "pages": [
+      "Chunnel homepage explicit list navigation"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/list-navigation.test.cjs",
+      "tests/frontend/scroll-stability.test.cjs",
+      "internal/httpserver/home_test.go",
+      "scripts/verify_home_browser.mjs"
+    ]
+  },
+  {
+    "name": "home-blocks",
+    "source": "frontend/themes/chunnel/home-blocks.ts",
+    "outputs": [
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-home-blocks.js"
+      }
+    ],
+    "pages": [
+      "Chunnel homepage with configured visual blocks"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/chunnel-carousel.test.cjs",
+      "internal/httpserver/home_creative_test.go",
+      "scripts/verify_home_browser.mjs"
+    ]
+  },
+  {
+    "name": "registration",
+    "source": "frontend/shared/registration.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-registration.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-registration.js"
+      }
+    ],
+    "pages": [
+      "public registration, recovery and code login; account dialog"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/registration.test.cjs",
+      "tests/frontend/account-data.test.cjs",
+      "scripts/verify_account_browser.mjs"
+    ]
+  },
+  {
+    "name": "account",
+    "source": "frontend/shared/account.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-account.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-account.js"
+      }
+    ],
+    "pages": [
+      "authenticated account pages"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/account-loading.test.cjs",
+      "tests/frontend/scroll-stability.test.cjs",
+      "tests/frontend/account-data.test.cjs",
+      "scripts/verify_account_browser.mjs"
+    ]
+  },
+  {
+    "name": "account-nav",
+    "source": "frontend/shared/account-nav.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-account-nav.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-account-nav.js"
+      }
+    ],
+    "pages": [
+      "authenticated account pages"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/account-navigation.test.cjs",
+      "tests/frontend/account-data.test.cjs",
+      "scripts/verify_account_browser.mjs"
+    ]
+  },
+  {
+    "name": "account-import",
+    "source": "frontend/shared/account-import.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-account-import.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-account-import.js"
+      }
+    ],
+    "pages": [
+      "authenticated account pages"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/account-import.test.cjs",
+      "tests/frontend/account-data.test.cjs",
+      "scripts/verify_account_browser.mjs"
+    ]
+  },
+  {
+    "name": "interactions",
+    "source": "frontend/shared/interactions.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-interactions.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-interactions.js"
+      }
+    ],
+    "pages": [
+      "public interaction hub, lazy homepage overlays"
+    ],
+    "composites": [
+      "chunnel-home-features.js"
+    ],
+    "tests": [
+      "tests/frontend/interaction-data.test.cjs",
+      "tests/frontend/interaction-mutations.test.cjs",
+      "tests/frontend/message-sync.test.cjs",
+      "tests/frontend/session-race.test.cjs",
+      "tests/frontend/notice-list.test.cjs",
+      "scripts/verify_interactions_browser.mjs"
+    ]
+  },
+  {
+    "name": "notifications",
+    "source": "frontend/shared/notifications.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-notifications.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-notifications.js"
+      }
+    ],
+    "pages": [
+      "account notification settings"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/notifications.test.cjs",
+      "scripts/verify_interactions_browser.mjs"
+    ]
+  },
+  {
+    "name": "experience",
+    "source": "frontend/shared/experience.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-experience.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-experience.js"
+      }
+    ],
+    "pages": [
+      "public comments, community, discovery and guest preferences"
+    ],
+    "composites": [
+      "chunnel-home-features.js"
+    ],
+    "tests": [
+      "tests/frontend/comment-submit.test.cjs",
+      "tests/frontend/comment-closed.test.cjs",
+      "tests/frontend/list-navigation.test.cjs",
+      "tests/frontend/editor-reliability.test.cjs",
+      "tests/frontend/experience-data.test.cjs",
+      "tests/frontend/community-submit.test.cjs",
+      "scripts/verify_experience_browser.mjs"
+    ]
+  },
+  {
+    "name": "explore",
+    "source": "frontend/shared/explore.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-explore.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-explore.js"
+      }
+    ],
+    "pages": [
+      "core and Chunnel discovery pages"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/explore-entry.test.cjs",
+      "tests/frontend/list-navigation.test.cjs",
+      "internal/httpserver/explore_resources_test.go",
+      "scripts/verify_experience_browser.mjs",
+      "scripts/verify_explore_browser.mjs"
+    ]
+  },
+  {
+    "name": "currency-shared",
+    "source": "frontend/shared/currency-shared.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-currency-shared.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-currency-shared.js"
+      }
+    ],
+    "pages": [
+      "wallet, currency administration and explicitly loaded homepage rewards"
+    ],
+    "composites": [
+      "chunnel-home-features.js"
+    ],
+    "tests": [
+      "tests/frontend/currency-wallet.test.cjs",
+      "tests/frontend/currency-admin.test.cjs",
+      "tests/frontend/home-widgets.test.cjs",
+      "scripts/verify_wallet_browser.mjs"
+    ]
+  },
+  {
+    "name": "wallet",
+    "source": "frontend/shared/wallet.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-wallet.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-wallet.js"
+      }
+    ],
+    "pages": [
+      "account wallet"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/currency-wallet.test.cjs",
+      "scripts/verify_wallet_browser.mjs"
+    ]
+  },
+  {
+    "name": "progression-shared",
+    "source": "frontend/shared/progression-shared.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-progression-shared.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-progression-shared.js"
+      }
+    ],
+    "pages": [
+      "account progression and progression administration"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/progression.test.cjs",
+      "scripts/verify_wallet_browser.mjs"
+    ]
+  },
+  {
+    "name": "progression",
+    "source": "frontend/shared/progression.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-progression.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-progression.js"
+      }
+    ],
+    "pages": [
+      "account experience and membership"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/progression.test.cjs",
+      "scripts/verify_wallet_browser.mjs"
+    ]
+  },
+  {
+    "name": "progression-badges",
+    "source": "frontend/shared/progression-badges.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-progression-badges.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-progression-badges.js"
+      }
+    ],
+    "pages": [
+      "public membership badges"
+    ],
+    "composites": [],
+    "tests": [
+      "scripts/verify_wallet_browser.mjs"
+    ]
+  },
+  {
+    "name": "home-widgets",
+    "source": "frontend/themes/chunnel/home-widgets.ts",
+    "outputs": [
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-home-widgets.js"
+      }
+    ],
+    "pages": [
+      "explicitly loaded homepage rewards"
+    ],
+    "composites": [
+      "chunnel-home-features.js"
+    ],
+    "tests": [
+      "tests/frontend/home-widgets.test.cjs",
+      "scripts/verify_wallet_browser.mjs",
+      "scripts/verify_home_browser.mjs"
+    ]
+  },
+  {
+    "name": "engagement",
+    "source": "frontend/shared/engagement.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-engagement.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-engagement.js"
+      }
+    ],
+    "pages": [
+      "public article, account and explicitly loaded homepage interactions"
+    ],
+    "composites": [
+      "chunnel-home-features.js"
+    ],
+    "tests": [
+      "tests/frontend/engagement-session.test.cjs",
+      "tests/frontend/account-data.test.cjs",
+      "scripts/verify_account_browser.mjs"
+    ]
+  },
+  {
+    "name": "snippets",
+    "source": "frontend/core/snippets.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-snippets.js"
+      }
+    ],
+    "pages": [
+      "admin shared snippets"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/snippets.test.cjs"
+    ]
+  },
+  {
+    "name": "editor-snippets",
+    "source": "frontend/core/editor-snippets.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-editor-snippets.js"
+      }
+    ],
+    "pages": [
+      "admin content editor"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/snippets.test.cjs"
+    ]
+  },
+  {
+    "name": "circles",
+    "source": "frontend/shared/circles.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-circles.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-circles.js"
+      }
+    ],
+    "pages": [
+      "public circles and circle administration"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/collections-data.test.cjs",
+      "tests/frontend/collections-browser.test.cjs",
+      "scripts/verify_collections_browser.mjs"
+    ]
+  },
+  {
+    "name": "links",
+    "source": "frontend/shared/links.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-links.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-links.js"
+      }
+    ],
+    "pages": [
+      "link board administration"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/collections-data.test.cjs",
+      "tests/frontend/collections-browser.test.cjs",
+      "scripts/verify_collections_browser.mjs"
+    ]
+  },
+  {
+    "name": "series",
+    "source": "frontend/shared/series.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-series.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-series.js"
+      }
+    ],
+    "pages": [
+      "series administration"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/collections-data.test.cjs",
+      "tests/frontend/collections-browser.test.cjs",
+      "scripts/verify_collections_browser.mjs"
+    ]
+  },
+  {
+    "name": "feedback",
+    "source": "frontend/shared/feedback.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-feedback.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-feedback.js"
+      }
+    ],
+    "pages": [
+      "public feedback boards and feature administration"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/form-data.test.cjs",
+      "tests/frontend/forms-browser.test.cjs",
+      "tests/frontend/feedback-workspace.test.cjs",
+      "scripts/verify_forms_browser.mjs"
+    ]
+  },
+  {
+    "name": "invitations",
+    "source": "frontend/shared/invitations.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-invitations.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-invitations.js"
+      }
+    ],
+    "pages": [
+      "admin users invitation management"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/form-data.test.cjs",
+      "tests/frontend/forms-browser.test.cjs",
+      "scripts/verify_forms_browser.mjs"
+    ]
+  },
+  {
+    "name": "verification",
+    "source": "frontend/shared/verification.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-verification.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-verification.js"
+      }
+    ],
+    "pages": [
+      "public forms, account access and admin login verification"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/form-data.test.cjs",
+      "tests/frontend/forms-browser.test.cjs",
+      "tests/frontend/verification.test.cjs",
+      "scripts/verify_forms_browser.mjs"
+    ]
+  },
+  {
+    "name": "currency-admin",
+    "source": "frontend/core/currency-admin.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-currency-admin.js"
+      }
+    ],
+    "pages": [
+      "admin currency settings and account ledger"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/ledger-admin-data.test.cjs",
+      "tests/frontend/ledger-admin-browser.test.cjs",
+      "tests/frontend/currency-admin.test.cjs",
+      "scripts/verify_ledger_admin_browser.mjs"
+    ]
+  },
+  {
+    "name": "progression-admin",
+    "source": "frontend/core/progression-admin.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-progression-admin.js"
+      }
+    ],
+    "pages": [
+      "admin progression settings, experience and membership"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/ledger-admin-data.test.cjs",
+      "tests/frontend/ledger-admin-browser.test.cjs",
+      "scripts/verify_ledger_admin_browser.mjs"
+    ]
+  },
+  {
+    "name": "billing",
+    "source": "frontend/shared/billing.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-billing.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-billing.js"
+      }
+    ],
+    "pages": [
+      "billing checkout and order history"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/billing.test.cjs",
+      "tests/frontend/payment-data.test.cjs",
+      "scripts/verify_payments_browser.mjs"
+    ]
+  },
+  {
+    "name": "payments-admin",
+    "source": "frontend/core/payments-admin.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-payments-admin.js"
+      }
+    ],
+    "pages": [
+      "admin payment settings and order reconciliation"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/payment-data.test.cjs",
+      "scripts/verify_payments_browser.mjs"
+    ]
+  },
+  {
+    "name": "shop-services",
+    "source": "frontend/core/shop-services.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-shop-services.js"
+      }
+    ],
+    "pages": [
+      "public shop service cards and admin preview"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/shop-services.test.cjs",
+      "tests/frontend/shop-service-data.test.cjs",
+      "scripts/verify_shop_services_browser.mjs"
+    ]
+  },
+  {
+    "name": "shop-service-editor",
+    "source": "frontend/core/shop-service-editor.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-shop-service-editor.js"
+      }
+    ],
+    "pages": [
+      "admin product service descriptions"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/shop-service-data.test.cjs",
+      "scripts/verify_shop_services_browser.mjs"
+    ]
+  },
+  {
+    "name": "shop-coupons",
+    "source": "frontend/core/shop-coupons.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-shop-coupons.js"
+      }
+    ],
+    "pages": [
+      "optional homepage coupon cards and explicit claims"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/shop-coupon-data.test.cjs",
+      "scripts/verify_shop_services_browser.mjs"
+    ]
+  },
+  {
+    "name": "shop",
+    "source": "frontend/core/shop.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-shop.js"
+      }
+    ],
+    "pages": [
+      "shop catalog, product purchase, checkout, orders and buyer reviews"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/shop-storefront-data.test.cjs",
+      "tests/frontend/shop-money.test.cjs",
+      "tests/frontend/shop-raffle.test.cjs",
+      "scripts/verify_shop_storefront_browser.mjs"
+    ]
+  },
+  {
+    "name": "shop-admin",
+    "source": "frontend/core/shop-admin.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-shop-admin.js"
+      }
+    ],
+    "pages": [
+      "shop administration: catalog, inventory, coupons, orders, after-sales and review moderation"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/shop-admin-data.test.cjs",
+      "tests/frontend/shop-admin-money.test.cjs",
+      "tests/frontend/shop-catalog-merge.test.cjs",
+      "tests/frontend/shop-raffle.test.cjs",
+      "scripts/verify_shop_admin_browser.mjs"
+    ]
+  }
+]

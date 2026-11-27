@@ -1,0 +1,34 @@
+{{define "article-badge-editor"}}
+{{$badge := .Editor.Input.ArticleBadge}}
+<section class="admin-article-badge" data-article-badge-editor data-published-at="{{.Editor.Input.PublishedAt.Format "2006-01-02T15:04:05Z07:00"}}" data-published-local="{{.Editor.PublishedAtLocal}}" aria-labelledby="article-badge-heading">
+  <header class="article-badge-heading"><div><span class="article-badge-eyebrow">CONTENT BADGE</span><h2 id="article-badge-heading">文章角标</h2><p>用一个小标记，让内容更醒目。</p></div><span class="article-badge-count">25 款预设 · 6 种风格</span></header>
+  <fieldset class="article-badge-fieldset" {{if .Admin.ReadOnly}}disabled{{end}}><legend class="sr-only">文章角标设置</legend>
+    <div class="article-badge-workbench">
+      <div class="article-badge-preview" aria-label="文章角标实时预览">
+        <div class="article-badge-preview-cover" data-article-badge-cover>
+          <img data-article-badge-image alt="" {{if and .Editor.Input.CoverURL (not (index .Admin.FieldErrors "cover_url"))}}src="{{.Editor.Input.CoverURL}}"{{else}}hidden{{end}}>
+          <span class="article-badge-preview-art" aria-hidden="true">Aa<span>读到好内容。</span></span>
+          <span data-article-badge-preview class="np-article-badge-position" data-placement="{{.Editor.BadgePreview.Placement}}" data-shape="{{.Editor.BadgePreview.Style}}">{{template "article-badge" .Editor.BadgePreview}}</span>
+          <span class="article-badge-preview-caption">封面效果</span>
+        </div>
+        <div class="article-badge-preview-copy"><span data-article-badge-title>{{if .Editor.Input.Title}}{{.Editor.Input.Title}}{{else}}下一篇好内容，从这里开始{{end}}</span><small>内容列表 / 文章详情</small></div>
+        <p class="article-badge-preview-note" data-article-badge-note role="status">{{if .Editor.Pinned}}已置顶，自动优先显示置顶角标。{{else if eq $badge.Kind "pinned"}}尚未置顶，公开页面不显示此角标。{{else if $badge.Kind}}保存文章后，角标会同步展示。{{else}}当前未启用角标，选择下方预设开始。{{end}}</p>
+      </div>
+      <div class="article-badge-fields">
+        <label class="article-badge-field-wide">角标类型<select name="article_badge_kind" data-article-badge-field="kind"><option value="">不设置手动角标</option>{{range .Editor.BadgeGroups}}<optgroup label="{{.Name}}">{{range .Presets}}<option value="{{.Kind}}" data-text="{{.Text}}" data-style="{{.Style}}" data-tone="{{.Tone}}" data-icon="{{.Icon}}" {{if eq $badge.Kind .Kind}}selected{{end}}>{{.Label}}</option>{{end}}</optgroup>{{end}}</select></label>
+        <label class="article-badge-field-wide">角标文字<span class="article-badge-text-input"><input name="article_badge_text" value="{{$badge.Text}}" maxlength="12" placeholder="留空使用预设文字" data-article-badge-field="text"><small data-article-badge-count>最多 12 字</small></span></label>
+        <label>外观<select name="article_badge_style" data-article-badge-field="style"><option value="">使用预设</option>{{range .Editor.BadgeStyles}}<option value="{{.Value}}" {{if eq $badge.Style .Value}}selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+        <label>配色<select name="article_badge_tone" data-article-badge-field="tone"><option value="">使用预设</option>{{range .Editor.BadgeTones}}<option value="{{.Value}}" {{if eq $badge.Tone .Value}}selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+        <label>图标<select name="article_badge_icon" data-article-badge-field="icon"><option value="">使用预设</option>{{range .Editor.BadgeIcons}}<option value="{{.Value}}" {{if eq $badge.Icon .Value}}selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+        <label>封面位置<select name="article_badge_placement" data-article-badge-field="placement"><option value="top-left" {{if ne $badge.Placement "top-right"}}selected{{end}}>左上角</option><option value="top-right" {{if eq $badge.Placement "top-right"}}selected{{end}}>右上角</option></select></label>
+        <label class="article-badge-field-wide">手机端<select name="article_badge_hide_mobile" data-article-badge-field="hide_mobile"><option value="false" {{if not $badge.HideOnMobile}}selected{{end}}>显示角标</option><option value="true" {{if $badge.HideOnMobile}}selected{{end}}>隐藏角标</option></select></label>
+      </div>
+    </div>
+    <div class="article-badge-errors" role="alert">{{range $key, $message := .Admin.FieldErrors}}{{if or (eq $key "article_badge_kind") (eq $key "article_badge_text") (eq $key "article_badge_style") (eq $key "article_badge_tone") (eq $key "article_badge_icon") (eq $key "article_badge_placement") (eq $key "article_badge_hide_mobile")}}<p>{{$message}}</p>{{end}}{{end}}</div>
+    <details class="article-badge-library" open><summary>选择预设<span>点击即可应用，再自由调整</span>{{template "icon" "chevron-down"}}</summary>
+      {{range .Editor.BadgeGroups}}<div class="article-badge-group"><h3>{{.Name}}</h3><div class="article-badge-presets">{{range .Presets}}<button type="button" class="article-badge-preset" data-article-badge-preset="{{.Kind}}" aria-label="应用{{.Label}}角标" aria-pressed="{{if eq $badge.Kind .Kind}}true{{else}}false{{end}}">{{template "article-badge" .ArticleBadge}}</button>{{end}}</div></div>{{end}}
+      <p class="article-badge-library-note">“置顶”跟随<a href="#article-pin-control">发布控制中的置顶状态</a>自动展示，选择预设可调整外观；“跟随发布状态”自动更新文字、配色和图标。其他角标可手动设置。</p>
+    </details>
+  </fieldset>
+</section>
+{{end}}

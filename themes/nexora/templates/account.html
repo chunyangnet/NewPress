@@ -1,0 +1,104 @@
+{{define "content"}}
+<section class="account-room shell" data-account-room data-account-user="{{.Account.ID}}" data-account-can-write="{{.Account.CanWrite}}">
+  <div class="account-page-bar">
+    <nav class="account-breadcrumb" aria-label="当前位置"><a href="/">首页</a>{{template "service-icon" "chevron-right"}}<span aria-current="page">个人中心</span></nav>
+    <a class="account-discover" href="/explore/">{{template "service-icon" "compass"}}发现内容 </a>
+  </div>
+  {{if .Account.Authenticated}}
+  <header class="account-profile-card">
+    <div class="account-profile-cover" aria-hidden="true"><span class="docs-account-cover-text">NEXORA · CLIENT SERVICES</span></div>
+    <div class="account-profile-summary">
+      <span class="account-monogram" data-profile-monogram>{{if .Account.AvatarURL}}<img src="{{.Account.AvatarURL}}" alt="" width="88" height="88">{{else}}{{.Account.Initial}}{{end}}</span>
+      <div class="account-profile-copy">
+        <div class="account-profile-name"><h1 data-profile-heading>{{.Account.Name}}</h1>{{if .Account.RoleName}}<span class="account-role">{{.Account.RoleName}}</span>{{end}}<span class="identity-badges" data-account-identity-badges>{{template "identity-badges" .Recognition.AccountBadges}}</span><span class="progression-badges" data-progression-badges>{{template "progression-badges" .Account.Badges}}</span></div>
+        <div class="account-profile-meta"><span>@{{.Account.Username}}</span>{{if .Account.Joined}}<span>{{.Account.Joined}} 加入</span>{{end}}</div>
+        <p class="account-profile-bio" data-profile-bio>{{if .Account.Bio}}{{.Account.Bio}}{{else}}还没有填写个人简介{{end}}</p>
+      </div>
+      <div class="account-profile-actions"><button class="ui-button ui-button-secondary ui-button-small" type="button" data-account-open="profile">{{template "service-icon" "pen-line"}}编辑资料</button><a class="ui-button ui-button-primary ui-button-small" href="/authors/{{.Account.ID}}/">{{template "service-icon" "user-round"}}公开主页 </a></div>
+    </div>
+  </header>
+
+  <div class="account-room-layout">
+    <aside class="account-rail">
+      <div class="account-nav-toolbar"><span>全部栏目</span><button class="account-nav-toggle" type="button" data-account-nav-toggle aria-controls="account-navigation" aria-expanded="false" aria-label="展开全部栏目">{{template "service-icon" "chevron-down"}}</button></div>
+      <nav id="account-navigation" class="account-navigation" aria-label="个人中心">
+        <div class="account-nav-group"><p class="account-nav-label">我的内容</p>
+          {{if (index .Modules "questions")}}<a class="account-nav-link" href="/questions/?scope=mine">{{template "service-icon" "circle-help"}}<span>我的提问</span></a><a class="account-nav-link" href="/questions/?scope=answered">{{template "service-icon" "message-square"}}<span>我的回答</span></a>{{end}}
+          {{if (index .Modules "flash")}}<a class="account-nav-link" href="/flash/submit/">{{template "service-icon" "newspaper"}}<span>我的快报</span>{{template "service-icon" "chevron-right"}}</a>{{end}}
+          <button type="button" data-library-tab="bookmark" aria-pressed="true">{{template "service-icon" "bookmark"}}<span>我的收藏</span>{{template "service-icon" "chevron-right"}}</button>
+          <button type="button" data-library-tab="posts" aria-pressed="false">{{template "service-icon" "newspaper"}}<span>我的文章</span>{{template "service-icon" "chevron-right"}}</button>
+          {{if (index .Modules "comments")}}<button type="button" data-library-tab="comments" aria-pressed="false">{{template "service-icon" "message-square"}}<span>我的评论</span>{{template "service-icon" "chevron-right"}}</button>{{end}}
+          <button type="button" data-library-tab="like" aria-pressed="false">{{template "service-icon" "heart"}}<span>我赞过的</span>{{template "service-icon" "chevron-right"}}</button>
+        </div>
+        <div class="account-nav-group"><p class="account-nav-label">关注与互动</p>
+          <button type="button" data-library-tab="feed" aria-pressed="false">{{template "service-icon" "rss"}}<span>关注动态</span>{{template "service-icon" "chevron-right"}}</button>
+          <button type="button" data-library-tab="follow" aria-pressed="false">{{template "service-icon" "users"}}<span>关注的人</span>{{template "service-icon" "chevron-right"}}</button>
+          <button type="button" data-library-tab="notifications" aria-pressed="false">{{template "service-icon" "bell-ring"}}<span>通知与订阅</span>{{template "service-icon" "chevron-right"}}</button>
+        </div>
+        <div class="account-nav-group"><p class="account-nav-label">账号管理</p>
+          <button type="button" data-library-tab="wallet" aria-pressed="false">{{template "service-icon" "coins"}}<span>我的钱包</span>{{template "service-icon" "chevron-right"}}</button>
+          <button type="button" data-library-tab="progression" aria-pressed="false">{{template "service-icon" "award"}}<span>成长与会员</span>{{template "service-icon" "chevron-right"}}</button>
+          <button type="button" data-library-tab="identity" aria-pressed="false">{{template "service-icon" "badge-check"}}<span>勋章与认证</span>{{template "service-icon" "chevron-right"}}</button>
+          <button type="button" data-library-tab="profile" aria-pressed="false">{{template "service-icon" "user-round"}}<span>个人资料</span>{{template "service-icon" "chevron-right"}}</button>
+          <button type="button" data-library-tab="import" aria-pressed="false">{{template "service-icon" "arrow-down-to-line"}}<span>导入本机记录</span>{{template "service-icon" "chevron-right"}}</button>
+        </div>
+      </nav>
+    </aside>
+
+    <section class="account-library" aria-labelledby="account-library-heading">
+      <header class="account-library-heading"><div><h2 id="account-library-heading" data-library-title>我的收藏</h2><p data-library-description>收藏的文章与收藏夹</p></div><span class="account-library-count" data-library-total aria-live="polite"></span></header>
+      <div class="account-library-body">
+        <form class="account-library-tools" data-library-search role="search" aria-label="搜索个人内容">
+          <label class="fluent-input-group"><span class="sr-only">搜索个人内容</span>{{template "service-icon" "search"}}<input type="search" name="q" maxlength="80" placeholder="搜索收藏的文章" autocomplete="off"></label>
+          <label class="account-collection-filter"><span class="sr-only">收藏夹</span><select data-select-ui="icon" data-select-icon="folder" name="collection" aria-label="收藏夹"><option value="">全部收藏夹</option></select></label>
+          <button class="ui-button ui-button-secondary ui-button-small" type="submit">搜索</button>
+        </form>
+        <div class="account-library-status" data-library-status role="status" aria-live="polite">正在加载…</div>
+        <div class="account-library-list" data-library-list></div>
+        {{template "notification-settings" .}}
+        {{template "currency-wallet" .}}
+        {{template "progression-panel" .}}
+        {{template "identity-panel" .}}
+        <nav class="account-library-pagination" data-library-pagination aria-label="个人内容分页" hidden><button type="button" data-library-page="-1">{{template "service-icon" "arrow-left"}}上一页</button><span data-library-page-label></span><button type="button" data-library-page="1">下一页{{template "service-icon" "arrow-right"}}</button></nav>
+
+        <form class="account-avatar-form" data-avatar-form hidden>
+          <div class="account-avatar-preview"><img data-avatar-preview alt="当前头像" width="80" height="80" hidden><span data-avatar-fallback aria-hidden="true">{{template "service-icon" "user-round"}}</span></div>
+          <div><label for="account-avatar-file">个人头像</label><p>JPG / PNG，2 MB 以内，边长不超过 2048 像素。</p><div class="account-avatar-upload"><input id="account-avatar-file" type="file" name="file" accept="image/jpeg,image/png" required><button class="ui-button ui-button-secondary ui-button-small" type="submit" disabled>上传头像</button></div></div>
+          <p data-avatar-result role="status"></p>
+        </form>
+        <form class="account-profile-form" data-profile-form hidden>
+          <div class="account-profile-fields"><label>用户名<input name="username" readonly autocomplete="username"></label><label>公开昵称<input name="display_name" required maxlength="160" autocomplete="nickname"></label></div>
+          <label>个人简介<textarea name="bio" rows="4" maxlength="280" placeholder="简单介绍一下自己"></textarea><small>最多 280 字，将显示在公开主页。</small></label>
+          <label class="account-locale-field">语言<input name="locale" required maxlength="35" placeholder="zh-CN"></label>
+          <label class="account-remove-avatar"><input type="checkbox" name="remove_avatar">移除当前头像</label><input type="hidden" name="version">
+          <div class="account-profile-save"><button class="ui-button ui-button-primary" type="submit">保存资料</button><button class="ui-button ui-button-secondary" type="button" data-profile-refresh>重新载入</button></div><p data-profile-result role="status"></p>
+        </form>
+
+        <section class="account-import" data-account-import data-import-account="{{.Account.ID}}" hidden>
+          <span class="account-import-mark">{{template "service-icon" "arrow-down-to-line"}}</span><h3>导入浏览器中的收藏记录</h3>
+          <p>检查当前浏览器保存的收藏、点赞和关注，确认后导入 <strong>{{.Account.Name}}</strong> 的账号。</p>
+          <ul><li>新收藏将放入「本机收藏」，已有收藏夹不受影响。</li><li>重复记录会自动跳过，本机原记录会保留。</li><li>失效链接和外部链接会跳过，仅保存了昵称的旧关注需要重新关注。</li></ul>
+          <div class="account-import-actions"><button class="ui-button ui-button-secondary" type="button" data-import-preview>检查本机记录</button><button class="ui-button ui-button-primary" type="button" data-import-confirm hidden>确认导入这个账号</button></div><p data-import-result role="status" aria-live="polite"></p>
+        </section>
+        <noscript><p>个人中心需要启用 JavaScript。你仍可以<a href="/explore/">浏览公开文章</a>。</p></noscript>
+      </div>
+    </section>
+
+    <aside class="account-side" aria-label="收藏夹与快捷入口">
+      <section class="account-side-card account-folders" data-account-folders hidden><h2>{{template "service-icon" "bookmark"}}我的收藏夹</h2><nav data-collection-list aria-label="选择收藏夹"></nav><p>在文章下方点击「整理」可更换收藏夹。</p></section>
+      <section class="account-side-card"><h2>客户服务</h2><div class="account-shortcuts">{{if index .Modules "shop"}}<a href="/shop/orders/">{{template "service-icon" "package"}}<span>产品订单</span></a>{{end}}<a href="/billing/">{{template "service-icon" "wallet"}}<span>充值与会员订单</span></a>
+        {{if .Account.CanWrite}}<a href="/admin/content/new/">{{template "service-icon" "pen-line"}}<span>撰写文章</span>{{template "service-icon" "chevron-right"}}</a>{{end}}
+        {{if index $.Modules "messaging"}}<button type="button" data-drawer-open="message-drawer">{{template "service-icon" "message-square"}}<span>我的私信</span>{{template "service-icon" "chevron-right"}}</button>{{end}}
+        <button type="button" data-drawer-open="notification-drawer">{{template "service-icon" "bell-ring"}}<span>通知中心</span>{{template "service-icon" "chevron-right"}}</button>
+        <a href="/explore/">{{template "service-icon" "compass"}}<span>发现文章</span>{{template "service-icon" "chevron-right"}}</a>
+      </div></section>
+    </aside>
+  </div>
+
+  <dialog class="account-collection-dialog" data-collection-dialog aria-labelledby="collection-heading"><form data-collection-form><h2 id="collection-heading">整理收藏夹</h2><p data-collection-post></p><label>收藏夹名称<input name="collection" maxlength="40" placeholder="选择或输入收藏夹名称" list="account-collection-options" autocomplete="off"></label><datalist id="account-collection-options"></datalist><small>输入新名称即可创建收藏夹，留空使用默认收藏夹。</small><div><button class="ui-button ui-button-primary" type="submit">保存</button><button class="ui-button ui-button-secondary" type="button" data-collection-cancel>取消</button></div><p data-collection-error role="alert"></p></form></dialog>
+  {{else}}
+  <div class="account-welcome"><span class="account-welcome-icon">{{template "service-icon" "user-round"}}</span><h1>登录客户中心</h1><p>管理个人资料、消息通知与服务记录，持续跟进咨询与交流。</p><button class="ui-button ui-button-primary" type="button" data-account-login>登录</button><a href="/account/access/">还没有账号？查看加入方式</a></div>
+  {{end}}
+</section>
+{{end}}
+

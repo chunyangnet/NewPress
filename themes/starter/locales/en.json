@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "locale": "en",
+  "messages": {
+    "starter.latest": "Latest posts",
+    "starter.discover": "Discover content",
+    "starter.empty": "No content yet."
+  }
+}

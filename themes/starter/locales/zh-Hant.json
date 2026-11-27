@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "locale": "zh-Hant",
+  "messages": {
+    "starter.latest": "最新文章",
+    "starter.discover": "探索內容",
+    "starter.empty": "目前沒有內容。"
+  }
+}

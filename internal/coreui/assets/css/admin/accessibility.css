@@ -1,0 +1,8 @@
+/* Muted labels remain readable on the dark operational panels. */
+.admin-progress small, .admin-media-policy li small, .admin-media-policy-foot span, .admin-navigation-preview > p, .admin-tools-command-deck > div > small { color: var(--tone-muted, var(--line-dark)); }
+.admin-tools-audit-event.is-comment > div > p > span, .admin-tools-backup-unit.is-deploy > span { color: var(--tone-accent, var(--admin-brand)); }
+.admin-tools-backup-unit.is-media > span { color: var(--tone-accent, var(--admin-blue)); }
+
+.admin-taxonomy-pagination nav > span { color: var(--tone-muted, #687a74); opacity: 1; }
+.admin-comment-status-grid a.is-active > i { color: var(--selection-text); opacity: 1; }
+.admin-tools-audit-event.is-comment > .admin-tools-audit-action, .admin-tools-backup-unit.is-deploy > div > small { color: var(--tone-accent, var(--admin-brand)); }

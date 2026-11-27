@@ -1,0 +1,39 @@
+@font-face{font-family:"Nexora Serif";src:url("../fonts/nexora-serif.woff2") format("woff2");font-style:normal;font-weight:400;font-display:swap}
+:root{--accent:#304b68;--ink:#171b20;--muted:#727d93;--paper:#f4f5f7;--line:#dfe2e9;--gutter:5.2631579vw;--serif:"Nexora Serif","Noto Serif SC","Songti SC",SimSun,serif;--sans:"Microsoft YaHei","PingFang SC","Noto Sans CJK SC",sans-serif;color-scheme:light;font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--paper);font-synthesis:none}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:100px}
+body{margin:0;line-height:1.75;-webkit-font-smoothing:antialiased}
+[hidden]{display:none!important}
+body.menu-open,body.search-open{overflow:hidden}
+a{color:inherit;text-decoration:none}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+button,summary,a,input,textarea{-webkit-tap-highlight-color:transparent}
+button{border:0;background:none;padding:0}
+img{display:block;max-width:100%;height:auto}
+svg{display:block;flex-shrink:0;stroke:currentColor;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}
+h1,h2,h3,p{margin:0}
+h1,h2,h3{font-weight:400}
+h1,h2{font-family:var(--serif)}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid currentColor;outline-offset:6px}
+input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+::selection{background:#b9c9d9;color:#172637}
+.sr-only,.skip-link:not(:focus){position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.skip-link:focus{position:fixed;z-index:100;top:12px;left:12px;background:#fff;color:#172637;padding:10px 18px}
+.icon-button{width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.icon-button svg{width:21px;height:21px}
+.outline-button{display:inline-flex;justify-content:center;align-items:center;gap:10px;min-height:41px;padding:7px 24px;border:1px solid currentColor;border-radius:30px;line-height:1.5;font-size:14px;letter-spacing:.04em;white-space:nowrap;transition:background .22s,color .22s,transform .22s}
+.outline-button svg{width:17px;height:17px}
+.outline-button:hover{background:#fff;color:#22364b}
+.dark-button{color:#20252b;min-height:36px;font-size:13px;padding:6px 22px}
+.dark-button:hover{background:#24394e;color:#fff;border-color:#24394e}
+.text-link{display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.04em;line-height:1.6;flex-shrink:0}
+.text-link svg{width:16px;height:16px;transition:transform .2s}
+.text-link:hover svg{transform:translateX(4px)}
+.eyebrow{font-family:var(--sans);font-size:12px;line-height:1.7;letter-spacing:.1em;color:var(--muted)}
+.section-shell{padding-inline:var(--gutter)}
+.section-heading{display:flex;align-items:center;justify-content:space-between;gap:32px}
+.section-heading h2{font-size:28px;line-height:1.45}
+.section-heading p:not(.eyebrow){color:var(--muted);font-size:14px;letter-spacing:.015em}
+.section-heading .eyebrow{margin-bottom:12px}
+.section-intro{white-space:pre-line}

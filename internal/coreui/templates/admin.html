@@ -1,0 +1,51 @@
+{{define "content"}}
+<section class="admin-page admin-dashboard admin-daily">
+<header class="admin-page-heading"><h1>工作台</h1><div class="admin-heading-actions"><a class="admin-button admin-button-quiet" href="/admin/">刷新</a>{{if or (.Admin.CanWrite "content:write") (.Admin.CanWrite "content:write:own")}}<a class="admin-button admin-button-primary" href="/admin/content/new/">写文章</a>{{end}}</div></header>
+{{template "admin-notice" (dict "Message" .Admin.Notice "Tone" .Admin.NoticeTone)}}
+<p class="daily-read-time">读取于 {{.Dashboard.CheckedAt}} · {{.Dashboard.Timezone}}；刷新后更新，不自动执行操作。</p>
+<section class="daily-tasks" aria-label="待处理">
+  <h2>待处理</h2>
+  {{$articles := .Admin.Can "content:read"}}{{$comments := and (.ModuleEnabled "comments") (.Admin.Can "comments:moderate")}}
+  {{if or $articles $comments}}
+    {{if and $articles (or .Dashboard.PendingError .Dashboard.PendingTotal)}}<a class="daily-task" href="/admin/content/?type=post&amp;status=pending">待审核文章 <strong>{{if .Dashboard.PendingError}}读取失败{{else}}{{.Dashboard.PendingTotal}}{{end}}</strong>{{template "icon" "chevron-right"}}</a>{{end}}
+    {{if and $comments (or .Dashboard.CommentsError .CommentAdmin.Total)}}<a class="daily-task" href="/admin/comments/?status=pending">待审核评论 <strong>{{if .Dashboard.CommentsError}}读取失败{{else}}{{.CommentAdmin.Total}}{{end}}</strong>{{template "icon" "chevron-right"}}</a>{{end}}
+    {{if not (or (and $articles (or .Dashboard.PendingError .Dashboard.PendingTotal)) (and $comments (or .Dashboard.CommentsError .CommentAdmin.Total)))}}<p>暂无待处理事项</p>{{end}}
+  {{else}}<p>当前权限没有可处理事项。</p>{{end}}
+</section>
+<div class="daily-grid">
+{{if .Admin.Can "content:read"}}
+<section class="daily-workspace" data-daily-workspace aria-label="内容工作区">
+  <header class="daily-workspace-heading"><h2>内容工作区</h2><p>从上次停下的地方继续。</p></header>
+  <div class="daily-tabs" data-daily-tabs hidden aria-label="内容视图"><button type="button" id="daily-drafts-tab" data-daily-tab="daily-drafts">继续写作</button><button type="button" id="daily-recent-tab" data-daily-tab="daily-recent">最近发布</button></div>
+  <section class="daily-drafts" id="daily-drafts" data-daily-panel><header class="daily-heading"><h2>继续写作</h2><a href="/admin/content/?status=draft">全部草稿 {{template "icon" "chevron-right"}}</a></header>
+    {{if .Dashboard.DraftError}}<p class="daily-empty">草稿暂时无法读取，请刷新重试。</p>{{else}}<div class="daily-list">{{range .Dashboard.RecentDrafts}}<a class="daily-row" href="{{.EditURL}}"><span><b>{{.Post.Title}}</b><small>上次编辑 {{.UpdatedLabel}}</small></span><span>继续编辑 {{template "icon" "chevron-right"}}</span></a>{{else}}<div class="daily-empty"><h3>从一个想法开始</h3><p>暂无草稿，写下你的第一篇文章。</p>{{if or (.Admin.CanWrite "content:write") (.Admin.CanWrite "content:write:own")}}<a class="admin-button admin-button-quiet" href="/admin/content/new/">写第一篇文章</a>{{end}}</div>{{end}}</div>{{end}}
+  </section>
+  <section class="daily-recent" id="daily-recent" data-daily-panel><header class="daily-heading"><h2>最近发布</h2><a href="/admin/content/?status=published">全部内容 {{template "icon" "chevron-right"}}</a></header>{{if .Dashboard.PostsError}}<p class="daily-empty">公开内容暂时无法读取，请刷新重试。</p>{{else}}<div class="daily-list">{{range .Posts}}<a class="daily-row" href="/admin/content/{{.ID}}/edit/"><span><b>{{.Title}}</b><small>已发布 · 更新于 {{dateIn .UpdatedAt $.Site.Timezone}}</small></span><span>编辑 {{template "icon" "chevron-right"}}</span></a>{{else}}<p class="daily-empty">还没有公开内容。</p>{{end}}</div>{{end}}</section>
+</section>
+{{end}}
+<div class="daily-column daily-column-side">
+<section class="admin-panel daily-shortcuts"><header class="daily-heading"><h2>常用入口</h2></header><div class="daily-links" data-dashboard-pins>{{range .Admin.Navigation}}{{range .Items}}{{if or (eq .ID "content") (eq .ID "media") (eq .ID "comments") (eq .ID "settings") (eq .ID "shop")}}<a class="admin-button admin-button-quiet" href="{{.URL}}">{{.Title}}</a>{{end}}{{end}}{{end}}</div><details class="daily-pin-picker" data-pin-picker hidden><summary>管理常用入口（最多 5 个）</summary><p>仅保存在当前浏览器，按站点和账号隔离。</p><div>{{range .Admin.Navigation}}{{range .Items}}{{if ne .ID "dashboard"}}<label><input type="checkbox" value="{{.ID}}" data-pin-option> {{.Title}}</label>{{end}}{{end}}{{end}}</div><p role="status" data-pin-status></p></details></section>
+{{if .Admin.Can "content:read"}}<section class="admin-panel daily-scheduled"><header class="daily-heading"><h2>即将发布</h2><a href="/admin/content/?status=future">全部定时内容</a></header><p class="daily-hint">未来 7 天 · {{.Dashboard.Timezone}} · 最多显示 5 条</p>{{if .Dashboard.ScheduledError}}<p class="daily-empty">定时内容暂时无法读取，请刷新重试。</p>{{else}}<div class="daily-list">{{range .Dashboard.Scheduled}}<a class="daily-row" href="{{.EditURL}}"><span class="daily-schedule-entry"><small>{{.UpdatedLabel}}</small><b>{{.Post.Title}}</b></span>{{template "icon" "chevron-right"}}</a>{{else}}<p class="daily-empty">未来 7 天没有定时内容。</p>{{end}}</div>{{end}}</section>{{end}}
+<div class="daily-note">{{if or (.Admin.CanWrite "content:write") (.Admin.CanWrite "content:write:own")}}<section class="daily-quick-note" aria-labelledby="daily-note-title"><header class="daily-heading"><h2 id="daily-note-title">记个想法</h2></header>      <form class="admin-quick-draft-form" action="/admin/quick-draft/" method="post" data-quick-draft>
+        <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}">
+        <input type="hidden" name="action" value="quick_draft">
+        <label class="admin-quick-draft-title {{if index .Dashboard.QuickDraft.FieldErrors "title"}}has-error{{end}}" for="quick-draft-title-input"><span>草稿标题 <b data-quick-draft-title-count>0/200</b></span><input id="quick-draft-title-input" type="text" name="title" value="{{.Dashboard.QuickDraft.Title}}" maxlength="200" required autocomplete="off" placeholder="标题">{{if index .Dashboard.QuickDraft.FieldErrors "title"}}<small>{{template "icon" "triangle-alert"}}{{index .Dashboard.QuickDraft.FieldErrors "title"}}</small>{{end}}</label>
+        <div class="admin-quick-draft-copy">
+          <label class="{{if index .Dashboard.QuickDraft.FieldErrors "content_source"}}has-error{{end}}" for="quick-draft-body"><span>正文速记 <b data-quick-draft-body-count>0 字</b></span><textarea id="quick-draft-body" name="content_source" maxlength="2097152" rows="4" placeholder="正文">{{.Dashboard.QuickDraft.ContentSource}}</textarea>{{if index .Dashboard.QuickDraft.FieldErrors "content_source"}}<small>{{template "icon" "triangle-alert"}}{{index .Dashboard.QuickDraft.FieldErrors "content_source"}}</small>{{end}}</label>
+          <details class="admin-draft-excerpt"{{if or .Dashboard.QuickDraft.Excerpt (index .Dashboard.QuickDraft.FieldErrors "excerpt")}} open{{end}}><summary>添加摘要（可选）</summary><label class="{{if index .Dashboard.QuickDraft.FieldErrors "excerpt"}}has-error{{end}}" for="quick-draft-excerpt"><span>摘要 <b>≤ 500</b></span><textarea id="quick-draft-excerpt" name="excerpt" maxlength="500" rows="2" placeholder="可留空">{{.Dashboard.QuickDraft.Excerpt}}</textarea>{{if index .Dashboard.QuickDraft.FieldErrors "excerpt"}}<small>{{template "icon" "triangle-alert"}}{{index .Dashboard.QuickDraft.FieldErrors "excerpt"}}</small>{{end}}</label></details>
+        </div>
+        <footer><p class="admin-draft-save-note">仅保存为草稿，不会立即发布。</p><button class="admin-button admin-button-primary" type="submit" data-quick-draft-submit>{{template "icon" "send"}}保存草稿</button></footer>
+      </form></section>{{end}}
+</div>
+</div>
+</div>{{if .Admin.ReadOnly}}
+    <article class="admin-security-setup" id="security-setup">
+      <h2>设置管理员密码</h2>
+      <p>生成密码哈希并写入密钥文件后，服务端会持久保存管理员账号；重启或重新登录都不会再次引导。</p>
+      <code tabindex="0">Read-Host -MaskInput | newpress admin hash-password</code>
+      <code tabindex="0">NEWPRESS_ADMIN_PASSWORD_HASH_FILE=/run/secrets/admin_password_hash</code>
+      <small>登录 Cookie 仅通过 HttpOnly 传递，HTTPS 下自动启用 Secure。</small>
+    </article>
+  {{end}}
+</section>
+{{end}}

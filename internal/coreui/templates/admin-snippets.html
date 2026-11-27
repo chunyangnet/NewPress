@@ -1,0 +1,37 @@
+{{define "content"}}
+<section class="admin-page snippet-workspace" data-snippet-workspace data-id="{{.Snippets.Current.ID}}" data-version="{{.Snippets.Current.Version}}" data-enabled="{{and .Snippets.Writable .Snippets.APIEnabled}}">
+  <header class="snippet-heading"><div><p class="snippet-kicker">内容 / 共享片段</p><h1>{{if .Snippets.Editing}}{{if .Snippets.Current.ID}}{{.Snippets.Current.Title}}{{else}}新建共享片段{{end}}{{else}}共享片段{{end}}</h1><p>保存固定版本，检查引用，再明确更新文章。</p></div><a class="admin-button" href="{{if .Snippets.Editing}}/admin/snippets/{{else}}/admin/content/{{end}}">{{if .Snippets.Editing}}返回片段列表{{else}}内容管理{{end}}</a></header>
+  {{if not .Snippets.APIEnabled}}<p class="admin-callout admin-callout-warning" role="status">后台内容 API 已关闭。可以查看片段，启用后才能保存与更新引用。</p>{{end}}
+  {{if .Admin.ReadOnly}}<p class="admin-callout admin-callout-warning" role="status">当前为只读预览，不能提交修改。</p>{{end}}
+  {{if .Snippets.Editing}}
+  <div class="snippet-layout">
+    <div>
+      <form data-snippet-editor>
+        <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}">
+        <fieldset {{if not (and .Snippets.Manage .Snippets.Writable .Snippets.APIEnabled)}}disabled{{end}}><legend class="sr-only">片段正文与共享范围</legend>
+          <label>标题<input name="title" value="{{.Snippets.Current.Title}}" maxlength="200" required></label>
+          <label>静态 HTML 正文<textarea name="content_source" rows="13" spellcheck="false" required>{{.Snippets.Body}}</textarea><small>支持文字、列表、表格与图片，最多 128 KiB。片段不能嵌套，也不能包含交互组件或资源区。</small></label>
+          <label>可见范围<select name="visibility"><option value="private" {{if ne .Snippets.Current.Visibility "shared"}}selected{{end}}>私密 · 仅内容管理者可查看</option><option value="shared" {{if eq .Snippets.Current.Visibility "shared"}}selected{{end}}>共享 · 固定版本可用于公开文章</option></select></label>
+          <p>保存共享的新版本不会自动修改文章。转为私密会隐藏所有旧引用；之后重新共享，需要明确更新文章引用。</p>
+          <button class="admin-button admin-button-primary" type="submit">保存新版本</button>
+        </fieldset>
+      </form>
+      <p data-snippet-status role="status" aria-live="polite"></p>
+      <a data-snippet-save-review href="/admin/snippets/" target="_blank" rel="noopener" hidden>在新标签页核对片段列表</a>
+      {{if .Snippets.Current.ID}}<section class="snippet-impact-panel" aria-labelledby="snippet-impact-heading"><header><div><h2 id="snippet-impact-heading">引用影响清单</h2><p>只列出你能编辑的文章。每次最多更新 100 篇；任何版本冲突都会拒绝整批更新。</p></div><button type="button" class="admin-button" data-snippet-impacts {{if not (and .Snippets.Writable .Snippets.APIEnabled)}}disabled{{end}}>查看引用</button></header><div data-snippet-impacts-list></div><nav class="snippet-actions" aria-label="引用分页"><button type="button" class="admin-button" data-snippet-prev hidden>上一页</button><button type="button" class="admin-button" data-snippet-next hidden>下一页</button></nav><p data-snippet-selection role="status"></p><button class="admin-button" type="button" data-snippet-preview hidden>预览选中的更新</button><div data-snippet-plan hidden><h3>确认本次更新</h3><p data-snippet-plan-summary></p><p>已发布文章会立即使用新引用版本；文章其他字段与发布状态保持原值。</p><button class="admin-button admin-button-primary" type="button" data-snippet-apply>确认更新</button></div></section>{{end}}
+    </div>
+    <aside class="snippet-sidebar">
+      {{if .Snippets.Current.ID}}<section><h2>当前状态</h2><dl><dt>编号</dt><dd>#{{.Snippets.Current.ID}}</dd><dt>管理版本</dt><dd>v{{.Snippets.Current.Version}}</dd><dt>正文版本</dt><dd>v{{.Snippets.Current.CurrentVersion}}</dd><dt>可见范围</dt><dd>{{if eq .Snippets.Current.Visibility "shared"}}共享{{else if eq .Snippets.Current.Visibility "withdrawn"}}已撤回{{else}}私密{{end}}</dd></dl></section>{{end}}
+      {{if .Snippets.Reference}}<section><h2>插入文章</h2><p>在文章编辑器的“共享片段”中选择本片段；也可以把下面的引用放入 HTML 正文。</p><textarea data-snippet-reference readonly rows="4" aria-label="固定版本引用">{{.Snippets.Reference}}</textarea><button class="admin-button" type="button" data-snippet-copy>复制引用</button></section>{{end}}
+      {{if and .Snippets.Current.ID .Snippets.Manage}}<section><h2>撤回共享</h2><p>撤回后，后续请求会隐藏所有旧引用，历史版本继续保留。重新共享不会自动恢复旧引用。</p><button class="admin-button" type="button" data-snippet-withdraw {{if not (and .Snippets.Writable .Snippets.APIEnabled)}}disabled{{end}}>撤回此片段</button></section>{{end}}
+      {{if .Snippets.Revisions}}<section><h2>正文历史</h2><p>每页显示 24 个版本的记录。翻页会在新标签页打开，保留本页尚未保存的输入。</p><ol class="snippet-history">{{range .Snippets.Revisions}}<li><strong>v{{.Version}} · {{.Title}}</strong><span>{{.Actor}} · {{.CreatedAt.Format "2006-01-02 15:04"}} UTC</span></li>{{end}}</ol><nav class="snippet-actions" aria-label="正文历史分页">{{if .Snippets.HistoryFirstURL}}<a href="{{.Snippets.HistoryFirstURL}}" target="_blank" rel="noopener">最新记录</a>{{end}}{{if .Snippets.HistoryNextURL}}<a href="{{.Snippets.HistoryNextURL}}" target="_blank" rel="noopener">更早记录</a>{{end}}</nav></section>{{end}}
+    </aside>
+  </div>
+  <noscript><p>请启用 JavaScript 后保存片段或更新引用。</p></noscript>
+  {{else}}
+  <div class="snippet-list-heading"><p>{{.Snippets.Total}} 个可见片段</p>{{if and .Snippets.Manage .Snippets.Writable .Snippets.APIEnabled}}<a class="admin-button admin-button-primary" href="/admin/snippets/?edit=new">新建片段</a>{{end}}</div>
+  <div class="snippet-list">{{range .Snippets.Items}}<a href="/admin/snippets/?edit={{.ID}}"><span class="snippet-number">#{{.ID}}</span><div><h2>{{.Title}}</h2><p>正文 v{{.CurrentVersion}} · 管理 v{{.Version}}</p></div><span class="snippet-state">{{if eq .Visibility "shared"}}共享{{else if eq .Visibility "withdrawn"}}已撤回{{else}}私密{{end}}</span><span aria-hidden="true">→</span></a>{{else}}<div class="snippet-empty"><h2>还没有可用的共享片段</h2><p>适合重复使用的说明、介绍与固定内容。文章中的引用保留具体版本，更新前可以先查看影响。</p></div>{{end}}</div>
+  <nav class="snippet-actions" aria-label="片段分页">{{if .Snippets.PreviousURL}}<a class="admin-button" href="{{.Snippets.PreviousURL}}">上一页</a>{{end}}<span>{{.Snippets.Page}} / {{.Snippets.Pages}}</span>{{if .Snippets.NextURL}}<a class="admin-button" href="{{.Snippets.NextURL}}">下一页</a>{{end}}</nav>
+  {{end}}
+</section>
+{{end}}

@@ -1,0 +1,17 @@
+{{define "base"}}<!doctype html>
+<html lang="{{.Site.Locale}}" data-contract="{{.Contract}}">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{.PageTitle}}</title><meta name="description" content="{{.Description}}">
+{{if .IsPreview}}<meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">{{else if .Site.Robots}}<meta name="robots" content="{{.Site.Robots}}">{{end}}
+{{if and .Canonical (not .IsPreview)}}<link rel="canonical" href="{{.Canonical}}">{{end}}
+<link rel="icon" href="{{.Site.IconURL}}"><link rel="stylesheet" href="{{asset "css/starter.css"}}"><link rel="stylesheet" href="{{.ThemeCSSURL}}">
+{{range .Integrations.Verification}}<meta name="{{.Name}}" content="{{.Content}}">{{end}}
+{{if .Integrations.AnalyticsConfig}}<script src="{{.Integrations.ScriptURL}}" data-site-integrations="{{.Integrations.AnalyticsConfig}}" defer></script>{{end}}
+{{template "child-head" .}}
+</head><body class="{{.ThemeClass}}"><a class="skip" href="#main">{{t "accessibility.skip_content"}}</a>
+<header><a class="brand" href="/">{{.Site.Title}}</a><p>{{.Site.Tagline}}</p>
+<nav aria-label="{{t "navigation.primary"}}">{{with index .Navigation "primary"}}{{if .Configured}}{{range .Items}}<a href="{{.URL}}"{{if .Active}} aria-current="page"{{end}}>{{.Label}}{{if .Badge.Text}} <small{{if .Badge.HideOnMobile}} class="nav-badge-mobile-hidden"{{end}}>({{.Badge.Text}})</small>{{end}}</a>{{end}}{{else}}<a href="/">{{t "navigation.home"}}</a><a href="/explore/">{{t "navigation.explore"}}</a>{{end}}{{end}}<a href="/account/">{{t "navigation.account"}}</a></nav></header>
+<main id="main">{{template "content" .}}</main>
+{{template "footer" .}}
+{{template "child-body-end" .}}
+</body></html>{{end}}

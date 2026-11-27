@@ -1,0 +1,41 @@
+{{define "content"}}
+<link rel="stylesheet" href="/core-assets/css/chunnel-flash.css"><script src="/core-assets/js/chunnel-flash.js" defer></script>
+<div class="shell portal-page flash-page {{if not .Flash.Editing}}flash-admin-list-page{{end}}"><header class="flash-heading flash-list-heading"><div><h1>{{if .Flash.Admin}}快报管理{{else}}我的快报{{end}}</h1><p>{{if .Flash.Admin}}管理短资讯，核对来源，审核与发布。{{else}}草稿只有自己可见，提交后由编辑审核。{{end}}</p></div><div class="flash-heading-actions"><a href="/flash/">浏览快报</a>{{if not .Flash.Editing}}<a class="ui-button ui-button-primary" href="?edit=new">新建快报</a>{{end}}</div></header>
+  {{if .FeatureStatus}}{{template "admin-feature-status" .}}{{end}}
+{{if not .Flash.Authenticated}}<section class="portal-empty"><h2>登录后发布快报</h2><a class="ui-button ui-button-primary" href="/account/access/">登录或注册</a></section>{{else}}
+{{if .Flash.Editing}}
+<form class="flash-editor" data-flash-editor data-user-id="{{.Flash.UserID}}" data-endpoint="{{.Flash.Endpoint}}" data-csrf="{{.Flash.CSRF}}" data-admin="{{.Flash.Admin}}" data-id="{{.Flash.Current.ID}}" data-version="{{.Flash.Current.Version}}">
+{{with .Flash.Current.ReviewNote}}<p class="flash-review-note">退回说明：{{.}}</p>{{end}}
+<label>标题<input name="title" value="{{.Flash.Current.Title}}" required maxlength="200"></label><label>正文<textarea name="body" rows="9" required maxlength="5000">{{.Flash.Current.Body}}</textarea></label>
+<div class="flash-form-grid"><label>来源名称<input name="source_name" value="{{.Flash.Current.SourceName}}" maxlength="100"></label><label>来源网址<input name="source_url" type="url" value="{{.Flash.Current.SourceURL}}" maxlength="2048" placeholder="https://"></label></div>
+<label class="flash-check"><input type="checkbox" name="comments" {{if .Flash.Current.Comments}}checked{{end}}>允许评论</label>
+{{if .Flash.Admin}}<label class="flash-check"><input type="checkbox" name="important" {{if .Flash.Current.Important}}checked{{end}}>重要快报</label><input type="hidden" name="published_timezone" value="{{.Site.Timezone}}"><label><span>发布时间（<span data-flash-timezone-label>{{.Site.Timezone}}</span>）</span><input type="datetime-local" name="published_at" value="{{.Flash.Current.PublishedAt}}"></label><p class="flash-review-note" data-flash-timezone-review hidden>站点时区已变化，输入已保留。<button class="ui-button" type="button">按当前时区核对发布时间</button></p><label>退回说明<textarea name="review_note" maxlength="500" rows="2"></textarea></label>{{end}}
+<div class="flash-actions">{{if or .Flash.Admin (eq .Flash.Current.Status "draft") (eq .Flash.Current.ID 0)}}<button type="submit" class="ui-button" value="save">保存</button><button type="submit" class="ui-button ui-button-primary" value="submit">提交审核</button>{{end}}{{if eq .Flash.Current.Status "pending"}}<button type="submit" value="withdraw" formnovalidate>撤回投稿</button>{{end}}
+{{if .Flash.Admin}}<button type="submit" value="publish">审核发布</button>{{if eq .Flash.Current.Status "pending"}}<button type="submit" value="reject" formnovalidate>退回修改</button>{{end}}{{if gt .Flash.Current.ID 0}}<button type="submit" value="unpublish" formnovalidate>下架为草稿</button>{{if eq .Flash.Current.Status "trash"}}<button type="submit" value="restore" formnovalidate>恢复草稿</button>{{else}}<button type="submit" value="trash" formnovalidate>移入回收站</button>{{end}}{{end}}{{end}}<a href="{{if .Flash.Admin}}/admin/flash/{{else}}/flash/submit/{{end}}">返回列表</a></div><p role="status" aria-live="polite" data-flash-status></p><noscript>启用 JavaScript 后可保存和提交；已保存稿件不会丢失。</noscript></form>
+{{else}}
+<section class="flash-management" aria-label="快报稿件">
+<form class="flash-management-tools" method="get" role="search">
+  <div class="flash-search"><input type="search" name="q" maxlength="80" value="{{.Flash.Query}}" placeholder="搜索快报标题或正文" aria-label="搜索快报"><button class="ui-button" name="status" value="{{.Flash.Filter}}">搜索</button></div>
+  <div class="flash-tabs" aria-label="稿件状态">
+    <button name="status" value="" {{if not .Flash.Filter}}aria-current="true"{{end}}>全部</button>
+    <button name="status" value="draft" {{if eq .Flash.Filter "draft"}}aria-current="true"{{end}}>草稿</button>
+    <button name="status" value="pending" {{if eq .Flash.Filter "pending"}}aria-current="true"{{end}}>待审核</button>
+    <button name="status" value="publish" {{if eq .Flash.Filter "publish"}}aria-current="true"{{end}}>已发布</button>
+    <button name="status" value="future" {{if eq .Flash.Filter "future"}}aria-current="true"{{end}}>定时发布</button>
+    <button name="status" value="private" {{if eq .Flash.Filter "private"}}aria-current="true"{{end}}>私密</button>
+    <button name="status" value="trash" {{if eq .Flash.Filter "trash"}}aria-current="true"{{end}}>回收站</button>
+  </div>
+</form>
+<div class="flash-result-summary"><span>{{if or .Flash.Query .Flash.Filter}}筛选结果：{{end}}{{.Flash.Total}} 条稿件</span>{{if or .Flash.Query .Flash.Filter}}<a href="/admin/flash/">清除筛选</a>{{end}}</div>
+{{if .Flash.Items}}<div class="flash-management-columns" aria-hidden="true"><span>稿件</span><span>状态</span><span>来源与发布时间</span><span>操作</span></div>{{end}}
+<div class="flash-management-rows">{{range .Flash.Items}}
+  <article class="flash-management-row">
+    <div class="flash-manuscript"><h2><a href="?edit={{.ID}}">{{.Title}}</a>{{if .Important}}<span class="flash-important">重要</span>{{end}}</h2><p class="flash-manuscript-excerpt">{{.Body}}</p><span class="flash-muted">作者：{{if .Author}}{{.Author}}{{else}}未署名{{end}}</span>{{with .ReviewNote}}<p class="flash-review-note">退回说明：{{.}}</p>{{end}}</div>
+    <div><span class="flash-state flash-state-{{.Status}}">{{.StatusLabel}}</span></div>
+    <div class="flash-manuscript-origin"><span>{{if .SourceName}}{{.SourceName}}{{else if .SourceURL}}已附来源链接{{else}}未填写来源{{end}}</span>{{if and .Day (or (eq .Status "publish") (eq .Status "future"))}}<time>{{.Day}}<br>{{.Time}}{{if eq .Status "future"}} 计划发布{{end}}</time>{{else}}<span class="flash-muted">未公开发布</span>{{end}}</div>
+    <div class="flash-row-actions"><a class="ui-button" href="?edit={{.ID}}">编辑</a>{{if eq .Status "publish"}}<a href="{{.URL}}">查看快报</a>{{end}}</div>
+  </article>
+{{else}}<div class="flash-list-empty"><h2>{{if or .Flash.Query .Flash.Filter}}没有匹配的稿件{{else}}从第一条快报开始{{end}}</h2><p>{{if or .Flash.Query .Flash.Filter}}更换关键词或稿件状态，查看其他快报。{{else}}写下消息和来源，保存草稿或审核发布。{{end}}</p>{{if or .Flash.Query .Flash.Filter}}<a class="ui-button" href="/admin/flash/">清除筛选</a>{{else}}<a class="ui-button" href="?edit=new">撰写第一条快报</a>{{end}}</div>{{end}}</div>
+<nav class="flash-pagination" aria-label="稿件分页">{{if .Flash.PreviousURL}}<a href="{{.Flash.PreviousURL}}">上一页</a>{{end}}{{if .Flash.NextURL}}<a href="{{.Flash.NextURL}}">下一页</a>{{end}}</nav>
+</section>
+{{end}}{{end}}</div>{{end}}

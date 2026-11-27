@@ -1,0 +1,29 @@
+{{define "content"}}
+<section class="admin-page recognition-admin" data-recognition-admin data-csrf="{{.Admin.CSRFToken}}" data-read-only="{{.Admin.ReadOnly}}">
+  <header class="admin-page-heading"><div><h1>互动与身份</h1><p>让每一次支持被看见，让每一种贡献有自己的标记。</p></div><a class="admin-button admin-button-secondary" href="/admin/appearance/">文章与评论外观 {{template "icon" "chevron-right"}}</a></header>
+  {{if .FeatureStatus}}{{template "admin-feature-status" .}}{{end}}
+  <p data-recognition-status class="recognition-status" role="status" aria-live="polite">正在加载配置…</p><noscript><p>启用 JavaScript 后可配置打赏与社区身份。</p></noscript>
+  {{if .Admin.ReadOnly}}<p>当前为只读预览，登录管理员账号后可保存。</p>{{end}}
+  <nav class="recognition-admin-nav" aria-label="互动设置分区"><a href="#recognition-tips">文章打赏</a><a href="#recognition-designs">身份设计</a><a href="#recognition-review">授予与认证</a></nav>
+  <form data-recognition-settings hidden>
+    <section class="recognition-admin-card" id="recognition-tips"><header><div><span class="recognition-eyebrow">文章互动</span><h2>打赏与隐私</h2></div><a href="/admin/currency/">管理积分与余额 →</a></header>
+      <div class="recognition-fields"><label class="recognition-check"><input name="tips_enabled" type="checkbox">开启文章打赏</label><label class="recognition-check"><input name="hide_amounts" type="checkbox">统一隐藏打赏数值</label><label class="recognition-check"><input name="allow_hide_amount" type="checkbox">允许用户隐藏数值</label></div>
+      <p class="recognition-help">打赏金额隐私在此统一管理，旧主题的隐藏偏好会带入此表单，保存后以此处为准。统一隐藏开启时，用户无需再单独选择隐藏。</p>
+      <p class="recognition-help">「开启文章打赏」统一控制文章打赏入口与打赏功能，保存后生效，无需再到主题设置中开启。选择已开启转账的钱包，可同时使用积分与余额；打赏沿用钱包的余额与转账限额。评论标注仅关联被打赏的文章。</p><div data-recognition-currencies class="recognition-currency-list"></div>
+    </section>
+    <section class="recognition-admin-card" id="recognition-designs"><header><div><span class="recognition-eyebrow">社区个性</span><h2>头衔、勋章与认证</h2></div><button class="admin-button admin-button-secondary" type="button" data-recognition-add>新增设计</button></header>
+      <div class="recognition-fields"><label class="recognition-check"><input name="verification_enabled" type="checkbox">开放认证申请</label><label>同时展示勋章数<input name="max_medals" type="number" min="1" max="8" required></label></div><label>认证申请引导<input name="verification_help" maxlength="500"></label>
+      <p class="recognition-help">头衔、佩戴勋章和认证统一跟随此处的设计启用状态，评论区自动同步。等级与会员公开徽章在「成长与会员」管理。已授予的设计可停用，停用后公开页面立即隐藏；认证不授予管理权限。</p><div class="recognition-design-list" data-recognition-designs></div>
+    </section>
+    <div class="recognition-save"><span>外观预览随编辑更新</span><button class="admin-button admin-button-primary" type="submit" {{if .Admin.ReadOnly}}disabled{{end}}>保存互动设置</button><button class="admin-button admin-button-secondary" type="button" data-recognition-reload>重新载入</button></div>
+  </form>
+  <section class="recognition-admin-card" id="recognition-review"><header><div><span class="recognition-eyebrow">成员管理</span><h2>授予与认证审核</h2></div><span data-recognition-pending-count></span></header>
+    <div class="recognition-applicants" data-recognition-pending></div>
+    <form data-recognition-lookup class="recognition-lookup"><label>完整用户名<input name="username" type="search" required maxlength="80" placeholder="输入用户名查询成员"></label><button class="admin-button admin-button-secondary">查询成员</button></form>
+    <p class="recognition-status" data-recognition-account-status role="status"></p>
+    <div data-recognition-account hidden><div data-recognition-member-summary></div><div class="recognition-evidence" data-recognition-evidence></div>
+      <form data-recognition-manage><div class="recognition-fields"><label>操作<select name="action"><option value="grant">授予头衔 / 勋章 / 认证</option><option value="revoke">撤销已授予身份</option><option value="approve">通过认证申请</option><option value="reject">驳回认证申请</option></select></label><label>选择设计<select name="key" required></select></label><label>有效天数<input name="days" type="number" min="0" max="3650" value="0"><small>0 为长期有效</small></label></div><label>公开说明<input name="label" maxlength="30" placeholder="可选，例如：独立设计师"></label><label>操作 / 审核原因<input name="reason" required maxlength="200" placeholder="向成员说明本次处理原因"></label><button type="submit" class="admin-button admin-button-primary" {{if .Admin.ReadOnly}}disabled{{end}}>确认执行</button></form>
+    </div>
+  </section>
+</section>
+{{end}}

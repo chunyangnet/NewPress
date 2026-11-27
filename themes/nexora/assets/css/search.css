@@ -1,0 +1,8 @@
+.search-dialog{position:fixed;inset:0 0 auto;width:100%;max-width:none;max-height:100dvh;overflow:auto;margin:0;border:0;padding:0;background:#f4f6f8;color:#203449;box-shadow:0 15px 60px #0a172936}
+.search-dialog::backdrop{background:#13273d9c;backdrop-filter:blur(4px)}
+.search-dialog-inner{position:relative;max-width:900px;margin:auto;padding:75px 70px 68px}
+.search-close{position:absolute;right:18px;top:20px}
+.search-dialog h2{font-size:34px;margin-top:8px}
+.search-dialog form{display:flex;align-items:center;border-bottom:1px solid #6a798e;margin-top:34px;padding:6px 0}
+.search-dialog input{width:100%;min-width:0;border:0;background:transparent;padding:10px 0;font-size:17px;outline-offset:5px}
+.search-dialog input::placeholder{color:#8b96a6}

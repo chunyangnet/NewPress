@@ -1,0 +1,57 @@
+{{define "content"}}
+<section class="admin-page admin-revision-page">
+  <header class="admin-revision-heading">
+    <div><a href="{{.Revision.EditorURL}}">{{template "icon" "arrow-left"}}返回编辑器</a><span>内容 #{{.Revision.Post.ID}}</span><h1>比较历史版本</h1></div>
+    <div>{{if .Revision.IsPublic}}<a class="admin-button admin-button-quiet" href="{{.Revision.PublicURL}}" target="_blank" rel="noopener">{{template "icon" "eye"}}查看公开页</a>{{end}}<a class="admin-button admin-button-primary" href="{{.Revision.EditorURL}}#revision-history">{{template "icon" "refresh-cw"}}回到恢复操作</a></div>
+  </header>
+
+  <section class="admin-revision-hero">
+    <div class="admin-revision-hero-copy"><span>{{template "icon" "git-compare"}}</span><div><h2>v{{.Revision.From.Version}} <i>→</i> {{if .Revision.To.Current}}当前 v{{.Revision.To.Version}}{{else}}v{{.Revision.To.Version}}{{end}}</h2><p>最多比较每侧 64 KiB、280 个文本单元；超出部分会自动截断。</p></div></div>
+    <dl><div><dt>字段变化</dt><dd>{{.Revision.ChangedFields}}</dd></div><div><dt>替换单元</dt><dd>{{.Revision.ChangedUnits}}</dd></div><div><dt>新增 / 删除</dt><dd><b>+{{.Revision.AddedUnits}}</b> / <em>-{{.Revision.RemovedUnits}}</em></dd></div><div><dt>字数变化</dt><dd>{{.Revision.FromCharacters}} → {{.Revision.ToCharacters}}</dd></div></dl>
+  </section>
+
+  <form class="admin-revision-picker" action="/admin/content/{{.Revision.Post.ID}}/revisions/compare/" method="get">
+    <div><label for="revision-from">基准修订</label><select id="revision-from" name="from">{{range .Revision.Options}}{{if not .Current}}<option value="{{.Value}}" {{if .SelectedFrom}}selected{{end}}>{{.Label}}</option>{{end}}{{end}}</select></div>
+    <span>{{template "icon" "arrow-right"}}</span>
+    <div><label for="revision-to">目标修订</label><select id="revision-to" name="to">{{range .Revision.Options}}<option value="{{.Value}}" {{if .SelectedTo}}selected{{end}}>{{.Label}}</option>{{end}}</select></div>
+    <button class="admin-button admin-button-primary" type="submit">{{template "icon" "git-compare"}}重新比较</button>
+  </form>
+
+  <section class="admin-revision-sides" aria-label="比较版本">
+    <article><header><span>修改前</span><b>v{{.Revision.From.Version}}</b></header><h2>{{.Revision.From.Title}}</h2><p>{{.Revision.From.Actor}}</p><footer><span>{{template "icon" "clock-3"}}{{.Revision.From.CreatedLabel}}</span><em>{{.Revision.From.StatusLabel}}</em></footer></article>
+    <div>{{template "icon" "arrow-right"}}</div>
+    <article class="is-target"><header><span>{{if .Revision.To.Current}}当前{{else}}修改后{{end}}</span><b>v{{.Revision.To.Version}}</b></header><h2>{{.Revision.To.Title}}</h2><p>{{.Revision.To.Actor}}</p><footer><span>{{template "icon" "clock-3"}}{{.Revision.To.CreatedLabel}}</span><em>{{.Revision.To.StatusLabel}}</em></footer></article>
+  </section>
+
+  {{if .Revision.DiffTruncated}}<div class="admin-callout admin-callout-warning" role="status"><span>{{template "icon" "triangle-alert"}}</span><div><strong>正文差异已截断</strong><p>字符总数仍按完整正文统计；可视差异只处理每侧前 64 KiB / 280 个单元。</p></div></div>{{end}}
+
+  <section class="admin-revision-fields">
+    <header><div><h2>结构化字段摘要</h2></div><p>{{.Revision.ChangedFields}} / {{len .Revision.Fields}} 个字段发生变化</p></header>
+    <div>{{range .Revision.Fields}}<article class="{{if .Changed}}is-changed{{else}}is-same{{end}}"><header><span>{{.Label}}</span><em>{{if .Changed}}已变化{{else}}保持{{end}}</em></header><div><p><small>v{{$.Revision.From.Version}}</small><span>{{.From}}</span></p><i>{{template "icon" "arrow-right"}}</i><p><small>{{if $.Revision.To.Current}}当前{{else}}v{{$.Revision.To.Version}}{{end}}</small><span>{{.To}}</span></p></div></article>{{end}}</div>
+  </section>
+
+  {{if .Revision.BodyChanged}}
+  {{if .Revision.Blocks.Available}}
+  <section class="admin-revision-body admin-revision-blocks" data-revision-block-diff>
+    <header><div><h2>内容块差异</h2><p>按完整顶层内容比较；排序变化可能显示为删除和新增。</p></div><nav aria-label="内容块变化"><span class="is-added">+{{.Revision.Blocks.AddedCount}} 新增</span><span class="is-removed">−{{.Revision.Blocks.RemovedCount}} 删除</span><span class="is-changed">{{.Revision.Blocks.ReplacedCount}} 替换</span></nav></header>
+    <div class="admin-revision-block-rows">{{range .Revision.Blocks.Rows}}{{if eq .Kind "collapsed"}}<p class="admin-revision-block-context">折叠 {{.Collapsed}} 个未变化内容块</p>{{else}}<article class="is-{{.Kind}}"><span class="admin-revision-block-status">{{.Label}}</span><div>{{if .From.Number}}<header><b>修改前 · #{{.From.Number}}</b><span>{{.From.Label}}</span></header><p>{{.From.Preview}}</p><details><summary>查看完整源码</summary><pre>{{.From.Source}}</pre></details>{{else}}<p class="admin-revision-block-empty">此版本没有对应块</p>{{end}}</div><div>{{if .To.Number}}<header><b>修改后 · #{{.To.Number}}</b><span>{{.To.Label}}</span></header><p>{{.To.Preview}}</p><details><summary>查看完整源码</summary><pre>{{.To.Source}}</pre></details>{{else}}<p class="admin-revision-block-empty">此版本没有对应块</p>{{end}}</div></article>{{end}}{{end}}</div>
+    <footer><span>{{template "icon" "shield-check"}}比较包含属性与空白变化，源码只按文本显示</span><small>{{.Revision.Blocks.FromCount}} → {{.Revision.Blocks.ToCount}} 个内容块</small></footer>
+  </section>
+  {{else}}<div class="admin-callout" role="status" data-revision-block-unavailable><span>{{template "icon" "info"}}</span><div><strong>使用正文源码核对</strong><p>{{.Revision.Blocks.Unavailable}}</p></div></div>{{end}}
+  {{end}}
+
+  <details class="admin-revision-source" {{if not .Revision.Blocks.Available}}open{{end}}>
+  <summary>正文源码差异 · {{if .Revision.BodyChanged}}继续核对文本单元{{else}}正文完全一致{{end}}</summary>
+  <section class="admin-revision-body">
+    <header><div><h2>正文差异</h2></div><nav aria-label="差异图例"><span class="is-added">新增</span><span class="is-removed">删除</span><span class="is-changed">替换</span><span class="is-equal">上下文</span></nav></header>
+    {{if .Revision.BodyChanged}}
+    <div class="admin-revision-diff">
+      <header><div><span>−</span>v{{.Revision.From.Version}} · {{.Revision.FromCharacters}} 字符</div><div><span>+</span>{{if .Revision.To.Current}}当前 v{{.Revision.To.Version}}{{else}}v{{.Revision.To.Version}}{{end}} · {{.Revision.ToCharacters}} 字符</div></header>
+      <div class="admin-revision-diff-rows">{{range .Revision.Rows}}{{if eq .Kind "collapsed"}}<div class="admin-revision-diff-collapsed"><span></span><p>{{template "icon" "more-horizontal"}}折叠 {{.Collapsed}} 个未变化单元</p><span></span></div>{{else}}<article class="is-{{.Kind}}"><div><b>{{if .FromLine}}{{.FromLine}}{{else}}—{{end}}</b><pre>{{.FromText}}</pre></div><div><b>{{if .ToLine}}{{.ToLine}}{{else}}—{{end}}</b><pre>{{.ToText}}</pre></div></article>{{end}}{{end}}</div>
+    </div>
+    {{else}}<div class="admin-revision-body-same"><span>{{template "icon" "check-circle"}}</span><div><h3>正文完全一致</h3><p>两个版本可能只在状态、摘要、分类或其他结构化字段上不同。</p></div></div>{{end}}
+    <footer><span>{{template "icon" "shield-check"}}差异按纯文本显示，不执行修订中的 HTML</span><small>最多比较 280 × 280 个单元 · 连续未变化内容自动折叠</small></footer>
+  </section>
+  </details>
+</section>
+{{end}}

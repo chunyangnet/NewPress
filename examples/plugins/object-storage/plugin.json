@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "slug": "object-storage",
+  "name": "对象存储",
+  "version": "1.0.1",
+  "description": "连接 S3、Cloudflare R2、腾讯 COS、阿里 OSS、七牛和 Cloudreve，提供媒体同步、校验和云端加速。",
+  "category": "integration",
+  "tags": ["对象存储", "CDN", "媒体同步", "Cloudreve"],
+  "author": "NewPress 官方",
+  "license": "Apache-2.0",
+  "newpress": "builtin/object-storage-v1",
+  "runtime": "builtin/object-storage-v1",
+  "entry": "builtin.json",
+  "capabilities": ["settings.read", "settings.write", "http.outbound", "media.storage"]
+}

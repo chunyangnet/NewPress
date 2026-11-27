@@ -1,0 +1,10 @@
+{{define "content"}}
+<section class="error-page page-content">
+  <span class="error-number" aria-hidden="true">{{if eq .Kind "maintenance"}}{{template "icon" "tools"}}{{else}}404{{end}}</span>
+  <p class="eyebrow">{{if eq .Kind "maintenance"}}稍后再来{{else}}页面未找到{{end}}</p>
+  <h1>{{if eq .Kind "maintenance"}}网站维护中{{else}}{{index .Settings "not_found_title"}}{{end}}</h1>
+  <p>{{if eq .Kind "maintenance"}}{{if .Site.MaintenanceMessage}}{{.Site.MaintenanceMessage}}{{else}}网站正在维护，请稍后重新访问。{{end}}{{else}}{{index .Settings "not_found_description"}}{{end}}</p>
+  {{if and (ne .Kind "maintenance") (index .Settings "show_error_search")}}<form class="error-search" action="/explore/" method="get" role="search" aria-label="查找文档"><label class="sr-only" for="error-query">搜索文档</label><input id="error-query" name="q" type="search" maxlength="80" placeholder="输入文档关键词" required><button class="button button-primary" type="submit">搜索 {{template "icon" "search"}}</button></form>{{end}}
+  <div class="error-actions"><a class="button button-secondary" href="/">返回首页</a>{{if ne .Kind "maintenance"}}<a class="button button-primary" href="/explore/">浏览文档 {{template "icon" "arrow"}}</a>{{end}}</div>
+</section>
+{{end}}

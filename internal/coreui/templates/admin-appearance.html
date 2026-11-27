@@ -1,0 +1,96 @@
+{{define "content"}}
+<section class="admin-page admin-settings-page">
+  <header class="admin-page-heading admin-settings-heading">
+    <div>
+      <h1>外观与主题</h1>
+      
+    </div>
+    <div class="admin-heading-actions">{{if .Admin.LayoutAvailable}}<a class="admin-button admin-button-primary" href="/admin/appearance/layout/">{{template "icon" "panels-top-left"}}可视化布局</a>{{end}}<button class="admin-button admin-button-quiet" type="button" data-settings-preview-open>{{template "icon" "eye"}}预览</button><details class="admin-more"><summary class="admin-button admin-button-quiet">更多</summary>      <div class="admin-settings-tools">
+        
+        <div><a href="/admin/appearance/export/">{{template "icon" "arrow-down-to-line"}}导出 JSON</a><button type="button" data-import-open {{if .Admin.ReadOnly}}disabled{{end}}>{{template "icon" "upload-cloud"}}导入设置</button></div>
+        <button class="admin-reset-button" type="submit" form="theme-reset-form" {{if .Admin.ReadOnly}}disabled{{end}}>{{template "icon" "refresh-cw"}}恢复默认值</button>
+      </div>
+</details>
+      <a class="admin-button admin-button-quiet" href="/admin/appearance/updates/">{{template "icon" "file-archive"}}版本与更新</a>
+      <a class="admin-button admin-button-quiet" href="/admin/themes/">{{template "icon" "panels-top-left"}}主题市场</a>
+      <a class="admin-button admin-button-quiet" href="/" target="_blank" rel="noopener">{{template "icon" "eye"}}查看站点</a>
+    </div>
+  </header>
+  {{template "theme-settings-identity" .Admin.Settings}}
+  {{if .FeatureStatus}}{{template "admin-feature-status" .}}{{end}}
+
+  {{if .Admin.ReadOnly}}<div class="admin-callout admin-callout-warning"><span>{{template "icon" "triangle-alert"}}</span><div><strong>只读模式</strong><p>本机可以预览全部设置组件，但必须配置管理员密码哈希并登录后才能保存、导入或恢复默认值。</p></div></div>{{end}}
+
+<div class="admin-settings-layout" data-settings-layout>
+{{template "admin-settings-nav" (dict "Groups" .Admin.Settings.Groups "Prefix" "settings-")}}
+
+    <form id="theme-settings-form" class="admin-settings-form" action="/admin/appearance/" method="post" data-settings-form>
+      <input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}">
+      <input type="hidden" name="action" value="save"><input type="hidden" name="revision" value="{{.Admin.Settings.Revision}}">
+      <fieldset {{if .Admin.ReadOnly}}disabled{{end}}>
+        <div hidden>{{range .AppearanceFields}}{{if .Boolean}}<input type="checkbox" name="{{.Key}}" value="true" {{if .Checked}}checked{{end}}>{{else}}<input type="hidden" name="{{.Key}}" {{if eq .Key "home_custom_blocks"}}data-admin-value value="{{$.HomeCustomBlocks}}"{{else}}value="{{.Value}}"{{end}}>{{end}}{{end}}</div>
+        {{range .Admin.Settings.Groups}}
+        <section id="settings-{{.ID}}" class="admin-setting-section" aria-labelledby="settings-title-{{.ID}}" data-settings-section>
+          <header><span>{{template "icon" .Icon}}</span><div><h2 id="settings-title-{{.ID}}">{{.Title}}</h2>{{if eq .ID "home"}}<p>通过位置选项和上下按钮调整模块，展开模块配置编辑内容；也可切换到<a href="/admin/appearance/layout/">可视化布局</a>。两处共用同一份设置，保存后生效。</p>{{end}}</div></header>
+          <div class="admin-setting-fields">
+            {{range .Fields}}
+            {{$field := .}}
+            <article class="admin-setting-field {{if index $.Admin.FieldErrors .Key}}has-error{{end}}" data-setting-field="{{.Key}}">
+              <div class="admin-setting-copy"><label for="setting-{{.Key}}">{{.Title}}{{if .Required}}<em>*</em>{{end}}</label><p id="setting-help-{{.Key}}">{{.Description}}</p>{{template "theme-setting-source" .}}</div>
+              <div class="admin-setting-control">
+                {{if or (eq .Key "home_top_order") (eq .Key "home_main_order") (eq .Key "home_aside_order")}}{{range $.HomeEditor}}{{if eq (printf "home_%s_order" .Key) $field.Key}}{{template "home-module-editor" (dict "Region" . "Settings" $.HomeModuleSettings "Errors" $.Admin.FieldErrors)}}{{end}}{{end}}{{else}}{{template "admin-setting-input" (dict "Field" . "Prefix" "setting-" "MaxLength" 4096)}}{{end}}
+                {{with index $.Admin.FieldErrors .Key}}<small class="admin-field-error">{{template "icon" "circle-x"}}{{.}}</small>{{end}}
+              </div>
+            </article>
+            {{end}}
+          </div>
+        </section>
+        {{end}}
+      </fieldset>
+    </form>
+
+
+  </div>
+
+{{template "admin-savebar" (dict "FormID" "theme-settings-form" "Settings" true "ReadOnly" .Admin.ReadOnly "Notice" .Admin.Notice "Tone" .Admin.NoticeTone)}}
+
+<dialog class="admin-preview-dialog" data-settings-preview-dialog aria-label="主题预览"><button class="admin-button admin-preview-close" type="button" data-settings-preview-close aria-label="关闭预览">{{template "icon" "x"}}</button>    <aside class="admin-theme-preview" data-appearance-preview data-preview-url="/admin/appearance/preview/" data-preview-readonly="{{.Admin.ReadOnly}}">
+
+      <div class="admin-preview-heading"><div><h2>实时预览</h2></div><button type="button" class="appearance-preview-refresh" data-preview-refresh aria-label="刷新预览" title="刷新预览">{{template "icon" "refresh-cw"}}</button></div>
+
+      <div class="appearance-preview-toolbar">
+
+        <div class="appearance-preview-toggle" role="group" aria-label="预览页面"><button type="button" data-preview-page="home" aria-pressed="true">首页</button><button type="button" data-preview-page="article" aria-pressed="false">文章</button></div>
+
+        <div class="appearance-preview-toggle" role="group" aria-label="预览尺寸"><button type="button" data-preview-device="desktop" aria-pressed="true" aria-label="桌面预览" title="桌面预览">{{template "icon" "monitor"}}</button><button type="button" data-preview-device="mobile" aria-pressed="false" aria-label="手机预览" title="手机预览">{{template "icon" "smartphone"}}</button></div>
+
+      </div>
+
+      <div class="appearance-preview-context"><span data-preview-context>首页 · 品牌与视觉</span><span data-preview-viewport>1440 px</span></div>
+
+      <div class="appearance-preview-stage" data-preview-stage aria-busy="true">
+
+        <div class="appearance-preview-canvas" data-preview-canvas></div>
+
+        <div class="appearance-preview-empty" data-preview-empty><span>{{template "icon" "eye"}}</span><strong>正在载入站点</strong><p>使用当前主题和真实内容</p></div>
+
+      </div>
+
+      <p class="appearance-preview-status" data-preview-status role="status" aria-live="polite">正在加载预览…</p>
+
+      
+
+      <noscript></noscript>
+
+    </aside></dialog>
+  <form id="theme-reset-form" action="/admin/appearance/" method="post" data-confirm="{{if .Admin.Settings.Parent}}确定恢复当前子主题的合并默认值？父主题设置不会改变。{{else}}确定恢复全部当前主题默认设置？{{end}}当前设置可先导出备份。"><input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><input type="hidden" name="action" value="reset"><input type="hidden" name="revision" value="{{.Admin.Settings.Revision}}"></form>
+  <dialog class="admin-import-dialog" aria-labelledby="import-title" aria-describedby="import-description" data-import-dialog>
+    <button class="admin-dialog-backdrop" type="button" aria-label="关闭导入窗口" tabindex="-1" data-import-close></button>
+    <section>
+      <button class="admin-dialog-close" type="button" aria-label="关闭" autofocus data-import-close>{{template "icon" "x"}}</button>
+      <span class="admin-dialog-icon">{{template "icon" "upload-cloud"}}</span><h2 id="import-title">导入主题设置</h2><p id="import-description">选择 NewPress 导出的主题配置。校验通过后将替换当前主题（{{.Admin.Settings.Theme}}）的配置{{if .Admin.Settings.Parent}}，不会更改父主题设置{{end}}，建议先导出一份备份。</p>
+      <form action="/admin/appearance/" method="post" enctype="multipart/form-data"><input type="hidden" name="csrf_token" value="{{.Admin.CSRFToken}}"><input type="hidden" name="action" value="import"><input type="hidden" name="revision" value="{{.Admin.Settings.Revision}}"><label class="admin-file-drop">{{template "icon" "file-archive"}}<span><b>点击选择，或将文件拖到这里</b><small>JSON 格式 · 最大 256 KiB</small></span><input type="file" name="settings_file" accept="application/json,.json" required data-settings-file></label><output data-file-name aria-live="polite">尚未选择文件</output><button class="admin-button admin-button-primary" type="submit">{{template "icon" "upload-cloud"}}校验并导入</button></form>
+    </section>
+  </dialog>
+</section>
+{{end}}

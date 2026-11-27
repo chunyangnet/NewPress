@@ -1,0 +1,14 @@
+{
+  "schema": 2,
+  "slug": "starter-child",
+  "name": "Starter 子主题示例",
+  "version": "1.0.0",
+  "description": "继承 Starter，只定制页脚、追加样式和默认配色。",
+  "author": "NewPress Project",
+  "license": "Apache-2.0",
+  "engine": "go-template/v1",
+  "view": "public/v1",
+  "newpress": ">=0.1.0",
+  "parent": { "slug": "starter", "version": ">=1.0.0 <2.0.0" },
+  "settings_schema": "settings.schema.json"
+}

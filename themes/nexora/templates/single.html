@@ -1,0 +1,22 @@
+{{define "content"}}
+{{if eq .BodyClass "is-page is-announcements"}}{{template "announcement-page" .}}{{else}}
+<article class="article-shell{{if eq .Settings.article_width "narrow"}} article-width-narrow{{else if eq .Settings.article_width "wide"}} article-width-wide{{end}}{{if eq .Settings.article_title_align "left"}} article-align-left{{end}}">
+  {{if ne .Settings.show_breadcrumbs false}}<nav class="breadcrumbs" aria-label="当前位置"><a href="/">首页</a>{{if ne .Kind "page"}}<span aria-hidden="true">/</span><a href="/explore/">{{template "listing-title" .}}</a>{{end}}{{if .Post.Categories}}{{with index .Post.Categories 0}}<span aria-hidden="true">/</span><a href="{{.URL}}">{{.Name}}</a>{{end}}{{end}}<span aria-hidden="true">/</span><span aria-current="page">正文</span></nav>{{end}}
+  <header class="article-header">
+    {{if .IsPreview}}<p class="preview-notice" role="status">草稿预览 · 仅供审核{{if .Preview.EditorURL}} · <a href="{{.Preview.EditorURL}}">返回编辑器</a>{{end}}</p>{{end}}
+    <h1>{{.Post.Title}}</h1>
+    {{if and (ne .Kind "page") (ne .Settings.article_meta false)}}<div class="article-meta">{{if not .Post.PublishedAt.IsZero}}<time datetime="{{date .Post.PublishedAt}}">{{date .Post.PublishedAt}}</time>{{end}}{{if .Post.AuthorName}}{{if .Post.AuthorURL}}<a href="{{.Post.AuthorURL}}">{{.Post.AuthorName}}</a>{{else}}<span>{{.Post.AuthorName}}</span>{{end}}{{end}}{{if .Post.Category}}<span>{{.Post.Category}}</span>{{end}}{{if and .Settings.article_updated (not .Post.UpdatedAt.IsZero) (.Post.UpdatedAt.After .Post.PublishedAt)}}<span class="article-updated">更新于 <time datetime="{{date .Post.UpdatedAt}}">{{date .Post.UpdatedAt}}</time></span>{{end}}{{if ne .Settings.article_reading_time false}}<span data-reading-time hidden></span>{{end}}{{if and (not .IsPreview) (index .Modules "comments")}}<a href="#comments">{{.Comments.Total}} 条评论</a>{{end}}</div>{{end}}
+    {{if and .Post.Excerpt (ne .Settings.article_summary false)}}<p class="article-lead">{{.Post.Excerpt}}</p>{{end}}
+  </header>
+  {{if and .Post.CoverURL (ne .Settings.article_cover false)}}<img class="article-cover" src="{{.Post.CoverURL}}" alt="" width="1200" height="680" decoding="async">{{end}}
+  {{if ne .Settings.article_toc false}}<details class="reading-toc" data-reading-toc hidden data-toc-open="{{if eq .Settings.article_toc_open false}}false{{else}}true{{end}}"><summary>本页目录{{template "icon-chevron" .}}</summary><nav aria-label="本页目录"><ol data-reading-toc-list></ol></nav></details>{{end}}
+  <div class="prose" data-article-body>{{safeHTML .Post.ContentHTML}}</div>
+  {{if and (eq .Kind "page") .Settings.page_contact_cta (not .IsPreview)}}<aside class="enterprise-page-contact"><h2>{{.Settings.contact_title}}</h2><p>{{.Settings.contact_description}}</p>{{template "nexora-contact-action" (dict "Page" . "Class" "outline-button dark-button")}}</aside>{{end}}
+  {{if and .Post.Tags (ne .Settings.article_tags false)}}<nav class="article-tags" aria-label="文章标签">{{range .Post.Tags}}<a href="{{.URL}}"># {{.Name}}</a>{{end}}</nav>{{end}}
+  <div class="article-actions"><a class="text-link" href="{{if eq .Kind "page"}}/{{else}}/explore/{{end}}">{{if eq .Kind "page"}}返回首页{{else}}返回{{template "listing-title" .}}{{end}}{{template "icon-arrow" .}}</a>{{if and (not .IsPreview) (ne .Settings.article_copy_link false)}}<div class="article-share"><button class="text-link" type="button" data-copy-link hidden>复制文章链接</button><span class="form-help" role="status" data-copy-status></span></div>{{end}}</div>
+  {{if and (not .IsPreview) (index .Modules "series") (ne .Settings.article_series false)}}{{template "reading-series" .}}{{end}}
+  {{range .PluginFragments}}<aside class="plugin-fragment" aria-label="{{if .Title}}{{.Title}}{{else}}内容提示{{end}}">{{if .Title}}<h2>{{.Title}}</h2>{{end}}<p>{{.Text}}</p></aside>{{end}}
+</article>
+{{if and (not .IsPreview) (ne .Kind "page") (index .Modules "comments")}}{{template "comments" .}}{{end}}
+{{end}}
+{{end}}

@@ -1,0 +1,9 @@
+{{define "footer"}}
+<footer id="site-footer" class="site-footer">
+  <span>{{if .Integrations.FooterCopyright}}{{.Integrations.FooterCopyright}}{{else}}{{.Site.Title}}{{with index .Settings "footer_description"}} <i>·</i> {{.}}{{end}}{{end}}</span>
+  {{$footer := index .Navigation "footer"}}{{$rss := and .Site.PublicAPIEnabled (ne (index .Settings "show_footer_rss") false)}}{{$credit := and (not .Integrations.FooterHideCredit) (ne (index .Settings "show_theme_credit") false)}}
+  {{if and (ne (index .Settings "show_footer_navigation") false) (or (and $footer.Configured $footer.Items) (and (not $footer.Configured) (or $rss $credit)))}}<nav aria-label="页脚导航">{{if $footer.Configured}}{{range $footer.Items}}{{template "docs-footer-item" .}}{{end}}{{else}}{{if $rss}}<a href="/feed.xml">RSS 订阅</a>{{end}}{{if $credit}}<a href="/">DocsHub</a>{{end}}{{end}}</nav>{{end}}
+  {{if .Integrations.FooterHTML}}<div class="footer-custom">{{safeHTML .Integrations.FooterHTML}}</div>{{end}}
+  {{if or .Integrations.ICPNumber .Integrations.PoliceNumber}}<div class="footer-registration" aria-label="网站备案信息">{{if .Integrations.ICPNumber}}<a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">{{.Integrations.ICPNumber}}</a>{{end}}{{if .Integrations.PoliceNumber}}<a href="{{.Integrations.PoliceURL}}" target="_blank" rel="noopener noreferrer"><img class="police-record-badge" src="{{asset "images/police-record-badge.png"}}" alt="" width="20" height="20" loading="lazy" aria-hidden="true">{{.Integrations.PoliceNumber}}</a>{{end}}</div>{{end}}
+{{if and (not .IsPreview) (index .Settings "cookie_consent_enabled")}}<button type="button" class="footer-cookie-button" data-cookie-open>Cookie 设置</button>{{end}}</footer>
+{{end}}

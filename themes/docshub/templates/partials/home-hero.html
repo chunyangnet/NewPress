@@ -1,0 +1,14 @@
+{{define "home-hero"}}
+<section class="hero{{if not (index .Settings "show_hero_artwork")}} hero-without-art{{end}}{{if index .Settings "hero_eyebrow"}} hero-with-eyebrow{{end}}" aria-labelledby="hero-title">
+  {{if index .Settings "show_hero_artwork"}}<img class="hero-art" src="{{asset "images/glass-ribbon.webp"}}" alt="" width="1036" height="481" fetchpriority="high">{{end}}
+  <div class="hero-copy">
+    {{with index .Settings "hero_eyebrow"}}<p class="hero-eyebrow">{{.}}</p>{{end}}
+    <h1 id="hero-title"><span>{{if index .Settings "hero_title"}}{{index .Settings "hero_title"}}{{else}}{{.Site.Title}}{{end}}</span>{{with index .Settings "hero_title_second"}}<span>{{.}}</span>{{end}}</h1>
+    {{if or (index .Settings "hero_description") (index .Settings "hero_description_second")}}<p class="hero-description">{{index .Settings "hero_description"}}{{if and (index .Settings "hero_description") (index .Settings "hero_description_second")}}<br>{{end}}{{index .Settings "hero_description_second"}}</p>{{end}}
+    <div class="hero-actions">
+      <a class="button button-primary" href="{{if index .Settings "start_link"}}{{index .Settings "start_link"}}{{else}}/explore/{{end}}">{{index .Settings "hero_primary_label"}} {{template "icon" "arrow"}}</a>
+      {{if index .Settings "show_hero_secondary"}}<a class="button button-secondary" href="{{if or (not (index .Settings "demo_link")) (and (or .Settings.use_home_layout (not (index .Settings "show_tutorials"))) (eq (index .Settings "demo_link") "/#tutorials"))}}/explore/{{else}}{{index .Settings "demo_link"}}{{end}}">{{template "icon" "book"}}{{index .Settings "hero_secondary_label"}}</a>{{end}}
+    </div>
+  </div>
+</section>
+{{end}}

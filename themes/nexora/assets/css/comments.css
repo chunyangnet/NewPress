@@ -1,0 +1,22 @@
+.comments-section{max-width:900px;margin:0 auto 80px;padding:35px 0 0;border-top:1px solid var(--line)}
+.comments-section h2{font-size:25px}
+.comments-section h2 small{font-family:var(--sans);font-size:14px;color:var(--muted)}
+.comment{border-bottom:1px solid var(--line);padding:22px 0;font-size:14px}
+.comment header{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:8px}
+.comment strong{font-weight:500}
+.comment time,.staff-label{font-size:11px;color:#718096}
+.comment .comment{margin:15px 0 0 20px;padding:15px 0 0 20px;border-bottom:0;border-left:1px solid #cbd5df}
+.comment-form{margin-top:30px}
+.comment-form label{display:grid;gap:8px;font-size:13px;color:#617087}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:20px}
+.comment-form input,.comment-form textarea{width:100%;min-width:0;border:1px solid #cbd4df;background:#fbfcfd;padding:10px 13px;border-radius:0;resize:vertical;color:#263c53}
+.form-help{font-size:12px;color:var(--muted);margin:18px 0}
+.form-help a,.comments-section>p a{text-decoration:underline}
+.form-notice{padding:14px 18px;margin-block:20px;background:#e4ebf1;color:#3f5a73}
+.form-error{margin-top:10px;color:#a33434;font-size:13px}
+.verification-box{margin:20px 0;padding:20px;border:1px solid var(--line);background:#fff;color:var(--ink);min-width:0;scroll-margin-block:30px}
+.verification-heading{display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;font-size:14px;margin-bottom:15px}
+.verification-heading span,.verification-status{font-size:12px;color:var(--muted)}
+.verification-status{margin-top:12px}.verification-status[data-error=true]{color:#a33434}
+.verification-local{display:flex;align-items:end;gap:12px;flex-wrap:wrap}.verification-local img{width:190px;height:60px}.verification-local label{min-width:125px;flex:1}.verification-widget{min-width:0}
+.verification-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:15px}.verification-button{display:inline-flex;align-items:center;justify-content:center;border:1px solid #aebdcd;border-radius:22px;padding:8px 18px;font-size:12px;min-height:36px}.verification-confirm{background:#304b68;color:#fff;border-color:#304b68}

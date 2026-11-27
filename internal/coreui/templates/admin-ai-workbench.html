@@ -1,0 +1,55 @@
+{{define "content"}}
+<div class="ai-workbench" data-ai-workbench data-user-id="{{.Admin.Principal.UserID}}" data-read-only="{{.Admin.ReadOnly}}">
+  <header class="aiw-heading">
+    <h1>AI 工作台</h1>
+    <div class="aiw-actions"><a class="admin-button admin-button-quiet" href="/admin/analytics/ai/">{{template "icon" "activity"}}消耗统计</a>{{if .Admin.Can "settings:manage"}}<a class="admin-button admin-button-quiet" href="/admin/settings/#site-settings-ai">{{template "icon" "sliders-horizontal"}}接口设置</a>{{end}}</div>
+  </header>
+  {{if .FeatureStatus}}{{template "admin-feature-status" .}}{{end}}
+  <nav class="aiw-nav" aria-label="AI 工作台视图"><button type="button" data-aiw-view="workspace" aria-pressed="true">任务</button><button type="button" data-aiw-view="history" aria-pressed="false">我的报告 <span data-aiw-history-count>0</span></button><span class="aiw-nav-meta" data-aiw-meta>加载中…</span></nav>
+  <div class="aiw-notice" data-aiw-notice role="status" hidden></div>
+  {{if .Admin.ReadOnly}}<p class="aiw-notice">当前为只读预览。登录具有系统查看权限的账号后，可生成和管理报告。</p>{{end}}
+  <section data-aiw-workspace>
+    <div class="aiw-section-heading"><h2>选择任务</h2></div>
+    <div class="aiw-tasks" data-aiw-tasks aria-label="选择分析任务"><p>正在加载任务…</p></div>
+    <div class="aiw-desk">
+      <form class="aiw-config" data-aiw-form>
+        <h2 data-aiw-task-title>运维诊断</h2>
+        <p class="aiw-scope" data-aiw-scope>正在读取任务范围…</p>
+        <fieldset data-aiw-inputs>
+          <label data-aiw-period-label>统计范围<select data-aiw-days><option value="1">今天 · 日报</option><option value="7" selected>近 7 天 · 周报</option><option value="30">近 30 天 · 月报</option><option value="90">近 90 天</option></select></label>
+          <p class="aiw-field-hint" data-aiw-period-hint>按站点时区统计，包含今天。</p>
+          <div data-aiw-summary-inputs hidden>
+            <label>材料来源<select data-aiw-source><option value="material">粘贴材料</option><option value="article">选择公开文章</option></select></label>
+            <div data-aiw-material-area><label>待总结材料<textarea data-aiw-material rows="7" maxlength="10000" placeholder="粘贴文章、会议记录或笔记…"></textarea></label><span class="aiw-field-hint">最多 10000 字，只用于本次总结。</span></div>
+            <div data-aiw-article-area hidden><label>搜索公开文章<input type="search" data-aiw-article-search maxlength="100" placeholder="输入标题关键词"></label><button type="button" class="admin-button admin-button-quiet" data-aiw-search-articles>查找文章</button><label>选择文章<select data-aiw-article data-select-ui="searchable"><option value="">请先搜索或加载文章</option></select></label><p class="aiw-field-hint" data-aiw-article-hint>只读取所选文章，正文超过 10000 字时截取并标注。</p></div>
+          </div>
+          <label>补充要求 <span>选填</span><textarea data-aiw-focus rows="3" maxlength="1000" placeholder="例如：检查加载速度"></textarea></label>
+          <div class="aiw-field-row"><label>AI 接口<select data-aiw-provider aria-label="AI 接口"><option value="">正在加载…</option></select></label><label>模型<select data-aiw-model aria-label="模型"><option value="">—</option></select></label></div>
+        </fieldset>
+        <p class="aiw-field-hint" data-aiw-provider-hint>使用已配置的文本模型。</p>
+        <div class="aiw-run-actions"><button type="submit" class="admin-button admin-button-quiet" data-aiw-preview disabled>{{template "icon" "scan-search"}}预览数据</button><button type="button" class="admin-button admin-button-primary" data-aiw-generate disabled>{{template "icon" "sparkles"}}生成报告</button><button type="button" class="admin-button admin-button-quiet" data-aiw-stop hidden>停止生成</button></div>
+        <p class="aiw-consent" data-aiw-consent>预览不调用模型；生成时将资料发送至所选 AI 接口。</p>
+      </form>
+      <section class="aiw-result" aria-labelledby="aiw-result-title" aria-busy="false" data-aiw-result>
+        <header class="aiw-result-heading"><h2 id="aiw-result-title" data-aiw-result-title>分析报告</h2><span class="aiw-result-badge" data-aiw-badge>未开始</span></header>
+        <div class="aiw-result-toolbar"><div class="aiw-result-tabs" aria-label="报告内容"><button type="button" data-aiw-tab="report" aria-pressed="true">分析报告</button><button type="button" data-aiw-tab="sources" aria-pressed="false">本次资料</button></div><div class="aiw-actions"><button type="button" data-aiw-copy class="aiw-tool" disabled>复制</button><button type="button" data-aiw-export class="aiw-tool" disabled>导出 .md</button></div></div>
+        <div class="aiw-result-meta" data-aiw-result-meta>完整报告自动保存。</div>
+        <div data-aiw-report-panel>
+          <div class="aiw-empty" data-aiw-empty><div class="aiw-empty-symbol">{{template "icon" "newspaper"}}</div><h3>暂无报告</h3><p>预览数据后生成报告。</p></div>
+          <article class="aiw-document" data-aiw-document hidden></article>
+        </div>
+        <div class="aiw-sources" data-aiw-sources-panel hidden><p data-aiw-source-description>预览后可核对本次数据。</p><div class="aiw-checks" data-aiw-checks></div><details data-aiw-source-details hidden><summary>查看发送给模型的完整资料</summary><pre data-aiw-source-json></pre></details><p class="aiw-field-hint">分析基于本次快照，操作前请核对。</p></div>
+        <footer class="aiw-result-footer"><span data-aiw-status role="status">待预览</span><span data-aiw-usage></span></footer>
+      </section>
+    </div>
+  </section>
+  <section class="aiw-history" data-aiw-history hidden>
+    <header class="aiw-section-heading"><div><h2>我的报告</h2><p>仅当前账号可见 · 保留 90 天 · 全站最多保存最近 100 份</p></div><button type="button" class="admin-button admin-button-quiet" data-aiw-history-refresh>刷新</button></header>
+    <div class="aiw-history-filters"><label>查找报告<input type="search" data-aiw-history-search placeholder="按任务、模型或日期查找" aria-label="查找报告"></label><label>任务类型<select data-aiw-history-task><option value="">全部任务</option></select></label></div>
+    <div class="aiw-history-list" data-aiw-history-list></div>
+    <p class="aiw-history-empty" data-aiw-history-empty>暂无已保存的报告。</p>
+  </section>
+  <dialog class="aiw-delete-dialog" data-aiw-delete-dialog aria-labelledby="aiw-delete-title"><h2 id="aiw-delete-title">删除报告？</h2><p>报告及资料快照将被删除。需要保留请先导出。</p><div class="aiw-actions"><button type="button" class="admin-button admin-button-quiet" data-aiw-delete-cancel>取消</button><button type="button" class="admin-button admin-button-primary" data-aiw-delete-confirm>删除报告</button></div></dialog>
+  <noscript><p>请启用 JavaScript 使用 AI 工作台。</p></noscript>
+</div>
+{{end}}

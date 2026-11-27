@@ -1,0 +1,201 @@
+.series-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+.series-card {
+  padding: 26px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.series-card > .icon {
+  color: var(--accent);
+  width: 30px;
+  height: 30px;
+}
+.series-card h2 {
+  font-size: 18px;
+  margin: 16px 0 8px;
+}
+.series-card p {
+  font-size: 13px;
+  color: var(--muted);
+}
+.series-card span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--accent);
+  font-size: 12px;
+  margin-top: 20px;
+}
+.chapter-list {
+  list-style: none;
+  counter-reset: chapters;
+  margin: 0;
+  padding: 0;
+}
+.chapter-list li {
+  counter-increment: chapters;
+  border-bottom: 1px solid var(--line);
+}
+.chapter-list li > a {
+  display: block;
+  position: relative;
+  padding: 22px 35px 22px 45px;
+}
+.chapter-list li > a:before {
+  content: counter(chapters, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 26px;
+  font-size: 13px;
+  color: var(--accent);
+}
+.chapter-list h2 {
+  font-size: 17px;
+  font-weight: 500;
+}
+.chapter-list p {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 5px;
+}
+.chapter-list .icon {
+  position: absolute;
+  right: 0;
+  top: 30px;
+  color: var(--accent);
+}
+.series-overview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 22px;
+}
+.series-overview p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.series-overview p > .icon {
+  color: var(--accent);
+}
+.series-overview p > strong {
+  color: var(--ink);
+  font-size: 17px;
+}
+.series-overview p > span {
+  font-size: 11px;
+  margin-left: 12px;
+}
+.series-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 610px;
+  padding: 7px 7px 7px 17px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  margin: 0 0 26px;
+  background: var(--panel);
+}
+.series-search > .icon {
+  color: var(--muted);
+  width: 18px;
+  height: 18px;
+}
+.series-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  padding: 8px 0;
+  background: transparent;
+  font-size: 13px;
+}
+.series-search .button {
+  flex-shrink: 0;
+}
+.series-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--page);
+  transition:
+    background .2s,
+    border-color .2s,
+    transform .2s;
+}
+.series-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent-line);
+  background: var(--panel);
+}
+.series-card .series-card-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: var(--accent-soft);
+  margin: 0 0 18px;
+}
+.series-card-icon .icon {
+  width: 23px;
+  height: 23px;
+}
+.series-card > small {
+  color: var(--subtle);
+  font-size: 11px;
+}
+.series-card h2 {
+  margin-top: 6px;
+}
+.series-card > p {
+  flex: 1;
+}
+.series-card > span:last-child {
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+.chapter-list li > a {
+  border-radius: 10px;
+  transition: background .15s;
+  padding: 22px 45px 22px 58px;
+}
+.chapter-list li > a:hover {
+  background: var(--panel);
+}
+.chapter-list li > a:before {
+  left: 16px;
+  top: 24px;
+}
+.chapter-list .icon {
+  right: 16px;
+}
+.chapter-list small {
+  display: block;
+  color: var(--subtle);
+  font-size: 11px;
+  margin-top: 8px;
+}
+.chapter-list .empty-state {
+  counter-increment: none;
+}
+.chapter-list .empty-state > a {
+  padding: 8px;
+}
+.chapter-list .empty-state > a:before {
+  display: none;
+}
+.chapter-list .empty-state > a > .icon {
+  position: static;
+}

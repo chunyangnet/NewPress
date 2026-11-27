@@ -1,0 +1,6 @@
+{{define "home-about"}}
+<section data-home-section="about" class="about-section" id="about" aria-labelledby="about-title">
+  <div class="about-copy"><h2 id="about-title">{{.Settings.about_title}}</h2><p class="about-description"><span>{{.Site.Title}} </span>{{.Settings.about_description}}</p>{{template "nexora-action-link" (dict "Page" . "URL" .Settings.about_link "Label" .Settings.about_button "Class" "outline-button dark-button")}}</div>
+  <div class="about-watermark" aria-hidden="true"><svg class="brand-mark" viewBox="0 0 290 212" fill="currentColor"><path d="M0 0h48l194 170V0h48v212h-48L50 43v169H0z"/></svg></div><img class="about-image" src="{{assetOr .Settings.about_image "images/about-architecture.webp"}}" width="558" height="241" alt="{{if not .Settings.about_image}}仰望现代玻璃建筑与穿过楼宇的阳光{{end}}" loading="lazy">
+</section>
+{{end}}

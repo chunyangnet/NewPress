@@ -1,0 +1,30 @@
+{{define "content"}}
+<section class="admin-page progression-admin" data-progression-admin data-user-id="{{.Admin.Principal.UserID}}" data-csrf="{{.Admin.CSRFToken}}" data-read-only="{{.Admin.ReadOnly}}">
+  <header class="admin-page-heading progression-heading"><div><h1>成长与会员</h1></div><a class="admin-button admin-button-secondary" href="/account/?view=progression" target="_blank" rel="noopener">查看我的成长 {{template "icon" "external-link"}}</a></header>
+  {{if .FeatureStatus}}{{template "admin-feature-status" .}}{{end}}
+  <p class="progression-status" data-progression-admin-status role="status" aria-live="polite">正在加载设置…</p>
+  <noscript><p>此页需要启用 JavaScript，以编辑等级与会员方案。</p></noscript>
+  {{if .Admin.ReadOnly}}<p class="progression-status">当前为只读模式，登录管理员账号后可修改规则。</p>{{end}}
+  <div class="progression-admin-layout admin-settings-layout"><aside class="progression-outline admin-settings-nav"><button class="admin-button admin-button-quiet" type="button" data-progression-reload>重新载入</button><span data-progression-version hidden></span><nav aria-label="成长设置模块">{{template "admin-settings-nav-item" (dict "Target" "progression-experience" "Title" "经验规则")}}{{template "admin-settings-nav-item" (dict "Target" "progression-levels" "Title" "等级门槛")}}{{template "admin-settings-nav-item" (dict "Target" "progression-check-in" "Title" "签到经验")}}{{template "admin-settings-nav-item" (dict "Target" "progression-registration" "Title" "注册经验")}}{{template "admin-settings-nav-item" (dict "Target" "progression-publication" "Title" "发文经验")}}{{template "admin-settings-nav-item" (dict "Target" "progression-membership" "Title" "会员方案")}}{{template "admin-settings-nav-item" (dict "Target" "progression-preview" "Title" "数值检查")}}{{template "admin-settings-nav-item" (dict "Target" "progression-accounts" "Title" "账号与记录")}}</nav></aside>
+  <div class="progression-admin-main"><div data-progression-modules></div>{{template "admin-savebar" (dict "FormID" "progression-settings" "Manual" true "ReadOnly" .Admin.ReadOnly "Label" "保存全部设置")}}
+  <section class="progression-module progression-preview" id="progression-preview" data-settings-section><header><div><h2>数值检查</h2></div><span class="progression-module-state" data-progression-preview-state>尚未检查</span></header>
+    <div class="progression-preview-actions"><button type="button" class="admin-button admin-button-secondary" data-progression-check {{if .Admin.ReadOnly}}disabled{{end}}>检查当前数值</button><p class="progression-help">基于当前编辑内容检查，旧响应不会覆盖新的编辑。</p></div>
+    <p class="progression-status" data-progression-preview-status role="status" aria-live="polite" hidden></p>
+    <div class="progression-preview-result" data-progression-preview-result hidden></div>
+  </section>
+  <section class="progression-module" id="progression-accounts" data-settings-section><header><div><h2>账号与成长记录</h2></div></header>
+    <form class="progression-lookup" data-progression-lookup><label>完整用户名<input type="search" name="username" maxlength="80" required autocomplete="off" placeholder="例如：reader" {{if .Admin.ReadOnly}}disabled{{end}}></label><button class="admin-button admin-button-secondary" {{if .Admin.ReadOnly}}disabled{{end}}>查询账号</button></form>
+    <p class="progression-status" data-progression-operation-status role="status" aria-live="polite" hidden></p>
+    <div class="progression-pending" data-progression-admin-pending hidden><h3>上笔操作尚未确认</h3><p data-progression-admin-pending-description></p><button type="button" class="admin-button admin-button-primary" data-progression-admin-retry>重试原操作</button></div>
+    <div data-progression-account hidden><div class="progression-summary" data-progression-account-summary></div>
+      <div class="progression-admin-operations">
+        <form data-progression-adjust><fieldset><legend>调整经验</legend><label>经验变动<input name="delta" type="text" inputmode="text" maxlength="20" pattern="-?[0-9]+" required placeholder="正数增加，负数扣减"></label><label>调整原因<textarea name="reason" maxlength="200" rows="2" required></textarea></label><p class="progression-help progression-operation-preview" data-progression-adjust-preview aria-live="polite">输入变动后显示调整结果预检。</p><button class="admin-button admin-button-secondary">核对经验调整</button></fieldset></form>
+        <form data-progression-member><fieldset><legend>管理会员</legend><div class="progression-fields"><label>操作<select name="action"><option value="grant">开通会员</option><option value="renew">续期会员</option><option value="revoke">撤销会员</option></select></label><label>会员方案<select name="plan"></select></label><label>天数<input type="number" name="days" min="1" max="3650" step="1" value="30" required></label></div><label>操作原因<textarea name="reason" maxlength="200" rows="2" required></textarea></label><p class="progression-help progression-operation-preview" data-progression-member-preview aria-live="polite">选择操作后显示预计到期时间。</p><button class="admin-button admin-button-secondary">核对会员操作</button></fieldset></form>
+      </div>
+      <div class="progression-pending" data-progression-order-tools hidden><h3>该账号有待确认的购买</h3><p data-progression-order-description></p><label>处理原因<input data-progression-order-reason maxlength="200" placeholder="填写订单处理原因"></label><div class="progression-actions"><button type="button" class="admin-button admin-button-secondary" data-progression-order-recover>从支付回执恢复</button><button type="button" class="admin-button admin-button-secondary" data-progression-order-cancel>取消待付款订单</button></div></div>
+      <div data-progression-admin-history></div><button type="button" class="admin-button admin-button-secondary" data-progression-admin-more hidden>更早的记录</button>
+    </div>
+  </section></div></div>
+  <dialog class="progression-dialog" data-progression-admin-dialog aria-labelledby="progression-admin-confirm-title"><form method="dialog"><h3 id="progression-admin-confirm-title">核对账号操作</h3><p data-progression-admin-confirm></p><div class="progression-actions"><button class="admin-button admin-button-secondary" value="cancel">返回修改</button><button class="admin-button admin-button-primary" type="button" data-progression-admin-confirm-submit>确认执行</button></div></form></dialog>
+</section>
+{{end}}

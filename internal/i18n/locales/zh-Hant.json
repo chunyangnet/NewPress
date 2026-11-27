@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "locale": "zh-Hant",
+  "messages": {
+    "accessibility.skip_content": "跳至正文",
+    "navigation.primary": "主導覽",
+    "navigation.home": "首頁",
+    "navigation.explore": "探索",
+    "navigation.account": "帳號",
+    "site.legal": "網站備案資訊",
+    "common.back_home": "返回首頁",
+    "search.label": "搜尋內容",
+    "search.submit": "搜尋",
+    "pagination.label": "文章分頁",
+    "pagination.previous": "上一頁",
+    "pagination.next": "下一頁",
+    "comments.label": "留言",
+    "comments.title": "留言（{count}）",
+    "comments.author": "稱呼",
+    "comments.email": "電子郵件",
+    "comments.submit": "送出留言",
+    "comments.login": "登入後留言"
+  }
+}

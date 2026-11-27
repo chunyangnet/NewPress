@@ -1,0 +1,30 @@
+{{define "base"}}<!doctype html>
+<html lang="{{.Site.Locale}}" data-site-timezone="{{.Site.Timezone}}" data-theme="nexora" data-contract="{{.Contract}}">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{.PageTitle}}</title><meta name="description" content="{{.Description}}">
+  <meta name="theme-color" content="#26394e">
+  {{if .IsPreview}}<meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">{{else if .Site.Robots}}<meta name="robots" content="{{.Site.Robots}}">{{end}}
+  {{if and .Canonical (not .IsPreview)}}<link rel="canonical" href="{{.Canonical}}"><meta property="og:url" content="{{.Canonical}}">{{end}}
+  <meta property="og:title" content="{{.PageTitle}}"><meta property="og:description" content="{{.Description}}"><meta property="og:site_name" content="{{.Site.Title}}">
+  {{if .Site.SocialImageURL}}<meta property="og:image" content="{{.Site.SocialImageURL}}">{{end}}
+  <link rel="icon" href="{{.Site.IconURL}}">
+  <link rel="preload" href="{{asset "fonts/nexora-serif.woff2"}}" as="font" type="font/woff2" crossorigin>
+   {{template "service-styles" .}}
+   <link rel="stylesheet" href="{{asset "css/nexora.css"}}">
+  {{if .ThemeCSSURL}}<link rel="stylesheet" href="{{.ThemeCSSURL}}">{{end}}
+   {{template "service-scripts" .}}
+   <script src="{{asset "js/nexora.js"}}" defer></script>
+  {{if and .VerificationEnabled (not .IsPreview) (eq .Kind "single")}}<script src="{{asset "js/nexora-verification.js"}}" defer></script>{{end}}
+  {{range .Integrations.Verification}}<meta name="{{.Name}}" content="{{.Content}}">{{end}}
+  {{if .Integrations.AnalyticsConfig}}<script src="{{.Integrations.ScriptURL}}" data-site-integrations="{{.Integrations.AnalyticsConfig}}" defer></script>{{end}}
+</head>
+<body class="nexora portal-site kind-{{.Kind}} {{.ThemeClass}}" data-page-kind="{{.Kind}}">
+   {{template "icon-sprite" .}}
+  <a class="skip-link" href="#main">跳到正文</a>
+  {{template "header" .}}
+  <main id="main" tabindex="-1">{{template "content" .}}</main>
+  {{template "footer" .}}
+  {{template "search-dialog" .}}
+  {{if not .IsPreview}}{{template "interaction-hub" .}}{{end}}
+</body></html>{{end}}

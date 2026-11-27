@@ -1,0 +1,30 @@
+{{define "admin-media-picker"}}
+  {{if (.Admin.Can "media:read")}}
+  <dialog class="admin-editor-media-dialog" data-editor-media-dialog data-csrf="{{.Admin.CSRFToken}}" data-can-upload="{{.Admin.CanWrite "media:write"}}" aria-labelledby="editor-media-title">
+    <header><h2 id="editor-media-title">插入图片</h2><button class="admin-media-icon-button" type="button" data-editor-media-close aria-label="关闭图片选择器" title="关闭">{{template "icon" "x"}}</button></header>
+    <div class="admin-editor-media-toolbar">
+      <form data-editor-media-search role="search"><input type="search" name="q" maxlength="100" aria-label="搜索图片" placeholder="搜索图片名称" autocomplete="off"><button class="admin-media-icon-button" type="submit" aria-label="搜索图片" title="搜索">{{template "icon" "search"}}</button></form>
+      {{if (.Admin.CanWrite "media:write")}}<button class="admin-button admin-button-primary" type="button" data-editor-media-upload disabled>{{template "icon" "upload-cloud"}}上传图片</button><input type="file" accept="image/jpeg,image/png,image/gif,image/webp" data-editor-media-file hidden>{{end}}
+    </div>
+    <div class="admin-editor-media-status"><p role="status" data-editor-media-status></p><progress aria-label="图片上传进度" data-editor-media-progress hidden></progress></div>
+    <div class="admin-editor-media-error" role="alert" data-editor-media-error hidden><span></span><a class="admin-button admin-button-quiet" data-editor-media-recover target="_blank" rel="noopener" hidden>{{template "icon" "rotate-ccw"}}查看回收站资源</a><button class="admin-button admin-button-quiet" type="button" data-editor-media-retry>{{template "icon" "refresh-cw"}}重试</button></div>
+    <div class="admin-editor-media-workspace">
+      <section class="admin-editor-media-library" aria-label="图片库" data-editor-media-library>
+        <div class="admin-editor-image-grid" role="group" aria-label="可用图片" data-editor-media-grid></div>
+        <footer><span data-editor-media-total>0 张图片</span><nav aria-label="图片分页"><button class="admin-media-icon-button" type="button" data-editor-media-previous aria-label="上一页图片" title="上一页" disabled>{{template "icon" "chevron-left"}}</button><span data-editor-media-page>1 / 1</span><button class="admin-media-icon-button" type="button" data-editor-media-next aria-label="下一页图片" title="下一页" disabled>{{template "icon" "chevron-right"}}</button></nav></footer>
+      </section>
+      <form class="admin-editor-image-details" data-editor-media-insert>
+        <div class="admin-editor-image-preview" data-editor-media-preview>{{template "icon" "image"}}</div>
+        <div class="admin-editor-image-description"><b data-editor-media-name>尚未选择图片</b><small data-editor-media-dimensions></small></div>
+        <fieldset data-editor-image-fields disabled>
+          <label>替代文本<input type="text" name="alt_text" maxlength="250" required></label>
+          {{template "admin-switch" (dict "Name" "decorative" "Label" "装饰图片")}}
+          <label>图片说明<textarea name="caption" rows="3" maxlength="2000"></textarea></label>
+          <label>显示宽度（像素）<input type="number" name="width" min="1" max="32768" step="1" required inputmode="numeric"></label>
+        </fieldset>
+        <footer><button class="admin-button admin-button-primary" type="submit" data-editor-media-apply disabled>{{template "icon" "check"}}<span>插入正文</span></button></footer>
+      </form>
+    </div>
+  </dialog>
+  {{end}}
+{{end}}

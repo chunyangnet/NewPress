@@ -1,0 +1,32 @@
+{{define "portal-navigation"}}
+<nav class="portal-navigation" aria-label="内容导航">
+  <a href="/explore/" {{if eq .BodyClass "is-explore"}}aria-current="page"{{end}}>{{template "icon" "compass"}}发现内容</a>
+  {{if .ModuleEnabled "series"}}<a href="/series/" {{if eq .BodyClass "is-series"}}aria-current="page"{{end}}>{{template "icon" "library"}}专题与系列</a>{{end}}
+  {{if and (.ModuleEnabled "community") (index .ThemeValues "community_nav")}}<a href="/community/" {{if or (eq .BodyClass "is-circles") (eq .BodyClass "is-community")}}aria-current="page"{{end}}>{{template "icon" "orbit"}}圈子广场</a>{{end}}
+  <a href="/account/">{{template "icon" "bookmark"}}个人中心</a>
+</nav>
+{{end}}
+
+{{define "portal-post-cards"}}
+{{range .Posts}}
+<article class="portal-post-card explore-result-card" data-post-id="{{.ID}}">
+  <a class="portal-post-cover explore-result-cover" href="{{$.ContentURL .}}" aria-label="阅读《{{.Title}}》"><img {{with index $.Images .CoverURL}}src="{{.CardSrc}}" srcset="{{.CardSrcSet}}" sizes="(max-width: 540px) 45vw, (max-width: 980px) 40vw, 420px"{{else}}src="{{assetOr .CoverURL "images/editorial/cover-notes-small.webp"}}"{{end}} alt="" width="768" height="512" loading="lazy">{{template "article-badge-cover" .ArticleBadge}}</a>
+  <div class="portal-post-body explore-result-body">
+    <div class="portal-post-terms">{{range $index, $term := .Categories}}{{if lt $index 2}}<a href="/categories/{{.Slug}}/">{{.Name}}</a>{{end}}{{end}}</div>
+    <h3><a href="{{$.ContentURL .}}">{{.Title}}</a></h3><p class="portal-post-excerpt">{{.Excerpt}}</p>
+    <footer class="portal-post-meta"><a class="author-inline" href="{{.AuthorURL}}">{{template "icon" "user-round"}}<b>{{.AuthorName}}</b></a><time>{{dateIn .PublishedAt $.Site.Timezone}}</time><span class="portal-post-actions"><a href="{{$.ContentURL .}}#comments" aria-label="讨论《{{.Title}}》">{{template "icon" "message-circle"}}</a><button type="button" data-favorite aria-pressed="false" aria-label="收藏文章">{{template "icon" "heart"}}</button></span></footer>
+  </div>
+</article>
+{{else}}
+<div class="portal-empty"><span class="portal-empty-icon">{{template "icon" "library"}}</span><h3>还没有匹配内容</h3><p>换个关键词，或回到发现页继续浏览。</p><a class="ui-button ui-button-secondary" href="/explore/">浏览全部内容</a></div>
+{{end}}
+{{end}}
+
+{{define "portal-reading-sidebar"}}
+<aside class="portal-sidebar">
+  <section class="portal-panel portal-reading-note"><img src="{{asset "images/editorial/cover-community-small.webp"}}" alt="" width="768" height="512" loading="lazy"><div><h2>收藏与个人中心</h2><p>在个人中心查看收藏文章、关注动态和评论记录。</p><a class="ui-button ui-button-primary" href="/account/">个人中心 {{template "icon" "arrow-right"}}</a></div></section>
+  {{if .Featured}}<section class="portal-panel portal-widget"><header class="portal-widget-heading"><h2>最近发布</h2>{{template "icon" "newspaper"}}</header><ol class="portal-ranking">{{range $index, $post := .Featured}}<li><span>{{printf "%02d" (add $index 1)}}</span><div><a href="{{$.ContentURL .}}">{{.Title}}</a><small>{{dateIn .PublishedAt $.Site.Timezone}}</small></div></li>{{end}}</ol></section>{{end}}
+  {{if .Categories}}<section class="portal-panel portal-widget"><header class="portal-widget-heading"><h2>按分类浏览</h2>{{template "icon" "layout-grid"}}</header><div class="portal-term-links">{{range .Categories}}<a href="/categories/{{.Slug}}/"><span>{{.Name}}</span><small>{{.Count}}</small>{{template "icon" "chevron-right"}}</a>{{end}}</div></section>{{end}}
+  {{if .Site.PublicAPIEnabled}}<section class="portal-panel portal-widget"><header class="portal-widget-heading"><h2>订阅更新</h2>{{template "icon" "rss"}}</header><p>用 RSS 阅读器或邮件，接收站点的新内容。</p><a class="ui-button ui-button-secondary" href="/feed.xml">{{template "icon" "rss"}}订阅 RSS </a></section>{{end}}
+</aside>
+{{end}}

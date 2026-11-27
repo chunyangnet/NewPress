@@ -1,0 +1,10 @@
+/* Shared suffix. Page bundles belong between shared and workflows. */
+/* Navigation includes shared icon controls and global sizing rules. */
+@import "./admin/navigation.css";
+@import "./admin/bulk-content.css";
+@import "./admin/editor-revisions.css";
+@import "./admin/comments.css";
+@import "./admin/tools.css";
+@import "./admin/comment-history.css";
+@import "./admin/accessibility.css";
+@import "./admin/feature-status.css";

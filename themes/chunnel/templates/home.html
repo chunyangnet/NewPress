@@ -1,0 +1,26 @@
+{{define "content"}}
+<div class="home-portal shell" data-home-portal>
+  <header class="home-masthead">
+    <div class="home-masthead-copy"><span class="home-edition">站点首页</span><h1>最新内容</h1></div>
+    <div class="home-date"><b>{{.Home.DateLabel}}</b><span>{{.Home.Weekday}}</span></div>
+  </header>
+  <div class="home-top">
+    {{if index .ThemeValues "market_module"}}<section class="home-module home-coupon-module" aria-label="商城优惠券" data-home-coupons hidden><header class="home-section-head"><div><h2><a href="/shop/">优惠券 {{template "icon" "arrow-right"}}</a></h2></div><a class="home-coupon-more" href="/shop/">去商城</a></header><div class="home-coupon-grid" data-home-coupon-list></div></section>{{end}}
+    {{range .Home.Top}}<section id="home-{{.Key}}" class="home-module home-device-{{.Visibility}}" data-home-module="{{.Key}}" aria-label="{{.Title}}">
+      {{template "home-block" (dict "Key" .Key "Custom" .Custom "Page" $)}}
+    </section>{{end}}
+  </div>
+  <div class="home-layout {{if and .Home.HasDesktopSidebar .Home.HasDesktopMain}}has-home-sidebar{{end}}">
+    <div class="home-content">
+      {{range .Home.Main}}<section class="home-module home-device-{{.Visibility}}" data-home-module="{{.Key}}" aria-label="{{.Title}}">
+        {{template "home-block" (dict "Key" .Key "Custom" .Custom "Page" $)}}
+      </section>{{end}}
+    </div>
+    {{if .Home.Aside}}<aside class="home-sidebar" aria-label="社区小工具">
+      {{range .Home.Aside}}<section class="home-module home-device-{{.Visibility}}" data-home-module="{{.Key}}" aria-label="{{.Title}}">
+        {{template "home-block" (dict "Key" .Key "Custom" .Custom "Page" $)}}
+      </section>{{end}}
+    </aside>{{end}}
+  </div>
+</div>
+{{end}}
