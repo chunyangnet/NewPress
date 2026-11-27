@@ -81,7 +81,11 @@ jobs:
           go mod download all
           python3 scripts/collect_licenses.py --check
           python3 -m unittest discover -s scripts -p 'test_build_extension.py' -v
-          test -z "$(gofmt -l .)"
+          unformatted="$(gofmt -l .)"
+          if test -n "$unformatted"; then
+            printf 'Run gofmt on the following files:\n%s\n' "$unformatted"
+            exit 1
+          fi
       - name: Test
         env:
           NEWPRESS_TEST_DATABASE_URL: postgres://newpress:newpress-ci-password@127.0.0.1:5432/newpress_test?sslmode=disable

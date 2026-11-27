@@ -17,15 +17,15 @@ import (
 )
 
 type document struct {
-	Schema               int       `json:"schema"`
-	Kind                 string    `json:"kind"`
-	Revision             string    `json:"revision"`
-	UpdatedAt            time.Time `json:"updated_at"`
-	Settings             Settings  `json:"settings"`
-	discussionPresent    bool
+	Schema                  int       `json:"schema"`
+	Kind                    string    `json:"kind"`
+	Revision                string    `json:"revision"`
+	UpdatedAt               time.Time `json:"updated_at"`
+	Settings                Settings  `json:"settings"`
+	discussionPresent       bool
 	discussionPolicyPresent bool
-	writingSafetyPresent bool
-	integrationsPresent  bool
+	writingSafetyPresent    bool
+	integrationsPresent     bool
 }
 
 func loadDocument(path string) (Settings, time.Time, error) {
