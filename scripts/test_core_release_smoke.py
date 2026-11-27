@@ -71,7 +71,9 @@ def postgres(pg_bin, temp, env):
     pg('initdb', '-D', cluster, '-U', 'releaseqa', '-A', 'scram-sha-256', '--pwfile', pwfile, '--encoding=UTF8', '--no-locale', stdout=subprocess.DEVNULL)
     log = temp / 'pg.log'
     try:
-        pg('pg_ctl', '-D', cluster, '-l', log, '-o', f'-h 127.0.0.1 -p {number}', '-w', 'start', stdout=subprocess.DEVNULL)
+        # Every smoke-test client uses TCP. Avoid the distro's system socket
+        # directory, which is not writable by the unprivileged CI runner.
+        pg('pg_ctl', '-D', cluster, '-l', log, '-o', f'-h 127.0.0.1 -p {number} -c unix_socket_directories=', '-w', 'start', stdout=subprocess.DEVNULL)
     except subprocess.CalledProcessError:
         details = log.read_text(encoding='utf-8', errors='replace') if log.exists() else '<PostgreSQL did not create a server log>'
         print('PostgreSQL failed to start; server log follows:', file=sys.stderr)

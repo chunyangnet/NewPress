@@ -41,6 +41,20 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
+      - name: Allow sandboxed Chromium on AppArmor hosts
+        # Only the CI-installed browsers need permission to create the user
+        # namespaces used by Chromium's sandbox on recent Ubuntu runners.
+        run: |
+          if test -f /proc/sys/kernel/apparmor_restrict_unprivileged_userns; then
+            sudo tee /etc/apparmor.d/newpress-playwright > /dev/null <<EOF
+          abi <abi/4.0>,
+          include <tunables/global>
+          profile newpress-playwright $HOME/.cache/ms-playwright/**/chrome{,-headless-shell} flags=(unconfined) {
+            userns,
+          }
+          EOF
+            sudo apparmor_parser -r /etc/apparmor.d/newpress-playwright
+          fi
       - name: Frontend regression tests
         run: |
           npm run typecheck:frontend
