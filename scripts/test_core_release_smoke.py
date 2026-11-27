@@ -69,7 +69,14 @@ def postgres(pg_bin, temp, env):
     def pg(name, *options, **kwargs):
         return run([str(pg_bin / name), *map(str, options)], **args, **kwargs)
     pg('initdb', '-D', cluster, '-U', 'releaseqa', '-A', 'scram-sha-256', '--pwfile', pwfile, '--encoding=UTF8', '--no-locale', stdout=subprocess.DEVNULL)
-    pg('pg_ctl', '-D', cluster, '-l', temp / 'pg.log', '-o', f'-h 127.0.0.1 -p {number}', '-w', 'start', stdout=subprocess.DEVNULL)
+    log = temp / 'pg.log'
+    try:
+        pg('pg_ctl', '-D', cluster, '-l', log, '-o', f'-h 127.0.0.1 -p {number}', '-w', 'start', stdout=subprocess.DEVNULL)
+    except subprocess.CalledProcessError:
+        details = log.read_text(encoding='utf-8', errors='replace') if log.exists() else '<PostgreSQL did not create a server log>'
+        print('PostgreSQL failed to start; server log follows:', file=sys.stderr)
+        print(details[-12000:], file=sys.stderr)
+        raise
     try:
         pg('createdb', 'ota'); pg('createdb', 'recovery')
         yield f'postgres://releaseqa:{password}@127.0.0.1:{number}/ota?sslmode=disable', pg

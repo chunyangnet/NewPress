@@ -37,16 +37,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install frontend dependencies
+        run: npm ci --ignore-scripts
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
       - name: Frontend regression tests
         run: |
-          npm ci --ignore-scripts
           npm run typecheck:frontend
           npm run check:frontend
           npm run test:frontend
       - name: Screenshot network isolation
-        run: |
-          npx playwright install --with-deps chromium
-          npm run test:security:browser
+        run: npm run test:security:browser
       - name: Independent theme contracts
         run: |
           npm run build:theme -- --source themes/starter --check
