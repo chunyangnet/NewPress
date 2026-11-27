@@ -1,6 +1,7 @@
 *.sh text eol=lf
 *.py text eol=lf
 *.service text eol=lf
+*.sql text eol=lf
 
 # Private documentation must never enter source archives.
 /docs export-ignore

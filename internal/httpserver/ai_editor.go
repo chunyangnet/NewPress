@@ -266,9 +266,17 @@ func (s *Server) adminAIGenerate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	go func() {
-		defer s.aiState.release(principal.UserID)
 		observed := s.observeAI(input.ProviderID, connection, "text", principal.UserID)
-		defer observed.finish(ctx)
+		var terminal aiStreamEvent
+		defer func() {
+			observed.finish(ctx)
+			s.aiState.release(principal.UserID)
+			// A terminal event permits the client to start the next generation.
+			// Publish it only after accounting and slot cleanup have finished.
+			if terminal.Name != "" {
+				_ = send(terminal)
+			}
+		}()
 		result, err := s.aiClient.StreamWithCallbacks(ctx, connection, messages, input.MaxTokens, aieditor.StreamCallbacks{
 			Delta: func(text string) error {
 				if text != "" {
@@ -298,13 +306,13 @@ func (s *Server) adminAIGenerate(w http.ResponseWriter, r *http.Request) {
 			} else if errors.Is(err, context.DeadlineExceeded) {
 				message = "生成超过 6 分钟，已停止并保留收到的正文"
 			}
-			_ = send(aiStreamEvent{"error", map[string]any{"message": message, "usage": result.Usage}})
+			terminal = aiStreamEvent{"error", map[string]any{"message": message, "usage": result.Usage}}
 			return
 		}
 		doc, err := aieditor.ParseDocument(result.Text, categories)
 		if err != nil {
 			observed.record.ErrorCode = "invalid_document"
-			_ = send(aiStreamEvent{"error", map[string]any{"message": err.Error(), "usage": result.Usage}})
+			terminal = aiStreamEvent{"error", map[string]any{"message": err.Error(), "usage": result.Usage}}
 			return
 		}
 		complete := result.FinishReason == "stop" || result.FinishReason == ""
@@ -312,7 +320,7 @@ func (s *Server) adminAIGenerate(w http.ResponseWriter, r *http.Request) {
 		if !complete {
 			doc.Warnings = append(doc.Warnings, "模型提前结束，正文可能未完成；可编辑后填入，或增加 Token 上限再生成。")
 		}
-		_ = send(aiStreamEvent{"done", map[string]any{"document": doc, "complete": complete, "usage": result.Usage}})
+		terminal = aiStreamEvent{"done", map[string]any{"document": doc, "complete": complete, "usage": result.Usage}}
 	}()
 	heartbeat := time.NewTicker(10 * time.Second)
 	defer heartbeat.Stop()

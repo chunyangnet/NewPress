@@ -10,6 +10,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     services:
       postgres:
         image: postgres:18.4-bookworm@sha256:882236b897e39051d2368c5ccc6cda944904723506b2dfc97f2a8f5bc9afa382
@@ -89,7 +90,9 @@ jobs:
       - name: Test
         env:
           NEWPRESS_TEST_DATABASE_URL: postgres://newpress:newpress-ci-password@127.0.0.1:5432/newpress_test?sslmode=disable
-        run: go test -race -coverprofile=coverage.out ./...
+        # Full database and HTTP suites include large capacity fixtures and
+        # password hashing; race instrumentation exceeds Go's default 10m.
+        run: go test -race -timeout=40m -coverprofile=coverage.out ./...
       - name: Vet
         run: go vet ./...
       - name: Public request URL fuzz smoke
