@@ -82,7 +82,17 @@ class Terminal:
 
     @property
     def width(self):
-        return max(16, min(self._width or shutil.get_terminal_size((80, 24)).columns, 96))
+        if self._width is not None:
+            return max(16, min(self._width, 96))
+        # Web terminals can report zero/tiny sizes before their PTY is resized.
+        # Prefer the output device over a stale COLUMNS environment variable.
+        try:
+            columns = os.get_terminal_size(self.stream.fileno()).columns
+        except (AttributeError, OSError, ValueError):
+            columns = 0
+        if columns < 32:
+            columns = shutil.get_terminal_size((80, 24)).columns
+        return min(columns, 96) if columns >= 32 else 80
 
     @property
     def colored(self):
