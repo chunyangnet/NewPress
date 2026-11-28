@@ -90,7 +90,7 @@ curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time
 bash newpress-install.sh --source github --dir ./newpress
 ```
 
-**Gitee（インストーラーとコアのソースの取得に GitHub を使用しません）：**
+**Gitee（インストーラー、配布物、ビルド済みイメージを Gitee から取得）：**
 
 ```bash
 curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time 60 -o newpress-install.sh https://gitee.com/chunyangnet_0/newpress/raw/v1.0.0-beta.2/install.sh && \

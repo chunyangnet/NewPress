@@ -709,9 +709,13 @@ def wait_http(url, timeout):
     while time.monotonic() < deadline:
         try:
             with opener.open(url, timeout=4) as response:
-                if response.status == 200 and response.headers.get("X-NewPress-Instance"):
-                    return
-        except (OSError, urllib.error.URLError):
+                if response.status == 200:
+                    if urllib.parse.urlsplit(url).path == "/health/live":
+                        if json.loads(response.read(4096)).get("status") == "ok":
+                            return
+                    elif response.headers.get("X-NewPress-Instance"):
+                        return
+        except (OSError, ValueError, AttributeError, urllib.error.URLError):
             pass
         time.sleep(2)
     raise DeployError(f"健康检查在 {timeout} 秒内未通过。数据和密钥已保留，请查看服务日志后重试。")
@@ -835,8 +839,10 @@ def install_docker(distro, plan):
             log(f"安装 Docker：系统依赖使用 {system['name']}，Docker 使用 {docker['name']}。")
             if run(["apt-get", *options, "update"], check=False).returncode:
                 continue
-            if run(["apt-get", *options, "install", "-y", "ca-certificates", "docker-ce", "docker-ce-cli", "containerd.io",
-                    "docker-buildx-plugin", "docker-compose-plugin"], check=False).returncode:
+            packages = ["ca-certificates", "docker-ce", "docker-ce-cli", "containerd.io", "docker-compose-plugin"]
+            if not (ROOT / "deployment.json").is_file():
+                packages.append("docker-buildx-plugin")
+            if run(["apt-get", *options, "install", "-y", *packages], check=False).returncode:
                 continue
             atomic_write(Path("/etc/apt/sources.list.d/newpress-docker.sources"), docker_config, 0o644)
             installed = True

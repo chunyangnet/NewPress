@@ -1,9 +1,11 @@
 import argparse
+import contextlib
 import hashlib
 import json
 from pathlib import Path
 import subprocess
 import tempfile
+import types
 import unittest
 from unittest.mock import patch
 import zipfile
@@ -53,6 +55,21 @@ class PrebuiltDeploymentTests(unittest.TestCase):
         values['NEWPRESS_EDGE_DYNAMIC_RANGE'] = '172.30.30.0/25'
         with self.assertRaises(deploy.DeployError):
             deploy.choose_subnet(values)
+
+    def test_public_liveness_accepts_its_json_without_a_private_instance_header(self):
+        response = types.SimpleNamespace(status=200, headers={}, read=lambda n: b'{"status":"ok"}')
+        opener = types.SimpleNamespace(open=lambda *a, **k: contextlib.nullcontext(response))
+        with patch.object(deploy.urllib.request, 'build_opener', return_value=opener):
+            deploy.wait_http('http://127.0.0.1:18080/health/live', 1)
+
+    def test_html_or_missing_ready_instance_cannot_pass_deployment_health(self):
+        for path, body in [('/health/live', b'<html>not our service</html>'), ('/health/ready', b'{"status":"ok"}')]:
+            response = types.SimpleNamespace(status=200, headers={}, read=lambda n: body)
+            opener = types.SimpleNamespace(open=lambda *a, **k: contextlib.nullcontext(response))
+            with patch.object(deploy.urllib.request, 'build_opener', return_value=opener), \
+                    patch.object(deploy.time, 'monotonic', side_effect=[0, 0, 3]), patch.object(deploy.time, 'sleep'):
+                with self.assertRaises(deploy.DeployError):
+                    deploy.wait_http('http://127.0.0.1:18080' + path, 2)
 
     def images(self, *, corrupt=False):
         data = b'prebuilt image archive'
