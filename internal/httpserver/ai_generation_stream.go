@@ -52,14 +52,22 @@ func (s *Server) streamAIGeneration(w http.ResponseWriter, r *http.Request, prin
 		defer close(events)
 		// Hold the slot until the producer has actually stopped, even when
 		// the HTTP handler already returned after cancellation or a write error.
-		defer s.aiState.release(principal.UserID)
+		var terminal aiStreamEvent
+		var send func(aiStreamEvent) error
+		defer func() {
+			s.aiState.release(principal.UserID)
+			// Accounting finishes before the slot is released and completion is sent.
+			if terminal.Name != "" {
+				_ = send(terminal)
+			}
+		}()
 		if err := guard.check(true); err != nil {
 			return
 		}
 		observed := s.observeAI(provider, connection, "text", principal.UserID)
 		defer observed.finish(ctx)
 		firstEvent := true
-		send := func(event aiStreamEvent) error {
+		send = func(event aiStreamEvent) error {
 			if err := guard.check(firstEvent || event.Name == "done" || event.Name == "error"); err != nil {
 				return err
 			}
@@ -102,23 +110,20 @@ func (s *Server) streamAIGeneration(w http.ResponseWriter, r *http.Request, prin
 			} else if errors.Is(err, context.DeadlineExceeded) {
 				message = "生成超过 6 分钟，已停止并保留收到的正文"
 			}
-			_ = send(aiStreamEvent{"error", map[string]any{"message": message, "usage": result.Usage}})
+			terminal = aiStreamEvent{"error", map[string]any{"message": message, "usage": result.Usage}}
 			return
 		}
 		doc, err := aieditor.ParseDocument(result.Text, categories)
 		if err != nil {
 			observed.record.ErrorCode = "invalid_document"
-			_ = send(aiStreamEvent{"error", map[string]any{"message": err.Error(), "usage": result.Usage}})
+			terminal = aiStreamEvent{"error", map[string]any{"message": err.Error(), "usage": result.Usage}}
 			return
 		}
 		complete := result.FinishReason == "stop" || result.FinishReason == ""
 		if !complete {
 			doc.Warnings = append(doc.Warnings, "模型提前结束，正文可能未完成；可编辑后填入，或增加 Token 上限再生成。")
 		}
-		if err := send(aiStreamEvent{"done", map[string]any{"document": doc, "complete": complete, "usage": result.Usage}}); err != nil {
-			observed.fail(err)
-			return
-		}
+		terminal = aiStreamEvent{"done", map[string]any{"document": doc, "complete": complete, "usage": result.Usage}}
 		observed.record.Status, observed.record.ErrorCode = "success", ""
 	}()
 	heartbeat := time.NewTicker(10 * time.Second)
