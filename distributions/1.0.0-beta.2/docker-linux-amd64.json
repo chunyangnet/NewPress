@@ -1,0 +1,58 @@
+{
+  "images": {
+    "app": {
+      "tag": "newpress:1.0.0-beta.2-amd64",
+      "id": "sha256:54203a96bfe3d193f23d824cf0f64fd46670274c5b9ce38a273b4044d1b54b8d"
+    },
+    "postgres": {
+      "tag": "newpress-postgres:1.0.0-beta.2-amd64",
+      "id": "sha256:cd6cdc750a125ea6f0e57f0a6029f6e9763a1117068753450d40eec5c8f60a87"
+    },
+    "proxy": {
+      "tag": "newpress-nginx:1.0.0-beta.2-amd64",
+      "id": "sha256:998f5ba8d63290ae26001a39739d335ba1675c888bf2c60323ef31e03d5e2ce9"
+    },
+    "redis": {
+      "tag": "newpress-redis:1.0.0-beta.2-amd64",
+      "id": "sha256:65b288fbd6b25b3dec564ac0c9a8dea9a8a0e2b4fd25ad71d882e0c5fd67d701"
+    }
+  },
+  "sha256": "bc1b548c4f135d72571d97d58a9f3f9e4c11a83d1af19a18302d1df8f2fb53aa",
+  "size": 262168740,
+  "parts": [
+    {
+      "name": "newpress-1.0.0-beta.2-linux-amd64-docker.tar.gz.part000",
+      "size": 50331648,
+      "sha256": "03e4d564fe93a0ec51716a1012f8a5075b3c8e1a5d4899bdeedc05c48ec07bef"
+    },
+    {
+      "name": "newpress-1.0.0-beta.2-linux-amd64-docker.tar.gz.part001",
+      "size": 50331648,
+      "sha256": "aec9537e413a4c1a9c6e71f2445492d903fd7d6a6bd22567920376d1429c6520"
+    },
+    {
+      "name": "newpress-1.0.0-beta.2-linux-amd64-docker.tar.gz.part002",
+      "size": 50331648,
+      "sha256": "c1257b18d41b7e9cf87e36d2fbc0e7624338ef96a7efb866528a8aeeb274edb4"
+    },
+    {
+      "name": "newpress-1.0.0-beta.2-linux-amd64-docker.tar.gz.part003",
+      "size": 50331648,
+      "sha256": "98d653970066abc469317a70ee309a73b1494ea3b1332769ec198ecda3b2b925"
+    },
+    {
+      "name": "newpress-1.0.0-beta.2-linux-amd64-docker.tar.gz.part004",
+      "size": 50331648,
+      "sha256": "13f2378b15c8bfca205c258fb3ee5db8ea48e2b6b17d1f3610189be9a13f7e25"
+    },
+    {
+      "name": "newpress-1.0.0-beta.2-linux-amd64-docker.tar.gz.part005",
+      "size": 10510500,
+      "sha256": "4119f202e779c7a4efd02c5bbbf17c05cb786c693a5391024fb0063505502100"
+    }
+  ],
+  "mirrors": {
+    "github": "https://github.com/chunyangnet/NewPress/releases/download/v1.0.0-beta.2",
+    "gitee": "https://gitee.com/chunyangnet_0/newpress/raw/releases/distributions/1.0.0-beta.2"
+  }
+}
