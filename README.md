@@ -103,9 +103,9 @@ bash newpress-install.sh --source gitee --dir ./newpress
 
 ### Linux 安装向导
 
-支持 Linux `amd64` / `arm64`。获取完整源码后，在包含 `go.mod`、`compose.yaml`、`themes/` 和 `plugins/` 的项目根目录运行：
-
 支持 Linux `amd64` / `arm64`。一键入口下载后会自动启动向导；已手动解压部署包时，在包含 `deployment.json`、`compose.yaml` 和 `themes/` 的目录运行：
+
+```bash
 sudo bash scripts/deploy.sh
 ```
 
@@ -113,8 +113,8 @@ sudo bash scripts/deploy.sh
 
 | 方式 | 运行组成 | 环境 |
 | --- | --- | --- |
-| Docker Compose | NewPress、PostgreSQL、NGINX | 本机 Docker Engine、Compose 2.20+、Buildx |
-| 原生服务 | NewPress 二进制、systemd；默认使用文件存储 | 已运行的 systemd；脚本按需获取 Go 工具链并构建 |
+| Docker Compose | NewPress、PostgreSQL、NGINX | 本机 Docker Engine、Compose 2.20+ |
+| 原生服务 | NewPress 二进制、systemd；默认使用文件存储 | 已运行的 systemd；直接使用包内程序 |
 
 向导使用 Bash 和 Python 3.9+，Bash 入口可引导安装缺少的 Python。Docker 的自动安装支持 Debian / Ubuntu；其他发行版需先准备 Docker 环境。部署使用仓库中已生成的前端资源，无需安装 Node.js。
 

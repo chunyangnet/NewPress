@@ -557,6 +557,14 @@ def choose_subnet(values):
             raise DeployError("NEWPRESS_PROXY_IPV4 必须是 edge 子网中的有效地址。")
         values.setdefault("NEWPRESS_PROXY_IPV4", str(proxy))
         values.setdefault("NEWPRESS_TRUSTED_PROXY_CIDRS", str(proxy) + "/32")
+        if subnet.prefixlen > 29:
+            raise DeployError("edge 子网至少需要 /29，以分离固定代理地址和动态容器地址。")
+        dynamic = next(block for block in subnet.subnets(prefixlen_diff=1) if proxy not in block)
+        if "NEWPRESS_EDGE_DYNAMIC_RANGE" in values:
+            dynamic = ipaddress.IPv4Network(values["NEWPRESS_EDGE_DYNAMIC_RANGE"])
+            if not dynamic.subnet_of(subnet) or proxy in dynamic:
+                raise DeployError("edge 动态地址范围必须位于子网内且不包含代理固定地址。")
+        values["NEWPRESS_EDGE_DYNAMIC_RANGE"] = str(dynamic)
         return
     occupied = []
     networks = run(["docker", "network", "ls", "-q"], capture=True).stdout.split()
@@ -587,6 +595,7 @@ def choose_subnet(values):
             proxy = str(candidate.network_address + 2)
             values.update(NEWPRESS_EDGE_SUBNET=str(candidate), NEWPRESS_PROXY_IPV4=proxy,
                           NEWPRESS_TRUSTED_PROXY_CIDRS=proxy + "/32")
+            choose_subnet(values)
             return
     raise DeployError("未找到不冲突的 edge 子网，请在 .env 配置 NEWPRESS_EDGE_SUBNET / NEWPRESS_PROXY_IPV4 / NEWPRESS_TRUSTED_PROXY_CIDRS。")
 

@@ -103,9 +103,9 @@ The destination must be a new directory. Deployment options follow `--`, for exa
 
 ### Linux installation wizard
 
-Supports Linux `amd64` / `arm64`. After obtaining the complete source, run the following from the project root containing `go.mod`, `compose.yaml`, `themes/`, and `plugins/`:
-
 Linux amd64 and arm64 are supported. The installer starts the wizard automatically. For a manually extracted bundle, run from the directory containing `deployment.json`, `compose.yaml`, and `themes/`:
+
+```bash
 sudo bash scripts/deploy.sh
 ```
 
@@ -113,8 +113,8 @@ Choose “安装 / 更新” (Install / update), select a deployment mode, and e
 
 | Mode | Components | Requirements |
 | --- | --- | --- |
-| Docker Compose | NewPress, PostgreSQL, NGINX | Local Docker Engine, Compose 2.20+, Buildx |
-| Native service | NewPress binary, systemd; file storage by default | A running systemd; the script downloads the Go toolchain and builds as needed |
+| Docker Compose | NewPress, PostgreSQL, NGINX | Local Docker Engine, Compose 2.20+ |
+| Native service | NewPress binary, systemd; file storage by default | A running systemd; uses the included prebuilt executable |
 
 The wizard uses Bash and Python 3.9+; the Bash entry point can bootstrap missing Python. Automatic Docker installation supports Debian / Ubuntu. Prepare Docker yourself on other distributions. Deployment uses the generated frontend assets included in the repository; Node.js is not required.
 

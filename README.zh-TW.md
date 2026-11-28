@@ -90,7 +90,7 @@ curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time
 bash newpress-install.sh --source github --dir ./newpress
 ```
 
-**Gitee 入口（取得安裝程式與主程式原始碼均不依賴 GitHub）：**
+**Gitee 入口（部署包及預建置映像均從 Gitee 下載）：**
 
 ```bash
 curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time 60 -o newpress-install.sh https://gitee.com/chunyangnet_0/newpress/raw/v1.0.0-beta.2/install.sh && \
@@ -103,9 +103,9 @@ bash newpress-install.sh --source gitee --dir ./newpress
 
 ### Linux 安裝精靈
 
-支援 Linux `amd64` / `arm64`。取得完整原始碼後，在包含 `go.mod`、`compose.yaml`、`themes/` 與 `plugins/` 的專案根目錄執行：
-
 支援 Linux amd64 / arm64。一鍵入口會自動啟動精靈；手動解壓部署包後，從含 `deployment.json`、`compose.yaml` 與 `themes/` 的目錄執行：
+
+```bash
 sudo bash scripts/deploy.sh
 ```
 
@@ -113,8 +113,8 @@ sudo bash scripts/deploy.sh
 
 | 方式 | 執行元件 | 環境 |
 | --- | --- | --- |
-| Docker Compose | NewPress、PostgreSQL、NGINX | 本機 Docker Engine、Compose 2.20+、Buildx |
-| 原生服務 | NewPress 執行檔、systemd；預設使用檔案儲存 | 正在執行的 systemd；腳本視需要取得 Go 工具鏈並建置 |
+| Docker Compose | NewPress、PostgreSQL、NGINX | 本機 Docker Engine、Compose 2.20+ |
+| 原生服務 | NewPress 執行檔、systemd；預設使用檔案儲存 | 正在執行的 systemd；直接使用包內程式 |
 
 精靈使用 Bash 與 Python 3.9+，Bash 入口可引導安裝缺少的 Python。Docker 自動安裝支援 Debian / Ubuntu；其他發行版須先準備 Docker 環境。部署使用儲存庫內已產生的前端資源，無須安裝 Node.js。
 

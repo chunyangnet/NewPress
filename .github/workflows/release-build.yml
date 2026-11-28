@@ -50,9 +50,19 @@ jobs:
           tar -xzf "output/release/newpress-1.0.0-beta.2-linux-$ARCH-deploy.tar.gz" -C output/deployment
           python3 output/deployment/scripts/deploy.py --mode docker --yes --url http://127.0.0.1:18080 --port 18080 --bind 127.0.0.1 --timeout 180
           curl --fail http://127.0.0.1:18080/health/live
-          sudo python3 output/deployment/scripts/deploy.py --mode native --yes --url http://127.0.0.1:18081 --port 18081 --bind 127.0.0.1 --timeout 180
+          docker compose --project-directory "$PWD/output/deployment" --env-file output/deployment/.env -f output/deployment/compose.yaml down --volumes
+          mkdir -p output/native
+          tar -xzf "output/release/newpress-1.0.0-beta.2-linux-$ARCH-deploy.tar.gz" -C output/native
+          sudo python3 output/native/scripts/deploy.py --mode native --yes --url http://127.0.0.1:18081 --port 18081 --bind 127.0.0.1 --timeout 180
           curl --fail http://127.0.0.1:18081/health/ready
           sudo systemctl stop newpress
+      - name: Deployment diagnostics
+        if: failure()
+        run: |
+          docker ps -a
+          docker logs newpress-app-1 || true
+          docker logs newpress-migrate-1 || true
+          sudo journalctl -u newpress --no-pager -n 80 || true
       - uses: actions/upload-artifact@v4
         with:
           name: release-linux-${{ matrix.arch }}

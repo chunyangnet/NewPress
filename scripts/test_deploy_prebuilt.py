@@ -44,6 +44,16 @@ class PrebuiltDeploymentTests(unittest.TestCase):
         self.assertEqual(run.call_count, 1)
         self.assertEqual(run.call_args.args[0], ['docker', 'compose', 'version', '--short'])
 
+    def test_proxy_address_cannot_be_assigned_to_an_earlier_started_container(self):
+        import ipaddress
+        values = {'NEWPRESS_EDGE_SUBNET': '172.30.30.0/24'}
+        deploy.choose_subnet(values)
+        self.assertNotIn(ipaddress.ip_address(values['NEWPRESS_PROXY_IPV4']),
+                         ipaddress.ip_network(values['NEWPRESS_EDGE_DYNAMIC_RANGE']))
+        values['NEWPRESS_EDGE_DYNAMIC_RANGE'] = '172.30.30.0/25'
+        with self.assertRaises(deploy.DeployError):
+            deploy.choose_subnet(values)
+
     def images(self, *, corrupt=False):
         data = b'prebuilt image archive'
         images = {key: {'tag': f'{name}:1.0.0-beta.2-amd64', 'id': 'sha256:' + str(index) * 64}

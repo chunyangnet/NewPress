@@ -103,9 +103,9 @@ bash newpress-install.sh --source gitee --dir ./newpress
 
 ### Linux インストールウィザード
 
-Linux `amd64` / `arm64` に対応しています。完全なソースを取得後、`go.mod`、`compose.yaml`、`themes/`、`plugins/` を含むプロジェクトルートで実行します。
-
 Linux amd64 / arm64 に対応します。ワンコマンド入口はウィザードを自動起動します。手動で展開した場合は `deployment.json`、`compose.yaml`、`themes/` を含むディレクトリで実行してください：
+
+```bash
 sudo bash scripts/deploy.sh
 ```
 
@@ -113,8 +113,8 @@ sudo bash scripts/deploy.sh
 
 | 方式 | 構成 | 必要な環境 |
 | --- | --- | --- |
-| Docker Compose | NewPress、PostgreSQL、NGINX | ローカルの Docker Engine、Compose 2.20+、Buildx |
-| ネイティブサービス | NewPress バイナリ、systemd。標準はファイルストレージ | 稼働中の systemd。スクリプトが必要に応じて Go ツールチェーンを取得してビルド |
+| Docker Compose | NewPress、PostgreSQL、NGINX | ローカルの Docker Engine、Compose 2.20+ |
+| ネイティブサービス | NewPress バイナリ、systemd。標準はファイルストレージ | 稼働中の systemd。同梱のビルド済み実行ファイルを使用 |
 
 ウィザードは Bash と Python 3.9+ を使用し、Bash の起動スクリプトから不足する Python を導入できます。Docker の自動インストールは Debian / Ubuntu に対応しています。他のディストリビューションでは Docker を事前に用意してください。デプロイにはリポジトリ内の生成済みフロントエンド資産を使用するため、Node.js は不要です。
 
