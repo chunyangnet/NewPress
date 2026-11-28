@@ -2,7 +2,7 @@
 
 `1.0.0-beta.2` 提供 Linux amd64、Linux arm64 和 Windows amd64 二进制。Go 程序与前端资源在发布端构建完成，使用方无需安装 Go、Node.js 或 npm。
 
-下载入口：[GitHub Releases](https://github.com/chunyangnet/NewPress/releases/tag/v1.0.0-beta.2)、[Gitee 发布文件](https://gitee.com/chunyangnet_0/newpress/tree/releases)。使用 `SHA256SUMS` 核对下载文件。
+下载入口：[GitHub Releases](https://github.com/chunyangnet/NewPress/releases/tag/v1.0.0-beta.2)。GitHub Release 附件使用 `DOWNLOAD_SHA256SUMS` 核对下载文件。Gitee 保留源码、签名清单与校验值镜像，大文件匿名下载受限。
 
 ## 一键部署
 
@@ -10,7 +10,8 @@ Linux 使用 README 中的 `install.sh` 入口，自动选择 amd64 或 arm64，
 
 - 原生模式直接安装包内二进制并创建 systemd 服务。
 - Docker 模式按需下载镜像分片，逐片及整体校验后 `docker load`，再以 `docker compose up --no-build` 启动。应用、数据库、代理和可选 Redis 均在发布端构建。
-- `--source gitee` 将部署包和镜像下载固定到 Gitee；`auto` 可在两源间切换。
+- 默认 `--source auto` 并行采样 GitHub、gh-proxy.com、ghfast.top、ghproxy.net，按实际文件传输速度选择最快源，失败自动切换。`--source github` 仅直连下载。
+- 官方 GitHub / Gitee 提供校验值；加速站只传输包，不提供信任依据。每个部署包、镜像分片及完整镜像均校验 SHA-256。
 
 预构建镜像体积大于原生程序，只在选择 Docker 且缺少匹配的本地镜像时下载。系统尚未安装 Docker 或 Python 时，向导仍会按需安装这些运行与部署组件。
 
@@ -50,5 +51,7 @@ $env:NEWPRESS_ADDR='127.0.0.1:8080'
 仅用 `serve` 启动的进程需先改用 `run`。标准部署向导已使用托管模式；Docker 的更新目录必须持久化。初始托管程序、基础镜像或部署协议的变更仍通过对应部署流程处理。
 
 PostgreSQL 站点需按 [README 的恢复回执说明](README.md#后台核心更新) 先完成备份和恢复演练。升级失败的程序回退不等于数据库恢复。
+
+核心包同样自动测速 GitHub 加速站，下载失败或 SHA-256 不符时切换；只有签名清单确认的提交、长度和摘要可用于安装。
 
 后台更新清单位于两仓库同一 `releases` 分支提交的 `updates/beta.json`，与 GitHub Release 附件使用相同核心包。安装来源无须访问令牌；不要下载或配置任何发布私钥。
