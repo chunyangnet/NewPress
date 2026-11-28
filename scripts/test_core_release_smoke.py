@@ -352,7 +352,7 @@ def main():
         revoked = (withdrawal_dir/'updates/stable.json').read_bytes()
         assert not (withdrawal_dir/'packages').exists()
         on_download, withdrawn = queue.Queue(), threading.Event()
-        run(['go','test','-c','-trimpath','-o',str(seed),'./cmd/newpress'],cwd=seed_source,env=dict(env,CGO_ENABLED='0'))
+        run(['go','test','-c','-trimpath','-ldflags',f'-X newpress.local/newpress/internal/version.Version={BASE}','-o',str(seed),'./cmd/newpress'],cwd=seed_source,env=dict(env,CGO_ENABLED='0'))
         signed=(package/'updates/stable.json').read_bytes(); m=json.loads(base64.b64decode(json.loads(signed)['payload'])); artifact=m['artifacts'][0]; payload=package/artifact['path']
         assert payload.stat().st_size==artifact['size'] and hashlib.sha256(payload.read_bytes()).hexdigest()==artifact['sha256']
         class Provider(http.server.BaseHTTPRequestHandler):

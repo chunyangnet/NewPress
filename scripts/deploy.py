@@ -26,6 +26,7 @@ import urllib.parse
 import urllib.request
 
 import deploy_sources as sources
+import deploy_prebuilt as prebuilt
 from deploy_password import PasswordInputError, password_prompt
 from deploy_terminal import Terminal, TerminalHelpFormatter, preview
 
@@ -530,6 +531,8 @@ def check_docker_plugins(args=None):
     version = re.search(r"(\d+)\.(\d+)\.(\d+)", result.stdout)
     if result.returncode or not version or tuple(map(int, version.groups())) < (2, 20, 0):
         raise DeployError("需要 Docker Compose 插件 2.20+（支持 up --wait）。")
+    if (ROOT / "deployment.json").is_file():
+        return
     if run(["docker", "buildx", "version"], capture=True, check=False).returncode:
         if args is not None and not args.check and interactive(args):
             ui.line("Buildx 用于构建应用镜像，插件本身没有常驻进程；安装大小以软件包管理器输出为准。", "muted")
@@ -735,6 +738,13 @@ def prepare_sources(args, distro, mode, ready, arch, values=None):
     if mode == "docker" and not ready:
         plan["os_apt"] = selector.os_apt(distro, arch)
         plan["docker_apt"] = selector.docker_apt(distro, arch)
+    try:
+        bundle = prebuilt.load(ROOT, arch)
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        raise DeployError(str(error)) from error
+    if bundle:
+        plan["prebuilt"] = bundle
+        return plan
     if mode == "docker" or not args.binary:
         plan["goproxy"] = selector.go_modules(ROOT)
     if mode == "native" and not args.binary and not matching_go():
@@ -840,22 +850,34 @@ def deploy_docker(values, args, existing, port, bind, arch):
     image = values["NEWPRESS_IMAGE"]
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:/@-]*", image):
         raise DeployError("NEWPRESS_IMAGE 格式无效。")
-    images = pull_images(args.source_plan, arch, args.pull_timeout)
-    values.update(NEWPRESS_GO_IMAGE=images["go"], NEWPRESS_RUNTIME_IMAGE=images["runtime"],
-                  NEWPRESS_POSTGRES_IMAGE=images["postgres"], NEWPRESS_PROXY_IMAGE=images["proxy"],
-                  NEWPRESS_GOPROXY="|".join(item["url"] for item in args.source_plan["goproxy"]))
+    bundle = args.source_plan.get("prebuilt")
+    if bundle:
+        try:
+            with ui.activity("下载、校验并导入预构建容器镜像"):
+                images = prebuilt.install_images(ROOT, bundle, arch, run, log)
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            raise DeployError(str(error)) from error
+        image = images["app"]
+        values.update(NEWPRESS_IMAGE=image, NEWPRESS_POSTGRES_PATCHED_IMAGE=images["postgres"],
+                      NEWPRESS_PROXY_PATCHED_IMAGE=images["proxy"], NEWPRESS_REDIS_PATCHED_IMAGE=images["redis"])
+    else:
+        images = pull_images(args.source_plan, arch, args.pull_timeout)
+        values.update(NEWPRESS_GO_IMAGE=images["go"], NEWPRESS_RUNTIME_IMAGE=images["runtime"],
+                      NEWPRESS_POSTGRES_IMAGE=images["postgres"], NEWPRESS_PROXY_IMAGE=images["proxy"],
+                      NEWPRESS_GOPROXY="|".join(item["url"] for item in args.source_plan["goproxy"]))
     for name, reference in args.source_plan.get("image_origins", {}).items():
         values[IMAGE_KEYS[name] + "_ORIGIN"] = reference
         values[IMAGE_KEYS[name] + "_SELECTED"] = images[name]
     write_proxy_config(values)
     write_env(ROOT / ".env", values, compose=True)
-    build = ["docker", "build", "--platform", "linux/" + arch, "--tag", image]
-    build.extend(["--build-arg", "NEWPRESS_GO_IMAGE=" + images["go"], "--build-arg", "NEWPRESS_RUNTIME_IMAGE=" + images["runtime"],
-                  "--build-arg", "GOPROXY=" + values["NEWPRESS_GOPROXY"], "--build-arg", "GOSUMDB=sum.golang.org"])
-    for key, fallback in (("VERSION", "1.0.0-beta.2"), ("COMMIT", "local"), ("BUILD_DATE", "unknown")):
-        build.extend(["--build-arg", f"{key}={values.get('NEWPRESS_' + key, fallback)}"])
-    with ui.activity("构建应用镜像"):
-        run([*build, ROOT], env=docker_env())
+    if not bundle:
+        build = ["docker", "build", "--platform", "linux/" + arch, "--tag", image]
+        build.extend(["--build-arg", "NEWPRESS_GO_IMAGE=" + images["go"], "--build-arg", "NEWPRESS_RUNTIME_IMAGE=" + images["runtime"],
+                      "--build-arg", "GOPROXY=" + values["NEWPRESS_GOPROXY"], "--build-arg", "GOSUMDB=sum.golang.org"])
+        for key, fallback in (("VERSION", "1.0.0-beta.2"), ("COMMIT", "local"), ("BUILD_DATE", "unknown")):
+            build.extend(["--build-arg", f"{key}={values.get('NEWPRESS_' + key, fallback)}"])
+        with ui.activity("构建应用镜像"):
+            run([*build, ROOT], env=docker_env())
     if not initialized:
         hashed, login = initial_credentials(values, lambda password: run(
             ["docker", "run", "--rm", "-i", "--network", "none", "--read-only", "--cap-drop", "ALL",
@@ -877,10 +899,11 @@ def deploy_docker(values, args, existing, port, bind, arch):
         for name in SECRET_NAMES:
             (directory / name).chmod(0o444)
     compose(values, "config", "--quiet")
-    with ui.activity("构建数据库与代理系统安全补丁镜像"):
-        services = compose(values, "config", "--services", capture=True).stdout.split()
-        patched_services = [name for name in ("db", "proxy", "redis") if name in services]
-        compose(values, "build", "--pull", "--no-cache", *patched_services)
+    if not bundle:
+        with ui.activity("构建数据库与代理系统安全补丁镜像"):
+            services = compose(values, "config", "--services", capture=True).stdout.split()
+            patched_services = [name for name in ("db", "proxy", "redis") if name in services]
+            compose(values, "build", "--pull", "--no-cache", *patched_services)
     with ui.activity("启动数据库、迁移、应用与代理"):
         compose(values, "up", "-d", "--no-build", "--wait", "--wait-timeout", str(args.timeout))
     host = "127.0.0.1" if bind == "0.0.0.0" else bind
@@ -1068,7 +1091,10 @@ def deploy_native(values, args, existing, port, bind, arch):
     initialized = secret_state(secret_dir, ("admin_password_hash",), existing)
     with tempfile.TemporaryDirectory(prefix="newpress-build-") as temporary:
         binary = Path(temporary) / "newpress"
-        if args.binary:
+        if getattr(args, "source_plan", {}).get("prebuilt"):
+            prebuilt.load(ROOT, arch)
+            shutil.copyfile(ROOT / "bin/newpress", binary)
+        elif args.binary:
             shutil.copyfile(args.binary, binary)
         else:
             with ui.activity("构建原生 Linux 二进制"):
@@ -1282,7 +1308,8 @@ def deploy_command(args):
     systemd = Path("/run/systemd/system").is_dir() and bool(shutil.which("systemctl"))
     environment_rows.extend([("Docker", "可用" if ready else "未就绪"), ("systemd", "可用" if systemd else "未就绪")])
     ui.panel("目标环境", environment_rows)
-    ui.line("源码构建建议至少 2 GiB 内存；可使用预编译二进制。", "muted")
+    ui.line("部署包使用预编译程序和预构建镜像，无需 Go、Node.js 或 Buildx。" if (ROOT / "deployment.json").is_file()
+            else "源码构建建议至少 2 GiB 内存；可使用预编译二进制。", "muted")
     ui.stage(2, "部署设置", "沿用已有部署与已保存的默认值")
     wizard_mode(args, native_exists, existing, ready, systemd)
     mode = select_mode(args.mode, native_exists, existing, ready, systemd)

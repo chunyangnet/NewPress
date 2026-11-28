@@ -1,0 +1,58 @@
+name: release-build
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/release-beta2]
+concurrency:
+  group: release-build-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build release images on the publisher
+        env:
+          ARCH: ${{ matrix.arch }}
+        run: |
+          set -euo pipefail
+          version=1.0.0-beta.2
+          stamp=$(git log -1 --format=%cI)
+          docker build --build-arg VERSION="$version" --build-arg COMMIT="$GITHUB_SHA" --build-arg BUILD_DATE="$stamp" -t "newpress:$version-$ARCH" .
+          docker build -f deploy/Dockerfile.postgres -t "newpress-postgres:$version-$ARCH" deploy
+          docker build -f deploy/Dockerfile.nginx -t "newpress-nginx:$version-$ARCH" deploy
+          docker build -f deploy/Dockerfile.redis -t "newpress-redis:$version-$ARCH" deploy
+          docker run --rm "newpress:$version-$ARCH" version
+          mkdir -p output/release
+          container=$(docker create "newpress:$version-$ARCH")
+          docker cp "$container:/newpress" "output/release/newpress-linux-$ARCH"
+          docker rm "$container"
+          docker save "newpress:$version-$ARCH" "newpress-postgres:$version-$ARCH" "newpress-nginx:$version-$ARCH" "newpress-redis:$version-$ARCH" | gzip -1 > output/images.tar.gz
+          python3 scripts/build_deployment.py docker --version "$version" --arch "$ARCH" --archive output/images.tar.gz --output output/release
+          python3 scripts/build_deployment.py bundle --version "$version" --os linux --arch "$ARCH" --commit "$GITHUB_SHA" --binary "output/release/newpress-linux-$ARCH" --docker "output/release/docker-linux-$ARCH.json" --output output/release
+      - name: Exercise deployment from the prebuilt bundle
+        env:
+          ARCH: ${{ matrix.arch }}
+        run: |
+          set -euo pipefail
+          mkdir -p output/deployment
+          tar -xzf "output/release/newpress-1.0.0-beta.2-linux-$ARCH-deploy.tar.gz" -C output/deployment
+          python3 output/deployment/scripts/deploy.py --mode docker --yes --url http://127.0.0.1:18080 --port 18080 --bind 127.0.0.1 --timeout 180
+          curl --fail http://127.0.0.1:18080/health/live
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-linux-${{ matrix.arch }}
+          path: output/release/
+          compression-level: 0
+          retention-days: 7

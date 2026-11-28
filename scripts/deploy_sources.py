@@ -360,7 +360,7 @@ def go_metadata(root, arch):
 def download_verified(choices, destination, digest, log=print):
     opener = urllib.request.build_opener(SafeRedirect())
     for choice in choices:
-        log(f"下载 Go 工具链：{choice['name']}")
+        log(f"下载并校验发布文件：{choice['name']}")
         hasher = hashlib.sha256()
         deadline = time.monotonic() + 600
         try:
