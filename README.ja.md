@@ -14,7 +14,7 @@
 <p align="center">Go 製のセルフホスト型コンテンツ管理システム</p>
 
 <p align="center">
-  <a href="internal/version/version.go"><img src="https://img.shields.io/badge/version-1.0.0--beta.1-c98232?style=flat-square" alt="ソースコードのバージョン 1.0.0-beta.1"></a>
+  <a href="internal/version/version.go"><img src="https://img.shields.io/badge/version-1.0.0--beta.2-c98232?style=flat-square" alt="ソースコードのバージョン 1.0.0-beta.2"></a>
   <a href="go.mod"><img src="https://img.shields.io/badge/Go-1.26.11-00ADD8?style=flat-square&amp;logo=go&amp;logoColor=white" alt="Go ツールチェーン 1.26.11"></a>
   <a href="#デプロイ"><img src="https://img.shields.io/badge/deploy-Docker%20%7C%20systemd-4176b8?style=flat-square&amp;logo=docker&amp;logoColor=white" alt="Docker Compose と systemd によるデプロイ"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-32825b?style=flat-square" alt="Apache-2.0 ライセンス"></a>
@@ -35,7 +35,7 @@
 NewPress は、投稿、固定ページ、メディアライブラリ、管理画面を備え、ブログ、リソース共有サイト、コミュニティ、企業サイトに利用できます。標準 Docker イメージとネイティブインストールウィザードによる新規インストールでは、標準テーマの Chunnel のみをプリインストールし、他のテーマは必要に応じてインストールします。ソースツリーには開発用のサンプルテーマも含まれています。コンテンツはローカルファイルまたは PostgreSQL に保存します。
 
 > [!NOTE]
-> 現在のソースコードのバージョンは `1.0.0-beta.1` です。安定版はまだリリースされていません。ファイルストレージへの書き込みは単一プロセスのみ対応しています。ログインセッションは永続化され、有効期限内であれば再起動後も利用できます。詳細は[セッションとデプロイの制約](SESSION_PERSISTENCE.md)を参照してください。
+> 現在のソースコードのバージョンは `1.0.0-beta.2` です。安定版はまだリリースされていません。ファイルストレージへの書き込みは単一プロセスのみ対応しています。ログインセッションは永続化され、有効期限内であれば再起動後も利用できます。詳細は[セッションとデプロイの制約](SESSION_PERSISTENCE.md)を参照してください。
 
 | 機能 | 内容 |
 | --- | --- |
@@ -79,21 +79,21 @@ NewPress は、投稿、固定ページ、メディアライブラリ、管理�
 
 ### GitHub または Gitee からのインストール
 
-以下のコマンドは、リポジトリが公開され、両方で `v1.0.0-beta.1` タグが利用可能になってから使用してください。初回公開前はプロジェクトをサーバーへ転送し、次節のローカルソース用インストールウィザードを使用します。リポジトリやタグへアクセスできない場合、インストーラーは明示的なエラーを返します。
+インストーラーは既定で `v1.0.0-beta.2` を使用します。以下はソースからのインストール手順です。ビルド不要の配布物と起動方法は [バイナリ配布](BINARY_RELEASES.md) を参照してください。
 
 サーバーには Linux、Bash、Git、curl が必要です。Debian / Ubuntu では、先に `sudo apt-get update && sudo apt-get install -y git curl ca-certificates` を実行できます。一般ユーザーでスクリプトをダウンロードして実行してください。システムサービスのインストール時には、必要に応じてウィザードが sudo を使用します。
 
 **GitHub：**
 
 ```bash
-curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time 60 -o newpress-install.sh https://raw.githubusercontent.com/chunyangnet/NewPress/v1.0.0-beta.1/install.sh && \
+curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time 60 -o newpress-install.sh https://raw.githubusercontent.com/chunyangnet/NewPress/v1.0.0-beta.2/install.sh && \
 bash newpress-install.sh --source github --dir ./newpress
 ```
 
 **Gitee（インストーラーとコアのソースの取得に GitHub を使用しません）：**
 
 ```bash
-curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time 60 -o newpress-install.sh https://gitee.com/chunyangnet_0/newpress/raw/v1.0.0-beta.1/install.sh && \
+curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time 60 -o newpress-install.sh https://gitee.com/chunyangnet_0/newpress/raw/v1.0.0-beta.2/install.sh && \
 bash newpress-install.sh --source gitee --dir ./newpress
 ```
 

@@ -14,7 +14,7 @@
 <p align="center">使用 Go 建置的自架內容管理系統</p>
 
 <p align="center">
-  <a href="internal/version/version.go"><img src="https://img.shields.io/badge/version-1.0.0--beta.1-c98232?style=flat-square" alt="原始碼版本 1.0.0-beta.1"></a>
+  <a href="internal/version/version.go"><img src="https://img.shields.io/badge/version-1.0.0--beta.2-c98232?style=flat-square" alt="原始碼版本 1.0.0-beta.2"></a>
   <a href="go.mod"><img src="https://img.shields.io/badge/Go-1.26.11-00ADD8?style=flat-square&amp;logo=go&amp;logoColor=white" alt="Go 工具鏈 1.26.11"></a>
   <a href="#部署"><img src="https://img.shields.io/badge/deploy-Docker%20%7C%20systemd-4176b8?style=flat-square&amp;logo=docker&amp;logoColor=white" alt="Docker Compose 與 systemd 部署"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-32825b?style=flat-square" alt="Apache-2.0 授權條款"></a>
@@ -35,7 +35,7 @@
 NewPress 提供文章、頁面、媒體庫與管理後台，可用於部落格、資源分享、社群及企業網站。標準 Docker 映像與原生安裝精靈在新安裝時僅預裝並預設使用 Chunnel 佈景主題，其他佈景主題按需安裝；原始碼目錄還包含開發範例佈景主題。內容可儲存在本機檔案或 PostgreSQL 中。
 
 > [!NOTE]
-> 目前原始碼版本為 `1.0.0-beta.1`，尚未發布穩定版。檔案儲存僅支援單一程序寫入；登入工作階段已持久化，有效期限內重新啟動可繼續使用。詳見[工作階段與部署限制](SESSION_PERSISTENCE.md)。
+> 目前原始碼版本為 `1.0.0-beta.2`，尚未發布穩定版。檔案儲存僅支援單一程序寫入；登入工作階段已持久化，有效期限內重新啟動可繼續使用。詳見[工作階段與部署限制](SESSION_PERSISTENCE.md)。
 
 | 功能 | 內容 |
 | --- | --- |
@@ -79,21 +79,21 @@ NewPress 提供文章、頁面、媒體庫與管理後台，可用於部落格�
 
 ### 雙來源原始碼安裝入口
 
-以下指令供儲存庫公開，且兩邊均已發布 `v1.0.0-beta.1` 標籤後使用。首次公開前，請將專案上傳至伺服器，使用下一節的本機原始碼安裝精靈；儲存庫或標籤尚無法存取時，安裝程式會明確報錯。
+安裝程式預設使用 `v1.0.0-beta.2`。以下入口用於原始碼安裝；免建置下載包與啟動方法見 [預編譯包使用說明](BINARY_RELEASES.md)。
 
 伺服器需要 Linux、Bash、Git 與 curl。Debian / Ubuntu 可先執行 `sudo apt-get update && sudo apt-get install -y git curl ca-certificates`。請以一般使用者下載並執行入口腳本，精靈會在安裝系統服務時視需要使用 sudo。
 
 **GitHub 入口：**
 
 ```bash
-curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time 60 -o newpress-install.sh https://raw.githubusercontent.com/chunyangnet/NewPress/v1.0.0-beta.1/install.sh && \
+curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time 60 -o newpress-install.sh https://raw.githubusercontent.com/chunyangnet/NewPress/v1.0.0-beta.2/install.sh && \
 bash newpress-install.sh --source github --dir ./newpress
 ```
 
 **Gitee 入口（取得安裝程式與主程式原始碼均不依賴 GitHub）：**
 
 ```bash
-curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time 60 -o newpress-install.sh https://gitee.com/chunyangnet_0/newpress/raw/v1.0.0-beta.1/install.sh && \
+curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time 60 -o newpress-install.sh https://gitee.com/chunyangnet_0/newpress/raw/v1.0.0-beta.2/install.sh && \
 bash newpress-install.sh --source gitee --dir ./newpress
 ```
 

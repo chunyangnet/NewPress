@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Public source installer. Repository identities are independent of extensions.
 set -euo pipefail
-np_source=auto np_ref=v1.0.0-beta.1 np_dir=./newpress np_commit=''
+np_source=auto np_ref=v1.0.0-beta.2 np_dir=./newpress np_commit=''
 np_args=()
 np_usage() {
-  printf '%s\n' 'NewPress 源码安装器（1.0.0-beta.1）' \
+  printf '%s\n' 'NewPress 源码安装器（1.0.0-beta.2）' \
     '用法：bash install.sh [--source auto|github|gitee] [--ref 标签或分支] [--dir 新目录] [--commit 完整SHA] [-- 部署参数]' \
-    '默认下载 v1.0.0-beta.1；GitHub 不可用时尝试 Gitee。--source gitee 仅从 Gitee 获取源码。' \
+    '默认下载 v1.0.0-beta.2；GitHub 不可用时尝试 Gitee。--source gitee 仅从 Gitee 获取源码。' \
     '需要 Linux、Bash、Git；下载入口需要 curl。目标目录必须不存在，避免覆盖已有站点。' \
     '已有部署请在原项目目录执行 bash scripts/deploy.sh；本安装器不覆盖或更新已有目录。'
 }

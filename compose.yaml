@@ -46,7 +46,7 @@ services:
     build:
       context: .
       args:
-        VERSION: ${NEWPRESS_VERSION:-1.0.0-beta.1}
+        VERSION: ${NEWPRESS_VERSION:-1.0.0-beta.2}
         COMMIT: ${NEWPRESS_COMMIT:-local}
         BUILD_DATE: ${NEWPRESS_BUILD_DATE:-unknown}
         NEWPRESS_GO_IMAGE: ${NEWPRESS_GO_IMAGE:-golang:1.26.11-bookworm@sha256:ea47ee45f1284d60f9cc09cb2c3bb4f508c256b640bd8bb30342ff13d1adcb52}

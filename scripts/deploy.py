@@ -852,7 +852,7 @@ def deploy_docker(values, args, existing, port, bind, arch):
     build = ["docker", "build", "--platform", "linux/" + arch, "--tag", image]
     build.extend(["--build-arg", "NEWPRESS_GO_IMAGE=" + images["go"], "--build-arg", "NEWPRESS_RUNTIME_IMAGE=" + images["runtime"],
                   "--build-arg", "GOPROXY=" + values["NEWPRESS_GOPROXY"], "--build-arg", "GOSUMDB=sum.golang.org"])
-    for key, fallback in (("VERSION", "1.0.0-beta.1"), ("COMMIT", "local"), ("BUILD_DATE", "unknown")):
+    for key, fallback in (("VERSION", "1.0.0-beta.2"), ("COMMIT", "local"), ("BUILD_DATE", "unknown")):
         build.extend(["--build-arg", f"{key}={values.get('NEWPRESS_' + key, fallback)}"])
     with ui.activity("构建应用镜像"):
         run([*build, ROOT], env=docker_env())
@@ -926,7 +926,7 @@ def build_binary(destination, arch, plan):
     environment.update(GOCACHE=str(destination.parent / "build-cache"),
                        GOPATH=str(destination.parent / "go-cache"))
     stamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    flags = "-s -w -X newpress.local/newpress/internal/version.Version=1.0.0-beta.1 -X newpress.local/newpress/internal/version.BuildDate=" + stamp
+    flags = "-s -w -X newpress.local/newpress/internal/version.Version=1.0.0-beta.2 -X newpress.local/newpress/internal/version.BuildDate=" + stamp
     run([go, "build", "-trimpath", "-buildvcs=false", "-ldflags=" + flags, "-o", destination, "./cmd/newpress"],
         cwd=ROOT, env=environment)
 

@@ -14,7 +14,7 @@
 <p align="center">A self-hosted content management system built with Go</p>
 
 <p align="center">
-  <a href="internal/version/version.go"><img src="https://img.shields.io/badge/version-1.0.0--beta.1-c98232?style=flat-square" alt="Source version 1.0.0-beta.1"></a>
+  <a href="internal/version/version.go"><img src="https://img.shields.io/badge/version-1.0.0--beta.2-c98232?style=flat-square" alt="Source version 1.0.0-beta.2"></a>
   <a href="go.mod"><img src="https://img.shields.io/badge/Go-1.26.11-00ADD8?style=flat-square&amp;logo=go&amp;logoColor=white" alt="Go toolchain 1.26.11"></a>
   <a href="#deployment"><img src="https://img.shields.io/badge/deploy-Docker%20%7C%20systemd-4176b8?style=flat-square&amp;logo=docker&amp;logoColor=white" alt="Docker Compose and systemd deployment"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-32825b?style=flat-square" alt="Apache-2.0 license"></a>
@@ -35,7 +35,7 @@
 NewPress provides posts, pages, a media library, and an administration dashboard for blogs, resource-sharing sites, communities, and business websites. Fresh installations using the standard Docker image or native installation wizard preinstall only Chunnel as the default theme; other themes are installed on demand. The source tree also includes development example themes. Content is stored in local files or PostgreSQL.
 
 > [!NOTE]
-> The current source version is `1.0.0-beta.1`; a stable release is not yet available. File storage supports a single writer process only. Login sessions are persisted and remain usable across restarts until they expire. See [session persistence and deployment boundaries](SESSION_PERSISTENCE.md).
+> The current source version is `1.0.0-beta.2`; a stable release is not yet available. File storage supports a single writer process only. Login sessions are persisted and remain usable across restarts until they expire. See [session persistence and deployment boundaries](SESSION_PERSISTENCE.md).
 
 | Feature | Includes |
 | --- | --- |
@@ -79,21 +79,21 @@ Click a thumbnail to view the full-size screenshot. These captures use an isolat
 
 ### Install from GitHub or Gitee
 
-Use these commands after the repositories are public and the `v1.0.0-beta.1` tag is available on both platforms. Before the initial public release, upload the project to your server and use the local-source installation wizard below. The installer reports an error if the repository or tag is unavailable.
+The installer defaults to `v1.0.0-beta.2`. These commands install from source. For prebuilt downloads and startup instructions, see [binary releases](BINARY_RELEASES.md).
 
 The server needs Linux, Bash, Git, and curl. On Debian / Ubuntu, install prerequisites with `sudo apt-get update && sudo apt-get install -y git curl ca-certificates`. Download and run the entry script as a regular user; the wizard uses sudo when installing system services as needed.
 
 **GitHub:**
 
 ```bash
-curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time 60 -o newpress-install.sh https://raw.githubusercontent.com/chunyangnet/NewPress/v1.0.0-beta.1/install.sh && \
+curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time 60 -o newpress-install.sh https://raw.githubusercontent.com/chunyangnet/NewPress/v1.0.0-beta.2/install.sh && \
 bash newpress-install.sh --source github --dir ./newpress
 ```
 
 **Gitee (fetches both the installer and core source without accessing GitHub):**
 
 ```bash
-curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time 60 -o newpress-install.sh https://gitee.com/chunyangnet_0/newpress/raw/v1.0.0-beta.1/install.sh && \
+curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time 60 -o newpress-install.sh https://gitee.com/chunyangnet_0/newpress/raw/v1.0.0-beta.2/install.sh && \
 bash newpress-install.sh --source gitee --dir ./newpress
 ```
 

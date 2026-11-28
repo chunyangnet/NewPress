@@ -17,7 +17,7 @@ ARG GOSUMDB=sum.golang.org
 RUN GOTOOLCHAIN=local GOPROXY="${GOPROXY}" GOSUMDB="${GOSUMDB}" go mod download
 
 COPY . .
-ARG VERSION=1.0.0-beta.1
+ARG VERSION=1.0.0-beta.2
 ARG COMMIT=unknown
 ARG BUILD_DATE=unknown
 ARG TARGETOS
