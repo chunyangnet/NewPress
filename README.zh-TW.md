@@ -87,17 +87,17 @@ NewPress 提供文章、頁面、媒體庫與管理後台，可用於部落格�
 
 ```bash
 curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time 60 -o newpress-install.sh https://raw.githubusercontent.com/chunyangnet/NewPress/v1.0.0-beta.2/install.sh && \
-bash newpress-install.sh --source github --dir ./newpress
+bash newpress-install.sh --source auto --dir ./newpress
 ```
 
-**Gitee 入口（部署包及預建置映像均從 Gitee 下載）：**
+**Gitee 入口（安裝器從 Gitee 下載，部署包自動測速 GitHub 加速站）：**
 
 ```bash
 curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time 60 -o newpress-install.sh https://gitee.com/chunyangnet_0/newpress/raw/v1.0.0-beta.2/install.sh && \
-bash newpress-install.sh --source gitee --dir ./newpress
+bash newpress-install.sh --source auto --dir ./newpress
 ```
 
-`--source auto` 依序嘗試 GitHub、Gitee。`--source gitee` 僅從 Gitee 下載部署包與映像分片。`--ref` 選擇已發布標籤，`--commit` 可核對原始碼提交。缺少系統元件時使用對應套件來源。
+預設 `--source auto` 在伺服器上平行採樣 GitHub、gh-proxy.com、ghfast.top、ghproxy.net，優先選用相同檔案片段傳輸最快的來源，下載或校驗失敗時切換。`--source github` 僅直連下載套件；`--ref` 選擇發布標籤，`--commit` 可核對原始碼提交。校驗值僅從官方 GitHub / Gitee 取得。缺少的系統元件使用對應套件來源。
 
 目標必須為新目錄，部署參數放在 `--` 後，例如 `-- --mode native`。保留部署目錄，以其 `scripts/deploy.sh` 執行後續管理。
 
@@ -304,6 +304,8 @@ sudo bash scripts/deploy.sh deploy --compose-file deploy/compose.mail.yaml
 官方更新公鑰隨程式內建，首次安裝無須填寫公鑰或存取權杖，公開公鑰檔案見 [official_ed25519.pub](internal/update/official_ed25519.pub)。需要自訂發布者時，可透過受信任的管道取得其公鑰，並設定 `NEWPRESS_UPDATE_PUBLIC_KEY` 覆寫內建值；私有來源必須明確設定發布者的公鑰。無效的覆寫值會報錯，不會靜默退回官方公鑰。程式不會從待驗證的更新儲存庫自動匯入新公鑰。發布分支或簽章清單尚未上傳時，檢查會明確失敗，不會將缺少檔案視為「已是最新版本」。
 
 伺服器會平行驗證兩邊清單，優先採用有效且簽章序號較高的清單；相同序號的內容衝突時會停止更新。更新套件僅在已驗證為相同發布版本的來源間切換，各來源固定至檢查時的提交，並再次核對套件長度與 SHA-256。既有 Gitee 私有來源設定會保留，可在更新來源設定中切回官方公開雙來源；公開請求不會攜帶私有權杖。
+
+後台核心套件下載也會測速 GitHub 加速站並在失敗時切換。Gitee 大檔案需要登入，因此免登入下載使用 GitHub 及其加速站。清單僅從官方儲存庫取得，所有套件仍須通過簽章、長度及 SHA-256 校驗。
 
 安裝前請閱讀發行說明，並確認備份可還原。原始碼更新仍須依前述步驟重新部署；初始託管程式、容器基底映像或部署協定升級，也透過原始碼 / 映像重新部署完成。請勿使用首次安裝程式覆寫既有目錄。
 

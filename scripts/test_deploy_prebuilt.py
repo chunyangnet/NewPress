@@ -78,8 +78,8 @@ class PrebuiltDeploymentTests(unittest.TestCase):
         checksum = hashlib.sha256(data).hexdigest()
         self.manifest['docker'] = dict(images=images, parts=[dict(name='newpress-test.part000', size=len(data), sha256=checksum)],
                                        size=len(data), sha256='0' * 64 if corrupt else checksum,
-                                       mirrors={'github': 'https://github.com/example', 'gitee': 'https://gitee.com/example'})
-        (self.root / 'INSTALL_SOURCE').write_text('gitee')
+                                       mirrors={'github': 'https://github.com/chunyangnet/NewPress/releases/download/v1.0.0-beta.2'})
+        (self.root / 'INSTALL_SOURCE').write_text('auto')
         calls, loaded = [], False
 
         def run(command, **kwargs):
@@ -93,12 +93,18 @@ class PrebuiltDeploymentTests(unittest.TestCase):
             return subprocess.CompletedProcess(command, 0 if loaded else 1,
                 json.dumps([dict(Id=item['id'], Os='linux', Architecture='amd64')]))
 
-        def download(choices, target, digest, log):
-            self.assertEqual([choice['name'] for choice in choices], ['gitee'])
+        def download(choices, target, digest, log, expected_size=None):
+            self.assertEqual([choice['name'] for choice in choices], ['gh-proxy', 'GitHub'])
             self.assertEqual(digest, checksum)
+            self.assertEqual(expected_size, len(data))
             target.write_bytes(data)
+            return choices[0]
 
-        with patch.object(deploy_prebuilt.sources, 'download_verified', side_effect=download):
+        base = self.manifest['docker']['mirrors']['github']
+        ranked = [{'name': name, 'url': prefix + base + '/newpress-test.part000'}
+                  for name, prefix in [('gh-proxy', 'https://gh-proxy.com/'), ('GitHub', '')]]
+        with patch.object(deploy_prebuilt.sources, 'download_verified', side_effect=download), \
+                patch.object(deploy_prebuilt.sources.Selector, 'github_release', return_value=ranked):
             if corrupt:
                 with self.assertRaises(ValueError):
                     deploy_prebuilt.install_images(self.root, self.manifest, 'amd64', run, lambda _: None)

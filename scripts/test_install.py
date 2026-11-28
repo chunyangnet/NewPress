@@ -16,15 +16,15 @@ ROOT = Path(__file__).resolve().parents[1]
 
 @unittest.skipUnless(BASH, "Bash unavailable")
 class PrebuiltInstallerTests(unittest.TestCase):
-    def run_installer(self, source="auto", fail="", existing=False, expected="", mismatch=False):
+    def run_installer(self, source="auto", fail="", existing=False, expected="", mismatch=False, corrupt=""):
         with tempfile.TemporaryDirectory(prefix="newpress-install-test-") as temporary:
             root = Path(temporary)
             binary = root / "bin"
             binary.mkdir()
-            for provider in ('github', 'gitee'):
+            for provider in ('github',):
                 bundle = root / (provider + '.tar.gz')
                 with tarfile.open(bundle, 'w:gz') as archive:
-                    files = {'bin/newpress': b'fixture', 'deployment.json': b'{}', 'compose.yaml': b'services: {}',
+                    files = {'bin/newpress': os.urandom(300000), 'deployment.json': b'{}', 'compose.yaml': b'services: {}',
                              'RELEASE_COMMIT': ('0' * 39 + ('2' if mismatch and provider == 'github' else '1')).encode(),
                              'scripts/deploy.sh': b'#!/usr/bin/env bash\nprintf \'%s\\n\' "$@" > "$NP_TEST_DIR/deployed"\n'}
                     for name, data in files.items():
@@ -36,15 +36,33 @@ class PrebuiltInstallerTests(unittest.TestCase):
                 "go": "#!/usr/bin/env bash\nexit 99\n",
                 "curl": r'''#!/usr/bin/env bash
 set -eu
-np_url="${!#}" np_output=''
-while (( $# )); do if [[ "$1" == --output ]]; then np_output="$2"; shift; fi; shift; done
+np_url="${!#}" np_output='' np_probe=no
+while (( $# )); do
+  case "$1" in --output) np_output="$2"; shift ;; --range) np_probe=yes; shift ;; esac
+  shift
+done
 printf '%s\n' "$np_url" >> "$NP_TEST_DIR/requests"
-provider=gitee
-[[ "$np_url" != *github.com* ]] || provider=github
+if [[ "$np_url" == *.sha256 ]]; then
+  [[ "$NP_FAIL" != metadata ]] || exit 7
+  cp "$NP_TEST_DIR/github.sha256" "$np_output"
+  exit 0
+fi
+case "$np_url" in
+  https://ghfast.top/*) provider=ghfast; speed=400000 ;;
+  https://gh-proxy.com/*) provider=gh-proxy; speed=200000 ;;
+  https://ghproxy.net/*) provider=ghproxy; speed=100000 ;;
+  https://github.com/*) provider=github; speed=50000 ;;
+  *) exit 9 ;;
+esac
 [[ "$NP_FAIL" != all && "$NP_FAIL" != "$provider" ]] || exit 7
-extension=tar.gz
-[[ "$np_url" != *.sha256 ]] || extension=sha256
-cp "$NP_TEST_DIR/$provider.$extension" "$np_output"
+if [[ "$np_probe" == yes ]]; then
+  head -c 262144 "$NP_TEST_DIR/github.tar.gz" > "$np_output"
+  printf '206 %s 262144' "$speed"
+elif [[ "$NP_CORRUPT" == "$provider" ]]; then
+  printf 'tampered content' > "$np_output"
+else
+  cp "$NP_TEST_DIR/github.tar.gz" "$np_output"
+fi
 ''',
             }
             for name, content in scripts.items():
@@ -69,7 +87,7 @@ bash "$@"
             if expected:
                 arguments += ["--commit", expected]
             arguments += ["--", "--mode", "native", "--url", "https://example.test"]
-            environment = dict(os.environ, NP_FAIL=fail, NP_MISMATCH="1" if mismatch else "0")
+            environment = dict(os.environ, NP_FAIL=fail, NP_CORRUPT=corrupt)
             result = subprocess.run(arguments, env=environment, capture_output=True, text=True,
                                     encoding="utf-8", timeout=30)
             requests = (root / "requests").read_text().splitlines() if (root / "requests").exists() else []
@@ -77,22 +95,36 @@ bash "$@"
             preserved = (destination / "keep.txt").read_text() if (destination / "keep.txt").exists() else None
             return result, requests, deployed, destination.exists(), preserved, list(root.glob(".newpress-install.*"))
 
-    def test_gitee_entry_only_fetches_gitee_and_forwards_deployment_arguments(self):
-        result, requests, deployed, exists, _, temporary = self.run_installer(source="gitee")
+    def test_auto_measures_all_sources_and_downloads_fastest(self):
+        result, requests, deployed, exists, _, temporary = self.run_installer()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(len(requests), 2)
-        self.assertTrue(all(url.startswith("https://gitee.com/") for url in requests))
+        self.assertEqual(len(requests), 6)
+        self.assertTrue(requests[0].startswith('https://gitee.com/'))
+        self.assertTrue(requests[-1].startswith('https://ghfast.top/'))
+        self.assertTrue(all(not url.endswith('.sha256') for url in requests[1:]))
         self.assertEqual(deployed, ["--mode", "native", "--url", "https://example.test"])
         self.assertTrue(exists)
         self.assertEqual(temporary, [])
 
-    def test_auto_falls_back_to_gitee_when_github_unavailable(self):
-        result, requests, deployed, _, _, _ = self.run_installer(fail="github")
+    def test_unreachable_fastest_mirror_selects_next_available(self):
+        result, requests, deployed, _, _, _ = self.run_installer(fail="ghfast")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(len(requests), 3)
-        self.assertIn("github.com", requests[0])
-        self.assertTrue(all("gitee.com" in url for url in requests[1:]))
+        self.assertTrue(requests[-1].startswith('https://gh-proxy.com/'))
         self.assertTrue(deployed)
+
+    def test_corrupt_fastest_mirror_is_rejected_and_next_mirror_used(self):
+        result, requests, deployed, _, _, _ = self.run_installer(corrupt='ghfast')
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue(requests[-2].startswith('https://ghfast.top/'))
+        self.assertTrue(requests[-1].startswith('https://gh-proxy.com/'))
+        self.assertTrue(deployed)
+
+    def test_official_checksum_failure_does_not_trust_proxy_checksum(self):
+        result, requests, deployed, exists, _, _ = self.run_installer(fail='metadata')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(len(requests), 2)
+        self.assertTrue(all(url.endswith('.sha256') for url in requests))
+        self.assertEqual((deployed, exists), ([], False))
 
     def test_existing_directory_is_preserved_without_network_requests(self):
         result, requests, deployed, _, preserved, temporary = self.run_installer(existing=True)
@@ -102,20 +134,19 @@ bash "$@"
     def test_all_sources_missing_do_not_create_a_partial_installation(self):
         result, requests, deployed, exists, _, temporary = self.run_installer(fail="all")
         self.assertNotEqual(result.returncode, 0)
-        self.assertEqual(len(requests), 2)
+        self.assertEqual(len(requests), 9)
         self.assertEqual((deployed, exists, temporary), ([], False, []))
 
-    def test_commit_mismatch_is_not_executed_and_can_use_matching_mirror(self):
+    def test_commit_mismatch_is_never_executed(self):
         result, requests, deployed, _, _, _ = self.run_installer(expected="0" * 39 + "1", mismatch=True)
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(len(requests), 4)
-        self.assertTrue(deployed)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(deployed)
 
-    def test_explicit_github_does_not_silently_use_gitee(self):
+    def test_explicit_github_does_not_use_proxies(self):
         result, requests, deployed, exists, _, _ = self.run_installer(source="github", fail="github")
         self.assertNotEqual(result.returncode, 0)
-        self.assertEqual(len(requests), 1)
-        self.assertIn("github.com", requests[0])
+        self.assertEqual(len(requests), 3)
+        self.assertTrue(all(url.startswith('https://github.com/') for url in requests[1:]))
         self.assertEqual((deployed, exists), ([], False))
 
 

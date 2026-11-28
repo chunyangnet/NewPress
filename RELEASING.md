@@ -80,7 +80,7 @@ git archive --format=zip --output=newpress-source.zip HEAD
 
 1. 完成上述检查，审阅公开文件清单，在 main 分支提交源码；版本默认值、README 徽章、Docker / Compose 和部署构建均为 1.0.0-beta.2。
 2. 将同一份 main 提交推送到 origin 与 gitee，再在该提交建立 v1.0.0-beta.2 标签并推送两边。不得让同名标签指向不同源码，也不单独升级主题或插件版本。
-3. 在 GitHub 与 Gitee 两种网络环境分别执行 README 的安装入口。确认 Gitee 入口只向 Gitee 获取安装器、部署包和镜像分片；验证原生 / Docker 初始化、管理员登录、重启与健康检查。仓库和标签尚不可访问时，README 的公网安装命令不代表已验证可用。
+3. 在 GitHub 与 Gitee 两种网络环境分别执行 README 的安装入口。确认 Gitee 入口从官方仓库获取安装器与校验值，部署包和镜像分片经 GitHub 及实测加速站下载；验证原生 / Docker 初始化、管理员登录、重启与健康检查。仓库和标签尚不可访问时，README 的公网安装命令不代表已验证可用。
 4. 使用已有 scripts/build_update.py 在发布机器生成并签名一次，--version 1.0.0-beta.2 --channel beta，并指定递增 --sequence、未来 --expires 和源码 --commit；签名密钥按上述本机配置读取，也可显式指定仓库外的 --signing-key。只有确认数据向后兼容时才添加 --data-compatible。不要在两个平台分别重新构建同一版本。
 5. 发布产物包含 packages/、updates/beta.json、LICENSE 和 THIRD_PARTY_LICENSES.txt。在单独的 releases 发布分支维护这些文件（保留历史包），用同一提交同步推送两个主程序仓库。发布分支中的 ZIP 需要 git add -f 精确添加指定文件，不能强制添加整个工作目录。不要覆盖或强推 main；源码镜像同步不代替发布文件同步。
 6. 核对生产签名密钥与内置官方公钥匹配。默认官方安装无需填写 NEWPRESS_UPDATE_PUBLIC_KEY；自定义发布者或私有源才需按受信渠道配置覆盖值。私钥始终保留在发布端，不能放进源码、发布分支或 Docker 上下文。未公开发布签名清单前，不宣称后台公网更新已经上线。
@@ -90,6 +90,6 @@ git archive --format=zip --output=newpress-source.zip HEAD
 
 ## 预编译部署包
 
-发布端通过 `.github/workflows/release-build.yml` 在 Linux amd64 / arm64 主机构建应用及已修补的 PostgreSQL、NGINX、Redis 镜像，实测部署后保存镜像归档和二进制。`scripts/build_deployment.py` 将这些产物打包，剔除 Compose 的构建配置，生成平台清单、校验值和 48 MiB 镜像分片。所有分片、运行包及部署包在 GitHub Release 和 Gitee 的 `releases` 分支 `distributions/<版本>/` 保持相同内容。
+发布端通过 `.github/workflows/release-build.yml` 在 Linux amd64 / arm64 主机构建应用及已修补的 PostgreSQL、NGINX、Redis 镜像，实测部署后保存镜像归档和二进制。`scripts/build_deployment.py` 将这些产物打包，剔除 Compose 的构建配置，生成平台清单、校验值和 48 MiB 镜像分片。所有分片、运行包及部署包上传 GitHub Release。官方两仓库的 `releases` 分支同步小型校验值与签名清单；后台核心 ZIP 保留在 GitHub `releases` 分支供固定提交下载。Gitee 大文件匿名访问受限，不能作为免登录下载保证。加速站仅传输官方固定地址对应的字节，部署包校验值只能从官方仓库取得，核心包保持签名和摘要校验。
 
 一键安装器按架构获取 `*-deploy.tar.gz` 及其 `.sha256`。运行包不得包含私钥、环境密钥、已初始化的站点状态或私有文档。部署侧不会下载 Go 工具链或编译程序；完整源码检出仍可用于开发者自行构建。

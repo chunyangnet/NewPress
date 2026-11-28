@@ -14,14 +14,14 @@ import (
 func (m *Manager) downloadArchive(ctx context.Context, source Source, available Available, artifact Artifact, file *os.File, state *State) error {
 	var attempts []func() (*http.Response, error)
 	if source.Official {
-		for _, mirror := range available.Mirrors {
-			for _, repo := range m.client.repositories {
-				if mirror.Source == repo.name && commitPattern.MatchString(mirror.Commit) {
-					attempts = append(attempts, func() (*http.Response, error) {
-						return m.client.publicGet(ctx, repo.raw+"/"+mirror.Commit+"/"+escapedPath(artifact.Path))
-					})
-				}
-			}
+		candidates, accelerated := m.client.publicDownloads(available, artifact)
+		if accelerated {
+			candidates = m.client.rankPublicDownloads(ctx, candidates, artifact.Size)
+		}
+		for _, candidate := range candidates {
+			attempts = append(attempts, func() (*http.Response, error) {
+				return m.client.publicGet(ctx, candidate.url)
+			})
 		}
 	} else {
 		attempts = append(attempts, func() (*http.Response, error) {

@@ -48,8 +48,7 @@ def docker_metadata(args):
             digest.update(data)
             total += len(data)
     result = {'images': images, 'sha256': digest.hexdigest(), 'size': total, 'parts': parts,
-              'mirrors': {'github': f'https://github.com/chunyangnet/NewPress/releases/download/v{args.version}',
-                          'gitee': f'https://gitee.com/chunyangnet_0/newpress/raw/releases/distributions/{args.version}'}}
+              'mirrors': {'github': f'https://github.com/chunyangnet/NewPress/releases/download/v{args.version}'}}
     (args.output / f'docker-linux-{args.arch}.json').write_text(json.dumps(result, indent=2) + '\n', encoding='utf-8')
 
 

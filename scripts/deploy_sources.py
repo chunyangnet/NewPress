@@ -14,6 +14,20 @@ class SourceError(RuntimeError):
     pass
 
 
+GITHUB_PROXIES = [('gh-proxy', 'https://gh-proxy.com/'),
+                  ('ghfast', 'https://ghfast.top/'), ('ghproxy', 'https://ghproxy.net/')]
+
+
+def github_candidates(url, policy='auto'):
+    parsed = urllib.parse.urlsplit(https_base(url))
+    if parsed.hostname != 'github.com' or not parsed.path.startswith('/chunyangnet/NewPress/releases/download/'):
+        raise SourceError('预编译包必须来自官方 GitHub Release')
+    choices = [('GitHub', url)]
+    if policy == 'auto':
+        choices += [(name, prefix + url) for name, prefix in GITHUB_PROXIES]
+    return choices
+
+
 class SafeRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, request, response, code, message, headers, target):
         if urllib.parse.urlsplit(target).scheme != "https":
@@ -192,6 +206,16 @@ class Selector:
             self.log(f"{label}：优先使用本次采样最快的 {available[0]['name']}，失败后依次切换。")
         return available
 
+    def github_release(self, url, size):
+        sample_size = min(size, 256 * 1024)
+
+        def probe(target):
+            data = self.read(target, sample=True, limit=sample_size)
+            if len(data) != sample_size or not data.startswith(b'\x1f\x8b'):
+                raise SourceError('镜像采样不是完整的发布文件片段')
+
+        return self.rank('预构建镜像下载', github_candidates(url, self.policy), probe)
+
     def docker_apt(self, distro, arch):
         family, codename = distro.get("ID"), distro.get("VERSION_CODENAME", "")
         if family not in ("debian", "ubuntu") or not re.fullmatch(r"[a-z]+", codename):
@@ -357,11 +381,11 @@ def go_metadata(root, arch):
     return matches[0]
 
 
-def download_verified(choices, destination, digest, log=print):
+def download_verified(choices, destination, digest, log=print, expected_size=None):
     opener = urllib.request.build_opener(SafeRedirect())
     for choice in choices:
         log(f"下载并校验发布文件：{choice['name']}")
-        hasher = hashlib.sha256()
+        hasher, size = hashlib.sha256(), 0
         deadline = time.monotonic() + 600
         try:
             with opener.open(choice["url"], timeout=20) as response, destination.open("wb") as stream:
@@ -371,12 +395,15 @@ def download_verified(choices, destination, digest, log=print):
                     block = response.read(65536)
                     if not block:
                         break
+                    size += len(block)
+                    if expected_size is not None and size > expected_size:
+                        raise SourceError('下载大小超过发布清单')
                     hasher.update(block)
                     stream.write(block)
-            if hasher.hexdigest() != digest:
+            if (expected_size is not None and size != expected_size) or hasher.hexdigest() != digest:
                 raise SourceError("SHA-256 不匹配")
-            return
+            return choice
         except (OSError, SourceError, urllib.error.URLError):
             destination.unlink(missing_ok=True)
             log(f"{choice['name']} 下载或校验失败，尝试下一个源。")
-    raise SourceError("所有 Go 工具链源下载失败；未使用未校验的产物")
+    raise SourceError("所有发布文件下载源均失败；未使用未校验的产物")

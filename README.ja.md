@@ -87,17 +87,17 @@ Linux、Bash、curl、tar、sha256sum が必要です。Debian / Ubuntu: `sudo a
 
 ```bash
 curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time 60 -o newpress-install.sh https://raw.githubusercontent.com/chunyangnet/NewPress/v1.0.0-beta.2/install.sh && \
-bash newpress-install.sh --source github --dir ./newpress
+bash newpress-install.sh --source auto --dir ./newpress
 ```
 
-**Gitee（インストーラー、配布物、ビルド済みイメージを Gitee から取得）：**
+**Gitee 入口（インストーラーは Gitee、配布物は GitHub プロキシを速度測定して取得）：**
 
 ```bash
 curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time 60 -o newpress-install.sh https://gitee.com/chunyangnet_0/newpress/raw/v1.0.0-beta.2/install.sh && \
-bash newpress-install.sh --source gitee --dir ./newpress
+bash newpress-install.sh --source auto --dir ./newpress
 ```
 
-`--source auto` は GitHub、Gitee の順に試します。`--source gitee` は配布物とイメージ分割ファイルを Gitee からのみ取得します。`--ref` は公開済みタグ、`--commit` はソースコミットの追加確認に使えます。不足するシステムコンポーネントは各パッケージリポジトリから導入します。
+`--source auto` は導入先サーバーから GitHub、gh-proxy.com、ghfast.top、ghproxy.net の同じファイル断片を並列取得し、最速の有効な転送先を優先します。ダウンロードやハッシュ検証に失敗すると次の候補へ切り替えます。`--source github` は直接取得、`--ref` は公開タグ、`--commit` はソースコミット確認用です。チェックサムは公式 GitHub / Gitee のみから取得します。システム依存は各パッケージソースから導入します。
 
 対象は新しいディレクトリに限ります。導入オプションは `--` の後（例: `-- --mode native`）に指定します。導入ディレクトリを保存し、その `scripts/deploy.sh` で管理してください。
 
@@ -304,6 +304,8 @@ sudo bash scripts/deploy.sh deploy --compose-file deploy/compose.mail.yaml
 公式更新の公開鍵はプログラムに組み込まれているため、初回インストールで公開鍵やアクセストークンを設定する必要はありません。公開鍵ファイルは [official_ed25519.pub](internal/update/official_ed25519.pub) を参照してください。独自の配信者を使用する場合は、信頼できる経路でその公開鍵を取得し、`NEWPRESS_UPDATE_PUBLIC_KEY` で組み込み鍵を上書きします。非公開ソースでは配信者の公開鍵を明示的に設定する必要があります。上書き値が無効な場合はエラーとなり、公式鍵へ自動的に戻ることはありません。検証対象の更新リポジトリから新しい公開鍵を自動的に取り込むこともありません。配信ブランチや署名付きマニフェストが未公開なら、確認処理は明示的に失敗し、ファイルの欠落を「最新版」とは扱いません。
 
 サーバーは両方のマニフェストを並列検証し、署名済みシーケンス番号が大きい有効なマニフェストを優先します。同じ番号で内容が異なる場合は更新を停止します。パッケージの取得先は、同一リリースであることを検証できたソース間でのみ切り替えます。各ソースを確認時のコミットに固定し、パッケージの長さと SHA-256 を再検証します。既存の非公開 Gitee ソース設定は保持され、更新ソース設定から公式公開ソースに戻せます。公開リクエストに非公開トークンは付加しません。
+
+コア更新も GitHub プロキシを速度測定し、失敗時に切り替えます。Gitee の大容量ファイルにはログインが必要なため、匿名ダウンロードには GitHub とそのプロキシを使用します。マニフェストは公式リポジトリのみから取得し、署名、サイズ、SHA-256 の検証を必須とします。
 
 インストール前にリリースノートを読み、バックアップから復元できることを確認してください。ソースからの更新は前述の手順で再デプロイします。初期導入したプロセス監視プログラム、コンテナのベースイメージ、デプロイプロトコルの更新も、ソース / イメージの再デプロイで行います。初回インストーラーで既存ディレクトリを上書きしないでください。
 

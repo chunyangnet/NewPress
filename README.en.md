@@ -87,17 +87,17 @@ The server needs Linux, Bash, curl, tar, and sha256sum. On Debian / Ubuntu: `sud
 
 ```bash
 curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time 60 -o newpress-install.sh https://raw.githubusercontent.com/chunyangnet/NewPress/v1.0.0-beta.2/install.sh && \
-bash newpress-install.sh --source github --dir ./newpress
+bash newpress-install.sh --source auto --dir ./newpress
 ```
 
-**Gitee (deployment bundles and prebuilt images are downloaded from Gitee):**
+**Gitee entry (installer from Gitee; release packages use measured GitHub proxies):**
 
 ```bash
 curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time 60 -o newpress-install.sh https://gitee.com/chunyangnet_0/newpress/raw/v1.0.0-beta.2/install.sh && \
-bash newpress-install.sh --source gitee --dir ./newpress
+bash newpress-install.sh --source auto --dir ./newpress
 ```
 
-`--source auto` tries GitHub and then Gitee. `--source gitee` fetches the bundle and image parts only from Gitee. `--ref` selects a published version tag; `--commit` optionally checks its source commit. Missing system components use their own package repositories.
+`--source auto` concurrently samples GitHub, gh-proxy.com, ghfast.top, and ghproxy.net from the installation server and prefers the fastest valid file transfer. Download or checksum failures try the next source. `--source github` downloads packages directly; `--ref` selects a release tag and `--commit` checks its source commit. Checksums come only from official GitHub / Gitee repositories. Missing system components use their own package repositories.
 
 The destination must be a new directory. Deployment options follow `--`, for example `-- --mode native`. Keep the deployment directory to run its `scripts/deploy.sh` management commands.
 
@@ -304,6 +304,8 @@ The `/admin/updates/` dashboard uses both official public sources by default, wi
 The official update public key is embedded in the application. A fresh installation does not need a manually configured public key or access token; see [official_ed25519.pub](internal/update/official_ed25519.pub). For a custom publisher, obtain its public key through a trusted channel and set `NEWPRESS_UPDATE_PUBLIC_KEY` to override the built-in key. Private sources require an explicitly configured publisher key. An invalid override produces an error instead of silently falling back to the official key. The application never imports a new public key automatically from the update repository it is verifying. If the release branch or signed manifest has not been published, the check fails explicitly; missing files do not mean “up to date.”
 
 The server verifies both manifests in parallel and prefers the valid one with the higher signed sequence number. Conflicting contents with the same sequence stop the update. Packages switch only between sources verified to contain the same release. Each source is pinned to the checked commit, and package length and SHA-256 are verified. Existing private Gitee source configuration is retained; switch back to the official public sources in update-source settings. Public requests never carry private tokens.
+
+Core package downloads also measure GitHub proxies and fall back on failure. Gitee requires login for large files, so anonymous package downloads use GitHub and its proxies. Manifests are fetched only from official repositories; signatures, sizes, and SHA-256 remain mandatory.
 
 Read the release notes and confirm that backups can be restored before installing. Source-based updates still require redeployment as described above. Updates to the original supervisor binary, container base images, or deployment protocol also require source / image redeployment. Do not run the first-time installer over an existing directory.
 

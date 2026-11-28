@@ -48,10 +48,14 @@ def install_images(root, manifest, arch, run, log):
 
     if not all(matches(item) for item in images.values()):
         origin = (root / 'INSTALL_SOURCE').read_text(encoding='utf-8').strip() if (root / 'INSTALL_SOURCE').exists() else 'auto'
-        mirrors = docker['mirrors']
-        if origin not in ('auto', 'github', 'gitee'):
+        if origin not in ('auto', 'github'):
             raise ValueError('部署包来源设置无效')
-        selected = [name for name in ('github', 'gitee') if origin in ('auto', name)]
+        base = sources.https_base(docker['mirrors']['github'])
+        first = docker['parts'][0]
+        selector = sources.Selector('auto' if origin == 'auto' else 'official', timeout=10, log=log)
+        ranked = selector.github_release(base + '/' + first['name'], first['size'])
+        # Retain the measured order across all parts, promoting a working fallback.
+        selected = [{'name': item['name'], 'base': item['url'].rsplit('/', 1)[0]} for item in ranked]
         with tempfile.TemporaryDirectory(prefix='newpress-images-') as temporary:
             directory = Path(temporary)
             archive = directory / 'images.tar.gz'
@@ -63,9 +67,10 @@ def install_images(root, manifest, arch, run, log):
                             or not 0 < part['size'] <= 64 * 1024 * 1024
                             or not re.fullmatch(r'[a-f0-9]{64}', part['sha256'])):
                         raise ValueError('镜像分片清单无效')
-                    choices = [{'name': key, 'url': sources.https_base(mirrors[key]) + '/' + name} for key in selected]
+                    choices = [{'name': item['name'], 'url': item['base'] + '/' + name} for item in selected]
                     target = directory / f'part-{index}'
-                    sources.download_verified(choices, target, part['sha256'], log)
+                    used = sources.download_verified(choices, target, part['sha256'], log, expected_size=part['size'])
+                    selected.sort(key=lambda item: item['name'] != used['name'])
                     if target.stat().st_size != part['size']:
                         raise ValueError('镜像分片长度不匹配')
                     with target.open('rb') as source:

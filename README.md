@@ -87,19 +87,19 @@ NewPress 提供文章、页面、媒体库和管理后台，可用于博客、�
 
 ```bash
 curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time 60 -o newpress-install.sh https://raw.githubusercontent.com/chunyangnet/NewPress/v1.0.0-beta.2/install.sh && \
-bash newpress-install.sh --source github --dir ./newpress
+bash newpress-install.sh --source auto --dir ./newpress
 ```
 
-**Gitee 国内入口（安装器、程序和预构建镜像均从 Gitee 下载）：**
+**Gitee 国内入口（安装器从 Gitee 下载，部署包自动测速 GitHub 加速站）：**
 
 ```bash
 curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time 60 -o newpress-install.sh https://gitee.com/chunyangnet_0/newpress/raw/v1.0.0-beta.2/install.sh && \
-bash newpress-install.sh --source gitee --dir ./newpress
+bash newpress-install.sh --source auto --dir ./newpress
 ```
 
-已取得安装器时，可用 `--source auto` 按 GitHub、Gitee 顺序失败切换；`--ref` 指定已发布版本标签，`--commit` 可额外核对发布说明中的完整源码提交 SHA。指定 `--source gitee` 时，部署包及镜像分片均只从 Gitee 获取。Docker / Python 等系统组件缺失时，仍由向导从对应软件源安装。
+默认 `--source auto` 在服务器上并行采样 GitHub、gh-proxy.com、ghfast.top、ghproxy.net，按同一文件片段的耗时选最快可用源，下载或校验失败自动切换。`--source github` 仅直连下载包；`--ref` 选择发布标签，`--commit` 可额外核对源码提交。校验值只从官方 GitHub / Gitee 获取，镜像仅传输文件。Docker / Python 等系统组件由向导从对应软件源安装。
 
-安装器只写入**不存在的新目录**，不会覆盖已有配置或站点数据。部署参数放在 `--` 后，例如 `bash newpress-install.sh --source gitee --dir ./newpress -- --mode native`。安装后保留部署目录，后续管理命令从其 `scripts/deploy.sh` 执行。
+安装器只写入**不存在的新目录**，不会覆盖已有配置或站点数据。部署参数放在 `--` 后，例如 `bash newpress-install.sh --source auto --dir ./newpress -- --mode native`。安装后保留部署目录，后续管理命令从其 `scripts/deploy.sh` 执行。
 
 ### Linux 安装向导
 
@@ -304,6 +304,8 @@ sudo bash scripts/deploy.sh deploy --compose-file deploy/compose.mail.yaml
 官方更新公钥随程序内置，首次安装无需填写公钥或访问令牌，公开公钥文件见 [official_ed25519.pub](internal/update/official_ed25519.pub)。需要自定义发布者时，可通过受信渠道取得其公钥并设置 `NEWPRESS_UPDATE_PUBLIC_KEY`，覆盖内置值；私有源必须显式配置其发布者公钥。无效的覆盖值会报错，不会静默退回官方公钥。程序不会从待验证的更新仓库自动导入新公钥。发布分支或签名清单尚未上传时，检查会明确失败，不会把缺失文件当成“已是最新版本”。
 
 服务端并行核验两边清单，优先采用有效的较高签名序号；同一序号内容冲突时停止更新。更新包只在已经核验为同一发布的源之间切换，每个源固定到检查到的提交，并复核包长度与 SHA-256。已有 Gitee 私有源配置继续保留，可在更新源设置中切回官方公开双源；公开请求不携带私有令牌。
+
+后台下载核心包也会测速 GitHub 加速站并在失败时切换；Gitee 大文件需要登录，因此不能用作免登录包下载源。校验清单仍只从官方仓库获取，所有下载必须匹配官方签名、长度和 SHA-256。
 
 安装前阅读发布说明并确认可恢复的备份。源码更新仍按前述步骤重新部署；初始托管程序、容器基础镜像或部署协议升级也通过源码 / 镜像重新部署完成。不要用首次安装器覆盖已有目录。
 

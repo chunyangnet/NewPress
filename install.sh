@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# Install an immutable prebuilt deployment bundle from either official mirror.
+# Download prebuilt bundles through measured mirrors; trust only official checksums.
 set -euo pipefail
 np_source=auto np_ref=v1.0.0-beta.2 np_dir=./newpress np_commit=''
 np_args=()
 np_usage() {
   printf '%s\n' 'NewPress 预编译部署包安装器（1.0.0-beta.2）' \
-    '用法：bash install.sh [--source auto|github|gitee] [--ref 版本标签] [--dir 新目录] [--commit 完整SHA] [-- 部署参数]' \
+    '用法：bash install.sh [--source auto|github] [--ref 版本标签] [--dir 新目录] [--commit 完整SHA] [-- 部署参数]' \
     '自动选择 Linux amd64 / arm64，下载并校验预编译部署包，无需 Git、Go 或 Node.js。' \
+    'auto 对 GitHub 和多个加速站并行测速，github 仅使用直连；校验值只从官方仓库获取。' \
     '需要 Bash、curl、tar 和 sha256sum。目标目录必须不存在；Docker 模式另下载预构建镜像。' \
     '已有部署请使用后台核心更新，或在原部署目录执行 bash scripts/deploy.sh。'
 }
@@ -26,7 +27,7 @@ while (( $# )); do
 done
 [[ "$(uname -s)" == Linux ]] || { printf '%s\n' '请在 Linux 服务器执行安装。' >&2; exit 1; }
 case "$(uname -m)" in x86_64|amd64) np_arch=amd64 ;; aarch64|arm64) np_arch=arm64 ;; *) printf '%s\n' '仅支持 Linux amd64 / arm64。' >&2; exit 1 ;; esac
-case "$np_source" in auto|github|gitee) ;; *) printf '%s\n' '--source 只接受 auto / github / gitee。' >&2; exit 2 ;; esac
+case "$np_source" in auto|github) ;; *) printf '%s\n' '--source 只接受 auto / github；Gitee 大文件需登录，请使用 auto 自动选择 GitHub 加速站。' >&2; exit 2 ;; esac
 for np_tool in curl tar sha256sum; do command -v "$np_tool" >/dev/null || { printf '缺少 %s，请先通过系统包管理器安装。\n' "$np_tool" >&2; exit 1; }; done
 [[ "$np_ref" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z]+([.-][0-9A-Za-z]+)*)?$ ]] || { printf '%s\n' '--ref 需要已发布的版本标签，例如 v1.0.0-beta.2。' >&2; exit 2; }
 [[ -z "$np_commit" || "$np_commit" =~ ^[a-f0-9]{40}$ ]] || { printf '%s\n' '--commit 需要完整的 40 位提交 SHA。' >&2; exit 2; }
@@ -37,28 +38,61 @@ np_target="$np_parent/$(basename -- "$np_dir")"
 np_stage="$(mktemp -d "$np_parent/.newpress-install.XXXXXXXX")"
 np_cleanup() { case "${np_stage:-}" in "$np_parent"/.newpress-install.*) rm -rf -- "$np_stage" ;; esac; }
 trap np_cleanup EXIT
-np_sources=(github gitee)
-[[ "$np_source" == auto ]] || np_sources=("$np_source")
 np_file="newpress-${np_ref#v}-linux-$np_arch-deploy.tar.gz"
 np_selected=''
 np_download() {
   curl --proto '=https' --proto-redir '=https' --fail --location --silent --show-error \
-    --connect-timeout 15 --max-time 600 --max-filesize 134217728 --retry 2 --output "$2" "$1"
+    --connect-timeout 15 --max-time 600 --speed-limit 1024 --speed-time 20 \
+    --max-filesize 134217728 --retry 1 --output "$2" "$1"
 }
-for np_candidate in "${np_sources[@]}"; do
-  case "$np_candidate" in
-    github) np_base="https://github.com/chunyangnet/NewPress/releases/download/$np_ref" ;;
-    gitee) np_base="https://gitee.com/chunyangnet_0/newpress/raw/releases/distributions/${np_ref#v}" ;;
-  esac
+np_hash=''
+# Never fetch the checksum through a third-party download proxy.
+for np_checksums in \
+  'https://gitee.com/chunyangnet_0/newpress/raw/releases' \
+  'https://raw.githubusercontent.com/chunyangnet/NewPress/releases'; do
+  if curl --proto '=https' --proto-redir '=https' --fail --location --silent --show-error \
+    --connect-timeout 5 --max-time 15 --max-filesize 4096 \
+    --output "$np_stage/official.sha256" "$np_checksums/distributions/${np_ref#v}/$np_file.sha256"; then
+    read -r np_hash np_unused < "$np_stage/official.sha256" || true
+    np_hash="${np_hash%$'\r'}"
+    [[ "$np_hash" =~ ^[a-f0-9]{64}$ ]] && break
+  fi
+  np_hash=''
+done
+[[ "$np_hash" =~ ^[a-f0-9]{64}$ ]] || { printf '%s\n' '无法取得官方校验值，已停止安装。' >&2; exit 1; }
+np_origin="https://github.com/chunyangnet/NewPress/releases/download/$np_ref/$np_file"
+np_names=(GitHub gh-proxy ghfast ghproxy)
+np_prefixes=('' 'https://gh-proxy.com/' 'https://ghfast.top/' 'https://ghproxy.net/')
+[[ "$np_source" == auto ]] || { np_names=(GitHub); np_prefixes=(''); }
+np_probe() {
+  local np_index="$1" np_stats np_code np_speed np_size np_magic
+  np_stats=$(curl --proto '=https' --proto-redir '=https' --fail --location --silent \
+    --connect-timeout 4 --max-time 10 --max-filesize 1048576 --range 0-262143 \
+    --output "$np_stage/sample-$np_index" --write-out '%{http_code} %{speed_download} %{size_download}' \
+    "${np_prefixes[$np_index]}$np_origin") || np_stats='0 0 0'
+  read -r np_code np_speed np_size <<< "$np_stats"
+  np_magic=$(od -An -tx1 -N2 "$np_stage/sample-$np_index" 2>/dev/null | tr -d ' \n') || np_magic=''
+  if [[ "$np_code" =~ ^20[06]$ && "$np_size" =~ ^[0-9]+$ && "$np_size" -ge 65536 && "$np_magic" == 1f8b ]]; then
+    printf '%s  %s 字节/秒\n' "${np_names[$np_index]}" "$np_speed" >&2
+  else
+    np_speed=0
+    printf '%s  采样不可用，将作为下载备用\n' "${np_names[$np_index]}" >&2
+  fi
+  printf '%s %s\n' "$np_speed" "$np_index" > "$np_stage/rank-$np_index"
+}
+printf '%s\n' '在当前服务器并行测试 GitHub 下载源（每源最多 256 KiB，10 秒超时）…'
+np_jobs=()
+for np_index in "${!np_names[@]}"; do np_probe "$np_index" & np_jobs+=("$!"); done
+for np_job in "${np_jobs[@]}"; do wait "$np_job"; done
+sort -k1,1nr -k2,2n "$np_stage"/rank-* > "$np_stage/ranked"
+while read -r np_speed np_index; do
+  np_candidate="${np_names[$np_index]}"
   np_checkout="$np_stage/$np_candidate"
   mkdir -- "$np_checkout"
   printf '从 %s 下载 %s（linux/%s）…\n' "$np_candidate" "$np_ref" "$np_arch"
-  if ! np_download "$np_base/$np_file.sha256" "$np_stage/$np_candidate.sha256" || \
-     ! np_download "$np_base/$np_file" "$np_stage/$np_candidate.tar.gz"; then
+  if ! np_download "${np_prefixes[$np_index]}$np_origin" "$np_stage/$np_candidate.tar.gz"; then
     printf '%s 下载失败，尝试下一个指定源。\n' "$np_candidate" >&2; continue
   fi
-  read -r np_hash np_unused < "$np_stage/$np_candidate.sha256" || true
-  np_hash="${np_hash%$'\r'}"
   if [[ ! "$np_hash" =~ ^[a-f0-9]{64}$ ]] || ! (cd "$np_stage" && printf '%s  %s.tar.gz\n' "$np_hash" "$np_candidate" | sha256sum --check --status); then
     printf '%s 部署包校验失败，不执行。\n' "$np_candidate" >&2; continue
   fi
@@ -77,7 +111,7 @@ for np_candidate in "${np_sources[@]}"; do
   chmod +x "$np_checkout/bin/newpress"
   np_selected="$np_candidate"
   break
-done
+done < "$np_stage/ranked"
 [[ -n "$np_selected" ]] || { printf '%s\n' '指定源均未提供可校验的部署包。请确认版本已发布。'; exit 1; }
 [[ ! -e "$np_target" && ! -L "$np_target" ]] || { printf '%s\n' '目标目录在下载期间被创建，已停止。' >&2; exit 1; }
 mv -T -- "$np_checkout" "$np_target"

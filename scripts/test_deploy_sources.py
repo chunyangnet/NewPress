@@ -41,6 +41,26 @@ class SourceTests(unittest.TestCase):
         with self.assertRaises(sources.SourceError):
             sources.image_candidates("postgres:latest")
 
+    def test_github_proxies_only_transport_official_public_release_urls(self):
+        url = 'https://github.com/chunyangnet/NewPress/releases/download/v1.0.0-beta.2/file.part000'
+        choices = sources.github_candidates(url)
+        self.assertEqual(len(choices), 4)
+        self.assertTrue(all(target.endswith(url) for _, target in choices))
+        self.assertEqual(sources.github_candidates(url, 'official'), [('GitHub', url)])
+        for invalid in ('https://github.com/other/private/archive.zip', url + '?token=secret',
+                        url.replace('github.com/', 'github.com.evil/')):
+            with self.assertRaises(sources.SourceError):
+                sources.github_candidates(invalid)
+
+    def test_github_probe_requires_same_amount_of_real_archive_bytes(self):
+        url = 'https://github.com/chunyangnet/NewPress/releases/download/v1.0.0-beta.2/file.part000'
+        self.selector.policy = 'official'
+        with patch.object(self.selector, 'read', return_value=b'\x1f\x8b' + b'x' * 98) as read:
+            self.assertEqual(len(self.selector.github_release(url, 100)), 1)
+            read.assert_called_once_with(url, sample=True, limit=100)
+        with patch.object(self.selector, 'read', return_value=b'\x1f\x8b'), self.assertRaises(sources.SourceError):
+            self.selector.github_release(url, 100)
+
     def test_invalid_mirror_url_is_rejected(self):
         for url in ("http://mirror.example", "https://user:pass@mirror.example", "https://mirror.example?q=token",
                     "https://mirror.example/#token", "https://mirror.example:0", "https://mirror.example:99999"):
