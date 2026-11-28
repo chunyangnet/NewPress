@@ -54,6 +54,7 @@ import (
 	"newpress.local/newpress/internal/version"
 	"newpress.local/newpress/internal/virtualcurrency"
 	"newpress.local/newpress/internal/wechat"
+	"newpress.local/newpress/internal/writingtemplate"
 )
 
 type App struct {
@@ -125,6 +126,19 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	aiSettings, err := aieditor.NewSettingsStore(filepath.Join(cfg.DataDir, "ai-settings.json"))
 	if err != nil {
 		return nil, fmt.Errorf("load AI settings: %w", err)
+	}
+	var templateStorage writingtemplate.Storage
+	if pool != nil {
+		templateStorage = database.NewWritingTemplateStorage(pool)
+	} else {
+		templateStorage, err = writingtemplate.NewFileStorage(filepath.Join(cfg.DataDir, "writing-templates.json"))
+		if err != nil {
+			return nil, fmt.Errorf("open writing templates: %w", err)
+		}
+	}
+	writingTemplates, err := writingtemplate.New(ctx, templateStorage)
+	if err != nil {
+		return nil, fmt.Errorf("load writing templates: %w", err)
 	}
 	aiTelemetry, err := aieditor.NewTelemetryStore(filepath.Join(cfg.DataDir, "ai-usage.json"), aiSettings.Operations)
 	if err != nil {
@@ -405,6 +419,7 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	server.SetQuestionsStore(questionStore)
 	server.SetAuditReader(auditReader)
 	server.SetAISettings(aiSettings)
+	server.SetWritingTemplates(writingTemplates)
 	server.SetAITelemetry(aiTelemetry)
 	server.SetAIReports(aiReports)
 	server.SetAccessSettings(accessSettings)

@@ -2,7 +2,10 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
-const source = fs.readFileSync(require('node:path').join(__dirname, '../../internal/coreui/assets/js/chunnel-plugins.js'), 'utf8');
+const {compile}=require('./helpers/typescript.cjs');
+const source=process.env.CHUNNEL_PLUGINS_SOURCE?fs.readFileSync(process.env.CHUNNEL_PLUGINS_SOURCE,'utf8'):compile('frontend/core/plugins.ts');
+const savedReceipt=(f,version,key_saved)=>{const settings={...JSON.parse(f.calls.at(-1).options.body).settings,version};delete settings.key;return{settings,key_saved};};
+const location=(extra={})=>({country:'',region:'',city:'',precision:'',provider:'',...extra});
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
 function fixture() {
@@ -31,11 +34,11 @@ function fixture() {
   form.elements = {namedItem: name => fields[name]};
   form.querySelectorAll = () => [...Object.values(fields).filter(input => input !== fields.flag_mode), ...flagInputs, ...rules.flatMap(r => [r.location, r.device])];
   form.querySelector = () => submit;
-  const tester = put('[data-origin-test]'); tester.elements = {ip: node('8.8.8.8')}; tester.querySelector = () => node();
-  const record = put('[data-origin-record]'); record.elements = {comment_id: node('1')}; record.querySelector = () => node();
+  const tester = put('[data-origin-test]'); tester.elements = {ip: node('8.8.8.8')}; tester.querySelector = selector => selector==='[name=ip]'?tester.elements.ip:node();
+  const record = put('[data-origin-record]'); record.elements = {comment_id: node('1')}; record.querySelector = selector => selector==='[name=comment_id]'?record.elements.comment_id:node();
   const retry = node(); retry.dataset = {pluginAction: 'retry', slug: 'comment-origin'};
   const root = {dataset: {userId: '1', csrf: 'csrf'}, querySelector: get, querySelectorAll: selector => selector === '[data-origin-role]' ? rules : selector === '[data-plugin-action]' ? [retry] : []};
-  vm.runInNewContext(source, { document: {querySelector: () => root}, window: {addEventListener: (type, fn) => { events[type] = fn; }}, location: {reload: () => { reloads++; }}, fetch: (path, options) => new Promise((resolve, reject) => calls.push({path, options, resolve, reject})) });
+  vm.runInNewContext(source, { document: {events:{},addEventListener(n,f){this.events[n]=f;},removeEventListener(){},querySelector: () => root}, window: {addEventListener: (type, fn) => { events[type] = fn; }}, AbortController,setTimeout,clearTimeout, location: {reload: () => { reloads++; }}, fetch: (path, options) => new Promise((resolve, reject) => calls.push({path, options, resolve, reject})) });
   const respond = (result, status = 200) => calls.at(-1).resolve({ok: status < 400, status, json: async () => result});
   const fire = (target, type) => target.events[type]({preventDefault() {}, currentTarget: target});
   const dirty = () => { let prevented = false; events.beforeunload({preventDefault() {prevented = true;}}); return prevented; };
@@ -64,7 +67,7 @@ test('a failed second diagnostic replaces the first successful result in place',
 
 test('failed private record lookup clears the previous IP instead of retaining it', async () => {
   const f = fixture(); f.fire(f.record, 'submit');
-  f.respond({id: 1, ip: '8.8.8.8', status: 'resolved', location: {country: '美国'}, ua: 'Windows'}); await tick();
+  f.respond({id: 1, ip: '8.8.8.8', status: 'resolved', source_label:'TCP',location: location({country: '美国'}), ua: 'Windows'}); await tick();
   assert.match(f.get('[data-record-result]').textContent, /美国/);
   f.record.elements.comment_id.value = '2'; f.fire(f.record, 'submit');
   f.respond({error: {message: '评论不存在'}}, 404); await tick();
@@ -73,7 +76,7 @@ test('failed private record lookup clears the previous IP instead of retaining i
 
 test('unverified CDN source explains missing IP without claiming retention expiry', async () => {
   const f = fixture(); f.fire(f.record, 'submit');
-  f.respond({id: 1, status: 'unavailable', source_label: '阿里云 ESA', source_issue_label: '缺少真实 IP 标头', location: {}, ua: 'Windows'}); await tick();
+  f.respond({id: 1, status: 'unavailable', source_label: '阿里云 ESA', source_issue_label: '缺少真实 IP 标头', location: location(), ua: 'Windows'}); await tick();
   const message = f.get('[data-record-result]').textContent;
   assert.match(message, /阿里云 ESA/);
   assert.match(message, /未采集（来源未通过验证）/);
@@ -93,10 +96,10 @@ test('role and device previews leave the saved form clean; reverting edits remov
 test('save preserves newer role edits and only clears the submitted secret', async () => {
   const f = fixture(); f.fields.key.value = 'submitted'; f.fire(f.form, 'input'); f.fire(f.form, 'submit');
   f.rules[0].location.checked = false; f.fields.key.value = 'newer-secret'; f.fire(f.form, 'input');
-  f.respond({settings: {version: 2}, key_saved: true}); await tick();
-  assert.equal(f.form.dataset.version, 2); assert.equal(f.rules[0].location.checked, false);
+  f.respond(savedReceipt(f,2,true)); await tick();
+  assert.equal(f.form.dataset.version, '2'); assert.equal(f.rules[0].location.checked, false);
   assert.equal(f.fields.key.value, 'newer-secret'); assert.equal(f.dirty(), true);
-  f.fire(f.form, 'submit'); f.respond({settings: {version: 3}, key_saved: true}); await tick();
+  f.fire(f.form, 'submit'); f.respond(savedReceipt(f,3,true)); await tick();
   assert.equal(f.fields.key.value, ''); assert.equal(f.dirty(), false);
   f.rules[0].device.checked = false; f.fire(f.form, 'change'); assert.equal(f.dirty(), true);
   f.rules[0].device.checked = true; f.fire(f.form, 'change'); assert.equal(f.dirty(), false);
@@ -142,7 +145,17 @@ test('flag radios track dirty state, persist mode and code mapping, and preserve
   const saved = JSON.parse(f.calls.at(-1).options.body).settings;
   assert.equal(saved.flag_mode, 'off'); assert.equal(saved.country_code_path, 'geo.iso');
   f.fields.flag_mode.value = 'all'; f.fire(f.form, 'change');
-  f.respond({settings: {version: 2}, key_saved: false}); await tick();
+  f.respond(savedReceipt(f,2,false)); await tick();
   assert.equal(f.fields.flag_mode.value, 'all'); assert.equal(f.dirty(), true);
   f.fields.flag_mode.value = 'off'; f.fire(f.form, 'change'); assert.equal(f.dirty(), false);
+});
+
+
+test('a mismatched full settings receipt keeps secret and original version',async()=>{
+ const f=fixture();f.fields.key.value='preserve';f.fire(f.form,'submit');const receipt=savedReceipt(f,2,true);receipt.settings.rules[0].location=!receipt.settings.rules[0].location;
+ f.respond(receipt);await tick();assert.equal(f.fields.key.value,'preserve');assert.equal(f.form.dataset.version,'1');assert.match(f.get('[data-plugin-status]').textContent,/角色设置不一致/);
+});
+test('a private record from a different comment cannot be shown',async()=>{
+ const f=fixture();f.fire(f.record,'submit');f.respond({id:2,status:'resolved',source_label:'TCP',location:location({country:'wrong-comment'}),ip:'8.8.8.8'});await tick();
+ assert.doesNotMatch(f.get('[data-record-result]').textContent,/8.8.8.8|wrong-comment/);assert.match(f.get('[data-record-result]').textContent,/编号不匹配/);
 });

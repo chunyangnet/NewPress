@@ -400,26 +400,22 @@ func ValidateSnippetReceipt(r SnippetReceipt) error {
 	return nil
 }
 
-func SnippetStorageSize(s SnippetRecord) int {
-	// Fixed metadata reservation includes every possible withdrawal update.
-	size := 4096
-	for _, revision := range s.Revisions {
-		encoded, _ := json.Marshal(revision)
-		size += len(encoded)
-	}
-	return size
-}
-func SnippetReceiptSize(r SnippetReceipt) int { raw, _ := json.Marshal(r); return len(raw) }
-
 func ValidateSnippetState(records []SnippetRecord, receipts []SnippetReceipt, nextID int64) error {
+	_, err := validateSnippetState(records, receipts, nextID)
+	return err
+}
+
+// Return the receipt bytes already counted during full validation. File loads
+// keep this derived total in memory; the document never supplies a trusted sum.
+func validateSnippetState(records []SnippetRecord, receipts []SnippetReceipt, nextID int64) (int, error) {
 	if len(records) > MaxSnippets || len(receipts) > MaxSnippetReceipts || nextID < 1 || nextID == math.MaxInt64 {
-		return ErrSnippetCorrupt
+		return 0, ErrSnippetCorrupt
 	}
 	ids, keys := map[int64]bool{}, map[string]bool{}
 	bytes, revisions, receiptBytes := 0, 0, 0
 	for _, s := range records {
 		if ids[s.ID] || s.ID >= nextID || ValidateSnippetRecord(s) != nil {
-			return ErrSnippetCorrupt
+			return 0, ErrSnippetCorrupt
 		}
 		ids[s.ID] = true
 		bytes += SnippetStorageSize(s)
@@ -428,13 +424,13 @@ func ValidateSnippetState(records []SnippetRecord, receipts []SnippetReceipt, ne
 	for _, r := range receipts {
 		key := fmt.Sprintf("%s\x00%s", r.Identity, r.RequestKey)
 		if keys[key] || !ids[r.SnippetID] || ValidateSnippetReceipt(r) != nil {
-			return ErrSnippetCorrupt
+			return 0, ErrSnippetCorrupt
 		}
 		keys[key] = true
 		receiptBytes += SnippetReceiptSize(r)
 	}
 	if bytes > MaxSnippetStorageBytes || revisions > MaxSnippetRevisions || receiptBytes > MaxSnippetReceiptBytes {
-		return ErrSnippetCorrupt
+		return 0, ErrSnippetCorrupt
 	}
-	return nil
+	return receiptBytes, nil
 }

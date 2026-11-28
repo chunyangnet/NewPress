@@ -18,6 +18,7 @@ import (
 
 func (m *Manager) persistLocked() error {
 	if m.root == "" {
+		m.snapshot = nil
 		return nil
 	}
 	items := m.sortedItemsLocked()
@@ -26,7 +27,13 @@ func (m *Manager) persistLocked() error {
 		UpdatedAt: m.updatedAt.UTC(), Items: items,
 	}
 	doc.Revision = libraryRevision(doc.NextID, doc.Items)
-	return writeDocument(m.indexPath, doc)
+	if err := writeDocument(m.indexPath, doc); err != nil {
+		return err
+	}
+	// Persistence already computed the sorted items and revision. Publish the
+	// matching snapshot only after the durable write succeeds.
+	m.cacheSnapshotLocked(items, doc.Revision)
+	return nil
 }
 
 func (m *Manager) sortedItemsLocked() []Item {

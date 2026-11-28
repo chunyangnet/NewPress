@@ -109,6 +109,13 @@ func (s *Server) adminContentAutosaveStatus(writer http.ResponseWriter, request 
 		return
 	}
 	autosave, err := s.repository.GetAutosave(request.Context(), post.ID, ownerKey)
+	request, ok = s.freshSessionRequest(writer, request)
+	if !ok {
+		return
+	}
+	if _, ok = s.requireAutosaveAPIPrincipal(writer, request); !ok {
+		return
+	}
 	if errors.Is(err, content.ErrAutosaveNotFound) {
 		writeJSON(writer, http.StatusOK, autosaveAPIResponse{Available: false, PostID: post.ID})
 		return
@@ -122,12 +129,25 @@ func (s *Server) adminContentAutosaveStatus(writer http.ResponseWriter, request 
 		writeJSON(writer, http.StatusOK, autosaveAPIResponse{Available: false, PostID: post.ID})
 		return
 	}
+	state, err := s.autosaveReadState(request, post.ID, ownerKey)
+	if errors.Is(err, content.ErrAutosaveNotFound) || errors.Is(err, content.ErrNotFound) || err == nil && (state.SourceVersion != autosave.SourceVersion || !state.UpdatedAt.Equal(autosave.UpdatedAt)) {
+		writeJSON(writer, http.StatusOK, autosaveAPIResponse{Available: false, PostID: post.ID})
+		return
+	}
+	if err != nil {
+		s.autosaveReadError(writer, request, err, false)
+		return
+	}
 	writeJSON(writer, http.StatusOK, s.autosaveResponse(autosave, ownerKey))
 }
 
 func (s *Server) adminContentAutosaveSubmit(writer http.ResponseWriter, request *http.Request) {
 	s.previewPrivateHeaders(writer)
 	principal, form, ok := s.requireContentWrite(writer, request)
+	if !ok {
+		return
+	}
+	request, principal, ok = s.refreshAutosaveWrite(writer, request)
 	if !ok {
 		return
 	}
@@ -160,6 +180,9 @@ func (s *Server) adminContentAutosaveSubmit(writer http.ResponseWriter, request 
 		return
 	}
 	if action == "discard" {
+		if !s.recheckAutosaveMutation(writer, request, post) {
+			return
+		}
 		if err := s.repository.DeleteAutosave(request.Context(), post.ID, ownerKey); err != nil && !errors.Is(err, content.ErrNotFound) {
 			slog.Error("discard content autosave", "post_id", post.ID, "error", err)
 			writeJSON(writer, http.StatusInternalServerError, map[string]string{"error": "autosave_discard_failed"})
@@ -189,6 +212,9 @@ func (s *Server) adminContentAutosaveSubmit(writer http.ResponseWriter, request 
 	}
 	if len(fields) > 0 {
 		writeJSON(writer, http.StatusUnprocessableEntity, map[string]any{"error": "autosave_validation_failed", "fields": fields})
+		return
+	}
+	if !s.recheckAutosaveMutation(writer, request, post) {
 		return
 	}
 	autosave, err := s.repository.SaveAutosave(request.Context(), content.Autosave{
@@ -430,6 +456,17 @@ func (s *Server) adminContentPreview(writer http.ResponseWriter, request *http.R
 		s.renderPreviewError(writer, http.StatusGone, "恢复点已更新，请从编辑器重新打开预览")
 		return
 	}
+	access := func() error { return s.contentPreviewAccess(request, claims, ownerKey) }
+	beforeOutput := func() bool {
+		if err := access(); err != nil {
+			s.autosaveReadError(writer, request, err, true)
+			return false
+		}
+		return true
+	}
+	if !beforeOutput() {
+		return
+	}
 	previewPost := autosave.Snapshot
 	if strings.TrimSpace(previewPost.Title) == "" {
 		previewPost.Title = "（无标题预览）"
@@ -458,7 +495,7 @@ func (s *Server) adminContentPreview(writer http.ResponseWriter, request *http.R
 	if previewPost.Type == content.TypePage {
 		template = "page"
 	}
-	s.render(writer, http.StatusOK, template, data)
+	s.renderChecked(writer, http.StatusOK, template, data, request, beforeOutput, access)
 }
 
 func (s *Server) previewPrivateHeaders(writer http.ResponseWriter) {

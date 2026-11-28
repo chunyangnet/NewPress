@@ -50,14 +50,24 @@ type navigationItemView struct {
 	Children     []navigationItemView
 }
 
+const navigationReadTimeout = 350 * time.Millisecond
+
+// A discovery page has already loaded these categories for its filter. Reuse
+// that request's result (including an empty slice) for navigation alias matching.
+type navigationCategoriesContextKey struct{}
+
 func (s *Server) publicNavigation(path string) navigationView {
-	if s == nil || s.navigation == nil {
+	return s.publicNavigationContext(context.Background(), path)
+}
+
+func (s *Server) publicNavigationContext(parent context.Context, path string) navigationView {
+	if s == nil || s.navigation == nil || parent.Err() != nil {
 		return navigationView{}
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 350*time.Millisecond)
+	ctx, cancel := context.WithTimeout(parent, navigationReadTimeout)
 	defer cancel()
 	snapshot, err := s.navigation.Snapshot(ctx)
-	if err != nil {
+	if err != nil || ctx.Err() != nil {
 		return navigationView{}
 	}
 	menus := make(map[int64]navigation.Menu, len(snapshot.Menus))
@@ -72,12 +82,20 @@ func (s *Server) publicNavigation(path string) navigationView {
 	// Resolve saved category names and custom slugs to the same identity, only
 	// on filtered discovery requests. Stored URLs remain untouched.
 	aliases := map[string]string{}
-	if current, err := url.Parse(path); err == nil && current.Path == "/explore/" && current.Query().Get("category") != "" && s.repository != nil {
-		if terms, err := s.repository.ListTerms(ctx, content.TermQuery{Taxonomy: content.TaxonomyCategory, Limit: 500}); err == nil {
-			for _, term := range terms.Items {
-				aliases[strings.ToLower(term.Name)] = term.Slug
-				aliases[term.Slug] = term.Slug
+	if navigationNeedsCategoryAliases(path, snapshot.Locations, menus) {
+		terms, loaded := ctx.Value(navigationCategoriesContextKey{}).([]content.Term)
+		if !loaded && s.repository != nil && ctx.Err() == nil {
+			result, err := s.repository.ListTerms(ctx, content.TermQuery{Taxonomy: content.TaxonomyCategory, Limit: 500})
+			if err == nil {
+				terms = result.Items
 			}
+		}
+		if ctx.Err() != nil {
+			return navigationView{}
+		}
+		for _, term := range terms {
+			aliases[strings.ToLower(term.Name)] = term.Slug
+			aliases[term.Slug] = term.Slug
 		}
 	}
 	primaryMenu, primaryConfigured := menuFor(navigation.LocationPrimary)
@@ -117,7 +135,28 @@ func (s *Server) publicNavigation(path string) navigationView {
 			}
 		}
 	}
+	if ctx.Err() != nil {
+		return navigationView{}
+	}
 	return view
+}
+
+func navigationNeedsCategoryAliases(currentPath string, locations map[string]int64, menus map[int64]navigation.Menu) bool {
+	current, err := url.Parse(currentPath)
+	if err != nil || current.Path != "/explore/" || current.Query().Get("category") == "" {
+		return false
+	}
+	// Unassigned menus and filtered private subtrees cannot contribute a
+	// current link. Match the URL rules used by navigationMatch below.
+	for _, id := range locations {
+		for _, item := range menus[id].Items {
+			target, err := url.Parse(item.URL)
+			if err == nil && !target.IsAbs() && target.Host == "" && target.Fragment == "" && path.Clean(target.Path) == "/explore" && target.Query().Get("category") != "" {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // exploreFallbackItems uses the first published root pointing at the directory.
@@ -320,7 +359,19 @@ func (s *Server) navigationCSS(writer http.ResponseWriter, request *http.Request
 		http.NotFound(writer, request)
 		return
 	}
-	snapshot, err := s.navigation.Snapshot(request.Context())
+	if request.Context().Err() != nil {
+		panic(http.ErrAbortHandler)
+	}
+	writer.Header().Set("Cache-Control", "no-store")
+	ctx, cancel := context.WithTimeout(request.Context(), navigationReadTimeout)
+	defer cancel()
+	snapshot, err := s.navigation.Snapshot(ctx)
+	if request.Context().Err() != nil {
+		panic(http.ErrAbortHandler)
+	}
+	if ctx.Err() != nil {
+		err = ctx.Err()
+	}
 	if err != nil {
 		http.Error(writer, "navigation stylesheet unavailable", http.StatusServiceUnavailable)
 		return

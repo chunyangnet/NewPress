@@ -57,7 +57,7 @@ func (m *Manager) ValidateSessionContext(ctx context.Context, token string) (Pri
 }
 
 func (m *Manager) ResolveSession(ctx context.Context, token string) (Principal, error) {
-	if m == nil || !m.Configured() || len(token) < 32 || len(token) > 256 {
+	if m == nil || !m.Configured() || !validSessionToken(token) {
 		return Principal{}, ErrSessionNotFound
 	}
 	ctx, cancel := context.WithTimeout(ctx, sessionOperationTimeout)
@@ -115,7 +115,7 @@ func (m *Manager) RevokeSession(token string) error {
 }
 
 func (m *Manager) RevokeSessionContext(ctx context.Context, token string) error {
-	if m == nil || token == "" {
+	if m == nil || !validSessionToken(token) {
 		return nil
 	}
 	ctx, cancel := context.WithTimeout(ctx, sessionOperationTimeout)
@@ -250,6 +250,16 @@ func (m *Manager) sessionInfo(r SessionRecord, current bool) SessionInfo {
 		IPAddress: r.Metadata.IPAddress, UserAgent: r.Metadata.UserAgent,
 		CreatedAt: r.CreatedAt, LastSeenAt: r.LastSeenAt, ExpiresAt: r.ExpiresAt, IdleExpiresAt: idleExpires, Current: current,
 	}
+}
+
+func validSessionToken(token string) bool {
+	// Issued tokens encode exactly 32 random bytes. Reject malformed input
+	// before it can cause a storage lookup or durable logout mutation.
+	if len(token) != base64.RawURLEncoding.EncodedLen(32) {
+		return false
+	}
+	_, err := sessionKeyFromID(token)
+	return err == nil
 }
 
 func sessionKeyFromID(value string) ([32]byte, error) {

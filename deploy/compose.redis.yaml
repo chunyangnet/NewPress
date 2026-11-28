@@ -1,6 +1,11 @@
 services:
   redis:
-    image: redis:8.10.0-alpine3.23@sha256:978f0e01593e65eed801f2402944efcd936d43b5027e4908a7897baf88ed6241
+    image: ${NEWPRESS_REDIS_PATCHED_IMAGE:-newpress-redis:local}
+    build:
+      context: ./deploy
+      dockerfile: Dockerfile.redis
+      args:
+        BASE_IMAGE: ${NEWPRESS_REDIS_IMAGE:-redis:8.10.3-alpine3.23@sha256:7958cfbb9d152f87dadfbc89f1b0b15938f0b81ff8982feb327476f4911935c3}
     profiles: ["cache"]
     restart: unless-stopped
     command: ["redis-server", "--aclfile", "/run/secrets/redis_acl", "--protected-mode", "yes", "--save", "", "--appendonly", "no", "--maxmemory", "192mb", "--maxmemory-policy", "allkeys-lfu"]

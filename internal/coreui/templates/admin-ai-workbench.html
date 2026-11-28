@@ -1,5 +1,5 @@
 {{define "content"}}
-<div class="ai-workbench" data-ai-workbench data-user-id="{{.Admin.Principal.UserID}}" data-read-only="{{.Admin.ReadOnly}}">
+<div class="ai-workbench" data-ai-workbench data-user-id="{{.Admin.Principal.UserID}}" data-csrf="{{.Admin.CSRFToken}}" data-read-only="{{.Admin.ReadOnly}}">
   <header class="aiw-heading">
     <h1>AI 工作台</h1>
     <div class="aiw-actions"><a class="admin-button admin-button-quiet" href="/admin/analytics/ai/">{{template "icon" "activity"}}消耗统计</a>{{if .Admin.Can "settings:manage"}}<a class="admin-button admin-button-quiet" href="/admin/settings/#site-settings-ai">{{template "icon" "sliders-horizontal"}}接口设置</a>{{end}}</div>

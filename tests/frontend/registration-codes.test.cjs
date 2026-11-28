@@ -1,7 +1,12 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
-for(const path of ['../../internal/coreui/assets/js/chunnel-registration-codes.source.js','../../internal/coreui/assets/js/chunnel-registration-codes.js']){
-  const api=require(path);
+const vm=require('node:vm');
+const {buildSync}=require('esbuild');
+for(const minify of [false,true]){
+  const path=minify?'minified TS helpers':'TS helpers',module={exports:{}};
+  const code=buildSync({entryPoints:['frontend/shared/registration-code-helpers.ts'],bundle:true,write:false,platform:'browser',format:'cjs',target:'es2022',minify}).outputFiles[0].text;
+  vm.runInNewContext(code,{module,exports:module.exports});
+  const api=Object.fromEntries(Object.entries(module.exports).filter(([,value])=>typeof value==='function').map(([name,fn])=>[name,(...args)=>structuredClone(fn(...args))]));
   test(`${path}: imports text, exported CSV and JSON without silently dropping duplicates`,()=>{
     assert.deepEqual(api.parseImport('VIP-001\nVIP-002,VIP-003；VIP-004'),['VIP-001','VIP-002','VIP-003','VIP-004']);
     assert.deepEqual(api.parseImport('\uFEFF"备注","注册码"\r\n"含,逗号","VIP-001"\r\n"多\n行","VIP-002"'),['VIP-001','VIP-002']);

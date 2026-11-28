@@ -4,7 +4,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const {webcrypto} = require('node:crypto');
-const source = fs.readFileSync(path.join(__dirname, '../../internal/coreui/assets/js/chunnel-admin-editor.source.js'), 'utf8');
+const editor = require('./helpers/editor-save.cjs');
+const source = editor.source();
 const deferred = () => { let resolve; const promise = new Promise(done => {resolve = done;}); return {promise, resolve}; };
 const good = (request, extra = {}) => ({ok: true, status: 200, json: async () => ({saved: true, submission_key: request.headers['Idempotency-Key'], id: 42,
   version: Number(request.body.get('version') || 0) + 1, action: request.body.has('version') ? request.body.get('action').replace(/^restore_revision-\d+$/, 'restore_revision') : 'create',
@@ -25,6 +26,7 @@ function fixture(fetch, isNew = false) {
   let nextTimer = 0;
   const featureEvents = [];
   const context = vm.createContext({
+    ...editor.context,
     AbortController, CustomEvent, DOMException, URL, URLSearchParams, Uint8Array, FormData, serializeEditorData, serializedEditor: signature,
     submittingEditor: false, editorPageHidden: false, pendingEditorSubmission: null, intentionalEditorNavigation: false, browserRecovery: null,
     timezoneNeedsReview: false, timezoneReview: null, publishedSource: null, reviewPublicationTimezone() {},
@@ -111,6 +113,33 @@ test('rapid saves share one in-flight write and an unchanged confirmation naviga
   assert.equal(f.context.pendingEditorSubmission,null); assert.equal(f.timers.size,0);
 });
 
+test('saving captures the confirmed fields before waiting for a fresh session', async () => {
+  const gate = deferred(), f = fixture(async (_, options) => good(options));
+  f.context.checkEditorSession = () => gate.promise;
+  f.fields.status.value = 'publish';
+  const saving = f.send();
+  f.fields.title.value = 'typing while the session is checked';
+  f.fields.status.value = 'private';
+  assert.equal(f.requests.length, 0);
+  gate.resolve(true); await saving;
+  assert.equal(f.requests[0].body.get('title'), 'original');
+  assert.equal(f.requests[0].body.get('status'), 'publish');
+  assert.equal(f.fields.title.value, 'typing while the session is checked');
+  assert.equal(f.fields.status.value, 'private');
+  assert.equal(f.navigations.length, 0);
+});
+
+test('IME composition defers a new save until the committed input is available', async () => {
+  const f = fixture(async (_, options) => good(options));
+  f.form.dataset.editorComposing = 'true';
+  await f.send(); assert.equal(f.requests.length, 0);
+  assert.equal(f.context.pendingEditorSubmission, null);
+  f.fields.title.value = '已经完成的中文输入';
+  f.form.dataset.editorComposing = 'false';
+  await f.send();
+  assert.equal(f.requests[0].body.get('title'), '已经完成的中文输入');
+});
+
 test('invalid acknowledgements retain the request and never advance the version', async () => {
   for (const change of [{saved:false},{submission_key:'wrong'},{id:43},{version:3},{action:'publish'},{replayed:undefined},
     {editor_url:'//external.test/edit/'},{autosave_url:'/admin/content/99/autosave/'},{autosave_enabled:undefined}]) {
@@ -162,7 +191,8 @@ test('status and revision actions never mark unsaved visible fields as saved', a
 test('leaving during an uncertain or in-flight save still protects a clean-looking form', () => {
   const start=source.indexOf("    window.addEventListener('beforeunload'", source.indexOf('    async function submitEditor(')),end=source.indexOf("    window.addEventListener('pageshow'",start);
   let listener;
-  const context=vm.createContext({intentionalEditorNavigation:false,submittingEditor:false,pendingEditorSubmission:null,editorIsDirty:()=>false,
+  const context=vm.createContext({
+    ...editor.context,intentionalEditorNavigation:false,submittingEditor:false,pendingEditorSubmission:null,editorIsDirty:()=>false,
     window:{addEventListener:(_,fn)=>{listener=fn;}}});
   vm.runInContext(source.slice(start,end),context);
   const leave=()=>{let prevented=false;const event={preventDefault(){prevented=true;}};listener(event);return prevented;};
@@ -173,7 +203,8 @@ test('leaving during an uncertain or in-flight save still protects a clean-looki
 
 test('autosave cannot send a newer version while the original save is still uncertain', async () => {
   const start=source.indexOf('    const performAutosave ='),end=source.indexOf('    async function saveAutosave',start);
-  const context=vm.createContext({autosaveURL:'/admin/content/42/autosave/',submittingEditor:false,pendingEditorSubmission:{},timezoneNeedsReview:false,
+  const context=vm.createContext({
+    ...editor.context,autosaveURL:'/admin/content/42/autosave/',submittingEditor:false,pendingEditorSubmission:{},timezoneNeedsReview:false,
     serializedEditor(){throw new Error('must not read newer fields for an uncertain write');}});
   vm.runInContext(source.slice(start,end)+'\nglobalThis.save=performAutosave;',context);
   assert.equal(await context.save(true),null);

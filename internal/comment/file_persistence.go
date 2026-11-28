@@ -2,6 +2,7 @@ package comment
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -19,6 +20,13 @@ import (
 )
 
 func (store *FileStore) persistLocked(items map[int64]Comment, revisions map[int64][]Revision, nextID int64, updatedAt time.Time, event *audit.Event, submissions ...map[string]SubmissionReceipt) error {
+	return store.persistContextLocked(context.Background(), items, revisions, nextID, updatedAt, event, submissions...)
+}
+
+func (store *FileStore) persistContextLocked(ctx context.Context, items map[int64]Comment, revisions map[int64][]Revision, nextID int64, updatedAt time.Time, event *audit.Event, submissions ...map[string]SubmissionReceipt) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	activities := append([]activity.Event(nil), store.activities...)
 	if event != nil && event.Action != "comment.seeded" {
 		changed := make([]int64, 0)
@@ -32,16 +40,19 @@ func (store *FileStore) persistLocked(items map[int64]Comment, revisions map[int
 			activities = append(activities, ActivityEvents(store.items[id], items[id])...)
 		}
 	}
-	if err := store.persistActivitiesLocked(items, revisions, nextID, updatedAt, event, activities, submissions...); err != nil {
+	if err := store.persistActivitiesContextLocked(ctx, items, revisions, nextID, updatedAt, event, activities, submissions...); err != nil {
 		return err
 	}
 	store.activities = activities
 	return nil
 }
 
-func (store *FileStore) persistActivitiesLocked(items map[int64]Comment, revisions map[int64][]Revision, nextID int64, updatedAt time.Time, event *audit.Event, activities []activity.Event, submissions ...map[string]SubmissionReceipt) error {
+func (store *FileStore) persistActivitiesContextLocked(ctx context.Context, items map[int64]Comment, revisions map[int64][]Revision, nextID int64, updatedAt time.Time, event *audit.Event, activities []activity.Event, submissions ...map[string]SubmissionReceipt) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	if store.path == "" {
-		return nil
+		return ctx.Err()
 	}
 	document := fileDocument{
 		Schema: fileSchema, Kind: fileKind, NextID: nextID, UpdatedAt: updatedAt,
@@ -56,6 +67,9 @@ func (store *FileStore) persistActivitiesLocked(items map[int64]Comment, revisio
 		document.Items = append(document.Items, item)
 	}
 	SortPublic(document.Items)
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	var encoded bytes.Buffer
 	encoder := json.NewEncoder(&encoded)
 	encoder.SetEscapeHTML(true)
@@ -66,6 +80,11 @@ func (store *FileStore) persistActivitiesLocked(items map[int64]Comment, revisio
 	if encoded.Len() > maxFileBytes {
 		return errors.New("comment document exceeds size limit")
 	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	// From the audit/file commit boundary onward, finish publishing the same
+	// durable state in memory even if cancellation arrives during disk I/O.
 	payload := encoded.Bytes()
 	write := func() error { return writeFileBytes(store.path, payload) }
 	if store.audit == nil || event == nil {

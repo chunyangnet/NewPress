@@ -30,17 +30,22 @@ func TestEditorBrowserRecoveryPolicyAndPageIsolation(t *testing.T) {
 		t.Fatalf("save: %v %v", fields, err)
 	}
 	page = read("/admin/content/new/")
-	for _, required := range []string{`data-browser-recovery-enabled="true"`, "data-browser-recovery-toggle", "chunnel-editor-recovery.js", "明文"} {
+	for _, required := range []string{`data-browser-recovery-enabled="true"`, "data-browser-recovery-toggle", "newpress-editor-page.js", "明文"} {
 		if !strings.Contains(page, required) {
 			t.Fatalf("editor missing %s", required)
 		}
 	}
-	if strings.Index(page, "chunnel-editor-recovery.js") > strings.Index(page, "chunnel-admin.js") {
-		t.Fatal("recovery module must load before editor initialization")
+	// Recovery initializes inside the eager page bundle. The generated-bundle
+	// browser checks verify that enabling it restores drafts across real tabs.
+	pageEntry := strings.Index(page, "/newpress-editor-page.js")
+	documentEntry := strings.Index(page, "/newpress-document-editor.js")
+	if strings.Count(page, "/newpress-editor-page.js") != 1 || documentEntry < 0 || pageEntry > documentEntry {
+		t.Fatal("the editor page bundle must load once before the document editor")
 	}
 	for _, path := range []string{"/", "/admin/content/", "/admin/settings/"} {
-		if strings.Contains(read(path), "chunnel-editor-recovery.js") {
-			t.Fatalf("recovery script loaded outside editor: %s", path)
+		body := read(path)
+		if strings.Contains(body, "newpress-editor-page.js") || strings.Contains(body, "chunnel-editor-recovery.js") {
+			t.Fatalf("recovery entry loaded outside editor: %s", path)
 		}
 	}
 }

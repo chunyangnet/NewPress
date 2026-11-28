@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -32,6 +33,16 @@ func TestAdminResourcesBrowserFixture(t *testing.T) {
 		t.Fatal("browser evidence directory must be explicit and absolute")
 	}
 	s, handler, accounts, repository, cookie, owner := newPersistentAdminTestServer(t)
+	readOnlyEditor := os.Getenv("NEWPRESS_EDITOR_WORKSPACE_BROWSER") == "1"
+	var editorSettingsBefore []byte
+	if readOnlyEditor {
+		snapshot := s.siteSettings.Snapshot()
+		snapshot.Settings.Writing.BrowserRecoveryEnabled = true
+		if _, fields, err := s.siteSettings.Save(snapshot.Revision, snapshot.Settings); err != nil || len(fields) > 0 {
+			t.Fatalf("editor recovery fixture policy: %v %v", fields, err)
+		}
+		editorSettingsBefore, _ = json.Marshal(s.siteSettings.Snapshot())
+	}
 	var navigationBefore *navigation.Snapshot
 	navigationPrimary, navigationExplore := "/admin/navigation/", "/admin/navigation/?location=explore"
 	if os.Getenv("NEWPRESS_ADMIN_NAVIGATION_BROWSER") == "1" {
@@ -126,6 +137,7 @@ func TestAdminResourcesBrowserFixture(t *testing.T) {
 	nonce := hex.EncodeToString(random[:])
 	login, stop := "/__admin_resource_login/"+nonce, "/__admin_resource_stop/"+nonce
 	done, once := make(chan struct{}), sync.Once{}
+	var uninterceptedWrites atomic.Int64
 	fixture := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == login && r.Method == http.MethodGet {
 			http.SetCookie(w, &http.Cookie{Name: auth.CookieName, Value: cookie.Value, Path: "/", HttpOnly: true, SameSite: http.SameSiteLaxMode})
@@ -145,6 +157,11 @@ func TestAdminResourcesBrowserFixture(t *testing.T) {
 			}
 			w.WriteHeader(http.StatusNoContent)
 			once.Do(func() { close(done) })
+			return
+		}
+		if readOnlyEditor && r.Method != http.MethodGet && r.Method != http.MethodHead {
+			uninterceptedWrites.Add(1)
+			http.Error(w, "editor acceptance writes must be intercepted", http.StatusForbidden)
 			return
 		}
 		handler.ServeHTTP(w, r)
@@ -167,8 +184,16 @@ func TestAdminResourcesBrowserFixture(t *testing.T) {
 			t.Fatalf("write evidence: %v / %v", encodeErr, closeErr)
 		}
 	}
+	response := httptest.NewRecorder()
+	s.writeEditorSubmissionResult(response, "editor-acceptance", content.SubmissionResult{Receipt: content.SubmissionReceipt{
+		PostID: post.ID, Version: post.Version + 1, Action: "save",
+	}})
+	now := time.Now().UTC()
+	autosaveProjection := s.autosaveResponse(content.Autosave{PostID: post.ID, SourceVersion: post.Version,
+		UpdatedAt: now, ExpiresAt: now.Add(time.Hour), Snapshot: post}, "editor-acceptance")
 	writeEvidence("fixture.json", map[string]any{"base": server.URL, "login": login, "stop": stop,
-		"account_id": owner.UserID, "comment_editor": commentEditorPath, "paths": map[string]string{
+		"editor_receipt": json.RawMessage(response.Body.Bytes()), "autosave_receipt": autosaveProjection,
+		"account_id": owner.UserID, "editor_post_id": post.ID, "editor_version": post.Version, "comment_editor": commentEditorPath, "paths": map[string]string{
 			"dashboard": "/admin/", "editor": "/admin/content/" + strconv.FormatInt(post.ID, 10) + "/edit/",
 			"revision":   "/admin/content/" + strconv.FormatInt(post.ID, 10) + "/revisions/compare/?from=" + strconv.FormatInt(revisions[1].ID, 10) + "&to=current",
 			"categories": "/admin/taxonomy/", "users": "/admin/users/", "sessions": "/admin/sessions/",
@@ -224,6 +249,15 @@ func TestAdminResourcesBrowserFixture(t *testing.T) {
 			t.Fatal("navigation checks changed saved menus", readErr)
 		}
 	}
-	writeEvidence("read-only-confirmation.json", map[string]any{"post_id": post.ID, "version": post.Version,
+	if uninterceptedWrites.Load() != 0 {
+		t.Fatalf("editor acceptance leaked %d mutation requests", uninterceptedWrites.Load())
+	}
+	if readOnlyEditor {
+		current, err := json.Marshal(s.siteSettings.Snapshot())
+		if err != nil || !reflect.DeepEqual(current, editorSettingsBefore) {
+			t.Fatal("editor acceptance changed settings", err)
+		}
+	}
+	writeEvidence("read-only-confirmation.json", map[string]any{"post_id": post.ID, "version": post.Version, "unintercepted_writes": uninterceptedWrites.Load(),
 		"revisions": len(revisions), "content_unchanged": true, "revisions_unchanged": true, "account_unchanged": true, "comment_checked": businessComment != nil, "business_post_checked": businessPost != nil, "shop_checked": composerShop != nil, "theme_settings_checked": appearanceBefore != nil, "navigation_checked": navigationBefore != nil})
 }

@@ -98,6 +98,7 @@
             <button type="button" data-emoji-trigger data-emoji-target="content-source" aria-label="添加表情" title="表情" aria-haspopup="dialog" aria-expanded="false" {{if .Admin.ReadOnly}}disabled{{end}}>{{template "icon" "smile"}}</button>
             <em>HTML</em>
           </div>
+          <p class="admin-help" data-editor-emoji-status role="status" aria-live="polite" hidden></p>
           <textarea id="content-source" name="content_source" rows="24" maxlength="2097152" placeholder="从这里开始写作……" data-content-source aria-label="正文" {{if .Admin.ReadOnly}}disabled{{end}}>{{.Editor.Input.ContentSource}}</textarea>
           </div>
           <div class="admin-composer" data-composer hidden>

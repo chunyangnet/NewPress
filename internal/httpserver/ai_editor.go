@@ -2,10 +2,9 @@ package httpserver
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -29,6 +28,10 @@ func (s *Server) adminAIConnections(w http.ResponseWriter, r *http.Request) {
 	if _, _, ok := s.requireAdminJSONReadCapability(w, r, auth.CapabilityContentWrite, auth.CapabilityContentWriteOwn); !ok {
 		return
 	}
+	access, ok := s.newAIAdminAuthority(w, r, false, auth.CapabilityContentWrite, auth.CapabilityContentWriteOwn)
+	if !ok {
+		return
+	}
 	if _, ok := s.strictAPIQuery(w, r, nil); !ok {
 		return
 	}
@@ -38,21 +41,29 @@ func (s *Server) adminAIConnections(w http.ResponseWriter, r *http.Request) {
 		connections.Providers[i].Pricing = nil
 		connections.Providers[i].Balance = aieditor.BalanceConfig{}
 	}
-	writeJSON(w, http.StatusOK, connections)
+	access.json(w, connections)
 }
 
 func (s *Server) adminAISettings(w http.ResponseWriter, r *http.Request) {
 	if _, _, ok := s.requireAdminJSONReadCapability(w, r, auth.CapabilitySettingsManage); !ok {
 		return
 	}
+	access, ok := s.newAIAdminAuthority(w, r, false, auth.CapabilitySettingsManage)
+	if !ok {
+		return
+	}
 	if _, ok := s.strictAPIQuery(w, r, nil); !ok {
 		return
 	}
-	writeJSON(w, http.StatusOK, s.aiSettings.Snapshot())
+	access.json(w, s.aiSettings.Snapshot())
 }
 
 func (s *Server) adminAISettingsSave(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.requireAdminJSONWrite(w, r, auth.CapabilitySettingsManage); !ok {
+		return
+	}
+	access, ok := s.newAIAdminAuthority(w, r, true, auth.CapabilitySettingsManage)
+	if !ok {
 		return
 	}
 	if _, ok := s.strictAPIQuery(w, r, nil); !ok {
@@ -62,12 +73,18 @@ func (s *Server) adminAISettingsSave(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.decodeStrictAPIJSONLimit(w, r, &input, 512<<10, "512 KiB"); !ok {
 		return
 	}
-	saved, err := s.aiSettings.Save(input)
-	if err != nil {
-		s.aiEditorError(w, r, err)
+	if !access.recheck(w) {
 		return
 	}
-	writeJSON(w, http.StatusOK, saved)
+	saved, err := s.aiSettings.SaveChecked(input, access.access)
+	if !access.recheck(w) {
+		return
+	}
+	if err != nil {
+		access.fail(w, err)
+		return
+	}
+	access.json(w, saved)
 }
 
 func (state *aiEditorState) acquire(user int64) bool {
@@ -113,17 +130,40 @@ func (s *Server) aiEditorError(w http.ResponseWriter, r *http.Request, err error
 }
 
 func (s *Server) adminAIPrompts(w http.ResponseWriter, r *http.Request) {
-	if _, _, ok := s.requireAdminJSONReadCapability(w, r, auth.CapabilityContentWrite, auth.CapabilityContentWriteOwn); !ok {
+	if _, _, ok := s.requireAdminJSONReadCapability(w, r, auth.CapabilityContentWrite, auth.CapabilityContentWriteOwn, auth.CapabilitySettingsManage); !ok {
+		return
+	}
+	access, ok := s.newAIAdminAuthority(w, r, false, auth.CapabilityContentWrite, auth.CapabilityContentWriteOwn, auth.CapabilitySettingsManage)
+	if !ok {
 		return
 	}
 	if _, ok := s.strictAPIQuery(w, r, nil); !ok {
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"prompts": aieditor.Prompts()})
+	team, err := s.writingTemplates.Catalog(r.Context())
+	if !access.recheck(w) {
+		return
+	}
+	if err != nil {
+		s.writingTemplateError(w, r, err)
+		return
+	}
+	prompts := make([]any, 0, len(aieditor.Prompts())+len(team))
+	for _, p := range aieditor.Prompts() {
+		prompts = append(prompts, p)
+	}
+	for _, p := range team {
+		prompts = append(prompts, p)
+	}
+	access.json(w, map[string]any{"prompts": prompts})
 }
 
 func (s *Server) adminAIModels(w http.ResponseWriter, r *http.Request) {
-	principal, ok := s.requireAdminJSONWrite(w, r, auth.CapabilityContentWrite, auth.CapabilityContentWriteOwn, auth.CapabilitySettingsManage)
+	_, ok := s.requireAdminJSONWrite(w, r, auth.CapabilityContentWrite, auth.CapabilityContentWriteOwn, auth.CapabilitySettingsManage)
+	if !ok {
+		return
+	}
+	access, ok := s.newAIAdminAuthority(w, r, true, auth.CapabilityContentWrite, auth.CapabilityContentWriteOwn, auth.CapabilitySettingsManage)
 	if !ok {
 		return
 	}
@@ -137,33 +177,43 @@ func (s *Server) adminAIModels(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.decodeStrictAPIJSONLimit(w, r, &input, 16<<10, "16 KiB"); !ok {
 		return
 	}
+	access.approveEndpoint = input.AllowInsecure
+	if !access.recheck(w) {
+		return
+	}
 	// Model discovery can take longer than the normal page write timeout.
 	_ = http.NewResponseController(w).SetWriteDeadline(time.Now().Add(25 * time.Second))
 	var connection aieditor.Connection
 	var err error
 	if input.AllowInsecure {
-		if !principal.Can(auth.CapabilitySettingsManage) {
-			s.writeAPIError(w, r, http.StatusForbidden, "ai.endpoint_permission", "只有管理员可以授权 HTTP 或本地接口", nil)
-			return
-		}
 		connection, err = aieditor.ApproveProbeConnection(input.Connection)
 	} else {
 		connection, err = s.aiSettings.Resolve(input.Connection, false)
 	}
+	if !access.recheck(w) {
+		return
+	}
 	if err != nil {
 		s.aiEditorError(w, r, err)
 		return
 	}
-	models, err := s.aiClient.Models(r.Context(), connection)
-	if err != nil {
-		s.aiEditorError(w, r, err)
+	models, err := access.models(connection)
+	if !access.recheck(w) {
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"models": models, "base_url": connection.BaseURL})
+	if err != nil {
+		access.fail(w, err)
+		return
+	}
+	access.json(w, map[string]any{"models": models, "base_url": connection.BaseURL})
 }
 
 func (s *Server) adminAIPrepare(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.requireAdminJSONWrite(w, r, auth.CapabilityContentWrite, auth.CapabilityContentWriteOwn); !ok {
+		return
+	}
+	access, ok := s.newAIAdminAuthority(w, r, true, auth.CapabilityContentWrite, auth.CapabilityContentWriteOwn)
+	if !ok {
 		return
 	}
 	if _, ok := s.strictAPIQuery(w, r, nil); !ok {
@@ -181,17 +231,26 @@ func (s *Server) adminAIPrepare(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.decodeStrictAPIJSONLimit(w, r, &input, 1<<20, "1 MiB"); !ok {
 		return
 	}
+	if !access.recheck(w) {
+		return
+	}
 	categories, err := s.aiEditorCategories(r.Context())
+	if !access.recheck(w) {
+		return
+	}
 	if err != nil {
 		s.aiEditorError(w, r, err)
 		return
 	}
 	doc, err := aieditor.PrepareDocument(aieditor.Document{Title: input.Title, Slug: input.Slug, Excerpt: input.Excerpt, Tags: input.Tags, CategoryIDs: input.CategoryIDs, CoverPrompt: input.CoverPrompt, Markdown: input.Markdown}, categories)
+	if !access.recheck(w) {
+		return
+	}
 	if err != nil {
 		s.writeAPIError(w, r, http.StatusBadRequest, "ai.invalid_document", err.Error(), nil)
 		return
 	}
-	writeJSON(w, http.StatusOK, doc)
+	access.json(w, doc)
 }
 
 type aiStreamEvent struct {
@@ -204,14 +263,40 @@ func (s *Server) adminAIGenerate(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	module, enabled := s.siteSettings.ModuleContext("ai")
+	if !enabled {
+		s.writeAPIError(w, r, 409, "ai.inactive", "AI 模块已停用", nil)
+		return
+	}
 	if _, ok := s.strictAPIQuery(w, r, nil); !ok {
 		return
 	}
 	var input struct {
 		aieditor.Connection
 		aieditor.Generation
+		TemplateVersion int64 `json:"template_version"`
 	}
 	if _, ok := s.decodeStrictAPIJSONLimit(w, r, &input, 256<<10, "256 KiB"); !ok {
+		return
+	}
+	if !s.recheckAIGeneration(w, r, module) {
+		return
+	}
+	if strings.HasPrefix(input.PromptID, "team:") {
+		p, err := s.writingTemplates.Resolve(r.Context(), strings.TrimPrefix(input.PromptID, "team:"), input.TemplateVersion)
+		if !s.recheckAIGeneration(w, r, module) {
+			return
+		}
+		if err != nil {
+			s.writingTemplateError(w, r, err)
+			return
+		}
+		input.PromptID = p.ID
+		if strings.TrimSpace(input.Instruction) == "" {
+			input.Instruction = p.Instruction
+		}
+	} else if input.TemplateVersion != 0 {
+		s.writeAPIError(w, r, http.StatusBadRequest, "ai.template_invalid", "内置模板不接受团队版本号", nil)
 		return
 	}
 	connection, err := s.aiSettings.Resolve(input.Connection, true)
@@ -220,6 +305,9 @@ func (s *Server) adminAIGenerate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	categories, err := s.aiEditorCategories(r.Context())
+	if !s.recheckAIGeneration(w, r, module) {
+		return
+	}
 	if err != nil {
 		s.aiEditorError(w, r, err)
 		return
@@ -229,108 +317,8 @@ func (s *Server) adminAIGenerate(w http.ResponseWriter, r *http.Request) {
 		s.writeAPIError(w, r, http.StatusBadRequest, "ai.invalid_brief", err.Error(), nil)
 		return
 	}
-	if !s.aiState.acquire(principal.UserID) {
-		w.Header().Set("Retry-After", "10")
-		s.writeAPIError(w, r, http.StatusTooManyRequests, "ai.busy", "已有生成任务进行中，请先停止它或稍后重试", nil)
+	if !s.recheckAIGeneration(w, r, module) {
 		return
 	}
-	ctx, cancel := context.WithTimeout(r.Context(), aieditor.GenerationTimeout)
-	defer cancel()
-	controller := http.NewResponseController(w)
-	// Limit this response only; ordinary requests retain their normal timeout.
-	_ = controller.SetWriteDeadline(time.Now().Add(aieditor.GenerationTimeout + 10*time.Second))
-	w.Header().Set("Content-Type", "text/event-stream; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-store, no-transform")
-	w.Header().Set("X-Accel-Buffering", "no")
-	writeEvent := func(event aiStreamEvent) bool {
-		encoded, err := json.Marshal(event.Data)
-		if err != nil {
-			return false
-		}
-		if _, err := fmt.Fprintf(w, "event: %s\ndata: %s\n\n", event.Name, encoded); err != nil {
-			return false
-		}
-		return controller.Flush() == nil
-	}
-	if !writeEvent(aiStreamEvent{"ready", map[string]string{"model": connection.Model}}) {
-		s.aiState.release(principal.UserID)
-		return
-	}
-	events := make(chan aiStreamEvent, 4)
-	send := func(event aiStreamEvent) error {
-		select {
-		case events <- event:
-			return nil
-		case <-ctx.Done():
-			return ctx.Err()
-		}
-	}
-	go func() {
-		defer s.aiState.release(principal.UserID)
-		observed := s.observeAI(input.ProviderID, connection, "text", principal.UserID)
-		defer observed.finish(ctx)
-		result, err := s.aiClient.StreamWithCallbacks(ctx, connection, messages, input.MaxTokens, aieditor.StreamCallbacks{
-			Delta: func(text string) error {
-				if text != "" {
-					observed.first()
-				}
-				return send(aiStreamEvent{"delta", map[string]string{"text": text}})
-			},
-			Thinking: func(delta aieditor.ThinkingDelta) error {
-				observed.first()
-				return send(aiStreamEvent{"thinking", delta})
-			},
-			ThinkingDone: func() error {
-				return send(aiStreamEvent{"thinking_done", struct{}{}})
-			},
-			Usage: func(usage aieditor.Usage) error {
-				observed.record.Usage = usage
-				return send(aiStreamEvent{"usage", usage})
-			},
-		})
-		observed.record.Usage = result.Usage
-		if err != nil {
-			observed.fail(err)
-			message := "生成连接中断，已保留收到的正文，可编辑后填入或重新生成"
-			var known *aieditor.Error
-			if errors.As(err, &known) {
-				message = known.Message
-			} else if errors.Is(err, context.DeadlineExceeded) {
-				message = "生成超过 6 分钟，已停止并保留收到的正文"
-			}
-			_ = send(aiStreamEvent{"error", map[string]any{"message": message, "usage": result.Usage}})
-			return
-		}
-		doc, err := aieditor.ParseDocument(result.Text, categories)
-		if err != nil {
-			observed.record.ErrorCode = "invalid_document"
-			_ = send(aiStreamEvent{"error", map[string]any{"message": err.Error(), "usage": result.Usage}})
-			return
-		}
-		complete := result.FinishReason == "stop" || result.FinishReason == ""
-		observed.record.Status, observed.record.ErrorCode = "success", ""
-		if !complete {
-			doc.Warnings = append(doc.Warnings, "模型提前结束，正文可能未完成；可编辑后填入，或增加 Token 上限再生成。")
-		}
-		_ = send(aiStreamEvent{"done", map[string]any{"document": doc, "complete": complete, "usage": result.Usage}})
-	}()
-	heartbeat := time.NewTicker(10 * time.Second)
-	defer heartbeat.Stop()
-	for {
-		select {
-		case <-ctx.Done():
-			if r.Context().Err() == nil {
-				writeEvent(aiStreamEvent{"error", map[string]string{"message": "生成超时，已停止并保留收到的正文"}})
-			}
-			return
-		case <-heartbeat.C:
-			if !writeEvent(aiStreamEvent{"ping", map[string]bool{"waiting": true}}) {
-				return
-			}
-		case event := <-events:
-			if !writeEvent(event) || event.Name == "done" || event.Name == "error" {
-				return
-			}
-		}
-	}
+	s.streamAIGeneration(w, r, principal, module, connection, input.ProviderID, messages, categories, input.MaxTokens)
 }

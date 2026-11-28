@@ -58,7 +58,7 @@ npm run package:docshub
 
 隔离浏览器预览使用 `python scripts/check_core.py --core ../newpress --theme docshub --ui`，地址为 `http://127.0.0.1:19107/`。夹具使用临时配置和内存服务；`NEWPRESS_DOCSHUB_UI_STOP` 可指定停止文件路径。源码热载入仅在设置 `NEWPRESS_DOCSHUB_UI_LIVE=1` 时开启，Go 服务变更需重启。
 
-模板按阅读、导航、首页与服务拆分，样式位于 `assets/css/modules/`，交互位于 `assets/js/modules/`。编辑源文件后必须重新构建；发布包包含生成资源，运行时无需 Node 或 Python。
+模板按阅读、导航、首页与服务拆分，样式位于 `assets/css/modules/`，交互源码位于仓库级 `frontend/themes/docshub/`，入口由 `frontend/entries.json` 管理。编辑源文件后运行 `npm run build:frontend` 或在仓库中运行 `npm run build:theme -- --source themes/docshub`；仅持有安装包时需取得对应仓库源码进行开发。发布包包含生成资源，运行时无需 Node 或 Python。
 
 ## 许可证与素材
 

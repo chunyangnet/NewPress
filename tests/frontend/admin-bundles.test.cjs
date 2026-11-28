@@ -55,7 +55,7 @@ function fixture({reducedMotion = false, toastStack = true} = {}) {
   return {
     document, window, stack, timers, frames,
     load(entry, variant) {
-      const typescript = ['chunnel-admin', 'chunnel-admin-lists', 'chunnel-admin-comments', 'chunnel-admin-settings', 'chunnel-admin-media-upload', 'chunnel-admin-login', 'chunnel-admin-menu'].includes(entry);
+      const typescript = ['chunnel-admin', 'chunnel-admin-lists', 'chunnel-admin-comments', 'chunnel-admin-settings', 'chunnel-admin-media-upload', 'chunnel-admin-login', 'chunnel-admin-menu', 'chunnel-admin-editor'].includes(entry);
       const filename = typescript && variant === 'source' ? `frontend/core/${entry.replace('chunnel-', '')}.ts`
         : path.join(__dirname, '../../internal/coreui/assets/js', `${entry}${variant === 'source' ? '.source' : ''}.js`);
       new vm.Script(typescript && variant === 'source' ? compile(filename) : fs.readFileSync(filename, 'utf8'), {filename}).runInContext(context);

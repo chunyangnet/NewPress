@@ -2,13 +2,15 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { readFileSync } = require('node:fs');
 const vm = require('node:vm');
-const source = readFileSync('internal/coreui/assets/js/chunnel-ai-settings.source.js', 'utf8');
+const source = require('./helpers/typescript.cjs').compile('frontend/core/ai-settings.ts');
+const {telemetryDefaults,defaultBalance}=require('./helpers/typescript.cjs').loadNativeModule('frontend/shared/ai-settings-data.ts');
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
 function fixture({ missing, missingProvider, readOnly = false, script = source } = {}) {
   const nodes = {}, requests = [], timers = new Map();
   let reloads = 0;
-  const element = () => ({ dataset: {}, disabled: false, value: '', checked: false, textContent: '', listeners: {}, children: [],
+  class Element {}
+  const element = () => Object.assign(new Element(),{ dataset: {}, isConnected:true, disabled: false, value: '', checked: false, textContent: '', listeners: {}, children: [],
     addEventListener(type, fn) { (this.listeners[type] ||= []).push(fn); },
     setAttribute() {}, removeAttribute() {}, focus() {}, reportValidity() { return true; }, querySelectorAll() { return []; },
     replaceChildren(...children) { this.children = children; }, append(...children) { this.children.push(...children); }
@@ -16,6 +18,7 @@ function fixture({ missing, missingProvider, readOnly = false, script = source }
   for (const name of ['form', 'fields', 'list', 'default', 'image-default', 'status', 'save', 'add', 'reload', 'empty', 'template', 'ops-enabled', 'ops-details', 'ops-costs', 'ops-balances', 'ops-charts', 'ops-retention', 'ops-records']) nodes[name] = element();
   nodes.fields.disabled = readOnly;
   nodes.form.dataset.userId = 'owner';
+  nodes.form.elements={namedItem:()=>Object.assign(element(),{value:'test-token'})};
   nodes.list.querySelectorAll = () => nodes.list.children;
   const cloneCard = () => {
     const card = element(), fields = {};
@@ -26,16 +29,17 @@ function fixture({ missing, missingProvider, readOnly = false, script = source }
   nodes.template.content = { querySelector: selector => selector === `[data-provider-${missingProvider}]` ? null : ({}), firstElementChild: { cloneNode: cloneCard } };
   nodes.status.textContent = '正在加载 AI 设置…';
   if (missing) delete nodes[missing];
-  const root = { hidden: false, querySelector: selector => nodes[selector.slice('[data-ai-config-'.length, -1)] || null };
+  const root = { hidden: false,isConnected:true, querySelector: selector => nodes[selector.slice('[data-ai-config-'.length, -1)] || null };
   const document = { querySelector: selector => selector === '[data-ai-config]' ? root : null, createElement: element, addEventListener() {} };
   const window = { location: { reload() { reloads++; } }, addEventListener() {} };
-  const context = { document, window, AbortController, crypto: {randomUUID: () => 'new-provider'},
+  const context = { document, window, AbortController, DOMException, URL, HTMLElement:Element, HTMLInputElement:Element,HTMLSelectElement:Element,HTMLTextAreaElement:Element,crypto: {randomUUID: () => 'new-provider'},
     setTimeout(fn) { const key = Symbol(); timers.set(key, fn); return key; }, clearTimeout(key) { timers.delete(key); },
     fetch(url, options) { return new Promise((resolve, reject) => {
       options.signal.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), {name: 'AbortError'})));
-      requests.push({ url, body: options.body, resolve(data, ok = true) { resolve({ok, json: async () => data}); }, reject });
+      requests.push({ url, body: options.body, resolve(data, ok = true) { resolve({ok,status:ok?200:503,headers:{get(){return null;}}, json: async () => data}); }, reject });
     }); }
   };
+  window.fetch=context.fetch;
   vm.runInNewContext(script, context);
   return { nodes, requests, timers, reloads: () => reloads, click(name) { nodes[name].listeners.click.forEach(fn => fn()); },
     field(name) { return nodes.list.children[0].querySelector(`[data-provider-${name}]`); },
@@ -60,14 +64,14 @@ for (const script of [source, readFileSync('internal/coreui/assets/js/chunnel-ai
   });
 }
 
-const localProvider = {id: 'local', name: '本地', base_url: 'http://localhost:11434/v1', allow_insecure: true, models: ['local-model'], default_model: 'local-model'};
+const localProvider = {id: 'local', name: '本地', base_url: 'http://localhost:11434/v1', allow_insecure: true, models: ['local-model'], default_model: 'local-model',balance:defaultBalance};
 async function providerFixture(provider = localProvider) {
   const f = fixture();
   f.requests[0].resolve({revision: 'revision-a', providers: [provider], default_provider: 'local'}); await tick();
   return f;
 }
 async function resolveSession(f) {
-  f.requests.at(-1).resolve({authenticated: true, user_id: 'owner', csrf_token: 'test-token'}); await tick();
+  await tick();
 }
 
 test('saved local approval restores, key is optional, editing address clears approval', async () => {
@@ -144,7 +148,7 @@ test('timeout exits loading and retry can recover', async () => {
   assert.equal(f.nodes.reload.disabled, false);
   assert.equal(f.nodes.add.disabled, true);
   f.click('reload');
-  f.requests[1].resolve({revision: 'revision-b', providers: []}); await tick();
+  f.requests[1].resolve({revision: 'revision-b', providers: [],default_provider:''}); await tick();
   assert.equal(f.nodes.add.disabled, false);
 });
 
@@ -159,14 +163,14 @@ test('authorization failures display server error and remain retryable', async (
 test('unsupported saved protocols cannot silently become Chat Completions', async () => {
   const f = fixture();
   f.requests[0].resolve({revision: 'revision-a', providers: [{id: 'future', protocol: 'future-protocol', models: ['model']}]}); await tick();
-  assert.match(f.nodes.status.textContent, /不兼容/);
+  assert.match(f.nodes.status.textContent, /未确认/);
   assert.equal(f.nodes.add.disabled, true);
   assert.equal(f.nodes.save.disabled, true);
 });
 
 test('read-only settings stay disabled after a successful load', async () => {
   const f = fixture({readOnly: true});
-  f.requests[0].resolve({revision: 'revision-a', providers: []}); await tick();
+  f.requests[0].resolve({revision: 'revision-a', providers: [],default_provider:''}); await tick();
   assert.equal(f.nodes.add.disabled, true);
   assert.equal(f.nodes.fields.disabled, true);
 });

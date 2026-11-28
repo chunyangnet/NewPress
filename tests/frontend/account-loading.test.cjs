@@ -49,7 +49,7 @@ function fixture(view = 'like') {
     ChunnelScroll: { keep(change) { const result = change(); scrollEvents.push(root.dataset.accountView); return result; } },
   };
   vm.runInNewContext(source, { window, document: { querySelector: () => root, createElement: tag => new Element(tag), createElementNS: (_,tag) => new Element(tag), addEventListener(name,listener) { events[name] = listener; }, activeElement:null },
-    HTMLInputElement:Element, HTMLSelectElement:Element, HTMLTextAreaElement:Element, Element, Error, URL, URLSearchParams,
+    HTMLInputElement:Element, HTMLSelectElement:Element, HTMLTextAreaElement:Element, Element, Error, URL, URLSearchParams, setTimeout, clearTimeout, setTimeout, clearTimeout,
     location: { href:'https://example.test/account/?view='+view, reload() { reloads++; } }, history: { state:null, replaceState(...args) { historyCalls.push(args); } } });
   const form = query('[data-library-search]'), list = query('[data-library-list]'), status = query('[data-library-status]');
   const response = (titles=['新内容']) => ({ pages:2, total:titles.length, collections:{}, items:titles.map((title,i) => ({ id:i+1,title,url:'/posts/'+i,cover_url:'',excerpt:'摘要',collection:'',author_name:'作者',author_url:'/authors/1/',published_at:'2026-11-26T00:00:00Z' })) });

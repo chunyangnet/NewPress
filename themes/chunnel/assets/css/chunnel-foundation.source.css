@@ -1,5 +1,14 @@
 /* Shared controls and motion. Material colors remain in the classic/glass skins.
    Build appends the sampled physical curves; older browsers retain these fallbacks. */
+/* purgecss start ignore */
+[data-async-loading="loading"] { min-height: 12rem; position: relative; }
+[data-async-loading="loading"]::before { content: ""; display: block; height: 10rem; border-radius: 12px; background: repeating-linear-gradient(180deg, var(--line) 0 16px, transparent 16px 32px); opacity: .45; }
+[data-async-loading="refreshing"] { opacity: .65; cursor: progress; }
+@media (prefers-reduced-motion: no-preference) {
+  [data-async-loading="loading"]::before { animation: np-loading-pulse 1.4s ease-in-out infinite alternate; }
+  @keyframes np-loading-pulse { to { opacity: .2; } }
+}
+/* purgecss end ignore */
 :root {
   --ink: #17253d;
   --ink-soft: #334155;

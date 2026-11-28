@@ -2,7 +2,7 @@
   "schema": 1,
   "slug": "docshub",
   "name": "DocsHub · 文档与教程",
-  "version": "2.0.1",
+  "version": "2.0.4",
   "description": "面向技术文档、教程与开发者知识库。完整覆盖文档阅读、学习系列、问答、圈子、反馈、技术快讯、资源商城与个人中心，提供统一的深浅色与移动端体验。",
   "author": "NewPress Project",
   "license": "Apache-2.0",

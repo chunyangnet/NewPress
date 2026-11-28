@@ -1,13 +1,13 @@
 package httpserver
 
 import (
-	"errors"
 	"net/http"
+	"strconv"
+	"time"
+
 	"newpress.local/newpress/internal/auth"
 	"newpress.local/newpress/internal/comment"
 	"newpress.local/newpress/internal/content"
-	"strconv"
-	"time"
 )
 
 func (s *Server) bindCommentAccount(r *http.Request, form *publicCommentForm) int64 {
@@ -50,22 +50,36 @@ func (s *Server) socialOwnContent(w http.ResponseWriter, r *http.Request) {
 		s.engagementError(w, r, err)
 		return
 	}
+	parentIDs := make([]int64, 0, len(result.Items))
+	for _, c := range result.Items {
+		parentIDs = append(parentIDs, c.PostID)
+	}
+	parents, err := content.ReadPostHeaders(r.Context(), s.repository, parentIDs)
+	if err != nil {
+		s.ownContentError(w, r, err)
+		return
+	}
+	visible := make(map[int64]content.PostHeader)
+	links := make(map[int64]string)
+	path := s.permalinkBuilder()
+	for id, header := range parents {
+		if s.publicEngagementTarget(header.Post()) {
+			visible[id] = header
+			links[id] = path(header.Post()) + "#comments"
+		}
+	}
 	items := []map[string]any{}
 	for _, c := range result.Items {
 		// Only the writer's text and public metadata are returned. A withdrawn
 		// article does not expose its private title, slug or updated contents.
 		item := map[string]any{"id": c.ID, "content": c.ContentSource, "status": c.Status, "created_at": c.CreatedAt, "title": "原文章当前不可用", "url": ""}
-		post, err := s.repository.GetByID(r.Context(), c.PostID)
-		if err != nil && !errors.Is(err, content.ErrNotFound) {
-			s.engagementError(w, r, err)
-			return
-		}
-		if err == nil && s.publicEngagementTarget(post) {
-			item["title"], item["url"] = post.Title, s.contentPath(post)+"#comments"
+		if header, found := visible[c.PostID]; found {
+			item["title"], item["url"] = header.Title, links[c.PostID]
 		}
 		items = append(items, item)
 	}
-	writeJSON(w, 200, map[string]any{"items": items, "total": result.Total, "page": page, "pages": max(1, (result.Total+23)/24), "status_counts": map[string]int{"pending": result.StatusCounts[comment.StatusPending], "approved": result.StatusCounts[comment.StatusApproved]}})
+	access := func() error { return s.ownCommentsAccess(r, p.UserID, result.Items, visible) }
+	writePrivateJSON(w, r, 200, map[string]any{"items": items, "total": result.Total, "page": page, "pages": max(1, (result.Total+23)/24), "status_counts": map[string]int{"pending": result.StatusCounts[comment.StatusPending], "approved": result.StatusCounts[comment.StatusApproved]}}, nil, access, func(err error) { s.ownContentError(w, r, err) })
 }
 
 func (s *Server) ownPosts(w http.ResponseWriter, r *http.Request, p auth.Principal, page int, search, status string) {
@@ -80,15 +94,19 @@ func (s *Server) ownPosts(w http.ResponseWriter, r *http.Request, p auth.Princip
 		return
 	}
 	items := []map[string]any{}
+	editLinks := false
+	paths := s.permalinkBuilder()
 	for _, post := range result.Items {
 		path, edit := "", ""
 		if content.PublicAt(post, time.Now()) {
-			path = s.contentPath(post)
+			path = paths(post)
 		}
 		if p.Can(auth.CapabilityAdminAccess) && (p.Can(auth.CapabilityContentWrite) || p.Can(auth.CapabilityContentWriteOwn)) {
 			edit = "/admin/content/" + strconv.FormatInt(post.ID, 10) + "/edit/"
+			editLinks = true
 		}
 		items = append(items, map[string]any{"id": post.ID, "title": post.Title, "excerpt": post.Excerpt, "status": post.Status, "url": path, "edit_url": edit, "updated_at": post.UpdatedAt})
 	}
-	writeJSON(w, 200, map[string]any{"items": items, "total": result.Total, "page": page, "pages": max(1, (result.Total+23)/24), "status_counts": result.StatusCounts})
+	access := func() error { return s.ownPostsAccess(r, p, result.Items, editLinks) }
+	writePrivateJSON(w, r, 200, map[string]any{"items": items, "total": result.Total, "page": page, "pages": max(1, (result.Total+23)/24), "status_counts": result.StatusCounts}, nil, access, func(err error) { s.ownContentError(w, r, err) })
 }

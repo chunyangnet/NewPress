@@ -1,0 +1,362 @@
+{
+  "snapshot": {
+    "upload_entries": [
+      {
+        "id": "media-library",
+        "name": "媒体库上传"
+      },
+      {
+        "id": "media-api",
+        "name": "媒体 API / 外部客户端"
+      },
+      {
+        "id": "editor-body",
+        "name": "编辑器正文（含粘贴、拖拽）"
+      },
+      {
+        "id": "editor-cover",
+        "name": "文章 / 页面封面"
+      },
+      {
+        "id": "editor-component",
+        "name": "文章组件图片"
+      },
+      {
+        "id": "series-cover",
+        "name": "选集封面"
+      },
+      {
+        "id": "settings-image",
+        "name": "后台设置图片（站点 / 主题 / 商品 / 勋章）"
+      },
+      {
+        "id": "avatar",
+        "name": "账号头像"
+      },
+      {
+        "id": "ai-image",
+        "name": "AI 图片生成"
+      },
+      {
+        "id": "ai-pro-image",
+        "name": "AI 自动配图"
+      },
+      {
+        "id": "wechat-import",
+        "name": "微信文章图片导入"
+      },
+      {
+        "id": "link-logo",
+        "name": "友链图标（上传 / 自动提取）"
+      },
+      {
+        "id": "circle-attachment",
+        "name": "圈子私有附件（鉴权代理读取）"
+      }
+    ],
+    "settings": {
+      "version": 2,
+      "active_profile": "archive",
+      "mode": "mirror",
+      "auto_sync": true,
+      "verify_download": true,
+      "paused": false,
+      "workers": 2,
+      "scan_seconds": 60,
+      "max_attempts": 5,
+      "signed_url_seconds": 300,
+      "profiles": [
+        {
+          "id": "archive",
+          "name": "媒体归档",
+          "provider": "s3-compatible",
+          "endpoint": "https://storage.example.invalid",
+          "region": "us-east-1",
+          "bucket": "newpress-media",
+          "prefix": "media",
+          "public_url": "",
+          "access_key": "storage-access-id",
+          "path_style": true,
+          "allow_private": false,
+          "allow_http": false,
+          "timeout_seconds": 120
+        },
+        {
+          "id": "backup",
+          "name": "备用存储",
+          "provider": "s3-compatible",
+          "endpoint": "https://storage.example.invalid",
+          "region": "us-east-1",
+          "bucket": "newpress-backup",
+          "prefix": "media",
+          "public_url": "",
+          "access_key": "storage-access-id",
+          "path_style": true,
+          "allow_private": false,
+          "allow_http": false,
+          "timeout_seconds": 120
+        }
+      ],
+      "profile_views": [
+        {
+          "id": "archive",
+          "name": "媒体归档",
+          "provider": "s3-compatible",
+          "endpoint": "https://storage.example.invalid",
+          "region": "us-east-1",
+          "bucket": "newpress-media",
+          "prefix": "media",
+          "public_url": "",
+          "access_key": "storage-access-id",
+          "path_style": true,
+          "allow_private": false,
+          "allow_http": false,
+          "timeout_seconds": 120,
+          "secret_saved": true,
+          "token_saved": true,
+          "password_saved": false
+        },
+        {
+          "id": "backup",
+          "name": "备用存储",
+          "provider": "s3-compatible",
+          "endpoint": "https://storage.example.invalid",
+          "region": "us-east-1",
+          "bucket": "newpress-backup",
+          "prefix": "media",
+          "public_url": "",
+          "access_key": "storage-access-id",
+          "path_style": true,
+          "allow_private": false,
+          "allow_http": false,
+          "timeout_seconds": 120,
+          "secret_saved": true,
+          "token_saved": true,
+          "password_saved": false
+        }
+      ]
+    },
+    "enabled": false,
+    "running": false,
+    "namespace": "newpress-bfebc25e4fef24102194eb16cf8e47dd",
+    "counts": {},
+    "profile_counts": {},
+    "profile_bytes": {},
+    "total_bytes": 0,
+    "synced_bytes": 0,
+    "records": []
+  },
+  "record": {
+    "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "profile_id": "archive",
+    "identity": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "item_id": 1,
+    "filename": "fixture.png",
+    "object_key": "fixture.png",
+    "remote_key": "media/fixture.png",
+    "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "size": 128,
+    "content_type": "image/png",
+    "status": "orphaned",
+    "operation": "upload",
+    "attempts": 0,
+    "next": "0001-01-01T00:00:00Z",
+    "updated": "2026-11-27T13:35:25.128675Z",
+    "verified": "2026-11-27T13:35:25.128675Z"
+  },
+  "migration": {
+    "source": "archive",
+    "target": "backup",
+    "total": 1,
+    "ready": 0,
+    "bytes": 128,
+    "routes": [
+      "媒体库"
+    ],
+    "default": true
+  },
+  "files": {
+    "files": [
+      {
+        "key": "media/example.txt",
+        "size": 12,
+        "directory": false,
+        "managed": false
+      },
+      {
+        "key": "media/newpress-00000000000000000000000000000000/1/image.png",
+        "size": 128,
+        "directory": false,
+        "managed": true
+      },
+      {
+        "key": "media/folder/",
+        "size": 0,
+        "directory": true,
+        "managed": false
+      }
+    ],
+    "next": ""
+  },
+  "probe": {
+    "ok": true,
+    "stages": [
+      "上传",
+      "校验",
+      "清理"
+    ],
+    "duration_ms": 12,
+    "cleanup_ok": true
+  },
+  "input": {
+    "source": "fixture-notes",
+    "format": "markdown",
+    "state": "draft",
+    "files": [
+      {
+        "name": "one.md",
+        "text": "---\ntitle: 第一篇迁入文章\nslug: fixture-import-one\nauthor: Writer\n---\n正文一\n\n[外部链接](https://example.invalid/read)"
+      },
+      {
+        "name": "two.md",
+        "text": "---\ntitle: 第二篇迁入文章\nslug: fixture-import-two\nauthor: Writer\n---\n正文二"
+      }
+    ]
+  },
+  "preview": {
+    "plan": {
+      "source": "fixture-notes",
+      "format": "markdown",
+      "revision": "9dde30339d52a71127cbe5020754710d104e7411b16ef0a958b44c585e1f6cb4",
+      "items": [
+        {
+          "key": "one.md",
+          "title": "第一篇迁入文章",
+          "type": "post",
+          "status": "draft",
+          "url": "/posts/fixture-import-one",
+          "action": "create"
+        },
+        {
+          "key": "two.md",
+          "title": "第二篇迁入文章",
+          "type": "post",
+          "status": "draft",
+          "url": "/posts/fixture-import-two",
+          "action": "create"
+        }
+      ],
+      "new": 2,
+      "existing": 0,
+      "conflicts": 0
+    },
+    "document": {
+      "items": [
+        {
+          "key": "one.md",
+          "author": "Writer",
+          "original_status": "draft",
+          "warnings": [],
+          "images": [],
+          "preview": "<p>正文一</p>\n<p><a href=\"https://example.invalid/read\" rel=\"nofollow\">外部链接</a></p>",
+          "categories": [],
+          "tags": []
+        },
+        {
+          "key": "two.md",
+          "author": "Writer",
+          "original_status": "draft",
+          "warnings": [],
+          "images": [],
+          "preview": "<p>正文二</p>",
+          "categories": [],
+          "tags": []
+        }
+      ],
+      "skipped": [],
+      "warnings": [],
+      "authors": [
+        "Writer"
+      ]
+    },
+    "token": "fixture-preview-token",
+    "expires": "2099-01-01T00:00:00Z",
+    "targets": [
+      {
+        "id": 1,
+        "name": "站点所有者"
+      }
+    ],
+    "default_author": 1,
+    "applied": false
+  },
+  "applied": {
+    "plan": {
+      "source": "fixture-notes",
+      "format": "markdown",
+      "revision": "9dde30339d52a71127cbe5020754710d104e7411b16ef0a958b44c585e1f6cb4",
+      "items": [
+        {
+          "key": "one.md",
+          "title": "第一篇迁入文章",
+          "type": "post",
+          "status": "draft",
+          "url": "/posts/fixture-import-one",
+          "action": "created",
+          "post_id": 900,
+          "version": 1
+        },
+        {
+          "key": "two.md",
+          "title": "第二篇迁入文章",
+          "type": "post",
+          "status": "draft",
+          "url": "/posts/fixture-import-two",
+          "action": "created",
+          "post_id": 901,
+          "version": 1
+        }
+      ],
+      "new": 2,
+      "existing": 0,
+      "conflicts": 0
+    },
+    "document": {
+      "items": [
+        {
+          "key": "one.md",
+          "author": "Writer",
+          "original_status": "draft",
+          "warnings": [],
+          "images": [],
+          "preview": "<p>正文一</p>\n<p><a href=\"https://example.invalid/read\" rel=\"nofollow\">外部链接</a></p>",
+          "categories": [],
+          "tags": []
+        },
+        {
+          "key": "two.md",
+          "author": "Writer",
+          "original_status": "draft",
+          "warnings": [],
+          "images": [],
+          "preview": "<p>正文二</p>",
+          "categories": [],
+          "tags": []
+        }
+      ],
+      "skipped": [],
+      "warnings": [],
+      "authors": [
+        "Writer"
+      ]
+    },
+    "targets": [
+      {
+        "id": 1,
+        "name": "站点所有者"
+      }
+    ],
+    "default_author": 1,
+    "applied": true
+  }
+}

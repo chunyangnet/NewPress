@@ -27,6 +27,9 @@ func (s *Server) editorMetadata(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.decodeStrictAPIJSONLimit(w, r, &input, 150<<10, "150 KiB"); !ok {
 		return
 	}
+	if !s.recheckAIEditorTool(w, r, lease) {
+		return
+	}
 	if len(input.Body) > 128<<10 || len(input.Title) > 1200 || len(input.Fields) == 0 || len(input.Fields) > 4 || strings.TrimSpace(input.Body) == "" || aieditor.LanguageName(input.Language) == "" {
 		s.writeAPIError(w, r, 422, "ai.metadata_input", "请填写正文并勾选所需字段", nil)
 		return
@@ -38,6 +41,9 @@ func (s *Server) editorMetadata(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	st, err := s.aiJobs.Snapshot()
+	if !s.recheckAIEditorTool(w, r, lease) {
+		return
+	}
 	if err != nil {
 		s.queueError(w, err)
 		return
@@ -55,14 +61,21 @@ func (s *Server) editorMetadata(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 	_ = http.NewResponseController(w).SetWriteDeadline(time.Now().Add(95 * time.Second))
 	categories, err := s.aiEditorCategories(ctx)
+	if !s.recheckAIEditorTool(w, r, lease) {
+		return
+	}
 	if err != nil {
 		s.aiEditorError(w, r, err)
 		return
 	}
 	messages := quotedMessages("返回 JSON，按需要的字段给出 excerpt 简明摘要、slug 英文别名、tags 字符串数组、categoryID 一个已存在的分类编号", map[string]any{"标题": input.Title, "正文": aiCommentContext(input.Body, 16000), "需要的字段": input.Fields, "分类": categories}, input.Language)
-	raw, err := s.autoText(ctx, aijobs.Job{Provider: rules.Provider, Model: rules.Model, UserID: actor.UserID, Work: aijobs.WorkSpec{Kind: "metadata", Rules: rules}}, messages, nil, 1200)
+	access := func() error { return s.aiEditorToolAccess(r, lease) }
+	raw, err := s.autoTextChecked(ctx, aijobs.Job{Provider: rules.Provider, Model: rules.Model, UserID: actor.UserID, Author: actor.Username, Work: aijobs.WorkSpec{Kind: "metadata", Rules: rules}}, messages, nil, 1200, access)
+	if !s.recheckAIEditorTool(w, r, lease) {
+		return
+	}
 	if err != nil {
-		s.aiEditorError(w, r, err)
+		s.aiEditorToolError(w, r, err)
 		return
 	}
 	var out aiEnrichment
@@ -70,9 +83,5 @@ func (s *Server) editorMetadata(w http.ResponseWriter, r *http.Request) {
 		s.writeAPIError(w, r, 502, "ai.metadata_output", "模型没有返回有效元数据", nil)
 		return
 	}
-	if !lease.active() {
-		s.writeAPIError(w, r, 409, "ai.inactive", "操作已中止", nil)
-		return
-	}
-	writeJSON(w, 200, out)
+	writePrivateJSON(w, r, 200, out, nil, access, func(err error) { s.aiEditorToolError(w, r, err) })
 }

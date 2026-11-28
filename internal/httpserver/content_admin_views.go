@@ -105,7 +105,7 @@ type adminRevisionView struct {
 	Current      bool
 }
 
-func (s *Server) renderContentList(writer http.ResponseWriter, status int, principal auth.Principal, readOnly bool, query content.AdminQuery, result content.AdminList, page int, notice adminNotice) {
+func (s *Server) renderContentList(writer http.ResponseWriter, request *http.Request, status int, principal auth.Principal, readOnly bool, query content.AdminQuery, result content.AdminList, page int, notice adminNotice) {
 	pageSize := max(1, query.Limit)
 	pageCount := max(1, (result.Total+pageSize-1)/pageSize)
 	rows := make([]adminContentRow, 0, len(result.Items))
@@ -182,10 +182,12 @@ func (s *Server) renderContentList(writer http.ResponseWriter, status int, princ
 		PreviousURL: contentListURL(query.Type, query.Status, query.Search, max(1, page-1)),
 		NextURL:     contentListURL(query.Type, query.Status, query.Search, min(pageCount, page+1)),
 	}
-	s.render(writer, status, "admin-content", data)
+	access := func() error { return s.contentListAccess(request, query.AuthorID, result.Items, false) }
+	s.renderChecked(writer, status, "admin-content", data, request, s.contentBeforeOutput(writer, request, false, access), access)
 }
 
-func (s *Server) renderContentEditor(writer http.ResponseWriter, request *http.Request, status int, principal auth.Principal, readOnly bool, post content.Post, input content.PostInput, fieldErrors map[string]string, notice adminNotice, conflict, recovered bool) {
+func (s *Server) renderContentEditor(writer http.ResponseWriter, request *http.Request, status int, principal auth.Principal, readOnly bool, post content.Post, input content.PostInput, fieldErrors map[string]string, notice adminNotice, conflict bool, recoverySource *content.Autosave) {
+	recovered := recoverySource != nil
 	if input.Type == "" {
 		input.Type = content.TypePost
 	}
@@ -205,7 +207,16 @@ func (s *Server) renderContentEditor(writer http.ResponseWriter, request *http.R
 	autosaveURL := ""
 	if post.ID > 0 && !readOnly && s.auth.Configured() && canWriteContentObject(principal, post) {
 		autosaveURL = "/admin/content/" + strconv.FormatInt(post.ID, 10) + "/autosave/"
-		if autosave, exists := s.loadEditorAutosave(request, post, principal); exists && autosaveDiffersFromPost(autosave, post) {
+		var autosave content.Autosave
+		exists := recovered
+		if recovered {
+			// The form and its recovery card describe the same snapshot. A later
+			// read must not authorize already-loaded input with a newer identity.
+			autosave = *recoverySource
+		} else {
+			autosave, exists = s.loadEditorAutosave(request, post, principal)
+		}
+		if exists && autosaveDiffersFromPost(autosave, post) {
 			recovery = adminEditorRecoveryView{
 				Available: true, SourceVersion: autosave.SourceVersion,
 				UpdatedLabel: autosave.UpdatedAt.In(location).Format("2006-01-02 15:04:05"),
@@ -353,5 +364,15 @@ func (s *Server) renderContentEditor(writer http.ResponseWriter, request *http.R
 	}
 	preview := content.Post{Type: input.Type, Status: input.Status, PublishedAt: input.PublishedAt, Meta: map[string]any{"pinned": data.Editor.Pinned, "article_badge": *data.Editor.Input.ArticleBadge}}
 	data.Editor.BadgePreview = preview.ArticleBadge()
-	s.render(writer, status, "admin-editor", data)
+	access := func() error {
+		return s.editorReadAccess(request, post.ID, !readOnly, recoverySource)
+	}
+	beforeOutput := func() bool {
+		if err := access(); err != nil {
+			s.editorAccessError(writer, request, err)
+			return false
+		}
+		return true
+	}
+	s.renderChecked(writer, status, "admin-editor", data, request, beforeOutput, access)
 }

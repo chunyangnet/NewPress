@@ -24,6 +24,8 @@ type systemStatusMonitor struct {
 	mu        sync.Mutex
 	resources systeminfo.Collector
 	cached    systemStatusView
+	cachedKey systemStatusCacheKey
+	pending   *systemStatusPending
 }
 
 type systemStatusView struct {
@@ -113,37 +115,62 @@ func (s *Server) adminSystemStatus(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	access, ok := s.newSystemStatusAuthority(w, r)
+	if !ok {
+		return
+	}
 	w.Header().Set("Cache-Control", "no-store")
 	if _, ok := s.strictAPIQuery(w, r, nil); !ok {
 		return
 	}
+	report, err := s.authorizedSystemStatus(access)
+	if err != nil {
+		s.systemStatusError(w, r, access, err)
+		return
+	}
 	data := s.baseViewFor(w, "系统状态", "服务健康、服务器资源与应用运行环境", "/admin/system/")
 	data.IsAdmin, data.BodyClass = true, "is-admin is-admin-system"
-	data.Admin = s.adminView("system", p, readOnly)
-	data.SystemStatus = s.systemStatusReport(r.Context())
-	s.render(w, http.StatusOK, "admin-system", data)
+	data.Admin = s.adminViewWithReadiness("system", p, readOnly, report.Checks)
+	data.SystemStatus = report
+	if !access.recheck(w) {
+		return
+	}
+	s.renderChecked(w, http.StatusOK, "admin-system", data, r, func() bool { return access.recheck(w) }, access.access)
 }
 
 func (s *Server) adminSystemStatusAPI(w http.ResponseWriter, r *http.Request) {
 	if _, _, ok := s.requireAdminJSONReadCapability(w, r, auth.CapabilitySystemRead); !ok {
 		return
 	}
+	access, ok := s.newSystemStatusAuthority(w, r)
+	if !ok {
+		return
+	}
 	w.Header().Set("Cache-Control", "no-store")
 	if _, ok := s.strictAPIQuery(w, r, nil); !ok {
 		return
 	}
-	writeJSON(w, http.StatusOK, s.systemStatusReport(r.Context()))
+	report, err := s.authorizedSystemStatus(access)
+	if err != nil {
+		s.systemStatusError(w, r, access, err)
+		return
+	}
+	access.json(w, report)
 }
 
 func (s *Server) systemStatusReport(ctx context.Context) systemStatusView {
-	s.systemStatus.mu.Lock()
-	defer s.systemStatus.mu.Unlock()
-	// A short shared cache also bounds native probes and readiness reads when
-	// multiple operators have this page open. No directory-size scans occur.
-	if time.Since(s.systemStatus.cached.CollectedAt) < 2*time.Second && s.systemStatus.cached.Timezone == s.siteLocation(ctx).String() {
-		return s.systemStatus.cached
+	report, _ := s.systemStatusReportChecked(ctx)
+	return report
+}
+
+func (s *Server) collectSystemStatus(ctx context.Context) systemStatusView {
+	if ctx.Err() != nil {
+		return systemStatusView{}
 	}
 	resources := s.systemStatus.resources.Collect(s.config.DataDir)
+	if ctx.Err() != nil {
+		return systemStatusView{}
+	}
 	var mem runtime.MemStats
 	runtime.ReadMemStats(&mem)
 	uptime := max(int64(0), int64(time.Since(s.startedAt).Seconds()))
@@ -179,12 +206,12 @@ func (s *Server) systemStatusReport(ctx context.Context) systemStatusView {
 		report.Status, report.StatusLabel = "error", "部分服务需要检查"
 		report.StatusDetail = "检测到未通过的服务，请查看下方检查结果。"
 	}
+	if ctx.Err() != nil {
+		return systemStatusView{}
+	}
 	report.Groups = s.systemDetailGroups(resources, process, report.StartedAt, settings)
 	report.CollectedAt = time.Now().UTC()
 	report.CollectedLabel = report.CollectedAt.In(location).Format("15:04:05")
-	if ctx.Err() == nil {
-		s.systemStatus.cached = report
-	}
 	return report
 }
 
@@ -275,6 +302,11 @@ func (s *Server) systemReadinessChecks(parent context.Context) []systemStatusChe
 		}
 		wg.Go(func() {
 			check := &checks[i]
+			defer func() {
+				if recover() != nil {
+					check.Status, check.StatusLabel, check.Detail = "error", "不可用", "就绪检查未通过，请查看服务器日志"
+				}
+			}()
 			if entry.ready == nil {
 				check.Status, check.StatusLabel, check.Detail = "error", "不可用", "服务尚未就绪"
 				return

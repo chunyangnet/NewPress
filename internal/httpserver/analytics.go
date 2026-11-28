@@ -3,7 +3,6 @@ package httpserver
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"sort"
@@ -13,6 +12,7 @@ import (
 
 	"newpress.local/newpress/internal/analytics"
 	"newpress.local/newpress/internal/auth"
+	"newpress.local/newpress/internal/comment"
 	"newpress.local/newpress/internal/content"
 	"newpress.local/newpress/internal/engagement"
 )
@@ -103,13 +103,14 @@ type analyticsRank struct {
 	Count int64  `json:"count"`
 }
 type analyticsArticle struct {
-	ID        int64  `json:"id"`
-	Title     string `json:"title"`
-	URL       string `json:"url"`
-	Views     int64  `json:"views"`
-	Likes     int    `json:"likes"`
-	Bookmarks int    `json:"bookmarks"`
-	Comments  int    `json:"comments"`
+	sourceVersion int64
+	ID            int64  `json:"id"`
+	Title         string `json:"title"`
+	URL           string `json:"url"`
+	Views         int64  `json:"views"`
+	Likes         int    `json:"likes"`
+	Bookmarks     int    `json:"bookmarks"`
+	Comments      int    `json:"comments"`
 }
 type analyticsView struct {
 	Timezone     string             `json:"timezone"`
@@ -155,6 +156,9 @@ func rankAnalytics(values map[string]int64, limit int) []analyticsRank {
 	return result
 }
 func (s *Server) analyticsReport(ctx context.Context, days int) (analyticsView, error) {
+	if err := ctx.Err(); err != nil {
+		return analyticsView{}, err
+	}
 	// Daily buckets and the displayed range follow the same calendar as the
 	// rest of the site (站点设置 → 站点时区).
 	location := s.siteLocation(ctx)
@@ -169,6 +173,9 @@ func (s *Server) analyticsReport(ctx context.Context, days int) (analyticsView, 
 	posts := map[int64]int64{}
 	sources, terms := map[string]int64{}, map[string]int64{}
 	for i := days - 1; i >= 0; i-- {
+		if err := ctx.Err(); err != nil {
+			return analyticsView{}, err
+		}
 		date := analytics.DateIn(local.AddDate(0, 0, -i), location)
 		d := state.Days[date]
 		result.Trend = append(result.Trend, analyticsTrend{date, d.Views, d.Searches, d.Misses})
@@ -216,24 +223,29 @@ func (s *Server) analyticsReport(ctx context.Context, days int) (analyticsView, 
 		}
 		return posts[ids[i]] > posts[ids[j]]
 	})
-	for _, id := range ids {
-		post, err := s.repository.GetByID(ctx, id)
-		if errors.Is(err, content.ErrNotFound) {
-			continue
-		}
+	// Read bounded batches of metadata; skip withdrawn/missing candidates until
+	// 20 public articles are found. Legacy repositories read only needed IDs.
+	batchSize := 1
+	if _, ok := s.repository.(content.PostHeadersReader); ok {
+		batchSize = 64
+	}
+	path := s.permalinkBuilder()
+	for start := 0; start < len(ids) && len(result.Articles) < 20; start += batchSize {
+		batch := ids[start:min(start+batchSize, len(ids))]
+		headers, err := content.ReadPostHeaders(ctx, s.repository, batch)
 		if err != nil {
 			return analyticsView{}, err
 		}
-		if post.Type != content.TypePost || !content.PublicAt(post, now) {
-			continue
-		}
-		_, comments, err := s.comments.ListApproved(ctx, id, 1, 0)
-		if err != nil {
-			return analyticsView{}, err
-		}
-		result.Articles = append(result.Articles, analyticsArticle{ID: id, Title: post.Title, URL: s.contentPath(post), Views: posts[id], Comments: comments})
-		if len(result.Articles) == 20 {
-			break
+		for _, id := range batch {
+			h, exists := headers[id]
+			post := h.Post()
+			if !exists || post.Type != content.TypePost || !content.PublicAt(post, now) {
+				continue
+			}
+			result.Articles = append(result.Articles, analyticsArticle{sourceVersion: post.Version, ID: id, Title: post.Title, URL: path(post), Views: posts[id]})
+			if len(result.Articles) == 20 {
+				break
+			}
 		}
 	}
 	ids = ids[:0]
@@ -241,6 +253,13 @@ func (s *Server) analyticsReport(ctx context.Context, days int) (analyticsView, 
 		ids = append(ids, item.ID)
 	}
 	if len(ids) > 0 {
+		comments, err := comment.ReadApprovedCounts(ctx, s.comments, ids)
+		if err != nil {
+			return analyticsView{}, err
+		}
+		for i := range result.Articles {
+			result.Articles[i].Comments = comments[result.Articles[i].ID]
+		}
 		for _, kind := range []string{engagement.Like, engagement.Bookmark} {
 			states, err := s.engagements.States(ctx, 0, kind, ids)
 			if err != nil {
@@ -264,7 +283,18 @@ func (s *Server) analyticsReport(ctx context.Context, days int) (analyticsView, 
 		points[i] = fmt.Sprintf("%.1f,%.1f", float64(i)*900/float64(max(1, days-1)), 180-float64(d.Views)*160/float64(max(int64(1), result.Peak)))
 	}
 	result.Points = strings.Join(points, " ")
+	if err := ctx.Err(); err != nil {
+		return analyticsView{}, err
+	}
 	return result, nil
+}
+
+func (s *Server) analyticsSourceCheck(report analyticsView) func(context.Context) error {
+	sources := &workbenchSources{server: s, versions: make(map[int64]int64, len(report.Articles))}
+	for _, article := range report.Articles {
+		sources.add(article.ID, article.sourceVersion)
+	}
+	return sources.check
 }
 func (s *Server) analyticsDays(w http.ResponseWriter, r *http.Request) (int, bool) {
 	values, ok := s.strictAPIQuery(w, r, map[string]bool{"days": true})
@@ -287,25 +317,46 @@ func (s *Server) adminAnalytics(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	access, ok := s.newAIAdminModuleAuthority(w, r, "analytics", false, auth.CapabilitySystemRead)
+	if !ok {
+		return
+	}
 	days, ok := s.analyticsDays(w, r)
 	if !ok {
 		return
 	}
-	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
-	defer cancel()
-	report, err := s.analyticsReport(ctx, days)
-	if err != nil {
-		s.renderFeatureRecovery(w, r, "analytics", "", s.adminView("analytics", p, readOnly), 503, "统计数据暂时不可读，请检查服务状态后重新检测。")
+	var report analyticsView
+	var err error
+	accessErr := access.wait(func(ctx context.Context, _ func() error) error {
+		ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+		defer cancel()
+		report, err = s.analyticsReport(ctx, days)
+		return nil
+	})
+	if accessErr != nil {
+		access.fail(w, accessErr)
 		return
 	}
+	if err != nil {
+		s.renderFeatureRecoveryChecked(w, r, "analytics", "", s.adminRecoveryIdentity("analytics", p, readOnly), 503, "统计数据暂时不可读，请检查服务状态后重新检测。", access)
+		return
+	}
+	access.sourceCheck = s.analyticsSourceCheck(report)
 	data := s.baseViewFor(w, "运营统计", "从真实阅读与反馈中，找到下一篇值得写的内容。", "/admin/analytics/")
 	data.IsAdmin, data.BodyClass = true, "is-admin is-admin-analytics"
 	data.Admin = s.adminView("analytics", p, readOnly)
 	data.Analytics = report
-	s.render(w, 200, "admin-analytics", data)
+	if !access.recheck(w) {
+		return
+	}
+	s.renderChecked(w, 200, "admin-analytics", data, r, func() bool { return access.recheck(w) }, access.access)
 }
 func (s *Server) adminAnalyticsAPI(w http.ResponseWriter, r *http.Request) {
 	if _, _, ok := s.requireAdminJSONReadCapability(w, r, auth.CapabilitySystemRead); !ok {
+		return
+	}
+	access, ok := s.newAIAdminModuleAuthority(w, r, "analytics", false, auth.CapabilitySystemRead)
+	if !ok {
 		return
 	}
 	w.Header().Set("Cache-Control", "no-store")
@@ -313,14 +364,24 @@ func (s *Server) adminAnalyticsAPI(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
-	defer cancel()
-	report, err := s.analyticsReport(ctx, days)
+	var report analyticsView
+	var err error
+	accessErr := access.wait(func(ctx context.Context, _ func() error) error {
+		ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+		defer cancel()
+		report, err = s.analyticsReport(ctx, days)
+		return nil
+	})
+	if accessErr != nil {
+		access.fail(w, accessErr)
+		return
+	}
 	if err != nil {
 		s.writeAPIError(w, r, 503, "analytics.unavailable", "统计暂时不可用，请稍后重试", nil)
 		return
 	}
-	writeJSON(w, 200, report)
+	access.sourceCheck = s.analyticsSourceCheck(report)
+	access.json(w, report)
 }
 func (s *Server) registerAnalyticsRoutes(mux routeRegistrar) {
 	mux.HandleFunc("GET /admin/analytics/{$}", s.adminAnalytics)

@@ -34,8 +34,12 @@ func (r *FileRepository) SaveSnippet(ctx context.Context, id int64, m Mutation, 
 	return fileContentChange(ctx, r, func(state *MemoryRepository) (Snippet, error) { return state.SaveSnippet(ctx, id, m, input, a) })
 }
 func (r *FileRepository) WithdrawSnippet(ctx context.Context, id int64, m Mutation, a SnippetAccess) (Snippet, error) {
-	return fileContentChange(ctx, r, func(state *MemoryRepository) (Snippet, error) { return state.WithdrawSnippet(ctx, id, m, a) })
+	return fileContentChangeWithConfirmation(ctx, r,
+		func(state *MemoryRepository) (Snippet, bool, error) { return state.confirmSnippetWithdrawal(id, m, a) },
+		func(state *MemoryRepository) (Snippet, error) { return state.WithdrawSnippet(ctx, id, m, a) })
 }
 func (r *FileRepository) ApplySnippetUpdate(ctx context.Context, u SnippetUpdate, a SnippetAccess) (SnippetResult, error) {
-	return fileContentChange(ctx, r, func(state *MemoryRepository) (SnippetResult, error) { return state.ApplySnippetUpdate(ctx, u, a) })
+	return fileContentChangeWithConfirmation(ctx, r,
+		func(state *MemoryRepository) (SnippetResult, bool, error) { return state.confirmSnippetUpdate(u, a) },
+		func(state *MemoryRepository) (SnippetResult, error) { return state.ApplySnippetUpdate(ctx, u, a) })
 }

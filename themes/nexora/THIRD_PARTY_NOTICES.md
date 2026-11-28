@@ -23,7 +23,7 @@ NotoSerifSC[wght].ttf
 
 ## 代码与图形
 
-主题代码遵循 Apache-2.0。N 形标志和线性图标以 SVG 路径实现。`nexora-verification.source.js` 由 NewPress 核心验证展示适配器改编，保留其 Apache-2.0 来源；使用 Nexora 自有命名、浅色配置和错误提示，不依赖 Chunnel 主题或其全局对象。
+主题代码遵循 Apache-2.0。N 形标志和线性图标以 SVG 路径实现。`nexora-verification.js` 由仓库 `frontend/themes/nexora/verification.ts` 和共享 `verification-controller.ts` 生成，保留 NewPress 核心的 Apache-2.0 来源；使用 Nexora 自有全局命名和表单错误提示，不依赖安装后的 Chunnel 主题。
 
 独立安装包保留 `LICENSE`、本说明和字体许可文件。
 

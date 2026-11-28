@@ -20,15 +20,19 @@ import (
 
 func TestSettingsShareMediaPickerAndImageControls(t *testing.T) {
 	_, h, token, _, _ := newMediaHTTPTestServer(t, 4096)
-	for _, page := range []struct{ path, field string }{
-		{"/admin/settings/", "site_icon_url"}, {"/admin/appearance/", "home_slide_1_image"},
-		{"/admin/series/?edit=new", "cover_url"}, {"/admin/content/new/", ""},
+	for _, page := range []struct{ path, field, script string }{
+		{"/admin/settings/", "site_icon_url", "chunnel-admin-media.js"}, {"/admin/appearance/", "home_slide_1_image", "chunnel-admin-media.js"},
+		{"/admin/series/?edit=new", "cover_url", "chunnel-admin-media.js"}, {"/admin/content/new/", "", "newpress-editor-page.js"},
 	} {
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, authenticatedMediaRequest("GET", "https://example.test"+page.path, nil, token))
 		body := w.Body.String()
-		if w.Code != 200 || strings.Count(body, "data-editor-media-dialog ") != 1 || strings.Count(body, "js/chunnel-admin-media.js") != 1 || strings.Contains(body, "js/chunnel-editor-media.js") || strings.Contains(body, "js/chunnel-media-fields.js") {
+		if w.Code != 200 || strings.Count(body, "data-editor-media-dialog ") != 1 || strings.Count(body, "js/"+page.script) != 1 || strings.Contains(body, "js/chunnel-editor-media.js") || strings.Contains(body, "js/chunnel-media-fields.js") {
 			t.Fatalf("%s: status %d or missing/duplicated shared picker", page.path, w.Code)
+		}
+		lazy := page.script == "newpress-editor-page.js"
+		if strings.Contains(body, "data-media-script=") != lazy || strings.Contains(body, "js/chunnel-admin-media.js") == lazy || strings.Contains(body, "js/newpress-editor-media-loader.js") {
+			t.Fatalf("%s: media loading mode is not isolated to its page", page.path)
 		}
 		if page.field != "" && (!strings.Contains(body, `name="`+page.field+`"`) || !strings.Contains(body, "data-media-input")) {
 			t.Fatalf("%s: missing image control", page.path)

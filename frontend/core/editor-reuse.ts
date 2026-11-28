@@ -2,6 +2,7 @@ import { node } from '../shared/dom';
 import { contentList, record, errorMessage, errorName, responseError } from './editor-tool-data';
 import type { ReusableContent } from './editor-tool-data';
 import type { EditorSourceSelection } from './media-types';
+import { editorToolReady, registerEditorTool } from './editor-tool-launch';
 
 (() => {
   'use strict';
@@ -10,6 +11,7 @@ import type { EditorSourceSelection } from './media-types';
   const sourceField = form?.querySelector<HTMLTextAreaElement>('[data-content-source]'), trigger = form?.querySelector<HTMLButtonElement>('[data-editor-reuse-open]');
   const blockEditor = window.ChunnelBlockEditor;
   if (!candidate || !sourceField || !trigger || !blockEditor) return;
+  if (editorToolReady(trigger)) return;
   const dialog = candidate, source = sourceField, launcher = trigger, editor = blockEditor;
   const search = dialog.querySelector<HTMLFormElement>('[data-editor-reuse-search]')!;
   const query = search.querySelector<HTMLInputElement>('[name="q"]')!, filter = search.querySelector<HTMLSelectElement>('[name="status"]')!;
@@ -77,13 +79,12 @@ import type { EditorSourceSelection } from './media-types';
       status.textContent = payload.items.length ? '选择要复制到当前文章的内容。' : '没有匹配的内容。可先把常用片段保存成草稿。';
     });
   }
-  launcher.addEventListener('pointerdown', event => event.preventDefault());
-  launcher.addEventListener('click', () => {
+  function open(_launcher: HTMLButtonElement, captured?: EditorSourceSelection) {
     if (dialog.open || source.disabled || source.readOnly) return;
-    selection = editor.capture();
+    selection = captured ?? editor.capture();
     returnToLauncher = true;
     dialog.showModal(); launcher.setAttribute('aria-expanded', 'true'); query.focus(); load(1);
-  });
+  }
   dialog.querySelector('[data-editor-reuse-close]')!.addEventListener('click', () => dialog.close());
   dialog.addEventListener('close', () => { if (dialog.open) return; serial++; controller?.abort(); controller = null; selection = null; busy = false; launcher.setAttribute('aria-expanded', 'false'); controls(); if (returnToLauncher && launcher.isConnected) launcher.focus({ preventScroll: true }); });
   search.addEventListener('submit', event => { event.preventDefault(); load(1); });
@@ -93,4 +94,5 @@ import type { EditorSourceSelection } from './media-types';
     const interrupted = busy; busy = false; controls();
     if (dialog.open && interrupted) status.textContent = '页面切换中断了请求，请重新查找或插入；正文已保留。';
   });
+  registerEditorTool([launcher], open);
 })();

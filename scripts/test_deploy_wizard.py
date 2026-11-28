@@ -73,11 +73,18 @@ class WizardTests(unittest.TestCase):
 
     def test_direct_http_port_change_updates_default_public_url(self):
         values = {"NEWPRESS_PROXY_MODE": "none", "NEWPRESS_HTTP_BIND": "0.0.0.0", "NEWPRESS_HTTP_PORT": "8080",
-                  "NEWPRESS_PUBLIC_URL": "http://192.0.2.10:8080"}
+                  "NEWPRESS_PUBLIC_URL": "http://127.0.0.1:8080"}
         args = deploy.parser().parse_args(["--interactive", "--port", "9090"])
         with patch("builtins.input", side_effect=["", "", ""]):
             deploy.wizard_network(args, values, "native", True)
-        self.assertEqual(args.url, "http://192.0.2.10:9090")
+        self.assertEqual(args.url, "http://127.0.0.1:9090")
+
+    def test_public_http_origin_rejected_before_deploy(self):
+        for origin in ("http://news.example", "http://192.0.2.10", "http://localhost.attacker.test"):
+            with self.subTest(origin=origin), self.assertRaises(deploy.DeployError):
+                deploy.validate_origin(origin)
+        for origin in ("https://news.example", "http://localhost:8080", "http://[::1]:8080"):
+            self.assertEqual(deploy.validate_origin(origin), origin)
 
     def test_manual_native_trust_is_preserved(self):
         values = {"NEWPRESS_PROXY_MODE": "remote", "NEWPRESS_EXTERNAL_PROXY_CIDRS": "10.1.1.1/32",
@@ -127,7 +134,7 @@ class WizardTests(unittest.TestCase):
         self.mock_linux()
         with patch("builtins.input", return_value="n"), patch.object(deploy, "prepare_sources", return_value={}) as probes, \
                 patch.object(deploy, "deploy_native") as install, patch.object(deploy, "atomic_write") as writes:
-            code = deploy.main(["--interactive", "--mode", "native", "--url", "http://news.example:9090", "--port", "9090",
+            code = deploy.main(["--interactive", "--mode", "native", "--url", "https://news.example:9090", "--port", "9090",
                                 "--bind", "0.0.0.0", "--source-mode", "auto"])
         self.assertEqual(code, 0)
         probes.assert_called_once()

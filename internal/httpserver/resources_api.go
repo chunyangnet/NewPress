@@ -177,6 +177,10 @@ type resourceActionInput struct {
 }
 
 func (s *Server) resourceAction(w http.ResponseWriter, r *http.Request) {
+	// This budget is independent of the caller-controlled visitor cookie.
+	if !s.currencyRate(w, r, "resource-source:"+s.commentGuard.sourceDigest(s.clientIPs.string(r)), 90) {
+		return
+	}
 	p, item, ok := s.resourceTarget(w, r)
 	if !ok {
 		return
@@ -212,6 +216,10 @@ func (s *Server) resourceAction(w http.ResponseWriter, r *http.Request) {
 	}
 	if v.ID == "" {
 		s.resourceError(w, r, resources.ErrInvalid)
+		return
+	}
+	if user == 0 && resourceRequiresAccount(item, v) {
+		s.writeAPIError(w, r, http.StatusUnauthorized, "auth.required", "请登录后使用有次数限制的资源", nil)
 		return
 	}
 	f, e := s.resourceFacts(r.Context(), p, actor, user)
@@ -324,58 +332,6 @@ func (s *Server) resourceAction(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	s.resourceError(w, r, resources.ErrInvalid)
-}
-func (s *Server) resourceHistory(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Cache-Control", "private, no-store")
-	p, ok := s.currencyPrincipal(w, r, false)
-	if !ok {
-		return
-	}
-	st, e := s.resources.Backend.Read(r.Context())
-	if e != nil {
-		s.resourceError(w, r, e)
-		return
-	}
-	out := []map[string]any{}
-	for i := len(st.Deliveries) - 1; i >= 0 && len(out) < 200; i-- {
-		d := st.Deliveries[i]
-		if d.Actor == resourceActorID(p.UserID) {
-			post, e := s.repository.GetByID(r.Context(), d.PostID)
-			if e != nil || !content.PublicAt(post, time.Now()) {
-				continue
-			}
-			out = append(out, map[string]any{"title": d.Title, "url": s.contentPath(post) + "#resource-" + d.Resource, "variant": d.Variant, "created_at": d.CreatedAt})
-		}
-	}
-	for i := len(st.Unlocks) - 1; i >= 0 && len(out) < 200; i-- {
-		u := st.Unlocks[i]
-		if u.Actor == resourceActorID(p.UserID) {
-			post, e := s.repository.GetByID(r.Context(), u.PostID)
-			if e == nil && content.PublicAt(post, time.Now()) {
-				out = append(out, map[string]any{"title": u.Title, "url": s.contentPath(post) + "#resource-" + u.Resource, "variant": u.Variant, "created_at": u.CreatedAt})
-			}
-		}
-	}
-	if s.commerce != nil {
-		if cs, e := s.commerce.Backend.Read(r.Context()); e == nil {
-			for _, o := range cs.Orders {
-				if o.UserID == p.UserID && o.Kind == "resource" && o.Status == "completed" && o.ResourceURL != "" {
-					out = append(out, map[string]any{"title": o.Title, "url": o.ResourceURL, "created_at": o.CompletedAt})
-				}
-			}
-		}
-	}
-	sort.Slice(out, func(i, j int) bool { return out[i]["created_at"].(time.Time).After(out[j]["created_at"].(time.Time)) })
-	seen := map[string]bool{}
-	unique := []map[string]any{}
-	for _, entry := range out {
-		key := entry["url"].(string)
-		if !seen[key] && len(unique) < 200 {
-			seen[key] = true
-			unique = append(unique, entry)
-		}
-	}
-	writeJSON(w, 200, map[string]any{"items": unique})
 }
 func (s *Server) resourceOptions(w http.ResponseWriter, r *http.Request) {
 	if _, _, ok := s.requireAdminJSONReadCapability(w, r, auth.CapabilityContentRead, auth.CapabilityContentWriteOwn); !ok {

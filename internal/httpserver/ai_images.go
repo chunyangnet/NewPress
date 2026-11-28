@@ -26,6 +26,7 @@ func (s *Server) adminAIImages(w http.ResponseWriter, r *http.Request) {
 		s.writeAPIError(w, r, http.StatusForbidden, "ai.media_forbidden", "生图需要媒体上传与读取权限", nil)
 		return
 	}
+	_, sessionToken, _ := s.currentAdminSession(r)
 	if _, ok := s.strictAPIQuery(w, r, nil); !ok {
 		return
 	}
@@ -92,6 +93,29 @@ func (s *Server) adminAIImages(w http.ResponseWriter, r *http.Request) {
 		defer s.aiState.release(principal.UserID)
 		observed := s.observeAI(input.ProviderID, connection, "image", principal.UserID)
 		defer observed.finish(ctx)
+		checkAuthority := func() bool {
+			if ctx.Err() != nil {
+				return false
+			}
+			// Generation can take minutes. Resolve the original session instead
+			// of trusting the principal cached at the start of the request.
+			current, err := s.auth.ResolveSession(ctx, sessionToken)
+			if err == nil && current.UserID == principal.UserID && current.Username == principal.Username &&
+				current.Can(auth.CapabilityAdminAccess) && principalCanAny(current, auth.CapabilityContentWrite, auth.CapabilityContentWriteOwn) &&
+				current.Can(auth.CapabilityMediaRead) && current.Can(auth.CapabilityMediaWrite) {
+				return true
+			}
+			code, message := "ai.media_forbidden", "登录状态或生图权限已变化，已停止保存；此前保存的图片仍可在媒体库查看"
+			if err != nil && !errors.Is(err, auth.ErrSessionNotFound) {
+				code, message = "auth.session_unavailable", "无法确认当前登录权限，已停止保存；请稍后重试"
+			}
+			observed.record.ErrorCode = code
+			send(aiStreamEvent{"error", map[string]string{"code": code, "message": message}})
+			return false
+		}
+		if !checkAuthority() {
+			return
+		}
 		images, err := s.aiImages.GenerateObserved(ctx, connection, generation, func(usage aieditor.Usage, count int) {
 			observed.first()
 			observed.record.Usage = usage
@@ -115,7 +139,7 @@ func (s *Server) adminAIImages(w http.ResponseWriter, r *http.Request) {
 		}
 		items := []adminMediaAPIItem{}
 		for i, image := range images {
-			if ctx.Err() != nil {
+			if !checkAuthority() {
 				return
 			}
 			title := input.Title

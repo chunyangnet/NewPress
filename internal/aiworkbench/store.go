@@ -77,7 +77,7 @@ func validReport(r Report) bool {
 
 func cloneReport(r Report) Report {
 	if r.Source != nil {
-		source := *r.Source
+		source := r.Source.WithSourceCheck(nil)
 		r.Source = &source
 	}
 	return r
@@ -87,11 +87,22 @@ func retained(r Report, now time.Time) bool {
 }
 
 func (s *Store) Save(r Report, now time.Time) error {
+	return s.SaveChecked(r, now, nil)
+}
+
+// SaveChecked refreshes authority after waiting for the lock and after encoding,
+// before persistence starts. The callback must not call back into this Store.
+func (s *Store) SaveChecked(r Report, now time.Time, check func() error) error {
 	if !validReport(r) {
 		return errors.New("AI 报告内容无效或过长")
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if check != nil {
+		if err := check(); err != nil {
+			return err
+		}
+	}
 	next := []Report{cloneReport(r)}
 	for _, old := range s.reports {
 		if old.ID == r.ID {
@@ -101,7 +112,7 @@ func (s *Store) Save(r Report, now time.Time) error {
 			next = append(next, old)
 		}
 	}
-	if err := s.persist(next); err != nil {
+	if err := s.persist(next, check); err != nil {
 		return err
 	}
 	s.reports = next
@@ -133,8 +144,18 @@ func (s *Store) Get(owner int64, id string, now time.Time) (Report, error) {
 }
 
 func (s *Store) Delete(owner int64, id string, now time.Time) error {
+	return s.DeleteChecked(owner, id, now, nil)
+}
+
+// DeleteChecked has the same callback/locking contract as SaveChecked.
+func (s *Store) DeleteChecked(owner int64, id string, now time.Time, check func() error) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if check != nil {
+		if err := check(); err != nil {
+			return err
+		}
+	}
 	found := false
 	next := []Report{}
 	for _, r := range s.reports {
@@ -149,15 +170,18 @@ func (s *Store) Delete(owner int64, id string, now time.Time) error {
 	if !found {
 		return ErrNotFound
 	}
-	if err := s.persist(next); err != nil {
+	if err := s.persist(next, check); err != nil {
 		return err
 	}
 	s.reports = next
 	return nil
 }
 
-func (s *Store) persist(reports []Report) error {
+func (s *Store) persist(reports []Report, check func() error) error {
 	if s.path == "" {
+		if check != nil {
+			return check()
+		}
 		return nil
 	}
 	data, err := json.Marshal(reportDocument{1, reports})
@@ -166,6 +190,11 @@ func (s *Store) persist(reports []Report) error {
 	}
 	if len(data) > 16<<20 {
 		return errors.New("AI 报告存储已达上限")
+	}
+	if check != nil {
+		if err := check(); err != nil {
+			return err
+		}
 	}
 	if err := packagefs.MkdirAllNoSymlink(filepath.Dir(s.path), 0o700); err != nil {
 		return err

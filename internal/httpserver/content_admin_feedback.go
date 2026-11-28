@@ -25,7 +25,7 @@ func (s *Server) handleContentCreateError(writer http.ResponseWriter, request *h
 		s.renderError(writer, http.StatusInternalServerError, "保存内容失败")
 		return
 	}
-	s.renderContentEditor(writer, request, status, principal, false, content.Post{}, input, fields, notice, false, false)
+	s.renderContentEditor(writer, request, status, principal, false, content.Post{}, input, fields, notice, false, nil)
 }
 
 func (s *Server) handleContentUpdateError(writer http.ResponseWriter, request *http.Request, principal auth.Principal, id int64, action string, form url.Values, err error) {
@@ -46,7 +46,7 @@ func (s *Server) handleContentUpdateError(writer http.ResponseWriter, request *h
 	}
 	if errors.Is(err, content.ErrVersionConflict) {
 		s.renderContentEditor(writer, request, http.StatusConflict, principal, false, current, input, nil,
-			adminNotice{"这篇内容已在其他会话中更新。下方保留了你的输入，请核对后再次保存。", "error"}, true, false)
+			adminNotice{"这篇内容已在其他会话中更新。下方保留了你的输入，请核对后再次保存。", "error"}, true, nil)
 		return
 	}
 	fields := content.FieldErrors(err)
@@ -58,7 +58,7 @@ func (s *Server) handleContentUpdateError(writer http.ResponseWriter, request *h
 	}
 	if len(fields) > 0 {
 		s.renderContentEditor(writer, request, http.StatusUnprocessableEntity, principal, false, current, input, fields,
-			adminNotice{"操作未通过校验，请检查标记字段", "error"}, false, false)
+			adminNotice{"操作未通过校验，请检查标记字段", "error"}, false, nil)
 		return
 	}
 	slog.Error("update admin content", "id", id, "action", action, "error", err)

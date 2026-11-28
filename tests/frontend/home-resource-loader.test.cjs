@@ -6,7 +6,7 @@ const vm = require('node:vm');
 const {loadModules} = require('./helpers/typescript.cjs');
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
-function fixture() {
+function fixture({ statusMarkup = true } = {}) {
   let document;
   class Element {
     constructor(tag = 'button', control = false) {
@@ -37,7 +37,11 @@ function fixture() {
   document.body = new Element('body'); document.head = new Element('head');
   document.currentScript = { src: 'https://example.test/theme-assets/js/chunnel-home.js?v=0.22.5' };
   document.createElement = tag => new Element(tag);
-  document.querySelector = () => null;
+  const status = new Element('div'); status.hidden = true;
+  const message = new Element('span'), retry = new Element('button'), dismiss = new Element('button');
+  message.setAttribute('role', 'status'); retry.type = dismiss.type = 'button';
+  status.append(message, retry, dismiss);
+  document.querySelector = selector => selector === '[data-home-feature-status]' && statusMarkup ? status : null;
   const window = new Element('window');
   const timers = new Map(); let clock = 0;
   const [loader, features] = loadModules(['frontend/themes/chunnel/home-loader.ts','frontend/themes/chunnel/home-features-loader.ts'], { document, window, Element, Node: Element, URL, console,
@@ -45,7 +49,6 @@ function fixture() {
     clearTimeout: id => timers.delete(id),
   });
   const entry = new URL(document.currentScript.src); features.initHomeFeatures(entry, loader.createHomeLoader(entry));
-  const status = document.body.children[0];
   return { document, window, timers, status, retry: status.children[1], dismiss: status.children[2],
     button: (tag) => new Element(tag || 'button', true),
     get scripts() { return document.head.children.filter(node => node.tag === 'script'); },
@@ -53,6 +56,14 @@ function fixture() {
     finish: () => { window.ChunnelHomeFeaturesReady = true; for (const node of document.head.children) if (node.isConnected) node.onload?.(); },
   };
 }
+
+test('missing custom homepage status markup leaves native controls untouched', () => {
+  const f = fixture({statusMarkup: false}), button = f.button('a');
+  button.click();
+  assert.equal(button.acceptedClicks, 1);
+  assert.equal(f.scripts.length, 0);
+  assert.equal(f.timers.size, 0);
+});
 
 test('homepage does not fetch enhancement scripts before explicit use', () => {
   const f = fixture();

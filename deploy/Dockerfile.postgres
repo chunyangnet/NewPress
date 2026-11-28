@@ -1,0 +1,8 @@
+ARG BASE_IMAGE=postgres:18.7-bookworm@sha256:e742a2668255221388004f3a42b6150a2103f5054ab3a4a93ae9e4f01e551c35
+FROM ${BASE_IMAGE}
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends --only-upgrade libpam0g libpam-modules libpam-modules-bin libpam-runtime \
+    && for package in libpam0g libpam-modules libpam-modules-bin libpam-runtime; do \
+         dpkg --compare-versions "$(dpkg-query -W -f='${Version}' "$package")" ge '1.5.2-6+deb12u3' || exit 1; \
+       done \
+    && rm -rf /var/lib/apt/lists/*

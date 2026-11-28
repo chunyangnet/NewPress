@@ -290,5 +290,5 @@ func (s *Server) adminAIWritingQueueDraft(w http.ResponseWriter, r *http.Request
 		s.queueError(w, plugin.ErrInactive)
 		return
 	}
-	s.renderContentEditor(w, r, 200, p, false, content.Post{}, input, nil, adminNotice{message, "info"}, false, false)
+	s.renderContentEditor(w, r, 200, p, false, content.Post{}, input, nil, adminNotice{message, "info"}, false, nil)
 }

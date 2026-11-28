@@ -9,7 +9,7 @@ import { history, undo, redo, undoDepth, redoDepth, closeHistory } from 'prosemi
 import { wrapInList, splitListItem, liftListItem, sinkListItem } from 'prosemirror-schema-list';
 import { inputRules, textblockTypeInputRule, wrappingInputRule, undoInputRule } from 'prosemirror-inputrules';
 import { tableEditing, addRowAfter, addColumnAfter, deleteRow, deleteColumn, deleteTable, goToNextCell } from 'prosemirror-tables';
-import { createDocumentCodec, documentSchema, safeLink, safeImage, MAX_DOCUMENT_BYTES } from './editor-document';
+import { createDocumentCodec, documentSchema, safeLink, pastedImageURL, MAX_DOCUMENT_BYTES } from './editor-document';
 import { resourceSelection } from './editor-resource-selection';
 import type {} from './component-types';
 import { renderBlock, serialize, replacement, localImageURL, localPostURL } from './composer-core';
@@ -113,7 +113,10 @@ window.NewPressDocumentEditor = form => {
     transformPastedHTML(html){
       const template=document.createElement('template');template.innerHTML=html;
       template.content.querySelectorAll('script,style,iframe,object,embed,svg,math,link,meta,base').forEach(node=>node.remove());
-      template.content.querySelectorAll('img').forEach(node=>{if(!safeImage(node.getAttribute('src')||''))node.remove();});
+      template.content.querySelectorAll('img').forEach(node=>{
+        const src=pastedImageURL(node.getAttribute('src')||'',location.href);
+        if(src)node.setAttribute('src',src);else node.remove();
+      });
       template.content.querySelectorAll('*').forEach(node=>{for(const attribute of [...node.attributes])if(/^on/i.test(attribute.name))node.removeAttribute(attribute.name);});
       return template.innerHTML;
     },

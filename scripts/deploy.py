@@ -158,6 +158,13 @@ def validate_origin(value):
             any(char.isspace() or ord(char) < 32 for char in value) or
             port == 0 or "\\" in value or "?" in value or "#" in value):
         raise DeployError("--url 必须是完整的 HTTP(S) 站点地址，例如 https://example.com；不能含路径、凭据、查询或片段。")
+    if parsed.scheme == "http" and parsed.hostname.lower() != "localhost":
+        try:
+            local = ipaddress.ip_address(parsed.hostname).is_loopback and "%" not in parsed.hostname
+        except ValueError:
+            local = False
+        if not local:
+            raise DeployError("非回环站点地址必须使用 HTTPS；请先配置 TLS 反向代理。")
     return value.rstrip("/")
 
 
@@ -498,12 +505,44 @@ def select_compose_files(values, supplied=None, *, discover=False):
     return selected
 
 
-def check_docker_plugins():
+def install_buildx():
+    if shutil.which("apt-get"):
+        commands = [["apt-get", "update"], ["apt-get", "install", "-y", "docker-buildx-plugin"]]
+    elif shutil.which("dnf") or shutil.which("yum"):
+        commands = [[shutil.which("dnf") or shutil.which("yum"), "install", "-y", "docker-buildx-plugin"]]
+    else:
+        raise DeployError("无法自动安装 Buildx；请通过当前系统的软件包管理器安装 Docker Buildx 插件。")
+    prefix = []
+    if os.geteuid() != 0:
+        if not shutil.which("sudo"):
+            raise DeployError("安装 Buildx 需要 root，请使用 root 重新运行部署脚本。")
+        prefix = ["sudo"]
+    for command in commands:
+        if run(prefix + command, check=False).returncode:
+            raise DeployError("Buildx 安装失败，请查看上方软件包管理器输出；若找不到 docker-buildx-plugin，请先配置与现有 Docker 对应的软件源。")
+    if run(["docker", "buildx", "version"], capture=True, check=False).returncode:
+        raise DeployError("Buildx 安装后仍不可用，请检查 docker buildx version 的输出。")
+    log("Docker Buildx 插件已安装并验证。", "ok")
+
+
+def check_docker_plugins(args=None):
     result = run(["docker", "compose", "version", "--short"], capture=True, check=False)
     version = re.search(r"(\d+)\.(\d+)\.(\d+)", result.stdout)
     if result.returncode or not version or tuple(map(int, version.groups())) < (2, 20, 0):
         raise DeployError("需要 Docker Compose 插件 2.20+（支持 up --wait）。")
     if run(["docker", "buildx", "version"], capture=True, check=False).returncode:
+        if args is not None and not args.check and interactive(args):
+            ui.line("Buildx 用于构建应用镜像，插件本身没有常驻进程；安装大小以软件包管理器输出为准。", "muted")
+            ui.menu("缺少或无法运行 Docker Buildx，是否安装？", [
+                ("0", "不安装", "结束本次部署"),
+                ("1", "安装", "通过系统软件包管理器安装 docker-buildx-plugin")], "0")
+            def choose(value):
+                if value not in ("0", "1"):
+                    raise DeployError("请输入 0 或 1。")
+                return value
+            if ask("是否安装 Buildx（0 不安装 / 1 安装）", "0", choose) == "1":
+                install_buildx()
+                return
         raise DeployError("缺少 Docker Buildx 插件，请安装 docker-buildx-plugin。")
 
 
@@ -838,11 +877,17 @@ def deploy_docker(values, args, existing, port, bind, arch):
         for name in SECRET_NAMES:
             (directory / name).chmod(0o444)
     compose(values, "config", "--quiet")
+    with ui.activity("构建数据库与代理系统安全补丁镜像"):
+        services = compose(values, "config", "--services", capture=True).stdout.split()
+        patched_services = [name for name in ("db", "proxy", "redis") if name in services]
+        compose(values, "build", "--pull", "--no-cache", *patched_services)
     with ui.activity("启动数据库、迁移、应用与代理"):
         compose(values, "up", "-d", "--no-build", "--wait", "--wait-timeout", str(args.timeout))
     host = "127.0.0.1" if bind == "0.0.0.0" else bind
     with ui.activity(f"本机健康检查（最多等待 {args.timeout} 秒）"):
-        wait_http(f"http://{host}:{port}/health/ready", args.timeout)
+        # Compose --wait checks deep readiness inside the app container. The
+        # published proxy only needs a lightweight reachability check here.
+        wait_http(f"http://{host}:{port}/health/live", args.timeout)
     return directory / "first-login.txt"
 
 
@@ -1291,7 +1336,7 @@ def deploy_command(args):
         initialized = secret_state(docker_secret_directory(values), SECRET_NAMES, is_existing)
         if ready:
             inspect_local_docker()
-            check_docker_plugins()
+            check_docker_plugins(args)
             choose_subnet(values)
     if args.admin_username:
         args.admin_username = validate_admin_username(args.admin_username)
@@ -1414,11 +1459,15 @@ def manage_command(args):
         else:
             run(["systemctl", args.command, "newpress.service"])
         if args.command == "restart":
+            if mode == "docker":
+                compose(values, "up", "-d", "--no-build", "--no-recreate", "--no-deps",
+                        "--wait", "--wait-timeout", str(args.timeout), "app", "proxy")
             if mode == "native":
                 values = read_env(NATIVE_ENV)
             _, port, bind = resolve_network(values, parser().parse_args([]))
             host = "127.0.0.1" if bind == "0.0.0.0" else bind
-            wait_http(f"http://{host}:{port}/health/ready", args.timeout)
+            endpoint = "live" if mode == "docker" else "ready"
+            wait_http(f"http://{host}:{port}/health/{endpoint}", args.timeout)
     log("站点服务已" + ("重启并通过健康检查。" if args.command == "restart" else "停止。"), "ok")
     return 0
 

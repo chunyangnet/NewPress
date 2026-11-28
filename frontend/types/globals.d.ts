@@ -24,6 +24,7 @@ declare global {
     NewPressComponentMedia?: (launcher: HTMLElement, onSelect: ComponentMediaSelection) => void;
     ChunnelEmoji?: {
       close(): void;
+      render(root?: ParentNode): void;
       fragment(text: string): DocumentFragment;
       enhance(root: Element): void;
       validateReplacement(input: HTMLInputElement | HTMLTextAreaElement, text: string, range?: EditorSourceSelection): string;

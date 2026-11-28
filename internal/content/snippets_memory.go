@@ -234,9 +234,7 @@ func (r *MemoryRepository) ApplySnippetUpdate(ctx context.Context, u SnippetUpda
 		return SnippetResult{}, err
 	}
 	fingerprint := SnippetUpdateFingerprint(u, a)
-	size := 0
 	for _, receipt := range r.snippetReceipts {
-		size += SnippetReceiptSize(receipt)
 		if receipt.Identity == a.Identity && receipt.RequestKey == u.RequestKey {
 			if receipt.Fingerprint != fingerprint {
 				return SnippetResult{}, ErrSnippetReplay
@@ -254,7 +252,8 @@ func (r *MemoryRepository) ApplySnippetUpdate(ctx context.Context, u SnippetUpda
 	}
 	now := r.now().UTC()
 	receipt := NewSnippetReceipt(u, plan, a, now)
-	if len(r.snippetReceipts) >= MaxSnippetReceipts || size+SnippetReceiptSize(receipt) > MaxSnippetReceiptBytes || r.nextRevisionID > math.MaxInt64-int64(len(plan.Items))-1 {
+	size, added := r.snippetReceiptSizeLocked(), SnippetReceiptSize(receipt)
+	if len(r.snippetReceipts) >= MaxSnippetReceipts || added > MaxSnippetReceiptBytes-size || r.nextRevisionID > math.MaxInt64-int64(len(plan.Items))-1 {
 		return SnippetResult{}, ErrSnippetCapacity
 	}
 	// Every fallible check precedes mutation. Readers share this one mutex.
@@ -272,8 +271,31 @@ func (r *MemoryRepository) ApplySnippetUpdate(ctx context.Context, u SnippetUpda
 			}
 		}
 	}
+	// Receipt metadata and Items are immutable after storage; file candidates
+	// may share the selection arrays with earlier committed snapshots.
 	r.snippetReceipts = append(r.snippetReceipts, receipt)
+	r.snippetReceiptBytes, r.snippetReceiptCount = size+added, len(r.snippetReceipts)
 	r.contentSchema = max(r.contentSchema, 2)
 	receipt.Items = slices.Clone(receipt.Items)
 	return SnippetResult{Receipt: receipt}, nil
+}
+
+// Stored receipts are immutable and only appended through ApplySnippetUpdate.
+// Full file validation seeds this derived total; successful appends advance it.
+// Detached/assembled states without a matching count are counted without
+// publishing a cache change, so a rejected operation leaves their state alone.
+// Any future replacement/removal of old receipts must invalidate this total.
+func (r *MemoryRepository) snippetReceiptSizeLocked() int {
+	if r.snippetReceiptCount == len(r.snippetReceipts) {
+		return r.snippetReceiptBytes
+	}
+	size := 0
+	for _, receipt := range r.snippetReceipts {
+		added := SnippetReceiptSize(receipt)
+		if added > MaxSnippetReceiptBytes-size {
+			return MaxSnippetReceiptBytes + 1
+		}
+		size += added
+	}
+	return size
 }

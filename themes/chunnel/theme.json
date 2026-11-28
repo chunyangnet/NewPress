@@ -2,7 +2,7 @@
   "schema": 1,
   "slug": "chunnel",
   "name": "Chunnel（隧）",
-  "version": "0.48.15",
+  "version": "0.48.21",
   "description": "为 AI 时代设计的高性能、模块化 NewPress 官方主题，采用独立的内容社区设计语言：清晰导航、紧凑信息流、留白卡片与编辑式阅读排版。颜色与圆角可在后台统一设置，适配资源分享、讨论社区、个人博客、论坛圈子、企业官网与影视分享等站点。",
   "author": "NewPress Project",
   "license": "Apache-2.0",

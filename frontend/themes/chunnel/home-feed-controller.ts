@@ -1,3 +1,4 @@
+import { requestDeadline } from '../../shared/async-state';
 import type {} from './home-types';
 // Loaded only after an explicit feed interaction.
 export function createHomeFeed() {
@@ -51,12 +52,14 @@ export function createHomeFeed() {
     if (mode === 'none') history.scrollRestoration = 'manual';
     if (mode !== 'none') rememberFeedScroll();
     const request = new AbortController();
+    const deadline = requestDeadline(request);
     feedRequest?.abort();
     feedRequest = request;
     panel.setAttribute('aria-busy', 'true');
     try {
       const response = await fetch(url, { credentials: 'same-origin', headers: { Accept: 'text/html' }, signal: request.signal });
-      if (!response.ok || !(response.headers.get('content-type') || '').includes('text/html')) throw new Error('feed unavailable');
+      const finalURL = new URL(response.url || url, location.href);
+      if (!response.ok || finalURL.origin !== location.origin || finalURL.pathname !== '/' || !(response.headers.get('content-type') || '').includes('text/html')) throw new Error('feed unavailable');
       const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
       if (request.signal.aborted || feedRequest !== request) return;
       const next = doc.querySelector<HTMLElement>('#latest');
@@ -93,10 +96,11 @@ export function createHomeFeed() {
       else commit();
       if (scroll) placeFeed();
     } catch (error) {
-      if ((error instanceof Error && error.name === 'AbortError') || request.signal.aborted || feedRequest !== request) return;
+      if (feedRequest !== request || request.signal.aborted && !deadline.timedOut) return;
       if (mode === 'none') history.replaceState(history.state, '', feedLocation);
-      window.ChunnelScroll?.error(panel, '内容加载失败，已保留当前列表，请再次点击重试。');
+      window.ChunnelScroll?.error(panel, deadline.timedOut ? '加载超时，已保留当前列表，请再次点击重试。' : '内容加载失败，已保留当前列表，请再次点击重试。');
     } finally {
+      deadline.dispose();
       if (feedRequest === request) {
         feedRequest = null;
         history.scrollRestoration = 'auto';
@@ -163,7 +167,9 @@ export function createHomeFeed() {
         loadFeed(location.href, { history: 'none', scroll: false });
       }
     });
-    window.addEventListener('pagehide', () => { clearTimeout(feedScrollTimer); feedRequest?.abort(); });
+    const suspend = () => { clearTimeout(feedScrollTimer); feedRequest?.abort(); feedRequest = null; $('#latest')?.removeAttribute('aria-busy'); history.scrollRestoration = 'auto'; };
+    window.addEventListener('pagehide', suspend);
+    window.addEventListener('pageshow', event => { if (event.persisted) suspend(); });
   }
 
   window.ChunnelHomeFeedReady = true;

@@ -180,7 +180,7 @@ func (s *Server) adminPluginPage(w http.ResponseWriter, r *http.Request, editing
 		"http.outbound": "查询外部服务", "http.send": "发送 HTTPS Webhook（需独立开启）", "render.fragment": "展示页面内容",
 		"media.storage": "同步媒体到对象存储",
 	}
-	settingsPages := s.plugins.SettingsPages()
+	settingsPages := plugin.SettingsPagesFromInstalled(items)
 	categoryCounts := make(map[string]int)
 	for i := range view.Cards {
 		c := &view.Cards[i]
@@ -251,7 +251,7 @@ func (s *Server) adminPluginPage(w http.ResponseWriter, r *http.Request, editing
 	data := s.baseViewFor(w, "官方插件", "按需安装官方扩展。", "/admin/plugins/")
 	data.IsAdmin = true
 	data.BodyClass = "is-admin is-admin-plugins"
-	data.Admin = s.adminView("plugins", p, readOnly)
+	data.Admin = s.adminViewWithSnapshots("plugins", p, readOnly, nil, &items)
 	if view.Editing {
 		data.Admin.DetailTitle = "评论来源"
 		data.Admin.PluginSlug = "comment-origin"

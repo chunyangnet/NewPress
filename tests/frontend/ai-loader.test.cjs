@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const {createAssetLoader} = require('../../internal/coreui/assets/js/chunnel-ai-loader.source.js');
+const {createAssetLoader} = require('./helpers/typescript.cjs').loadNativeModule('frontend/core/ai-loader.ts');
 
 function fixture() {
   const nodes = [];

@@ -345,6 +345,12 @@ func normalizePublicURL(value string) (string, error) {
 		}
 	}
 	parsed.Scheme = strings.ToLower(parsed.Scheme)
+	if parsed.Scheme == "http" && !strings.EqualFold(parsed.Hostname(), "localhost") {
+		address, err := netip.ParseAddr(parsed.Hostname())
+		if err != nil || address.Zone() != "" || !address.IsLoopback() {
+			return "", errors.New("non-loopback public URLs require HTTPS")
+		}
+	}
 	parsed.Path = ""
 	return parsed.String(), nil
 }

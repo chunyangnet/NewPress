@@ -1,14 +1,17 @@
 package media
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -152,6 +155,7 @@ type Manager struct {
 	memoryObjects map[string][]byte
 	nextID        int64
 	updatedAt     time.Time
+	snapshot      *Snapshot // Protected by mu; replaced only after a successful mutation.
 }
 
 // ManagerOptions controls resource limits for CPU-heavy media operations.
@@ -238,13 +242,33 @@ func (m *Manager) Snapshot() Snapshot {
 		return Snapshot{KindCounts: emptyKindCounts()}
 	}
 	m.mu.RLock()
-	defer m.mu.RUnlock()
-	items := m.sortedItemsLocked()
+	if m.snapshot != nil {
+		result := copySnapshot(*m.snapshot)
+		m.mu.RUnlock()
+		return result
+	}
+	m.mu.RUnlock()
+	// Only the first reader after an in-memory mutation rebuilds the snapshot.
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.snapshot == nil {
+		items := m.sortedItemsLocked()
+		m.cacheSnapshotLocked(items, libraryRevision(m.nextID, items))
+	}
+	return copySnapshot(*m.snapshot)
+}
+
+func copySnapshot(snapshot Snapshot) Snapshot {
+	snapshot.KindCounts = maps.Clone(snapshot.KindCounts)
+	return snapshot
+}
+
+func (m *Manager) cacheSnapshotLocked(items []Item, revision string) {
 	counts, totalBytes := summarize(items)
 	states := countStates(items)
-	return Snapshot{
+	m.snapshot = &Snapshot{
 		Count: len(items), TotalBytes: totalBytes, KindCounts: counts,
-		Revision: libraryRevision(m.nextID, items), UpdatedAt: m.updatedAt,
+		Revision: revision, UpdatedAt: m.updatedAt,
 		ActiveCount: states[StatusActive], TrashCount: states[StatusTrash],
 	}
 }
@@ -259,18 +283,28 @@ func (m *Manager) List(query Query) (List, error) {
 	}
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	all := m.sortedItemsLocked()
-	states := countStates(all)
-	statusItems := make([]Item, 0, len(all))
-	for _, item := range all {
-		if normalized.Status == StatusAll || item.Status() == normalized.Status {
-			statusItems = append(statusItems, item)
-		}
-	}
-	counts, totalBytes := summarize(statusItems)
+	states := map[string]int{StatusActive: 0, StatusTrash: 0}
+	counts := emptyKindCounts()
+	var totalBytes int64
 	needle := strings.ToLower(normalized.Search)
-	filtered := make([]Item, 0, len(all))
-	for _, item := range statusItems {
+	// Sort matching identities, keeping the large image metadata only in the
+	// library and the requested page instead of copying it for every filter.
+	type match struct {
+		id        int64
+		createdAt time.Time
+	}
+	var filtered []match
+	for _, item := range m.items {
+		status := item.Status()
+		states[status]++
+		if normalized.Status != StatusAll && status != normalized.Status {
+			continue
+		}
+		counts[item.Kind]++
+		totalBytes += item.SizeBytes
+		for _, variant := range item.Image.Variants {
+			totalBytes += variant.Native.SizeBytes + variant.WebP.SizeBytes
+		}
 		if normalized.Kind != "" && item.Kind != normalized.Kind {
 			continue
 		}
@@ -282,15 +316,24 @@ func (m *Manager) List(query Query) (List, error) {
 				continue
 			}
 		}
-		filtered = append(filtered, item)
+		filtered = append(filtered, match{item.ID, item.CreatedAt})
 	}
 	result := List{Total: len(filtered), TotalBytes: totalBytes, KindCounts: counts, StatusCounts: states}
 	if normalized.Offset >= len(filtered) {
 		result.Items = []Item{}
 		return result, nil
 	}
+	slices.SortFunc(filtered, func(a, b match) int {
+		if order := b.createdAt.Compare(a.createdAt); order != 0 {
+			return order
+		}
+		return cmp.Compare(b.id, a.id)
+	})
 	end := min(len(filtered), normalized.Offset+normalized.Limit)
-	result.Items = append([]Item(nil), filtered[normalized.Offset:end]...)
+	result.Items = make([]Item, end-normalized.Offset)
+	for i, match := range filtered[normalized.Offset:end] {
+		result.Items[i] = m.items[match.id]
+	}
 	return result, nil
 }
 

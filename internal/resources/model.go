@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"newpress.local/newpress/internal/contenthtml"
+	"newpress.local/newpress/internal/packagefs"
 )
 
 var ErrInvalid = errors.New("invalid resource configuration")
@@ -112,6 +113,9 @@ func SafeURL(s string) bool {
 func Decode(raw []byte) (Config, error) {
 	var c Config
 	if len(raw) > MaxConfigBytes || strings.TrimSpace(string(raw)) == "null" {
+		return c, ErrInvalid
+	}
+	if err := packagefs.ValidateUniqueJSONFor(raw, &c); err != nil {
 		return c, ErrInvalid
 	}
 	d := json.NewDecoder(strings.NewReader(string(raw)))

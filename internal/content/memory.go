@@ -13,28 +13,31 @@ import (
 )
 
 type MemoryRepository struct {
-	mu                 sync.RWMutex
-	posts              []Post
-	terms              []Term
-	revisions          map[int64][]Revision
-	autosaves          map[int64]map[string]Autosave
-	nextID             int64
-	nextRevisionID     int64
-	nextTermID         int64
-	now                func() time.Time
-	activities         []activity.Event
-	series             []Series
-	nextSeriesID       int64
-	redirects          []Redirect
-	nextRedirectID     int64
-	imports            []ImportMapping
-	submissions        []SubmissionReceipt
-	snippets           []SnippetRecord
-	snippetReceipts    []SnippetReceipt
-	nextSnippetID      int64
-	contentSchema      int
-	snippetQuarantines []SnippetFileQuarantine
-	snippetPostCounts  map[int64][]contenthtml.SnippetCount
+	mu                  sync.RWMutex
+	posts               []Post
+	terms               []Term
+	revisions           map[int64][]Revision
+	autosaves           map[int64]map[string]Autosave
+	nextID              int64
+	nextRevisionID      int64
+	nextTermID          int64
+	now                 func() time.Time
+	activities          []activity.Event
+	series              []Series
+	nextSeriesID        int64
+	redirects           []Redirect
+	nextRedirectID      int64
+	imports             []ImportMapping
+	submissions         []SubmissionReceipt
+	snippets            []SnippetRecord
+	snippetReceipts     []SnippetReceipt
+	snippetReceiptBytes int
+	snippetReceiptCount int
+	nextSnippetID       int64
+	contentSchema       int
+	snippetQuarantines  []SnippetFileQuarantine
+	snippetPostCounts   map[int64][]contenthtml.SnippetCount
+	searchBodies        *publicSearchBodyCache
 }
 
 func NewMemoryRepository(seed bool) *MemoryRepository {
@@ -50,6 +53,7 @@ func NewMemoryRepository(seed bool) *MemoryRepository {
 		nextSnippetID:     1,
 		contentSchema:     1,
 		snippetPostCounts: make(map[int64][]contenthtml.SnippetCount),
+		searchBodies:      newPublicSearchBodyCache(),
 		now:               time.Now,
 		terms: []Term{{
 			ID: 1, Taxonomy: TaxonomyCategory, Slug: "uncategorized", Name: "未分类",
@@ -141,18 +145,31 @@ func (repository *MemoryRepository) getPublishedBySlug(postType, slug string) (P
 	return Post{}, ErrNotFound
 }
 
-func (repository *MemoryRepository) ListAdmin(_ context.Context, query AdminQuery) (AdminList, error) {
+func (repository *MemoryRepository) ListAdmin(ctx context.Context, query AdminQuery) (AdminList, error) {
+	if err := ctx.Err(); err != nil {
+		return AdminList{}, err
+	}
 	query, err := NormalizeAdminQuery(query)
 	if err != nil {
 		return AdminList{}, err
 	}
 	repository.mu.RLock()
 	defer repository.mu.RUnlock()
+	if err := ctx.Err(); err != nil {
+		return AdminList{}, err
+	}
 	search := strings.ToLower(query.Search)
-	allMatches := make([]Post, 0, len(repository.posts))
+	// Keep indices while filtering and sorting. Only the requested page needs
+	// independent metadata and terms, not every matching article in the store.
+	allMatches := make([]int, 0, len(repository.posts))
 	statusCounts := make(map[string]int)
 	typeCounts := make(map[string]int)
-	for _, post := range repository.posts {
+	for index, post := range repository.posts {
+		if index%256 == 0 {
+			if err := ctx.Err(); err != nil {
+				return AdminList{}, err
+			}
+		}
 		if query.AuthorID > 0 && post.AuthorID != query.AuthorID {
 			continue
 		}
@@ -170,25 +187,42 @@ func (repository *MemoryRepository) ListAdmin(_ context.Context, query AdminQuer
 		if query.Status != "" && post.Status != query.Status {
 			continue
 		}
-		allMatches = append(allMatches, clonePost(post))
+		allMatches = append(allMatches, index)
+	}
+	if err := ctx.Err(); err != nil {
+		return AdminList{}, err
 	}
 	sort.SliceStable(allMatches, func(left, right int) bool {
+		a, b := &repository.posts[allMatches[left]], &repository.posts[allMatches[right]]
 		if query.PublicationAscending {
-			if allMatches[left].PublishedAt.Equal(allMatches[right].PublishedAt) {
-				return allMatches[left].ID < allMatches[right].ID
+			if a.PublishedAt.Equal(b.PublishedAt) {
+				return a.ID < b.ID
 			}
-			return allMatches[left].PublishedAt.Before(allMatches[right].PublishedAt)
+			return a.PublishedAt.Before(b.PublishedAt)
 		}
-		if allMatches[left].UpdatedAt.Equal(allMatches[right].UpdatedAt) {
-			return allMatches[left].ID > allMatches[right].ID
+		if a.UpdatedAt.Equal(b.UpdatedAt) {
+			return a.ID > b.ID
 		}
-		return allMatches[left].UpdatedAt.After(allMatches[right].UpdatedAt)
+		return a.UpdatedAt.After(b.UpdatedAt)
 	})
 	total := len(allMatches)
 	start := min(query.Offset, total)
-	end := min(start+query.Limit, total)
+	end := start + min(query.Limit, total-start)
+	var items []Post
+	if end > start {
+		items = make([]Post, end-start)
+	}
+	for i, index := range allMatches[start:end] {
+		if err := ctx.Err(); err != nil {
+			return AdminList{}, err
+		}
+		items[i] = clonePost(repository.posts[index])
+	}
+	if err := ctx.Err(); err != nil {
+		return AdminList{}, err
+	}
 	return AdminList{
-		Items: append([]Post(nil), allMatches[start:end]...), Total: total,
+		Items: items, Total: total,
 		StatusCounts: statusCounts, TypeCounts: typeCounts,
 	}, nil
 }
@@ -528,7 +562,10 @@ func (repository *MemoryRepository) RestoreRevision(_ context.Context, postID, r
 	return clonePost(current), nil
 }
 
-func (repository *MemoryRepository) SaveAutosave(_ context.Context, autosave Autosave) (Autosave, error) {
+func (repository *MemoryRepository) SaveAutosave(ctx context.Context, autosave Autosave) (Autosave, error) {
+	if err := ctx.Err(); err != nil {
+		return Autosave{}, err
+	}
 	var err error
 	autosave, err = NormalizeAutosave(autosave)
 	if err != nil {
@@ -536,6 +573,9 @@ func (repository *MemoryRepository) SaveAutosave(_ context.Context, autosave Aut
 	}
 	repository.mu.Lock()
 	defer repository.mu.Unlock()
+	if err := ctx.Err(); err != nil {
+		return Autosave{}, err
+	}
 	index := repository.postIndexLocked(autosave.PostID)
 	if index < 0 {
 		return Autosave{}, ErrNotFound
@@ -554,21 +594,30 @@ func (repository *MemoryRepository) SaveAutosave(_ context.Context, autosave Aut
 	if !autosave.ExpiresAt.After(now) {
 		return Autosave{}, &ValidationError{Fields: map[string]string{"expires_at": "自动保存过期时间必须晚于恢复点更新时间"}}
 	}
+	autosave.UpdatedAt = now
+	autosave.Snapshot = clonePost(autosave.Snapshot)
+	if err := ctx.Err(); err != nil {
+		return Autosave{}, err
+	}
 	if repository.autosaves[autosave.PostID] == nil {
 		repository.autosaves[autosave.PostID] = make(map[string]Autosave)
 	}
-	autosave.UpdatedAt = now
-	autosave.Snapshot = clonePost(autosave.Snapshot)
 	repository.autosaves[autosave.PostID][autosave.OwnerKey] = autosave
 	return cloneAutosave(autosave), nil
 }
 
-func (repository *MemoryRepository) GetAutosave(_ context.Context, postID int64, ownerKey string) (Autosave, error) {
+func (repository *MemoryRepository) GetAutosave(ctx context.Context, postID int64, ownerKey string) (Autosave, error) {
+	if err := ctx.Err(); err != nil {
+		return Autosave{}, err
+	}
 	if postID <= 0 || !ValidAutosaveOwnerKey(ownerKey) {
 		return Autosave{}, ErrAutosaveNotFound
 	}
 	repository.mu.Lock()
 	defer repository.mu.Unlock()
+	if err := ctx.Err(); err != nil {
+		return Autosave{}, err
+	}
 	if repository.postIndexLocked(postID) < 0 {
 		return Autosave{}, ErrNotFound
 	}
@@ -583,15 +632,25 @@ func (repository *MemoryRepository) GetAutosave(_ context.Context, postID int64,
 		}
 		return Autosave{}, ErrAutosaveNotFound
 	}
-	return cloneAutosave(autosave), nil
+	result := cloneAutosave(autosave)
+	if err := ctx.Err(); err != nil {
+		return Autosave{}, err
+	}
+	return result, nil
 }
 
-func (repository *MemoryRepository) DeleteAutosave(_ context.Context, postID int64, ownerKey string) error {
+func (repository *MemoryRepository) DeleteAutosave(ctx context.Context, postID int64, ownerKey string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	if postID <= 0 || !ValidAutosaveOwnerKey(ownerKey) {
 		return nil
 	}
 	repository.mu.Lock()
 	defer repository.mu.Unlock()
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	if repository.postIndexLocked(postID) < 0 {
 		return ErrNotFound
 	}

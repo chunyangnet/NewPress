@@ -67,9 +67,10 @@ func TestQueueCapacityStopsBeforeBillingAndResumesAfterRemoval(t *testing.T) {
 	}
 	for completed < MaxJobs {
 		before := queueBytes(t, q)
-		ctx, cancel := context.WithTimeout(t.Context(), 3*time.Second)
-		ran, err := q.step(ctx, now, generate)
-		cancel()
+		// This test measures capacity, not a per-write latency target. A short
+		// deadline may skip generation after a durable claim on a busy machine,
+		// invalidating the completed == model calls premise of this fixture.
+		ran, err := q.step(t.Context(), now, generate)
 		if errors.Is(err, ErrFull) {
 			if ran || calls != completed || !bytes.Equal(before, queueBytes(t, q)) {
 				t.Fatal("capacity rejection billed work or changed durable state")

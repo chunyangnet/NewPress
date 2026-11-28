@@ -24,6 +24,7 @@
     <div class="ai-config-footer"><p data-ai-config-status role="status" aria-live="polite">正在加载 AI 设置…</p><div><button type="button" class="admin-button admin-button-quiet" data-ai-config-reload>重新加载</button><button type="submit" class="admin-button admin-button-primary" data-ai-config-save disabled>保存 AI 设置</button></div></div>
     <noscript><p>请启用 JavaScript 后管理 AI 接口。</p></noscript>
   </form>
+  {{template "writing-templates" .}}
   <template data-ai-config-template>
     <article class="ai-provider-card">
       <div class="ai-provider-heading"><div><span class="ai-provider-number"></span><strong data-provider-title>新接口</strong><small data-provider-key-state>未保存</small></div><button class="admin-button admin-button-quiet" type="button" data-provider-remove>移除</button></div>

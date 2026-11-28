@@ -128,9 +128,10 @@ func (s *Server) adminContentsAPI(writer http.ResponseWriter, request *http.Requ
 	if page < pages {
 		pagination.Next = adminContentsAPIURL(query, page+1, perPage, defaultPageSize)
 	}
-	writeJSON(writer, http.StatusOK, adminContentsAPIResponse{
+	access := func() error { return s.contentListAccess(request, query.AuthorID, result.Items, true) }
+	s.writeContentJSON(writer, request, http.StatusOK, adminContentsAPIResponse{
 		Items: items, Pagination: pagination, StatusCounts: result.StatusCounts, TypeCounts: result.TypeCounts,
-	})
+	}, nil, access)
 }
 
 func (s *Server) adminContentAPI(writer http.ResponseWriter, request *http.Request) {
@@ -151,13 +152,17 @@ func (s *Server) adminContentAPI(writer http.ResponseWriter, request *http.Reque
 	if !s.requireContentAPIObjectRead(writer, request, principal, post) {
 		return
 	}
-	s.setContentAPIHeaders(writer, post)
+	access := func() error { return s.contentObjectAccess(request, post.ID, false, true) }
 	if etagMatches(request.Header.Get("If-None-Match"), contentAPIETag(post)) {
+		if !s.contentBeforeOutput(writer, request, true, access)() {
+			return
+		}
+		s.setContentAPIHeaders(writer, post)
 		writer.Header().Set("Cache-Control", "no-store")
 		writer.WriteHeader(http.StatusNotModified)
 		return
 	}
-	writeJSON(writer, http.StatusOK, adminContentResponse(post, time.Now(), s.contentPath))
+	s.writeContentJSON(writer, request, http.StatusOK, adminContentResponse(post, time.Now(), s.contentPath), func() { s.setContentAPIHeaders(writer, post) }, access)
 }
 
 func (s *Server) adminContentCreateAPI(writer http.ResponseWriter, request *http.Request) {
@@ -181,6 +186,10 @@ func (s *Server) adminContentCreateAPI(writer http.ResponseWriter, request *http
 	if !ok {
 		return
 	}
+	principal, ok = s.recheckContentAPIWrite(writer, request, 0)
+	if !ok {
+		return
+	}
 	if idempotencyKey != "" {
 		s.createContentAPISubmission(writer, request, principal, mutation, body, idempotencyKey)
 		return
@@ -191,12 +200,15 @@ func (s *Server) adminContentCreateAPI(writer http.ResponseWriter, request *http
 		return
 	}
 
+	if _, ok := s.recheckContentAPIWrite(writer, request, 0); !ok {
+		return
+	}
 	post, err := s.repository.Create(request.Context(), input)
 	if err != nil {
 		s.handleContentCreateAPIError(writer, request, err)
 		return
 	}
-	s.writeContentAPISuccess(writer, http.StatusCreated, post, true)
+	s.writeContentAPISuccess(writer, request, http.StatusCreated, post, true)
 }
 
 func (s *Server) adminContentUpdateAPI(writer http.ResponseWriter, request *http.Request) {
@@ -218,6 +230,10 @@ func (s *Server) adminContentUpdateAPI(writer http.ResponseWriter, request *http
 	if _, ok := s.decodeStrictAPIJSON(writer, request, &mutation); !ok {
 		return
 	}
+	principal, ok = s.recheckContentAPIWrite(writer, request, current.ID)
+	if !ok {
+		return
+	}
 	if mutation.Empty() {
 		s.writeAPIError(writer, request, http.StatusBadRequest, "request.empty_patch", "PATCH 至少需要一个可写字段", nil)
 		return
@@ -227,6 +243,9 @@ func (s *Server) adminContentUpdateAPI(writer http.ResponseWriter, request *http
 		s.writeContentValidationAPIError(writer, request, fields)
 		return
 	}
+	if _, ok := s.recheckContentAPIWrite(writer, request, current.ID); !ok {
+		return
+	}
 	updated, err := s.repository.Update(request.Context(), current.ID, content.Mutation{
 		ExpectedVersion: current.Version, Actor: principal.Username,
 	}, input)
@@ -234,7 +253,7 @@ func (s *Server) adminContentUpdateAPI(writer http.ResponseWriter, request *http
 		s.handleContentMutationAPIError(writer, request, current.ID, err)
 		return
 	}
-	s.writeContentAPISuccess(writer, http.StatusOK, updated, false)
+	s.writeContentAPISuccess(writer, request, http.StatusOK, updated, false)
 }
 
 func (s *Server) adminContentDeleteAPI(writer http.ResponseWriter, request *http.Request) {
@@ -252,6 +271,9 @@ func (s *Server) adminContentDeleteAPI(writer http.ResponseWriter, request *http
 	if !ok || !s.requireContentAPIObjectWrite(writer, request, principal, current) || !s.requireContentAPIPrecondition(writer, request, current) {
 		return
 	}
+	if _, ok := s.recheckContentAPIWrite(writer, request, current.ID); !ok {
+		return
+	}
 	updated, err := s.repository.ChangeStatus(request.Context(), current.ID, content.Mutation{
 		ExpectedVersion: current.Version, Actor: principal.Username,
 	}, content.StatusTrash)
@@ -259,7 +281,7 @@ func (s *Server) adminContentDeleteAPI(writer http.ResponseWriter, request *http
 		s.handleContentMutationAPIError(writer, request, current.ID, err)
 		return
 	}
-	s.writeContentAPISuccess(writer, http.StatusOK, updated, false)
+	s.writeContentAPISuccess(writer, request, http.StatusOK, updated, false)
 }
 
 func (s *Server) adminContentRevisionsAPI(writer http.ResponseWriter, request *http.Request) {
@@ -287,9 +309,16 @@ func (s *Server) adminContentRevisionsAPI(writer http.ResponseWriter, request *h
 		return
 	}
 	revisionsETag := contentRevisionsAPIETag(post)
-	writer.Header().Set("ETag", revisionsETag)
-	writer.Header().Set("Last-Modified", post.UpdatedAt.UTC().Format(http.TimeFormat))
+	access := func() error { return s.contentObjectAccess(request, post.ID, false, true) }
+	headers := func() {
+		writer.Header().Set("ETag", revisionsETag)
+		writer.Header().Set("Last-Modified", post.UpdatedAt.UTC().Format(http.TimeFormat))
+	}
 	if etagMatches(request.Header.Get("If-None-Match"), revisionsETag) {
+		if !s.contentBeforeOutput(writer, request, true, access)() {
+			return
+		}
+		headers()
 		writer.Header().Set("Cache-Control", "no-store")
 		writer.WriteHeader(http.StatusNotModified)
 		return
@@ -312,9 +341,9 @@ func (s *Server) adminContentRevisionsAPI(writer http.ResponseWriter, request *h
 			Title: revision.Snapshot.Title, Actor: revision.Actor, CreatedAt: revision.CreatedAt,
 		})
 	}
-	writeJSON(writer, http.StatusOK, adminRevisionsAPIResponse{
+	s.writeContentJSON(writer, request, http.StatusOK, adminRevisionsAPIResponse{
 		Items: items, Count: len(items), CurrentVersion: post.Version, CurrentETag: contentAPIETag(post),
-	})
+	}, headers, access)
 }
 
 func (s *Server) adminContentRestoreRevisionAPI(writer http.ResponseWriter, request *http.Request) {
@@ -337,6 +366,9 @@ func (s *Server) adminContentRestoreRevisionAPI(writer http.ResponseWriter, requ
 		s.writeAPIError(writer, request, http.StatusNotFound, "content.revision_not_found", "修订记录没有找到", nil)
 		return
 	}
+	if _, ok := s.recheckContentAPIWrite(writer, request, post.ID); !ok {
+		return
+	}
 	updated, err := s.repository.RestoreRevision(request.Context(), post.ID, revisionID, content.Mutation{
 		ExpectedVersion: post.Version, Actor: principal.Username,
 	})
@@ -344,5 +376,5 @@ func (s *Server) adminContentRestoreRevisionAPI(writer http.ResponseWriter, requ
 		s.handleContentMutationAPIError(writer, request, post.ID, err)
 		return
 	}
-	s.writeContentAPISuccess(writer, http.StatusOK, updated, false)
+	s.writeContentAPISuccess(writer, request, http.StatusOK, updated, false)
 }

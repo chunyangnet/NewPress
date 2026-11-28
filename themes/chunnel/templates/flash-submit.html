@@ -3,7 +3,7 @@
 <div class="shell portal-page flash-page"><nav class="portal-breadcrumb" aria-label="当前位置"><a href="/account/">个人中心</a><a href="/flash/submit/" {{if not .Flash.Editing}}aria-current="page"{{end}}>我的快报</a>{{if .Flash.Editing}}<span aria-current="page">编辑快报</span>{{end}}</nav><header class="flash-heading"><div><h1>{{if .Flash.Admin}}快报管理{{else}}我的快报{{end}}</h1><p>草稿只有自己可见，提交后由编辑审核。</p></div><a href="/flash/">浏览快报</a></header>
 {{if not .Flash.Authenticated}}<section class="portal-empty"><h2>登录后发布快报</h2><a class="ui-button ui-button-primary" href="/account/access/">登录或注册</a></section>{{else}}
 {{if .Flash.Editing}}
-<form class="flash-editor" data-flash-editor data-user-id="{{.Flash.UserID}}" data-endpoint="{{.Flash.Endpoint}}" data-csrf="{{.Flash.CSRF}}" data-admin="{{.Flash.Admin}}" data-id="{{.Flash.Current.ID}}" data-version="{{.Flash.Current.Version}}">
+<form class="flash-editor" data-flash-editor data-user-id="{{.Flash.UserID}}" data-endpoint="{{.Flash.Endpoint}}" data-csrf="{{.Flash.CSRF}}" data-admin="{{.Flash.Admin}}" data-id="{{.Flash.Current.ID}}" data-version="{{.Flash.Current.Version}}" data-state="{{.Flash.Current.Status}}">
 {{with .Flash.Current.ReviewNote}}<p class="flash-review-note">退回说明：{{.}}</p>{{end}}
 <label>标题<input name="title" value="{{.Flash.Current.Title}}" required maxlength="200"></label><label>正文<textarea name="body" rows="9" required maxlength="5000">{{.Flash.Current.Body}}</textarea></label>
 <div class="flash-form-grid"><label>来源名称<input name="source_name" value="{{.Flash.Current.SourceName}}" maxlength="100"></label><label>来源网址<input name="source_url" type="url" value="{{.Flash.Current.SourceURL}}" maxlength="2048" placeholder="https://"></label></div>

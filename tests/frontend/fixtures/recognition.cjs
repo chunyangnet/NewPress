@@ -1,0 +1,7 @@
+const badge = (patch = {}) => ({key:'original',kind:'medal',name:'原创之星',description:'认真记录',icon:'award',color:'#a16207',background:'#fef9c3',style:'soft',image:'',enabled:true,...patch});
+const settings = () => ({version:3,tips_enabled:true,hide_amounts:false,allow_hide_amount:true,verification_enabled:true,verification_help:'作品说明',max_medals:3,currencies:[{key:'main',presets:['1','3']}],badges:[badge(),badge({key:'creator',kind:'verified',name:'认证作者'})]});
+const identity = () => ({version:2,grants:[{key:'original',label:'原创',granted_at:'2026-11-20T00:00:00Z',expires_at:'0001-01-01T00:00:00Z',actor_id:1}],equipped:['original'],history:[{action:'grant',key:'original',reason:'贡献',actor_id:1,created_at:'2026-11-20T00:00:00Z'}]});
+const application = () => ({key:'creator',label:'摄影作者',evidence:'https://example.test/portfolio',status:'pending',reason:'',updated_at:'2026-11-27T00:00:00Z'});
+const tips = (user = 2) => ({user_id:user,enabled:true,author:'站点作者',settings_version:3,hide_amounts:false,allow_hide_amount:true,currencies:[{key:'main',name:'积分',symbol:'分',precision:0,version:2,balance:'10',min:'1',max:'100',presets:['1','3']},{key:'balance',name:'余额',symbol:'元',precision:2,version:4,balance:'20.00',min:'0.01',max:'100.00',presets:['1.25','3']}]});
+const pending = () => ({post_id:7,request_id:'recognition-tip-test-123',currency:'main',amount:'3',hidden:false,settings_version:3,currency_version:2});
+module.exports = {badge,settings,identity,application,tips,pending};

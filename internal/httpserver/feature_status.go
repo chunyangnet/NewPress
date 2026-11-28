@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"newpress.local/newpress/internal/auth"
+	"newpress.local/newpress/internal/content"
 	"newpress.local/newpress/internal/module"
 )
 
@@ -135,6 +136,7 @@ func finishFeatureStatus(v *adminFeatureStatus, a adminView) {
 			return
 		}
 		action.Allowed = action.Capability == "" || a.Can(action.Capability)
+		action.Restriction = ""
 		if action.Module != "" {
 			action.Allowed = a.CanWrite(auth.CapabilitySettingsManage)
 		}
@@ -226,26 +228,56 @@ func (s *Server) adminFeatureStatusAPI(w http.ResponseWriter, r *http.Request) {
 		s.writeAPIError(w, r, 400, "feature_status.invalid", "此业务不接受对象参数", nil)
 		return
 	}
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+	access := &featureStatusAuthority{server: s, request: r, ctx: ctx, capabilities: caps, writeObject: feature == "ai-related"}
+	if err := access.access(); err != nil {
+		access.fail(w, err)
+		return
+	}
+	var savedPost *content.Post
+	var sourceErr error
 	if feature == "ai-related" || feature == "article-comments" && object != "" {
 		id, err := strconv.ParseInt(object, 10, 64)
 		if err != nil || id <= 0 || strconv.FormatInt(id, 10) != object {
 			http.NotFound(w, r)
 			return
 		}
-		post, err := s.repository.GetByID(r.Context(), id)
-		allowed := canReadContentObject(p, post)
+		var source content.PostState
 		if feature == "ai-related" {
-			allowed = canWriteContentObject(p, post)
+			source, err = content.ReadPostState(ctx, s.repository, id)
+		} else {
+			var post content.Post
+			post, err = s.repository.GetByID(ctx, id)
+			source = content.PostState{ID: post.ID, AuthorID: post.AuthorID, Version: post.Version, Type: post.Type}
+			// Retain only the fields used by diagnostics, not the article body.
+			savedPost = &content.Post{ID: post.ID, CommentStatus: post.CommentStatus}
 		}
-		if err != nil || (!ro && !allowed) {
-			http.NotFound(w, r)
-			return
+		if err == nil && source.ID != id {
+			err = content.ErrNotFound
 		}
+		if err == nil {
+			access.source = source
+		}
+		sourceErr = err
 	}
-	a := adminView{Principal: p, ReadOnly: ro, Preview: ro && !s.auth.Configured()}
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
-	writeJSON(w, 200, s.featureStatus(ctx, feature, object, a))
+	a, err := access.view()
+	if err != nil {
+		access.fail(w, err)
+		return
+	}
+	if sourceErr != nil {
+		access.fail(w, sourceErr)
+		return
+	}
+	status := s.featureStatusWithPost(ctx, feature, object, a, savedPost)
+	a, err = access.view()
+	if err != nil {
+		access.fail(w, err)
+		return
+	}
+	finishFeatureStatus(&status, a)
+	writePrivateJSON(w, r, http.StatusOK, status, nil, access.access, func(err error) { access.fail(w, err) })
 }
 
 func (s *Server) prepareAdminFeatureStatus(ctx context.Context, page string, data *pageView) {
@@ -330,11 +362,38 @@ func (s *Server) renderModuleRecovery(w http.ResponseWriter, r *http.Request, id
 	if id == "community" {
 		current = "circles"
 	}
-	s.renderFeatureRecovery(w, r, id, "", s.adminView(current, p, ro), 200, "")
+	s.renderFeatureRecovery(w, r, id, "", s.adminRecoveryIdentity(current, p, ro), 200, "")
 	return true
 }
 
 func (s *Server) renderFeatureRecovery(w http.ResponseWriter, r *http.Request, feature, object string, a adminView, status int, reason string) {
+	s.renderFeatureRecoveryChecked(w, r, feature, object, a, status, reason, nil)
+}
+
+func (s *Server) renderFeatureRecoveryChecked(w http.ResponseWriter, r *http.Request, feature, object string, a adminView, status int, reason string, access *aiAdminAuthority) {
+	pageAccess := func() error { return s.diagnosticPageAccess(r, a.Principal, featureCapabilities(feature)...) }
+	check := func() bool {
+		if !s.recheckDiagnosticPage(w, r, pageAccess) {
+			return false
+		}
+		return access == nil || access.recheck(w)
+	}
+	outputAccess := func() error {
+		if err := pageAccess(); err != nil {
+			return err
+		}
+		if access != nil {
+			return access.access()
+		}
+		return nil
+	}
+	if !check() {
+		return
+	}
+	s.prepareAdminRecovery(r.Context(), &a)
+	if !check() {
+		return
+	}
 	d, _ := module.Lookup(feature)
 	if feature == "layout" {
 		d.Title = "首页布局"
@@ -354,5 +413,8 @@ func (s *Server) renderFeatureRecovery(w http.ResponseWriter, r *http.Request, f
 	v := s.featureStatus(ctx, feature, object, data.Admin)
 	v.Recovery = true
 	data.FeatureStatus = &v
-	s.render(w, status, "admin-feature-recovery", data)
+	if !check() {
+		return
+	}
+	s.renderChecked(w, status, "admin-feature-recovery", data, r, check, outputAccess)
 }

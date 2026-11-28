@@ -2,7 +2,6 @@ package pluginjobs
 
 import (
 	"context"
-	"sort"
 	"time"
 )
 
@@ -63,32 +62,12 @@ func (q *Queue) List(ctx context.Context, query Query) (Page, error) {
 	if err != nil {
 		return Page{}, err
 	}
-	s, err := q.Backend.Read(ctx)
-	if err != nil {
+	var page Page
+	if err := q.readState(ctx, func(s State) error {
+		page = taskPage(s, query)
+		return nil
+	}); err != nil {
 		return Page{}, err
 	}
-	items := make([]Summary, 0)
-	if query.Archived {
-		for _, j := range s.ArchivedJobs {
-			if j.Plugin == query.Plugin && (query.Status == "" || j.Status == query.Status) {
-				items = append(items, j.Summary)
-			}
-		}
-	} else {
-		for _, j := range s.Jobs {
-			if j.Plugin == query.Plugin && (query.Status == "" || j.Status == query.Status) {
-				items = append(items, Summarize(j))
-			}
-		}
-	}
-	sort.Slice(items, func(i, j int) bool {
-		if items[i].UpdatedAt.Equal(items[j].UpdatedAt) {
-			return items[i].ID < items[j].ID
-		}
-		return items[i].UpdatedAt.After(items[j].UpdatedAt)
-	})
-	total := len(items)
-	start := min(query.Offset, total)
-	end := min(start+query.Limit, total)
-	return Page{Items: items[start:end], Total: total}, nil
+	return page, nil
 }

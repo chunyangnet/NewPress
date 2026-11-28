@@ -3,7 +3,9 @@ package httpserver
 import (
 	"encoding/json"
 	"fmt"
+	"html"
 	"net/http"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -32,13 +34,21 @@ func TestStructuredEditorReuseUsesContentOwnership(t *testing.T) {
 		}
 	}
 	editor := serveCookieRequest(handler, http.MethodGet, "https://example.test/admin/content/new/", cookieA, nil)
-	for _, control := range []string{"data-composer", "data-editor-reuse-open", "data-block-add=\"table\"", "newpress-document-editor.js", "chunnel-editor-reuse.js"} {
+	for _, control := range []string{"data-composer", "data-editor-reuse-open", "data-block-add=\"table\"", "newpress-document-editor.js", "newpress-editor-page.js", "data-editor-tools-loader"} {
 		if editor.Code != http.StatusOK || !strings.Contains(editor.Body.String(), control) {
 			t.Fatalf("editor missing %s: %d", control, editor.Code)
 		}
 	}
 	if strings.Contains(editor.Body.String(), "js/chunnel-composer.js") {
 		t.Fatal("article editor still loads the shop block renderer")
+	}
+	tools := regexp.MustCompile(`data-editor-tools-script="([^"]+)"`).FindStringSubmatch(editor.Body.String())
+	if len(tools) != 2 || !strings.Contains(tools[1], "/newpress-editor-insert-tools.js") || strings.Contains(editor.Body.String(), "js/chunnel-editor-reuse.js") {
+		t.Fatal("reuse must be available through the declared insertion tools bundle")
+	}
+	toolSource := serveCookieRequest(handler, http.MethodGet, "https://example.test"+html.UnescapeString(tools[1]), cookieA, nil)
+	if toolSource.Code != http.StatusOK || !strings.Contains(toolSource.Body.String(), "data-editor-reuse-open") {
+		t.Fatal("declared insertion tools do not provide the reuse entry", toolSource.Code)
 	}
 	list := serveCookieRequest(handler, http.MethodGet, "https://example.test/api/v1/admin/contents?status=draft", cookieA, nil)
 	if list.Code != http.StatusOK || strings.Contains(list.Body.String(), "他人私密模板") {

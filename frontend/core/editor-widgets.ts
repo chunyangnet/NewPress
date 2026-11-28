@@ -2,12 +2,14 @@ import { node as element } from '../shared/dom';
 import { articleSummary, record, integer, errorMessage, errorName, responseError } from './editor-tool-data';
 import type { ArticleSummary } from './editor-tool-data';
 import type { EditorSourceSelection } from './media-types';
+import { editorToolReady, registerEditorTool } from './editor-tool-launch';
 
 (() => {
   const formNode = document.querySelector<HTMLFormElement>('[data-content-editor]'), dialogNode = document.querySelector<HTMLDialogElement>('[data-editor-widget-dialog]');
   const sourceNode = formNode?.querySelector<HTMLTextAreaElement>('[data-content-source]'), blockEditor = window.ChunnelBlockEditor;
   const launchers = [...(formNode?.querySelectorAll<HTMLButtonElement>('[data-editor-widget-open]') || [])];
   if (!formNode || !dialogNode || !sourceNode || !blockEditor || !launchers.length) return;
+  if (editorToolReady(launchers[0]!)) return;
   const form = formNode, dialog = dialogNode, source = sourceNode, editor = blockEditor;
   const find = <T extends HTMLElement = HTMLElement>(name: string) => dialog.querySelector<T>(`[data-editor-widget-${name}]`)!;
   const search = find<HTMLFormElement>('search'), results = find('results'), status = find('status'), preview = find('preview');
@@ -90,14 +92,11 @@ import type { EditorSourceSelection } from './media-types';
       clearTimeout(timer); if (id === serial) { busy = false; controls(); }
     }
   }
-  for (const button of launchers) {
-    button.addEventListener('pointerdown', event => event.preventDefault());
-    button.addEventListener('click', () => {
+  function open(button: HTMLButtonElement, captured?: EditorSourceSelection) {
       if (dialog.open || source.disabled || source.readOnly) return;
-      selection = editor.capture(); launcher = button; inserted = false; selected = null;
+      selection = captured ?? editor.capture(); launcher = button; inserted = false; selected = null;
       dialog.showModal(); launchers.forEach(node => node.setAttribute('aria-expanded', 'true'));
       query.focus(); void load(1);
-    });
   }
   find('close').addEventListener('click', () => dialog.close());
   dialog.addEventListener('close', () => {
@@ -124,4 +123,5 @@ import type { EditorSourceSelection } from './media-types';
     const interrupted = busy; busy = false; controls();
     if (dialog.open && interrupted) status.textContent = '页面切换中断了请求，请重新查找；正文已保留。';
   });
+  registerEditorTool(launchers, open);
 })();

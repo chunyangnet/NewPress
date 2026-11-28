@@ -2,6 +2,7 @@ package media
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -67,7 +68,10 @@ func (m *Manager) openObjectLocked(item Item) (Item, ReadSeekCloser, error) {
 	return item, file, nil
 }
 
-func (m *Manager) commitObject(staged *stagedUpload, item Item) (bool, error) {
+func (m *Manager) commitObject(ctx context.Context, staged *stagedUpload, item Item) (bool, error) {
+	if err := ctx.Err(); err != nil {
+		return false, err
+	}
 	if m.root == "" {
 		if payload, exists := m.memoryObjects[item.ObjectKey]; exists {
 			if !bytes.Equal(payload, staged.payload) {
@@ -86,17 +90,19 @@ func (m *Manager) commitObject(staged *stagedUpload, item Item) (bool, error) {
 		return false, fmt.Errorf("create media object directory: %w", err)
 	}
 	if file, info, err := packagefs.OpenRegularNoSymlink(target); err == nil {
-		if strings.HasPrefix(item.ObjectKey, "objects/derived/") {
-			hash := sha256.New()
-			size, readErr := io.Copy(hash, io.LimitReader(file, item.SizeBytes+1))
-			if readErr != nil || size != item.SizeBytes || hex.EncodeToString(hash.Sum(nil)) != item.ChecksumSHA256 {
-				_ = file.Close()
-				return false, ErrObjectCorrupt
-			}
-		}
-		_ = file.Close()
 		if !info.Mode().IsRegular() || info.Size() != item.SizeBytes {
-			return false, errors.New("existing media object does not match staged upload")
+			_ = file.Close()
+			return false, ErrObjectCorrupt
+		}
+		// A retained original can survive an interrupted index commit or
+		// index recovery. Its name and size alone do not verify its bytes.
+		verifyErr := verifyObjectContent(ctx, file, item)
+		closeErr := file.Close()
+		if verifyErr != nil {
+			return false, verifyErr
+		}
+		if closeErr != nil {
+			return false, fmt.Errorf("close existing media object: %w", closeErr)
 		}
 		return false, nil
 	} else if !errors.Is(err, os.ErrNotExist) {
@@ -111,6 +117,44 @@ func (m *Manager) commitObject(staged *stagedUpload, item Item) (bool, error) {
 		return false, fmt.Errorf("set media object permissions: %w", err)
 	}
 	return true, nil
+}
+
+func (m *Manager) verifyDuplicateObjectLocked(ctx context.Context, staged *stagedUpload, item Item) error {
+	if m.root == "" {
+		payload, exists := m.memoryObjects[item.ObjectKey]
+		if !exists {
+			return ErrObjectMissing
+		}
+		if !bytes.Equal(payload, staged.payload) {
+			return ErrObjectCorrupt
+		}
+		return ctx.Err()
+	}
+	_, reader, err := m.openObjectLocked(item)
+	if err != nil {
+		return err
+	}
+	verifyErr := verifyObjectContent(ctx, reader, item)
+	closeErr := reader.Close()
+	if verifyErr != nil {
+		return verifyErr
+	}
+	return closeErr
+}
+
+func verifyObjectContent(ctx context.Context, reader io.Reader, item Item) error {
+	hash := sha256.New()
+	size, err := io.Copy(hash, io.LimitReader(contextReader{context: ctx, reader: reader}, item.SizeBytes+1))
+	if err != nil {
+		return fmt.Errorf("verify existing media object: %w", err)
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if size != item.SizeBytes || hex.EncodeToString(hash.Sum(nil)) != item.ChecksumSHA256 {
+		return ErrObjectCorrupt
+	}
+	return nil
 }
 
 func (m *Manager) stageObjectDeletionLocked(item Item) (func(bool), error) {

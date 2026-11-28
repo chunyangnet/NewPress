@@ -49,6 +49,7 @@ import (
 	"newpress.local/newpress/internal/verification"
 	"newpress.local/newpress/internal/virtualcurrency"
 	"newpress.local/newpress/internal/wechat"
+	"newpress.local/newpress/internal/writingtemplate"
 )
 
 type Server struct {
@@ -108,6 +109,7 @@ type Server struct {
 	aiClient          *aieditor.Client
 	aiImages          *aieditor.ImageClient
 	aiSettings        *aieditor.SettingsStore
+	writingTemplates  *writingtemplate.Service
 	aiTelemetry       *aieditor.TelemetryStore
 	aiBalances        *aieditor.BalanceService
 	aiState           aiEditorState
@@ -252,6 +254,7 @@ func NewWithSiteSettingsMediaCommentsAndNavigation(cfg config.Config, repository
 	server.resources = &resources.Store{Backend: resourceBackend}
 	server.feedback, _ = feedback.NewFileStore("")
 	server.aiSettings, _ = aieditor.NewSettingsStore("")
+	server.writingTemplates, _ = writingtemplate.New(context.Background(), &writingtemplate.MemoryStorage{})
 	server.aiReports, _ = aiworkbench.NewStore("")
 	server.aiTelemetry, _ = aieditor.NewTelemetryStore("", func() aieditor.TelemetryConfig { return server.aiSettings.Operations() })
 	server.aiBalances = aieditor.NewBalanceService()

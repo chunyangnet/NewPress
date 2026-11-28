@@ -3,9 +3,9 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
-const source = fs.readFileSync(path.join(__dirname, '../../internal/coreui/assets/js/chunnel-extension-updates.js'), 'utf8');
+const source=process.env.CHUNNEL_EXTENSION_UPDATES_SOURCE?fs.readFileSync(process.env.CHUNNEL_EXTENSION_UPDATES_SOURCE,'utf8'):require('./helpers/typescript.cjs').compile('frontend/core/extension-updates.ts');
 const tick = () => new Promise(resolve => setImmediate(resolve));
-const job = (phase, extra = {}) => ({ id: phase === 'idle' ? '' : 'task-1', phase, message: phase, kind: 'theme', action: 'update', slug: 'chunnel', target: '0.43.0', downloaded: 0, total: 0, updated_at: '2026-11-11T00:00:00Z', ...extra });
+const job = (phase, extra = {}) => ({ id: phase === 'idle' ? '' : 'task-1', phase, message: phase, kind: 'theme', action: 'update', slug: 'chunnel', target: '0.43.0', downloaded: 0, total: 0, started_at:'2026-11-11T00:00:00Z',review_required:false,updated_at: '2026-11-11T00:00:00Z', ...extra });
 
 function fixture(options = {}) {
   const nodes = new Map(), calls = [], timers = new Map(), events = {};
@@ -27,7 +27,7 @@ function fixture(options = {}) {
   const root = { dataset: { kind: options.kind || 'theme', userId: '7', csrf: 'csrf-token', activeTheme: 'starter', channel: 'stable', autoCheck: String(Boolean(options.autoCheck)), readonly: String(Boolean(options.readOnly)), busy: String(Boolean(options.busy)) },
     setAttribute() {}, querySelector: selector => nodes.get(selector),
     querySelectorAll: selector => selector === '[data-extension-check], [data-extension-action]' ? [get('extension-check'), get('extension-action')] : selector === '[data-extension-action]' ? [get('extension-action')] : [] };
-  vm.runInNewContext(source, { document: { querySelector: () => root }, window: { addEventListener(type, fn) { events[type] = fn; } }, location: { reload() { reloads++; } }, AbortController,
+  vm.runInNewContext(source, { document: {querySelector:()=>root,addEventListener(type,fn){events[type]=fn;}}, window: { addEventListener(type, fn) { events[type] = fn; } }, location: { reload() { reloads++; } }, AbortController,
     setTimeout(fn, ms) { const id = ++clock; timers.set(id, { fn, ms }); return id; }, clearTimeout(id) { timers.delete(id); },
     fetch(url, init) { return new Promise((resolve, reject) => calls.push({ url, init, resolve, reject })); } });
   return { get, calls, timers, dialog, events, reloads: () => reloads,
@@ -89,7 +89,7 @@ test('one submission reports real progress and reloads once after completion', a
   assert.equal(f.posts().length, 1);
   assert.deepEqual(JSON.parse(f.posts()[0].init.body), { channel: 'stable', expected_user_id: 7 });
   assert.equal(f.posts()[0].init.headers['X-CSRF-Token'], 'csrf-token');
-  f.respond(job('queued'), 202); await tick();
+  f.respond(job('queued', {action:'check'}), 202); await tick();
   f.poll(); f.respond(job('downloading', { downloaded: 2048, total: 4096 })); await tick();
   assert.equal(f.get('job-progress').value, 2048);
   assert.equal(f.get('job-progress').max, 4096);
@@ -175,7 +175,32 @@ for (const action of ['activate', 'uninstall']) test('theme ' + action + ' submi
   assert.equal(body.revision, 'current-revision');
   assert.equal(body.version, '');
   assert.match(f.posts()[0].url, new RegExp('/sample-theme/' + action + '$'));
-  f.respond(job('queued'), 202); await tick();
-  f.poll(); f.respond(job('succeeded')); await tick();
+  f.respond(job('queued',{action,slug:'sample-theme',target:''}), 202); await tick();
+  f.poll(); f.respond(job('succeeded',{action,slug:'sample-theme',target:''})); await tick();
   assert.equal(f.reloads(), 1);
+});
+
+test('unknown acceptance cannot be cleared by reading the old idle job',async()=>{
+  const f=fixture();f.respond(job('idle'));await tick();f.fire('extension-action');f.fire('extension-confirm');f.fail();await tick();f.respond(job('idle'));await tick();
+  assert.equal(f.get('extension-confirm').disabled,true);assert.equal(f.get('extension-action').disabled,true);
+  f.fire('extension-confirm');assert.equal(f.posts().length,1);f.fire('extension-reconnect');f.respond(job('succeeded'));await tick();assert.equal(f.reloads(),1);
+});
+
+test('a late pre-mutation poll cannot hide the accepted running job',async()=>{
+  const f=fixture();f.respond(job('idle'));await tick();f.fire('extension-reconnect');const old=f.calls.at(-1);
+  f.fire('extension-check');f.respond(job('queued',{action:'check'}));await tick();
+  assert.equal(old.init.signal.aborted,true);old.resolve({ok:true,status:200,json:async()=>job('idle')});await tick();
+  assert.equal(f.get('extension-job').dataset.phase,'queued');assert.equal(f.get('extension-check').disabled,true);assert.equal(f.reloads(),0);
+});
+
+test('session changes abort mutation and ignore a late receipt without reloading',async()=>{
+  const f=fixture();f.respond(job('idle'));await tick();f.fire('extension-check');const write=f.calls.at(-1);f.events['chunnel:session']();
+  assert.equal(write.init.signal.aborted,true);f.respond(job('queued',{action:'check'}));await tick();f.fire('extension-check');
+  assert.equal(f.posts().length,1);assert.equal(f.reloads(),0);assert.equal(f.get('extension-confirm').disabled,true);
+});
+
+test('BFCache resumes with a fresh job read and ignores the frozen response',async()=>{
+  const f=fixture({busy:true});f.respond(job('downloading'));await tick();f.poll();const old=f.calls.at(-1);f.events.pagehide();assert.equal(old.init.signal.aborted,true);
+  f.events.pageshow({persisted:true});f.respond(job('verifying'));await tick();old.resolve({ok:true,status:200,json:async()=>job('succeeded')});await tick();
+  assert.equal(f.reloads(),0);assert.equal(f.get('extension-job').dataset.phase,'verifying');
 });

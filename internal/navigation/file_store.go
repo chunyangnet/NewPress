@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"sync"
 	"time"
 	"unicode/utf8"
 
@@ -36,7 +35,7 @@ type fileDocument struct {
 }
 
 type FileStore struct {
-	mu           sync.RWMutex
+	mu           fileRWMutex
 	path         string
 	audit        *audit.Ledger
 	auditFault   error
@@ -75,7 +74,7 @@ func NewFileStore(path string, seedDemo bool, ledgers ...*audit.Ledger) (*FileSt
 			event := audit.Event{Action: "navigation.seeded", ObjectType: "navigation_registry", ObjectID: "all", Actor: "system", Metadata: map[string]any{
 				"menu_count": len(store.menus), "item_count": store.nextItemID - 1,
 			}}
-			if err := store.persistLocked(store.menus, store.nextMenuID, store.nextItemID, store.updatedAt, &event); err != nil {
+			if err := store.persistLocked(context.Background(), store.menus, store.nextMenuID, store.nextItemID, store.updatedAt, &event); err != nil {
 				return nil, err
 			}
 		}
@@ -97,17 +96,19 @@ func NewFileStore(path string, seedDemo bool, ledgers ...*audit.Ledger) (*FileSt
 	return store, nil
 }
 
-func (store *FileStore) Ready(context.Context) error {
+func (store *FileStore) Ready(ctx context.Context) error {
 	if store == nil {
 		return errors.New("navigation store is nil")
 	}
-	store.mu.RLock()
+	if err := store.mu.RLockContext(ctx); err != nil {
+		return err
+	}
 	defer store.mu.RUnlock()
 	if store.persistFault != nil {
 		return fmt.Errorf("navigation store write outcome is uncertain; reload required: %w", store.persistFault)
 	}
 	if store.path == "" {
-		return nil
+		return ctx.Err()
 	}
 	if store.auditFault != nil {
 		return fmt.Errorf("navigation store audit failure: %w", store.auditFault)
@@ -124,41 +125,59 @@ func (store *FileStore) Ready(context.Context) error {
 	if !info.IsDir() {
 		return errors.New("navigation store parent is not a directory")
 	}
-	return nil
+	return ctx.Err()
 }
 
-func (store *FileStore) List(context.Context) ([]Menu, error) {
+func (store *FileStore) List(ctx context.Context) ([]Menu, error) {
 	if store == nil {
 		return nil, errors.New("navigation store is nil")
 	}
-	store.mu.RLock()
+	if err := store.mu.RLockContext(ctx); err != nil {
+		return nil, err
+	}
 	defer store.mu.RUnlock()
-	return store.menusLocked(), nil
+	menus := store.menusLocked()
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	return menus, nil
 }
 
-func (store *FileStore) Get(_ context.Context, id int64) (Menu, error) {
+func (store *FileStore) Get(ctx context.Context, id int64) (Menu, error) {
 	if store == nil || id <= 0 {
 		return Menu{}, ErrNotFound
 	}
-	store.mu.RLock()
+	if err := store.mu.RLockContext(ctx); err != nil {
+		return Menu{}, err
+	}
 	defer store.mu.RUnlock()
 	menu, ok := store.menus[id]
 	if !ok {
 		return Menu{}, ErrNotFound
 	}
-	return cloneMenu(menu), nil
+	menu = cloneMenu(menu)
+	if err := ctx.Err(); err != nil {
+		return Menu{}, err
+	}
+	return menu, nil
 }
 
-func (store *FileStore) GetLocation(_ context.Context, location string) (Menu, error) {
+func (store *FileStore) GetLocation(ctx context.Context, location string) (Menu, error) {
 	location = strings.ToLower(strings.TrimSpace(location))
 	if store == nil || !ValidLocation(location) {
 		return Menu{}, ErrNotFound
 	}
-	store.mu.RLock()
+	if err := store.mu.RLockContext(ctx); err != nil {
+		return Menu{}, err
+	}
 	defer store.mu.RUnlock()
 	for _, menu := range store.menus {
 		if stringSliceContains(menu.Locations, location) {
-			return cloneMenu(menu), nil
+			menu = cloneMenu(menu)
+			if err := ctx.Err(); err != nil {
+				return Menu{}, err
+			}
+			return menu, nil
 		}
 	}
 	return Menu{}, ErrNotFound
@@ -168,7 +187,9 @@ func (store *FileStore) Create(ctx context.Context, input MenuInput, actor strin
 	if store == nil {
 		return Menu{}, errors.New("navigation store is nil")
 	}
-	store.mu.Lock()
+	if err := store.mu.LockContext(ctx); err != nil {
+		return Menu{}, err
+	}
 	defer store.mu.Unlock()
 	return store.createLocked(ctx, input, actor, nil)
 }
@@ -203,7 +224,7 @@ func (store *FileStore) createLocked(ctx context.Context, input MenuInput, actor
 		receipt.MenuID, receipt.CreatedAt = menu.ID, now
 		receipts = append(append([]CreationReceipt(nil), receipts...), *receipt)
 	}
-	if err := store.persistStateLocked(candidate, store.nextMenuID+1, store.nextItemID, now, receipts, &event); err != nil {
+	if err := store.persistStateLocked(ctx, candidate, store.nextMenuID+1, store.nextItemID, now, receipts, &event); err != nil {
 		return Menu{}, err
 	}
 	store.menus = candidate
@@ -213,7 +234,7 @@ func (store *FileStore) createLocked(ctx context.Context, input MenuInput, actor
 	return cloneMenu(menu), nil
 }
 
-func (store *FileStore) Update(_ context.Context, id int64, mutation Mutation, input MenuInput) (Menu, error) {
+func (store *FileStore) Update(ctx context.Context, id int64, mutation Mutation, input MenuInput) (Menu, error) {
 	if store == nil || id <= 0 || mutation.ExpectedVersion <= 0 {
 		return Menu{}, ErrInvalidInput
 	}
@@ -221,7 +242,9 @@ func (store *FileStore) Update(_ context.Context, id int64, mutation Mutation, i
 	if len(fields) > 0 {
 		return Menu{}, &ValidationError{Fields: fields}
 	}
-	store.mu.Lock()
+	if err := store.mu.LockContext(ctx); err != nil {
+		return Menu{}, err
+	}
 	defer store.mu.Unlock()
 	menu, ok := store.menus[id]
 	if !ok {
@@ -245,7 +268,7 @@ func (store *FileStore) Update(_ context.Context, id int64, mutation Mutation, i
 	event := audit.Event{Action: "navigation.menu.update", ObjectType: "navigation_menu", ObjectID: fmt.Sprint(id), Actor: auditActor(mutation.Actor), Metadata: map[string]any{
 		"from_version": mutation.ExpectedVersion, "version": menu.Version, "location_count": len(menu.Locations), "item_count": len(menu.Items),
 	}}
-	if err := store.persistLocked(candidate, store.nextMenuID, store.nextItemID, now, &event); err != nil {
+	if err := store.persistLocked(ctx, candidate, store.nextMenuID, store.nextItemID, now, &event); err != nil {
 		return Menu{}, err
 	}
 	store.menus = candidate
@@ -253,7 +276,7 @@ func (store *FileStore) Update(_ context.Context, id int64, mutation Mutation, i
 	return cloneMenu(menu), nil
 }
 
-func (store *FileStore) ReplaceItems(_ context.Context, id int64, mutation Mutation, inputs []ItemInput) (Menu, error) {
+func (store *FileStore) ReplaceItems(ctx context.Context, id int64, mutation Mutation, inputs []ItemInput) (Menu, error) {
 	if store == nil || id <= 0 || mutation.ExpectedVersion <= 0 {
 		return Menu{}, ErrInvalidInput
 	}
@@ -261,7 +284,9 @@ func (store *FileStore) ReplaceItems(_ context.Context, id int64, mutation Mutat
 	if len(fields) > 0 {
 		return Menu{}, &ValidationError{Fields: fields}
 	}
-	store.mu.Lock()
+	if err := store.mu.LockContext(ctx); err != nil {
+		return Menu{}, err
+	}
 	defer store.mu.Unlock()
 	menu, ok := store.menus[id]
 	if !ok {
@@ -318,7 +343,7 @@ func (store *FileStore) ReplaceItems(_ context.Context, id int64, mutation Mutat
 	event := audit.Event{Action: "navigation.items.replace", ObjectType: "navigation_menu", ObjectID: fmt.Sprint(id), Actor: auditActor(mutation.Actor), Metadata: map[string]any{
 		"from_version": mutation.ExpectedVersion, "version": menu.Version, "previous_item_count": len(existing), "item_count": len(items),
 	}}
-	if err := store.persistLocked(candidate, store.nextMenuID, nextItemID, now, &event); err != nil {
+	if err := store.persistLocked(ctx, candidate, store.nextMenuID, nextItemID, now, &event); err != nil {
 		return Menu{}, err
 	}
 	store.menus = candidate
@@ -327,11 +352,13 @@ func (store *FileStore) ReplaceItems(_ context.Context, id int64, mutation Mutat
 	return cloneMenu(menu), nil
 }
 
-func (store *FileStore) Delete(_ context.Context, id int64, mutation Mutation) error {
+func (store *FileStore) Delete(ctx context.Context, id int64, mutation Mutation) error {
 	if store == nil || id <= 0 || mutation.ExpectedVersion <= 0 {
 		return ErrInvalidInput
 	}
-	store.mu.Lock()
+	if err := store.mu.LockContext(ctx); err != nil {
+		return err
+	}
 	defer store.mu.Unlock()
 	menu, ok := store.menus[id]
 	if !ok {
@@ -346,7 +373,7 @@ func (store *FileStore) Delete(_ context.Context, id int64, mutation Mutation) e
 	event := audit.Event{Action: "navigation.menu.delete", ObjectType: "navigation_menu", ObjectID: fmt.Sprint(id), Actor: auditActor(mutation.Actor), Metadata: map[string]any{
 		"version": mutation.ExpectedVersion, "item_count": len(menu.Items), "location_count": len(menu.Locations),
 	}}
-	if err := store.persistLocked(candidate, store.nextMenuID, store.nextItemID, now, &event); err != nil {
+	if err := store.persistLocked(ctx, candidate, store.nextMenuID, store.nextItemID, now, &event); err != nil {
 		return err
 	}
 	store.menus = candidate
@@ -354,17 +381,23 @@ func (store *FileStore) Delete(_ context.Context, id int64, mutation Mutation) e
 	return nil
 }
 
-func (store *FileStore) Snapshot(context.Context) (Snapshot, error) {
+func (store *FileStore) Snapshot(ctx context.Context) (Snapshot, error) {
 	if store == nil {
 		return Snapshot{}, errors.New("navigation store is nil")
 	}
-	store.mu.RLock()
+	if err := store.mu.RLockContext(ctx); err != nil {
+		return Snapshot{}, err
+	}
 	defer store.mu.RUnlock()
 	menus := store.menusLocked()
-	return snapshotFromMenus(menus, store.updatedAt), nil
+	snapshot := snapshotFromMenus(menus, store.updatedAt)
+	if err := ctx.Err(); err != nil {
+		return Snapshot{}, err
+	}
+	return snapshot, nil
 }
 
-func (store *FileStore) ReplaceAll(_ context.Context, mutation RegistryMutation, inputs []RegistryMenuInput) (Snapshot, error) {
+func (store *FileStore) ReplaceAll(ctx context.Context, mutation RegistryMutation, inputs []RegistryMenuInput) (Snapshot, error) {
 	if store == nil || strings.TrimSpace(mutation.ExpectedRevision) == "" {
 		return Snapshot{}, ErrInvalidInput
 	}
@@ -372,7 +405,9 @@ func (store *FileStore) ReplaceAll(_ context.Context, mutation RegistryMutation,
 	if len(fields) > 0 {
 		return Snapshot{}, &ValidationError{Fields: fields}
 	}
-	store.mu.Lock()
+	if err := store.mu.LockContext(ctx); err != nil {
+		return Snapshot{}, err
+	}
 	defer store.mu.Unlock()
 	current := snapshotFromMenus(store.menusLocked(), store.updatedAt)
 	if SnapshotRevision(current) != mutation.ExpectedRevision {
@@ -416,7 +451,7 @@ func (store *FileStore) ReplaceAll(_ context.Context, mutation RegistryMutation,
 	event := audit.Event{Action: "navigation.registry.replace", ObjectType: "navigation_registry", ObjectID: "all", Actor: auditActor(mutation.Actor), Metadata: map[string]any{
 		"previous_menu_count": current.MenuCount, "previous_item_count": current.ItemCount, "menu_count": len(candidate), "item_count": itemCount,
 	}}
-	if err := store.persistLocked(candidate, nextMenuID, nextItemID, now, &event); err != nil {
+	if err := store.persistLocked(ctx, candidate, nextMenuID, nextItemID, now, &event); err != nil {
 		return current, err
 	}
 	store.menus = candidate
@@ -491,11 +526,14 @@ func (store *FileStore) seedDemoLocked(now time.Time) {
 	store.updatedAt = now
 }
 
-func (store *FileStore) persistLocked(menus map[int64]Menu, nextMenuID, nextItemID int64, updatedAt time.Time, event *audit.Event) error {
-	return store.persistStateLocked(menus, nextMenuID, nextItemID, updatedAt, store.creations, event)
+func (store *FileStore) persistLocked(ctx context.Context, menus map[int64]Menu, nextMenuID, nextItemID int64, updatedAt time.Time, event *audit.Event) error {
+	return store.persistStateLocked(ctx, menus, nextMenuID, nextItemID, updatedAt, store.creations, event)
 }
 
-func (store *FileStore) persistStateLocked(menus map[int64]Menu, nextMenuID, nextItemID int64, updatedAt time.Time, receipts []CreationReceipt, event *audit.Event) error {
+func (store *FileStore) persistStateLocked(ctx context.Context, menus map[int64]Menu, nextMenuID, nextItemID int64, updatedAt time.Time, receipts []CreationReceipt, event *audit.Event) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	if store.persistFault != nil {
 		return store.persistFault
 	}
@@ -519,6 +557,12 @@ func (store *FileStore) persistStateLocked(menus map[int64]Menu, nextMenuID, nex
 	}
 	if encoded.Len() > maxFileBytes {
 		return errors.New("navigation document exceeds size limit")
+	}
+	// Cancellation is safe before durable work begins. Once the audit/file
+	// transaction starts, finish it and publish the matching memory state;
+	// reporting cancellation after a successful commit would hide that write.
+	if err := ctx.Err(); err != nil {
+		return err
 	}
 	payload := encoded.Bytes()
 	write := func() error { return writeFileBytes(store.path, payload) }

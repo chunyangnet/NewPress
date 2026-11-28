@@ -3,6 +3,8 @@
 import { readdir, readFile, writeFile, realpath } from 'node:fs/promises';
 import { resolve, relative, sep } from 'node:path';
 import { build, transform } from 'esbuild';
+import { buildIndependentEntries } from './theme_entries.mjs';
+import { frontendRoot } from './frontend_entries.mjs';
 
 const args = process.argv.slice(2);
 const index = args.indexOf('--source');
@@ -10,6 +12,7 @@ if (index < 0 || !args[index + 1]) throw new Error('Usage: npm run build:theme -
 const root = await realpath(resolve(args[index + 1]));
 const check = args.includes('--check');
 const manifest = JSON.parse(await readFile(resolve(root, 'theme.json'), 'utf8'));
+if (root === resolve(frontendRoot, 'themes', manifest.slug)) await buildIndependentEntries({ check, scope: manifest.slug });
 let count = 0;
 async function walk(directory) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {

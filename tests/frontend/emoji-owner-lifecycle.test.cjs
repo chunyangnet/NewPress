@@ -3,7 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
-const source = fs.readFileSync(process.env.CHUNNEL_EMOJI_SOURCE || 'themes/chunnel/assets/js/chunnel-emoji.js', 'utf8');
+const source = require('./helpers/typescript.cjs').compile('frontend/shared/emoji.ts');
 
 function fixture(popover = true) {
   const observers = [], focus = [], listeners = new Map();
@@ -31,7 +31,7 @@ function fixture(popover = true) {
       disconnect() { this.disconnected = true; this.nodes.clear(); }
     },
   });
-  const start = source.includes('  let ownerObserver = null;') ? source.indexOf('  let ownerObserver = null;') : source.indexOf('  function position()');
+  const start = source.indexOf('let ownerObserver = null;');
   vm.runInContext(source.slice(start, source.indexOf('  function remember(', start)), context);
   const openStart = source.indexOf('  function open(');
   vm.runInContext(source.slice(openStart, source.indexOf('  function insert(', openStart)), context);

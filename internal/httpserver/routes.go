@@ -323,6 +323,7 @@ func (s *Server) routes() http.Handler {
 	mux.HandleFunc("GET /admin/content/{id}/revisions/compare/{$}", s.adminContentRevisionCompare)
 	mux.HandleFunc("POST /admin/quick-draft/{$}", s.adminQuickDraftCreate)
 	mux.HandleFunc("GET /api/v1/admin/ai/prompts", s.adminAIPrompts)
+	s.registerWritingTemplateRoutes(mux)
 	mux.HandleFunc("GET /api/v1/admin/ai/connections", s.adminAIConnections)
 	mux.HandleFunc("GET /api/v1/admin/ai/settings", s.adminAISettings)
 	mux.HandleFunc("GET /api/v1/admin/access/settings", s.adminAccessSettings)

@@ -1,5 +1,6 @@
 import {record,responseError,errorMessage} from './editor-tool-data';
 import type {EditorSourceSelection} from './media-types';
+import {editorToolReady,registerEditorTool} from './editor-tool-launch';
 import './editor-snippet-draft';
 
 (() => {
@@ -9,6 +10,7 @@ import './editor-snippet-draft';
   const candidate=document.querySelector<HTMLDialogElement>('[data-editor-snippets-dialog]');
   const blockEditor=window.ChunnelBlockEditor;
   if(!sourceField||!launcher||!candidate||!blockEditor)return;
+  if(editorToolReady(launcher))return;
   const source=sourceField,trigger=launcher,dialog=candidate,editor=blockEditor;
   const status=dialog.querySelector<HTMLElement>('[data-snippet-picker-status]')!,list=dialog.querySelector<HTMLElement>('[data-snippet-picker-list]')!;
   const previous=dialog.querySelector<HTMLButtonElement>('[data-snippet-picker-prev]')!,next=dialog.querySelector<HTMLButtonElement>('[data-snippet-picker-next]')!;
@@ -41,10 +43,10 @@ import './editor-snippet-draft';
       status.textContent=count?'插入的是固定版本引用；来源撤回后，公开文章中的片段会隐藏。':'这一页没有已共享的片段。';
     });
   }
-  trigger.addEventListener('pointerdown',e=>e.preventDefault());
-  trigger.addEventListener('click',()=>{if(source.disabled||source.readOnly||dialog.open)return;selection=editor.capture();returnFocus=true;dialog.showModal();trigger.setAttribute('aria-expanded','true');load(1);});
+  function open(_launcher:HTMLButtonElement,captured?:EditorSourceSelection){if(source.disabled||source.readOnly||dialog.open)return;selection=captured??editor.capture();returnFocus=true;dialog.showModal();trigger.setAttribute('aria-expanded','true');load(1);}
   dialog.querySelector('[data-snippet-picker-close]')!.addEventListener('click',()=>dialog.close());
   dialog.addEventListener('close',()=>{serial++;controller?.abort();busy=false;selection=null;trigger.setAttribute('aria-expanded','false');controls();if(returnFocus)trigger.focus({preventScroll:true});});
   previous.addEventListener('click',()=>load(page-1));next.addEventListener('click',()=>load(page+1));
   window.addEventListener('pagehide',()=>{serial++;controller?.abort();busy=false;controls();if(dialog.open)status.textContent='页面切换中断了读取，请重新打开片段选择器。';});
+  registerEditorTool([trigger],open);
 })();

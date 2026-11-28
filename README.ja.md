@@ -32,7 +32,7 @@
 
 ---
 
-NewPress は、投稿、固定ページ、メディアライブラリ、管理画面を備え、ブログ、リソース共有サイト、コミュニティ、企業サイトに利用できます。標準テーマは Chunnel で、コンテンツはローカルファイルまたは PostgreSQL に保存します。
+NewPress は、投稿、固定ページ、メディアライブラリ、管理画面を備え、ブログ、リソース共有サイト、コミュニティ、企業サイトに利用できます。標準 Docker イメージとネイティブインストールウィザードによる新規インストールでは、標準テーマの Chunnel のみをプリインストールし、他のテーマは必要に応じてインストールします。ソースツリーには開発用のサンプルテーマも含まれています。コンテンツはローカルファイルまたは PostgreSQL に保存します。
 
 > [!NOTE]
 > 現在のソースコードのバージョンは `1.0.0-beta.1` です。安定版はまだリリースされていません。ファイルストレージへの書き込みは単一プロセスのみ対応しています。ログインセッションは永続化され、有効期限内であれば再起動後も利用できます。詳細は[セッションとデプロイの制約](SESSION_PERSISTENCE.md)を参照してください。
@@ -130,19 +130,19 @@ Copy-Item .env.example .env
 New-Item -ItemType Directory -Force .secrets | Out-Null
 
 docker compose build migrate
-if ($LASTEXITCODE -ne 0) { throw '镜像构建失败' }
+if ($LASTEXITCODE -ne 0) { throw 'イメージのビルドに失敗しました' }
 
 $databasePassword = [Convert]::ToHexString([Security.Cryptography.RandomNumberGenerator]::GetBytes(32)).ToLowerInvariant()
 Set-Content -LiteralPath .secrets/postgres_password -Value $databasePassword -Encoding utf8 -NoNewline
 Set-Content -LiteralPath .secrets/database_url -Value "postgres://newpress:$databasePassword@db:5432/newpress?sslmode=disable" -Encoding utf8 -NoNewline
-Read-Host '管理员密码（至少 12 个字符）' -MaskInput |
+Read-Host '管理者パスワード（12 文字以上）' -MaskInput |
     docker run --rm -i --network none newpress:local admin hash-password |
     Set-Content -LiteralPath .secrets/admin_password_hash -Encoding utf8 -NoNewline
-if ($LASTEXITCODE -ne 0) { throw '管理员密码哈希生成失败' }
+if ($LASTEXITCODE -ne 0) { throw '管理者パスワードのハッシュ生成に失敗しました' }
 Remove-Variable databasePassword
 
 docker compose config --quiet
-if ($LASTEXITCODE -ne 0) { throw 'Compose 配置检查失败' }
+if ($LASTEXITCODE -ne 0) { throw 'Compose 設定の検証に失敗しました' }
 docker compose up -d --no-build --wait
 ```
 
@@ -167,10 +167,10 @@ go run ./cmd/newpress serve
 
 ```powershell
 New-Item -ItemType Directory -Force .secrets | Out-Null
-Read-Host '管理员密码（至少 12 个字符）' -MaskInput |
+Read-Host '管理者パスワード（12 文字以上）' -MaskInput |
     go run ./cmd/newpress admin hash-password |
     Set-Content -LiteralPath .secrets/admin_password_hash -Encoding utf8 -NoNewline
-if ($LASTEXITCODE -ne 0) { throw '管理员密码哈希生成失败' }
+if ($LASTEXITCODE -ne 0) { throw '管理者パスワードのハッシュ生成に失敗しました' }
 
 $env:NEWPRESS_ADMIN_USERNAME = 'admin'
 $env:NEWPRESS_ADMIN_PASSWORD_HASH_FILE = (Resolve-Path .secrets/admin_password_hash).Path
@@ -179,7 +179,7 @@ go run ./cmd/newpress serve
 
 管理者はユーザーデータベースが空の場合にのみ作成されます。後から初期管理者設定を変更しても既存アカウントは上書きされません。直接実行する場合はプロセスの環境変数で設定を渡します。プロジェクトの `.env` は自動では読み込まれません。
 
-標準では空のサイトを初期化します。ソースから実行する場合は `NEWPRESS_SEED_DEMO=true` でデモコンテンツを読み込めます。既存コンテンツは保持されます。標準 Compose のアプリケーションサービスでは、デモコンテンツは常に無効です。
+標準では空のサイトを初期化します。ファイルストレージでデモ記事を読み込むには、コンテンツストアの初回作成前に `NEWPRESS_SEED_DEMO=true` を設定してください。初期化済みの空ストアを含め、既存ストアにはデモ記事を追加しません。独立したデモサイトを起動する場合は、`NEWPRESS_DATA_DIR` に新しいディレクトリを指定してください。標準 Compose のアプリケーションサービスでは、デモコンテンツは常に無効です。
 
 </details>
 
@@ -283,7 +283,7 @@ docker compose up -d --no-build --wait
 
 デプロイスクリプトは保存済みのベースイメージ参照を保持します。イメージを更新する場合は、環境設定ファイルの `NEWPRESS_GO_IMAGE`、`NEWPRESS_RUNTIME_IMAGE`、`NEWPRESS_POSTGRES_IMAGE`、`NEWPRESS_PROXY_IMAGE` を確認して変更してください。参照には完全な SHA-256 digest が必要です。
 
-追加の Compose ファイルは `--compose-file` を繰り返して指定できます。以後のデプロイでは保存された一覧を再利用します。
+追加の Compose ファイルは `--compose-file` を繰り返して順番に指定できます。明示的に指定すると保存済みの一覧を置き換えるため、保持する追加ファイルをすべて指定してください。省略時のみ既存の一覧を再利用します。基本の `compose.yaml` は自動で追加され、このファイルのみ指定すると追加ファイルの選択を解除します。メール設定を有効にする例：
 
 ```bash
 sudo bash scripts/deploy.sh deploy --compose-file deploy/compose.mail.yaml
@@ -292,6 +292,8 @@ sudo bash scripts/deploy.sh deploy --compose-file deploy/compose.mail.yaml
 [メール設定](deploy/compose.mail.yaml)などの追加ファイルを使用する前に、そのファイルが必要とするサービス設定とシークレットを用意してください。
 
 ### 管理画面からのコア更新
+
+オンラインインストールには `newpress run` で起動するプロセス監視モードが必要です。標準 Docker Compose とネイティブインストールウィザードはこの方式を使用します。ローカルソースの例で使う `serve` はオンライン切り替えに対応しません。利用する場合はバイナリをビルドしてから `newpress run` で起動してください。
 
 管理画面の `/admin/updates/` は、標準で 2 つの公式公開ソースを使用します。GitHub / Gitee のアクセストークンは不要です。
 
@@ -303,7 +305,7 @@ sudo bash scripts/deploy.sh deploy --compose-file deploy/compose.mail.yaml
 
 サーバーは両方のマニフェストを並列検証し、署名済みシーケンス番号が大きい有効なマニフェストを優先します。同じ番号で内容が異なる場合は更新を停止します。パッケージの取得先は、同一リリースであることを検証できたソース間でのみ切り替えます。各ソースを確認時のコミットに固定し、パッケージの長さと SHA-256 を再検証します。既存の非公開 Gitee ソース設定は保持され、更新ソース設定から公式公開ソースに戻せます。公開リクエストに非公開トークンは付加しません。
 
-インストール前にリリースノートを読み、バックアップから復元できることを確認してください。ソースからの更新は前述の手順で再デプロイします。初期ホストプログラム、コンテナのベースイメージ、デプロイプロトコルの更新も、ソース / イメージの再デプロイで行います。初回インストーラーで既存ディレクトリを上書きしないでください。
+インストール前にリリースノートを読み、バックアップから復元できることを確認してください。ソースからの更新は前述の手順で再デプロイします。初期導入したプロセス監視プログラム、コンテナのベースイメージ、デプロイプロトコルの更新も、ソース / イメージの再デプロイで行います。初回インストーラーで既存ディレクトリを上書きしないでください。
 
 <details>
 <summary>PostgreSQL のオンライン更新：復元検証レシートの設定</summary>
@@ -318,7 +320,7 @@ Docker では `.secrets/update-recovery/backup.json` に保存します。`NEWPR
 sudo bash scripts/deploy.sh deploy --compose-file deploy/compose.update-recovery.yaml
 ```
 
-この設定に Gitee トークンは不要です。従来の `deploy/compose.updates-secret.yaml` は非公開ソース用に残しています。ネイティブ PostgreSQL 構成では、サービス環境の `NEWPRESS_UPDATE_BACKUP_RECEIPT_FILE` に、アクセス制限付きレシートの絶対パスを設定します。更新のたびにバックアップ、復元検証、レシート更新を行ってください。条件を満たせない場合は、サービスを停止してバックアップし、ソースから再デプロイします。
+メールなどの追加設定が有効な場合は、上のコマンドにも対応する `--compose-file` を繰り返し指定し、一覧全体を保持してください。この設定に Gitee トークンは不要です。従来の `deploy/compose.updates-secret.yaml` は非公開ソース用に残しています。ネイティブ PostgreSQL 構成では、サービス環境の `NEWPRESS_UPDATE_BACKUP_RECEIPT_FILE` に、アクセス制限付きレシートの絶対パスを設定します。更新のたびにバックアップ、復元検証、レシート更新を行ってください。条件を満たせない場合は、サービスを停止してバックアップし、ソースから再デプロイします。
 
 </details>
 
@@ -418,7 +420,7 @@ go vet ./...
 go build -trimpath -buildvcs=false ./cmd/newpress
 ```
 
-新規インストールには Chunnel のみが含まれ、他のテーマは必要に応じてインストールします。[テーマ開発ガイド](themes/README.md)を読み、[Starter](themes/starter/README.md)、[子テーマの例](themes/starter-child/README.md)、[表示契約](internal/presentation/page.go)から始められます。設計規約は [DESIGN.md](DESIGN.md)、リリース準備は [RELEASING.md](RELEASING.md) を参照してください。
+[テーマ開発ガイド](themes/README.md)を読み、[Starter](themes/starter/README.md)、[子テーマの例](themes/starter-child/README.md)、[表示契約](internal/presentation/page.go)から始められます。設計規約は [DESIGN.md](DESIGN.md)、リリース準備は [RELEASING.md](RELEASING.md) を参照してください。
 
 公開ドキュメントはソースに含まれています。`docs/` はメンテナーのローカル資料であり、公開ソースアーカイブや Docker ビルドコンテキストには含まれません。
 

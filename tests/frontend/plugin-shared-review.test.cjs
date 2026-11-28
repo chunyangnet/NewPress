@@ -3,7 +3,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
-const source = fs.readFileSync(path.join(__dirname, '../../internal/coreui/assets/js/newpress-plugin-records.source.js'), 'utf8');
+const {compile}=require('./helpers/typescript.cjs');
+const source=process.env.NEWPRESS_PLUGIN_RECORDS_SOURCE?fs.readFileSync(process.env.NEWPRESS_PLUGIN_RECORDS_SOURCE,'utf8'):compile('frontend/core/plugin-records.ts');
 const tick = () => new Promise(resolve => setImmediate(resolve));
 const digest = n => n.toString(16).padStart(64, '0');
 const receipt = (n = 1, extra = {}) => ({type: 'content_effect', reference: digest(n), bytes: 600, plugin: 'reader', job_id: digest(100), result: {operation_id: digest(n + 1000), post_id: 12, previous_version: 3, version: 4, changed: true, committed_at: '2026-11-25T01:00:00Z'}, ...extra});
@@ -34,7 +35,7 @@ function fixture({available = true, hidden = false} = {}) {
   const window = {events: {}, addEventListener(name, fn) { this.events[name] = fn; }};
   vm.runInNewContext(source, {document, window, URLSearchParams, AbortController, DOMException,
     setTimeout(fn, ms) { const id = ++timerID; timers.set(id, {fn, ms}); return id; }, clearTimeout(id) { timers.delete(id); },
-    BroadcastChannel: class { constructor(name) { this.name = name; channels.push(this); } addEventListener(_, fn) { this.message = fn; } },
+    BroadcastChannel: class { constructor(name) { this.name = name; channels.push(this); } addEventListener(_, fn) { this.message = fn; } close(){this.closed=true;} },
     fetch: (url, options) => new Promise((resolve, reject) => calls.push({url, options, resolve, reject}))
   });
   const fire = (name, event = 'click') => get(name).events[event]({target: get(name), preventDefault() {}});
@@ -248,4 +249,11 @@ test('webhook projection rejects impossible versions, missing result time and mi
     const f=fixture(); f.change('type','webhook_intent'); f.fire('form','submit'); f.reply(page([bad])); await tick();
     assert.equal(f.get('list').children.length,0); assert.match(f.get('status').textContent,/格式异常/);
   }
+});
+
+
+test('admin region replacement retires shared record requests and session channel',async()=>{
+ const f=fixture();const pending=f.calls[0];f.document.events['chunnel:admin-before-replace']({detail:{regions:[f.root]}});
+ assert.equal(pending.options.signal.aborted,true);assert.equal(f.channels[0].closed,true);f.reply(page());await tick();
+ assert.equal(f.get('list').children.length,0);assert.equal(f.calls.length,1);f.fire('form','submit');assert.equal(f.calls.length,1);
 });

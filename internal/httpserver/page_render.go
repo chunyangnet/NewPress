@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -21,6 +22,12 @@ import (
 )
 
 func (s *Server) render(writer http.ResponseWriter, status int, page string, data pageView) {
+	s.renderChecked(writer, status, page, data, nil, nil, nil)
+}
+
+// A private preview can lose authority while rendering widgets or templates.
+// Keep the normal render buffer and check before any response bytes are sent.
+func (s *Server) renderChecked(writer http.ResponseWriter, status int, page string, data pageView, request *http.Request, beforeOutput func() bool, access func() error) {
 	data.contentPaths = s.permalinkBuilder()
 	page, core := s.prepareRenderer(page, &data)
 	s.prepareAdminFeatureStatus(responseContext(writer), page, &data)
@@ -104,8 +111,19 @@ func (s *Server) render(writer http.ResponseWriter, status int, page string, dat
 		_ = coreui.Error(&output, "页面暂时不可用", "页面内容超过展示上限，请缩小模板输出范围。")
 		payload = output.Bytes()
 	}
-	writer.WriteHeader(status)
-	_, writeErr := writer.Write(payload)
+	if beforeOutput != nil && !beforeOutput() {
+		return
+	}
+	outputWriter := writer
+	if access != nil {
+		writer.Header().Set("Content-Length", strconv.Itoa(len(payload)))
+		outputWriter = privateResponse(writer, request, access)
+	}
+	outputWriter.WriteHeader(status)
+	_, writeErr := outputWriter.Write(payload)
+	if writeErr != nil && access != nil {
+		panic(http.ErrAbortHandler)
+	}
 	if observed, ok := writer.(*analyticsResponseWriter); ok && err == nil && writeErr == nil {
 		observed.complete = true
 	}
@@ -153,7 +171,7 @@ func (s *Server) baseViewContext(ctx context.Context, title, description, path s
 		canonical = s.absolutePublicURL(path)
 	}
 	location := site.TimeLocation(settings)
-	navigation := s.publicNavigation(path)
+	navigation := s.publicNavigationContext(ctx, path)
 	community, _ := themeSettings.Values["community_nav"].(bool)
 	if s.themes.Active().View != "" {
 		// Independent themes may fall back to core pages, which use core defaults.
@@ -189,6 +207,18 @@ func (s *Server) baseViewContext(ctx context.Context, title, description, path s
 }
 
 func (s *Server) adminView(current string, principal auth.Principal, readOnly bool) adminView {
+	return s.adminViewWithReadiness(current, principal, readOnly, nil)
+}
+
+// System diagnostics have already collected these probes under their shared
+// worker budget. Preparing the sidebar must not repeat them synchronously.
+func (s *Server) adminViewWithReadiness(current string, principal auth.Principal, readOnly bool, readiness []systemStatusCheck) adminView {
+	return s.adminViewWithSnapshots(current, principal, readOnly, readiness, nil)
+}
+
+// A page that already listed plugins can share that request's display snapshot
+// with its summary and navigation. A non-nil pointer also preserves an empty list.
+func (s *Server) adminViewWithSnapshots(current string, principal auth.Principal, readOnly bool, readiness []systemStatusCheck, installed *[]plugin.Installed) adminView {
 	preview := !s.auth.Configured()
 	username := principal.Label()
 	if username == "" {
@@ -199,7 +229,11 @@ func (s *Server) adminView(current string, principal auth.Principal, readOnly bo
 	plugins := []plugin.Installed(nil)
 	themes := []theme.Manifest(nil)
 	if preview || principal.Can(auth.CapabilityPluginsManage) || principal.Can(auth.CapabilitySystemRead) {
-		plugins, _ = s.plugins.List()
+		if installed != nil {
+			plugins = *installed
+		} else if s.plugins != nil {
+			plugins, _ = s.plugins.List()
+		}
 	}
 	if preview || principal.Can(auth.CapabilityAppearanceManage) || principal.Can(auth.CapabilitySystemRead) {
 		themes, _ = s.themes.List()
@@ -264,12 +298,23 @@ func (s *Server) adminView(current string, principal auth.Principal, readOnly bo
 	} else {
 		checks = append(checks, adminCheck{Label: "内容地图", Detail: "分类与标签指标暂时不可用", Status: "error"})
 	}
-	if err := s.repository.Ready(ctx); err != nil {
+	ready := func(id string, probe func() error) bool {
+		if readiness != nil {
+			for _, check := range readiness {
+				if check.ID == id {
+					return check.Status == "pass"
+				}
+			}
+			return false
+		}
+		return probe() == nil
+	}
+	if !ready("content", func() error { return s.repository.Ready(ctx) }) {
 		checks = append(checks, adminCheck{Label: "内容存储", Detail: "就绪检查失败", Status: "error"})
 	} else {
 		checks = append(checks, adminCheck{Label: "内容存储", Detail: "读取路径与依赖就绪", Status: "pass"})
 	}
-	if err := s.media.Ready(); err != nil {
+	if !ready("media", s.media.Ready) {
 		checks[4] = adminCheck{Label: "媒体存储", Detail: "对象目录或索引不可用", Status: "error"}
 	}
 	navigationMenuCount := 0
@@ -298,7 +343,7 @@ func (s *Server) adminView(current string, principal auth.Principal, readOnly bo
 	}
 	var pluginSettings []plugin.SettingsPage
 	if (preview || principal.Can(auth.CapabilityPluginsManage)) && s.plugins != nil {
-		pluginSettings = s.plugins.SettingsPages()
+		pluginSettings = plugin.SettingsPagesFromInstalled(plugins)
 	}
 	return adminView{
 		Current: current, Configured: s.auth.Configured(), Authenticated: principal.Username != "",

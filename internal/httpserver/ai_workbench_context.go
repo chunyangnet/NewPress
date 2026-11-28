@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"newpress.local/newpress/internal/aieditor"
 	"newpress.local/newpress/internal/aiworkbench"
@@ -13,11 +14,30 @@ import (
 )
 
 func workbenchText(value string, limit int) string {
-	runes := []rune(value)
-	if len(runes) > limit {
-		return string(runes[:limit]) + "…"
+	text, _ := workbenchTextPrefix(value, limit)
+	return text
+}
+
+func workbenchTextPrefix(value string, limit int) (string, bool) {
+	if limit < 0 {
+		panic("negative workbench text limit")
 	}
-	return value
+	if len(value) <= limit {
+		return value, false
+	}
+	// Scan only the retained prefix; articles may be much larger than the
+	// preview. Keep the former malformed UTF-8 normalization on truncation.
+	for end := range value {
+		if limit == 0 {
+			prefix := value[:end]
+			if !utf8.ValidString(prefix) {
+				prefix = string([]rune(prefix))
+			}
+			return prefix + "…", true
+		}
+		limit--
+	}
+	return value, false
 }
 
 type workbenchArticle struct {
@@ -54,9 +74,13 @@ func (s *Server) workbenchPreview(ctx context.Context, request aiworkbench.Reque
 	}
 	preview := aiworkbench.Preview{Task: task.ID, Title: task.Title, Scope: task.Scope, Start: now.AddDate(0, 0, 1-days).Format("2006-01-02"), End: now.Format("2006-01-02"), Timezone: location.String(), Focus: strings.TrimSpace(request.Focus)}
 	facts := map[string]any{"snapshot_at": now.Format(time.RFC3339), "scope": task.Scope}
+	sources := &workbenchSources{server: s, versions: make(map[int64]int64)}
 	switch request.Task {
 	case "operations":
-		system := s.systemStatusReport(ctx)
+		system, err := s.systemStatusReportChecked(ctx)
+		if err != nil {
+			return preview, errors.New("系统状态暂时无法采集，请稍后重试")
+		}
 		checks := []map[string]any{}
 		for _, c := range system.Checks {
 			checks = append(checks, map[string]any{"service": c.Label, "status": c.Status, "latency_ms": c.LatencyMS})
@@ -81,9 +105,9 @@ func (s *Server) workbenchPreview(ctx context.Context, request aiworkbench.Reque
 				body = post.ContentHTML
 			}
 			facts["article"] = workbenchArticleView(post)
-			facts["body"] = workbenchText(body, 10000)
-			facts["truncated"] = len([]rune(body)) > 10000
+			facts["body"], facts["truncated"] = workbenchTextPrefix(body, 10000)
 			facts["source_version"] = post.Version
+			sources.add(post.ID, post.Version)
 		}
 	case "seo", "planning":
 		posts, err := s.repository.ListPublishedPage(ctx, 20, 0)
@@ -92,22 +116,25 @@ func (s *Server) workbenchPreview(ctx context.Context, request aiworkbench.Reque
 		}
 		articles := []workbenchArticle{}
 		for _, post := range posts.Items {
-			if content.PublicAt(post, now) {
+			if post.Type == content.TypePost && content.PublicAt(post, now) {
 				articles = append(articles, workbenchArticleView(post))
+				sources.add(post.ID, post.Version)
 			}
 		}
 		facts["recent_articles"], facts["public_article_total"] = articles, posts.Total
 		facts["sample_note"] = "最近最多 20 篇公开文章的当前元数据；非所选日期内新增量，不含全文。"
 	}
 	if request.Task == "briefing" || request.Task == "planning" {
-		if !s.moduleEnabled("analytics") {
+		if lease, enabled := s.siteSettings.ModuleContext("analytics"); !enabled {
 			facts["analytics"] = map[string]any{"available": false, "reason": "运营统计模块未启用"}
 		} else if report, err := s.analyticsReport(ctx, request.Days); err != nil {
 			facts["analytics"] = map[string]any{"available": false, "reason": "访问统计暂时不可用，不能将缺失数据解释为零"}
 		} else {
+			sources.analytics = lease
 			articles := []map[string]any{}
 			for i, a := range report.Articles {
 				if i < 10 {
+					sources.add(a.ID, a.sourceVersion)
 					articles = append(articles, map[string]any{"id": a.ID, "title": workbenchText(a.Title, 200), "views_in_period": a.Views, "likes_current": a.Likes, "bookmarks_current": a.Bookmarks, "approved_comments_current": a.Comments})
 				}
 			}
@@ -136,5 +163,8 @@ func (s *Server) workbenchPreview(ctx context.Context, request aiworkbench.Reque
 		return preview, errors.New("资料超出上限，请缩短日期范围或材料")
 	}
 	preview.Context = string(encoded)
+	if len(sources.versions) != 0 || sources.analytics != nil {
+		preview = preview.WithSourceCheck(sources.check)
+	}
 	return preview, nil
 }

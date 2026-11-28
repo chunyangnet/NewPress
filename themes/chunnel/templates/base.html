@@ -102,7 +102,8 @@
   {{if ne .BodyClass "is-home"}}<link rel="stylesheet" href="{{asset "css/chunnel-selects.css"}}?v={{.Site.ThemeVersion}}">{{end}}
   <link rel="stylesheet" href="{{.ThemeCSSURL}}">
   <link rel="stylesheet" href="{{asset "css/chunnel-color-mode.css"}}?v={{.Site.ThemeVersion}}&amp;ui=color-mode-20261118-2">
-{{if or (eq .Kind "single") (eq .BodyClass "is-account") (eq .BodyClass "is-author") (eq .BodyClass "is-admin is-admin-recognition")}}<link rel="stylesheet" href="/core-assets/css/newpress-recognition.css"><script src="/core-assets/js/newpress-client.js" defer></script><script src="/core-assets/js/newpress-recognition.js" defer></script>{{end}}
+{{$hasRecognition := or (eq .Kind "single") (eq .BodyClass "is-account") (eq .BodyClass "is-author") (eq .BodyClass "is-admin is-admin-recognition")}}
+{{if $hasRecognition}}<link rel="stylesheet" href="/core-assets/css/newpress-recognition.css"><script src="/core-assets/js/newpress-client.js" defer></script><script src="/core-assets/js/newpress-recognition.js" defer></script>{{end}}
   {{if eq .BodyClass "is-questions"}}<link rel="stylesheet" href="/core-assets/css/newpress-questions.css"><script src="/core-assets/js/newpress-questions.js" defer></script>{{end}}
   {{if or (and (eq .BodyClass "is-questions") (not .Questions.New) (not .Questions.Question.ID)) (and (eq .BodyClass "is-circles") .Circles.Directory)}}<link rel="stylesheet" href="{{asset "css/chunnel-channels.css"}}?v={{.Site.ThemeVersion}}">{{end}}
   {{if eq .BodyClass "is-page is-announcements"}}<link rel="stylesheet" href="{{asset "css/chunnel-announcements.css"}}?v={{.Site.ThemeVersion}}">{{end}}
@@ -138,7 +139,7 @@
   <script src="{{asset "js/chunnel.js"}}?v={{.Site.ThemeVersion}}&amp;ui=resources-20261114-1" defer></script>
   <script src="{{asset "js/chunnel-emoji-editor.js"}}?v={{.Site.ThemeVersion}}" defer></script>
   <script src="{{asset "js/chunnel-emoji.js"}}?v={{.Site.ThemeVersion}}" defer></script>
-  <script src="/core-assets/js/newpress-client.js" defer></script>
+  {{if not $hasRecognition}}<script src="/core-assets/js/newpress-client.js" defer></script>{{end}}
   {{if eq .BodyClass "is-shop"}}<script src="/core-assets/js/newpress-shop-services.js" defer></script><script src="/core-assets/js/newpress-shop.js" defer></script>{{end}}
   <script src="{{asset "js/chunnel-interactions.js"}}?v={{.Site.ThemeVersion}}" defer></script>
   {{if eq .BodyClass "is-billing"}}<script src="{{asset "js/chunnel-currency-shared.js"}}?v={{.Site.ThemeVersion}}" defer></script><script src="{{asset "js/chunnel-billing.js"}}?v={{.Site.ThemeVersion}}" defer></script>{{end}}

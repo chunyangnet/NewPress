@@ -10,6 +10,7 @@ import (
 	"newpress.local/newpress/internal/aijobs"
 	"newpress.local/newpress/internal/auth"
 	"strings"
+	"time"
 )
 
 func aiDigest(value string) string { return fmt.Sprintf("%x", sha256.Sum256([]byte(value))) }
@@ -35,7 +36,7 @@ func (s *Server) jobCapability(ctx context.Context, j aijobs.Job, cap string) bo
 	if j.UserID == 0 {
 		return errors.Is(err, auth.ErrUserStoreNotAvailable) && j.Author == s.auth.Username()
 	}
-	return err == nil && u.Status == auth.UserStatusActive && u.Can(cap) && u.Can(auth.CapabilityAdminAccess)
+	return err == nil && u.Status == auth.UserStatusActive && u.Can(cap) && u.Can(auth.CapabilityAdminAccess) && u.Can(auth.CapabilityPluginsManage)
 }
 func transientModel(err error) bool {
 	var e *aieditor.Error
@@ -45,6 +46,12 @@ func transientModel(err error) bool {
 	return (e.Details.UpstreamStatus == 429 && e.Details.ProviderCode != "insufficient_quota") || e.Details.UpstreamStatus == 503 || e.Details.UpstreamStatus == 502 || e.Details.Reason == "connect" || e.Details.Reason == "dns"
 }
 func (s *Server) autoText(ctx context.Context, j aijobs.Job, messages []aieditor.Message, image *aieditor.VisionImage, tokens int) (string, error) {
+	return s.autoTextChecked(ctx, j, messages, image, tokens, nil)
+}
+
+// Interactive callers supply their original-session and plugin-lease check.
+// Background jobs keep their account checks without depending on a browser.
+func (s *Server) autoTextChecked(ctx context.Context, j aijobs.Job, messages []aieditor.Message, image *aieditor.VisionImage, tokens int, access func() error) (string, error) {
 	choices := []aieditor.Connection{{ProviderID: j.Provider, Model: j.Model}}
 	if j.Work.Rules.Fallback {
 		for _, p := range s.aiSettings.Snapshot().Providers {
@@ -62,13 +69,45 @@ func (s *Server) autoText(ctx context.Context, j aijobs.Job, messages []aieditor
 		if err != nil {
 			continue
 		}
+		// A previous provider or workflow stage may have outlived the owner's
+		// authority. Recheck before each new billable request, including fallback.
+		managePlugin := j.Work.Kind != "metadata" && j.Work.Kind != "paragraph"
+		allowed := s.aiTextActorAllowed(ctx, j, managePlugin)
+		if access != nil {
+			if err := access(); err != nil {
+				return "", err
+			}
+		}
+		if !allowed {
+			return "", aijobs.ErrActor
+		}
 		o := s.observeAI(choice.ProviderID, c, "text", j.UserID)
 		o.record.Purpose = "pro_" + j.Work.Kind
 		if j.Work.Kind == "" {
 			o.record.Purpose = "content_queue"
 		}
 		received := 0
-		result, err := s.aiClient.StreamIllustrated(ctx, c, messages, tokens, aieditor.StreamCallbacks{Delta: func(text string) error {
+		var authorityErr error
+		var checkedAt time.Time
+		checkStream := func() error {
+			if access == nil {
+				return nil
+			}
+			if err := ctx.Err(); err != nil {
+				return err
+			}
+			// Refresh on the first event, then at most once per second. Small
+			// deltas must not amplify session-store reads without bound.
+			if checkedAt.IsZero() || time.Since(checkedAt) >= time.Second {
+				authorityErr = access()
+				checkedAt = time.Now()
+			}
+			return authorityErr
+		}
+		callbacks := aieditor.StreamCallbacks{Delta: func(text string) error {
+			if err := checkStream(); err != nil {
+				return err
+			}
 			if text != "" {
 				o.first()
 			}
@@ -77,8 +116,29 @@ func (s *Server) autoText(ctx context.Context, j aijobs.Job, messages []aieditor
 				return aijobs.ErrOutput
 			}
 			return nil
-		}}, image)
+		}}
+		if access != nil {
+			callbacks.Thinking = func(aieditor.ThinkingDelta) error { return checkStream() }
+			callbacks.Usage = func(usage aieditor.Usage) error {
+				o.record.Usage = usage
+				return checkStream()
+			}
+		}
+		result, err := s.aiClient.StreamIllustrated(ctx, c, messages, tokens, callbacks, image)
 		o.record.Usage = result.Usage
+		if access != nil {
+			if authorityErr == nil {
+				authorityErr = access()
+			}
+			if authorityErr != nil {
+				o.fail(authorityErr)
+				o.finish(ctx)
+				return "", authorityErr
+			}
+			if err == nil {
+				err = ctx.Err()
+			}
+		}
 		if err == nil && (!aijobs.ValidResult(result.Text) || result.FinishReason != "" && result.FinishReason != "stop") {
 			err = aijobs.ErrOutput
 		}

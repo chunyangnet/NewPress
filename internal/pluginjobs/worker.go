@@ -58,6 +58,9 @@ func (w *Worker) Tick(ctx context.Context) (bool, error) {
 	if w.Queue == nil || w.Executor == nil {
 		return false, ErrInvalid
 	}
+	if err := ctx.Err(); err != nil {
+		return false, err
+	}
 	var job Job
 	var ok bool
 	var err error
@@ -74,7 +77,12 @@ func (w *Worker) Tick(ctx context.Context) (bool, error) {
 	// shutdown leaves a running task for lease recovery rather than marking it
 	// successful or retrying a potentially committed side effect immediately.
 	execution, cancel := context.WithDeadline(ctx, job.LeaseUntil.Add(-time.Second))
-	err = w.Executor.Execute(execution, job)
+	defer cancel()
+	// Claim can spend the remaining execution budget waiting for storage.
+	// Never invoke the executor with an already cancelled or expired context.
+	if err = execution.Err(); err == nil {
+		err = w.Executor.Execute(execution, job)
+	}
 	executionErr := execution.Err()
 	cancel()
 	if ctx.Err() != nil {

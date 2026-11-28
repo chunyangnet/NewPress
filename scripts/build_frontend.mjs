@@ -11,11 +11,13 @@ import { splitHomeOverlays } from './home_resources.mjs';
 import { buildIconSprite } from './build_icons.mjs';
 import './build_core_ui.mjs';
 import { frontendEntries, compileFrontendEntry, browserTargets } from './frontend_entries.mjs';
+import { buildIndependentEntries } from './theme_entries.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const theme = resolve(root, 'themes/chunnel');
 const read = (path) => readFile(resolve(theme, path), 'utf8');
 const check = process.argv.includes('--check');
+await buildIndependentEntries({ check });
 await buildIconSprite(resolve(theme, 'templates/partials/icons.html'), check);
 const banner = '/* Generated: npm run build:frontend */\n';
 const products = new Map();
@@ -61,10 +63,9 @@ for (const entry of frontendEntries) {
 const contentFiles = [
   'templates/base.html', 'templates/home.html',
   ...['header', 'footer', 'navigation', 'interaction-hub', 'oauth-logos', 'icons', 'color-mode', 'home-modules', 'home-creative', 'content-pagination'].map((name) => `templates/partials/${name}.html`),
-  ...['chunnel-emoji', 'chunnel-emoji-editor'].map((name) => `assets/js/${name}.js`),
 ];
 const content = await Promise.all(contentFiles.map(async (path) => ({ raw: await read(path), extension: path.split('.').at(-1) })));
-for (const entry of ['shell', 'mobile-nav', 'search', 'interactions', 'interaction-notices']) {
+for (const entry of ['shell', 'mobile-nav', 'search', 'interactions', 'interaction-notices', 'emoji', 'emoji-editor']) {
   content.push({ raw: await readFile(resolve(root, `frontend/shared/${entry}.ts`), 'utf8'), extension: 'ts' });
 }
 for (const name of ['home', 'home-features-loader', 'home-search-loader', 'home-session', 'home-feed-loader']) {
@@ -153,6 +154,9 @@ for (const [asset, extension] of [['chunnel-selects.css', 'css'], ['chunnel-choi
   products.set(`assets/${extension}/${asset}`, await minify(sharedSource, extension));
 }
 const client = (await compileFrontendEntry('newpress-client', { minify: false })).code;
+for (const [asset, entry] of [['chunnel', 'chunnel'], ['chunnel-emoji', 'emoji'], ['chunnel-emoji-editor', 'emoji-editor']]) {
+  sharedScriptSources.set(asset, (await compileFrontendEntry(entry, { minify: false })).code);
+}
 sharedScriptSources.set('chunnel-motion', (await compileFrontendEntry('motion', { minify: false })).code);
 sharedScriptSources.set('chunnel-engagement', (await compileFrontendEntry('engagement', { minify: false })).code);
 sharedScriptSources.set('chunnel-interactions', (await compileFrontendEntry('interactions', { minify: false })).code);

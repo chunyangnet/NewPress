@@ -1,10 +1,8 @@
 package content
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -12,10 +10,12 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
+	"runtime/trace"
 	"sync"
+	"sync/atomic"
 
 	"newpress.local/newpress/internal/activity"
+	"newpress.local/newpress/internal/contenthtml"
 	"newpress.local/newpress/internal/packagefs"
 )
 
@@ -29,6 +29,9 @@ type FileRepository struct {
 	state  *MemoryRepository
 	path   string
 	digest [sha256.Size]byte
+	// Public searches may retain a committed state while the next file write
+	// prepares its detached candidate. Publish only after durable replacement.
+	searchState atomic.Pointer[MemoryRepository]
 }
 
 type contentDocument struct {
@@ -81,11 +84,8 @@ func NewFileRepository(path string, seed bool) (*FileRepository, error) {
 	}
 	if errors.Is(err, os.ErrNotExist) {
 		repository.state = NewMemoryRepository(seed)
-		payload, err = encodeContentDocument(repository.state)
+		repository.digest, err = writeContentState(context.Background(), absolute, repository.state)
 		if err != nil {
-			return nil, err
-		}
-		if err := writeContentFile(absolute, payload); err != nil {
 			return nil, err
 		}
 	} else if err != nil {
@@ -95,8 +95,9 @@ func NewFileRepository(path string, seed bool) (*FileRepository, error) {
 		if err != nil {
 			return nil, err
 		}
+		repository.digest = sha256.Sum256(payload)
 	}
-	repository.digest = sha256.Sum256(payload)
+	repository.searchState.Store(repository.state)
 	return repository, nil
 }
 
@@ -106,120 +107,145 @@ func readContentFile(path string) ([]byte, error) {
 		return nil, err
 	}
 	defer file.Close()
-	if before.Size() <= 0 || before.Size() > maxContentFileBytes {
-		return nil, errors.New("content document size is invalid")
-	}
-	payload, err := io.ReadAll(io.LimitReader(file, maxContentFileBytes+1))
+	payload, err := readContentFileBytes(file, before.Size())
 	if err != nil {
 		return nil, err
 	}
-	after, err := packagefs.LstatNoSymlink(path)
-	if err != nil {
+	if err := checkContentFileRead(path, before, int64(len(payload))); err != nil {
 		return nil, err
-	}
-	if !os.SameFile(before, after) || before.Size() != int64(len(payload)) || after.Size() != before.Size() || !after.ModTime().Equal(before.ModTime()) {
-		return nil, errors.New("content document changed while reading")
 	}
 	return payload, nil
 }
 
-func writeContentFile(path string, payload []byte) error {
-	if len(payload) > maxContentFileBytes {
-		return errors.New("content store exceeds 128 MiB; use PostgreSQL for a larger site")
+func readContentFileBytes(reader io.Reader, size int64) ([]byte, error) {
+	if size <= 0 || size > maxContentFileBytes {
+		return nil, errors.New("content document size is invalid")
 	}
-	directory := filepath.Dir(path)
-	if err := packagefs.MkdirAllNoSymlink(directory, 0o750); err != nil {
+	// The checked file length bounds one allocation. One extra byte detects
+	// growth without allocating or consuming the rest of a changing file.
+	payload := make([]byte, size+1)
+	n, err := io.ReadFull(reader, payload)
+	if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
+		return nil, err
+	}
+	if int64(n) != size {
+		return nil, errors.New("content document changed while reading")
+	}
+	return payload[:n], nil
+}
+
+// Readiness and writes need the original bytes' digest, not another complete
+// copy of the document. Still read every byte and reject a changing file.
+func contentFileDigest(path string) ([sha256.Size]byte, error) {
+	var digest [sha256.Size]byte
+	file, before, err := packagefs.OpenRegularNoSymlink(path)
+	if err != nil {
+		return digest, err
+	}
+	defer file.Close()
+	if before.Size() <= 0 || before.Size() > maxContentFileBytes {
+		return digest, errors.New("content document size is invalid")
+	}
+	hash := sha256.New()
+	// One byte past the observed length detects growth. Limiting by the
+	// actual size also keeps the copy buffer small for small documents.
+	size, err := io.Copy(hash, io.LimitReader(file, before.Size()+1))
+	if err != nil {
+		return digest, err
+	}
+	if err := checkContentFileRead(path, before, size); err != nil {
+		return digest, err
+	}
+	hash.Sum(digest[:0])
+	return digest, nil
+}
+
+func checkContentFileRead(path string, before os.FileInfo, size int64) error {
+	after, err := packagefs.LstatNoSymlink(path)
+	if err != nil {
 		return err
 	}
+	if !os.SameFile(before, after) || before.Size() != size || after.Size() != before.Size() || !after.ModTime().Equal(before.ModTime()) {
+		return errors.New("content document changed while reading")
+	}
+	return nil
+}
+
+func writeContentFile(path string, payload []byte) error {
+	if len(payload) > maxContentFileBytes {
+		return errContentFileCapacity
+	}
+	return replaceContentFile(context.Background(), path, func(writer io.Writer) error {
+		_, err := writer.Write(payload)
+		return err
+	})
+}
+
+func replaceContentFile(ctx context.Context, path string, populate func(io.Writer) error) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	directory := filepath.Dir(path)
+	region := trace.StartRegion(ctx, "content.file.directory")
+	err := packagefs.MkdirAllNoSymlink(directory, 0o750)
+	region.End()
+	if err != nil {
+		return err
+	}
+	region = trace.StartRegion(ctx, "content.file.create")
 	temporary, err := os.CreateTemp(directory, ".newpress-content-*.tmp")
+	region.End()
 	if err != nil {
 		return err
 	}
 	defer os.Remove(temporary.Name())
 	defer temporary.Close()
-	if err := temporary.Chmod(0o600); err != nil {
+	region = trace.StartRegion(ctx, "content.file.chmod")
+	err = temporary.Chmod(0o600)
+	region.End()
+	if err != nil {
 		return err
 	}
-	if _, err := temporary.Write(payload); err != nil {
+	if err := populate(temporary); err != nil {
 		return err
 	}
-	if err := temporary.Sync(); err != nil {
+	if err := ctx.Err(); err != nil {
 		return err
 	}
-	if err := temporary.Close(); err != nil {
+	region = trace.StartRegion(ctx, "content.file.sync")
+	err = temporary.Sync()
+	region.End()
+	if err != nil {
 		return err
 	}
-	if err := packagefs.ReplaceRegularFileNoSymlink(temporary.Name(), path); err != nil {
+	region = trace.StartRegion(ctx, "content.file.close")
+	err = temporary.Close()
+	region.End()
+	if err != nil {
+		return err
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	region = trace.StartRegion(ctx, "content.file.replace")
+	err = packagefs.ReplaceRegularFileNoSymlink(temporary.Name(), path)
+	region.End()
+	if err != nil {
 		return fmt.Errorf("replace content store: %w", err)
 	}
 	if runtime.GOOS != "windows" {
+		region = trace.StartRegion(ctx, "content.file.directory-sync")
 		if handle, err := packagefs.OpenDirectoryNoSymlink(directory); err == nil {
 			_ = handle.Sync()
 			_ = handle.Close()
 		}
+		region.End()
 	}
 	return nil
 }
 
-func encodeContentDocument(state *MemoryRepository) ([]byte, error) {
-	document := contentDocument{
-		Schema: state.contentSchema, Kind: "newpress.content", NextID: state.nextID,
-		NextTermID: state.nextTermID, NextRevisionID: state.nextRevisionID,
-		Posts: state.posts, Terms: state.terms, Revisions: []Revision{}, Autosaves: []Autosave{},
-		Activities: state.activities,
-		Series:     state.series, NextSeriesID: state.nextSeriesID,
-		Redirects: state.redirects, NextRedirectID: state.nextRedirectID,
-		Imports:     state.imports,
-		Submissions: state.submissions,
-		Snippets:    state.snippets, SnippetReceipts: state.snippetReceipts,
-		SnippetQuarantines: state.snippetQuarantines,
-	}
-	if state.contentSchema >= 2 {
-		document.NextSnippetID = state.nextSnippetID
-	}
-	for _, revisions := range state.revisions {
-		document.Revisions = append(document.Revisions, revisions...)
-	}
-	sort.Slice(document.Revisions, func(i, j int) bool { return document.Revisions[i].ID < document.Revisions[j].ID })
-	for _, owners := range state.autosaves {
-		for _, autosave := range owners {
-			if autosave.ExpiresAt.After(state.now()) {
-				document.Autosaves = append(document.Autosaves, autosave)
-			}
-		}
-	}
-	sort.Slice(document.Autosaves, func(i, j int) bool {
-		left, right := document.Autosaves[i], document.Autosaves[j]
-		if left.PostID == right.PostID {
-			return left.OwnerKey < right.OwnerKey
-		}
-		return left.PostID < right.PostID
-	})
-	payload, err := json.Marshal(document)
-	if err != nil {
-		return nil, fmt.Errorf("encode content store: %w", err)
-	}
-	withdrawalReserve := 0
-	for _, snippet := range state.snippets {
-		if snippet.Visibility != SnippetWithdrawn {
-			withdrawalReserve += 64
-		}
-	}
-	evidenceReserve, err := snippetFileEvidenceBudget(state.snippetQuarantines)
-	if err != nil {
-		return nil, err
-	}
-	if len(state.snippetQuarantines) != 0 && state.contentSchema < 3 {
-		return nil, ErrSnippetFileMaintenanceEvidence
-	}
-	if len(payload)+1+withdrawalReserve+evidenceReserve > maxContentFileBytes {
-		return nil, errors.New("content store exceeds 128 MiB; use PostgreSQL for a larger site")
-	}
-	return append(payload, '\n'), nil
-}
-
 func decodeContentDocument(payload []byte) (*MemoryRepository, error) {
-	document, err := packagefs.DecodeJSONWithNumbers[contentDocument](bytes.NewReader(payload), maxContentFileBytes, "content store")
+	document, err := packagefs.DecodeJSONBytesWithNumbers[contentDocument](payload, maxContentFileBytes, "content store")
 	if err != nil {
 		return nil, err
 	}
@@ -246,13 +272,15 @@ func decodeContentDocument(payload []byte) (*MemoryRepository, error) {
 		return nil, ErrSnippetCorrupt
 	}
 	if document.Schema >= 2 {
-		if err := ValidateSnippetState(document.Snippets, document.SnippetReceipts, document.NextSnippetID); err != nil {
+		receiptBytes, err := validateSnippetState(document.Snippets, document.SnippetReceipts, document.NextSnippetID)
+		if err != nil {
 			return nil, err
 		}
 		if err := validateSnippetFileLinks(document.Snippets, document.SnippetReceipts); err != nil {
 			return nil, err
 		}
 		state.snippets, state.snippetReceipts, state.nextSnippetID = document.Snippets, document.SnippetReceipts, document.NextSnippetID
+		state.snippetReceiptBytes, state.snippetReceiptCount = receiptBytes, len(document.SnippetReceipts)
 	}
 	if err := activity.Validate(document.Activities); err != nil {
 		return nil, err
@@ -356,7 +384,15 @@ func decodeContentDocument(payload []byte) (*MemoryRepository, error) {
 		seriesIDs[item.ID], seriesSlugs[item.Slug] = true, true
 		state.series = append(state.series, cloneSeries(item))
 	}
-	revisionIDs := make(map[int64]bool)
+	// The document already contains every record. Count groups without
+	// reordering them so loading long histories does not repeatedly grow and
+	// copy the large revision values. Validation still precedes each append.
+	revisionCounts := make(map[int64]int)
+	for _, revision := range document.Revisions {
+		revisionCounts[revision.PostID]++
+	}
+	state.revisions = make(map[int64][]Revision, len(revisionCounts))
+	revisionIDs := make(map[int64]bool, len(document.Revisions))
 	for _, revision := range document.Revisions {
 		post, ok := posts[revision.PostID]
 		previous := state.revisions[revision.PostID]
@@ -369,17 +405,25 @@ func decodeContentDocument(payload []byte) (*MemoryRepository, error) {
 			return nil, err
 		}
 		revisionIDs[revision.ID] = true
+		if previous == nil {
+			previous = make([]Revision, 0, revisionCounts[revision.PostID])
+		}
 		state.revisions[revision.PostID] = append(previous, revision)
 	}
+	autosaveCounts := make(map[int64]int)
 	for _, autosave := range document.Autosaves {
-		autosave, err := NormalizeAutosave(autosave)
+		autosaveCounts[autosave.PostID]++
+	}
+	state.autosaves = make(map[int64]map[string]Autosave, len(autosaveCounts))
+	for _, autosave := range document.Autosaves {
+		autosave, err := normalizeFileAutosave(autosave)
 		post, ok := posts[autosave.PostID]
 		if err != nil || !ok || autosave.SourceVersion != post.Version || autosave.Snapshot.Version != post.Version ||
 			autosave.Snapshot.AuthorID != post.AuthorID || autosave.UpdatedAt.IsZero() || !autosave.ExpiresAt.After(autosave.UpdatedAt) {
 			return nil, errors.New("invalid stored content autosave")
 		}
 		if state.autosaves[post.ID] == nil {
-			state.autosaves[post.ID] = make(map[string]Autosave)
+			state.autosaves[post.ID] = make(map[string]Autosave, autosaveCounts[post.ID])
 		}
 		if _, exists := state.autosaves[post.ID][autosave.OwnerKey]; exists {
 			return nil, errors.New("duplicate stored content autosave")
@@ -429,6 +473,7 @@ func validateStoredPost(post *Post) error {
 func cloneContentState(source *MemoryRepository) *MemoryRepository {
 	clone := NewMemoryRepository(false)
 	clone.now = source.now
+	clone.searchBodies = source.searchBodies
 	clone.activities = append([]activity.Event(nil), source.activities...)
 	clone.nextID, clone.nextTermID, clone.nextRevisionID = source.nextID, source.nextTermID, source.nextRevisionID
 	clone.terms = append([]Term(nil), source.terms...)
@@ -440,32 +485,52 @@ func cloneContentState(source *MemoryRepository) *MemoryRepository {
 	clone.contentSchema, clone.nextSnippetID = source.contentSchema, source.nextSnippetID
 	// Quarantine entries and their byte slices are immutable after publication.
 	clone.snippetQuarantines = append([]SnippetFileQuarantine(nil), source.snippetQuarantines...)
+	clone.snippetPostCounts = make(map[int64][]contenthtml.SnippetCount, len(source.snippetPostCounts))
 	for id, counts := range source.snippetPostCounts {
 		// Derived entries are replaced, never mutated after publication.
 		clone.snippetPostCounts[id] = counts
 	}
-	for _, record := range source.snippets {
+	// Counts are known before cloning. Allocate each destination once while
+	// retaining the existing deep copies and nil empty-list representation.
+	if len(source.snippets) > 0 {
+		clone.snippets = make([]SnippetRecord, len(source.snippets))
+	}
+	for i, record := range source.snippets {
 		record.Revisions = append([]SnippetRevision(nil), record.Revisions...)
-		clone.snippets = append(clone.snippets, record)
+		clone.snippets[i] = record
 	}
-	for _, receipt := range source.snippetReceipts {
-		receipt.Items = append([]SnippetSelection(nil), receipt.Items...)
-		clone.snippetReceipts = append(clone.snippetReceipts, receipt)
+	// Stored receipt entries never change. Copy the outer list so appending or
+	// replacing a candidate's receipt cannot affect an older snapshot, but share
+	// its immutable selection arrays. API results always detach those arrays.
+	clone.snippetReceipts = append([]SnippetReceipt(nil), source.snippetReceipts...)
+	clone.snippetReceiptBytes, clone.snippetReceiptCount = source.snippetReceiptBytes, source.snippetReceiptCount
+	if len(source.series) > 0 {
+		clone.series = make([]Series, len(source.series))
 	}
-	for _, item := range source.series {
-		clone.series = append(clone.series, cloneSeries(item))
+	for i, item := range source.series {
+		clone.series[i] = cloneSeries(item)
 	}
-	for _, post := range source.posts {
-		clone.posts = append(clone.posts, clonePost(post))
+	if len(source.posts) > 0 {
+		clone.posts = make([]Post, len(source.posts))
 	}
+	for i, post := range source.posts {
+		clone.posts[i] = clonePost(post)
+	}
+	clone.revisions = make(map[int64][]Revision, len(source.revisions))
 	for id, revisions := range source.revisions {
-		for _, revision := range revisions {
-			revision.Snapshot = clonePost(revision.Snapshot)
-			clone.revisions[id] = append(clone.revisions[id], revision)
+		if len(revisions) == 0 {
+			continue
 		}
+		copied := make([]Revision, len(revisions))
+		for i, revision := range revisions {
+			revision.Snapshot = clonePost(revision.Snapshot)
+			copied[i] = revision
+		}
+		clone.revisions[id] = copied
 	}
+	clone.autosaves = make(map[int64]map[string]Autosave, len(source.autosaves))
 	for id, owners := range source.autosaves {
-		clone.autosaves[id] = make(map[string]Autosave)
+		clone.autosaves[id] = make(map[string]Autosave, len(owners))
 		for owner, autosave := range owners {
 			clone.autosaves[id][owner] = cloneAutosave(autosave)
 		}
@@ -474,43 +539,88 @@ func cloneContentState(source *MemoryRepository) *MemoryRepository {
 }
 
 func fileContentChange[T any](ctx context.Context, repository *FileRepository, update func(*MemoryRepository) (T, error)) (T, error) {
+	return fileContentChangeWithConfirmation(ctx, repository, nil, update)
+}
+
+// confirm may return an existing result after all applicable checks. It must
+// only read the committed state and return detached values. The file lock and
+// full original-byte verification also apply to confirmations.
+func fileContentChangeWithConfirmation[T any](ctx context.Context, repository *FileRepository, confirm func(*MemoryRepository) (T, bool, error), update func(*MemoryRepository) (T, error)) (T, error) {
+	return fileContentChangeWithClone(ctx, repository, confirm, cloneContentState, update)
+}
+
+func fileContentChangeWithClone[T any](ctx context.Context, repository *FileRepository, confirm func(*MemoryRepository) (T, bool, error), clone func(*MemoryRepository) *MemoryRepository, update func(*MemoryRepository) (T, error)) (T, error) {
 	var zero T
 	if err := ctx.Err(); err != nil {
 		return zero, err
 	}
+	var task *trace.Task
+	if trace.IsEnabled() {
+		ctx, task = trace.NewTask(ctx, "content.file.commit")
+		defer task.End()
+	}
+	region := trace.StartRegion(ctx, "content.file.lock")
 	repository.mu.Lock()
+	region.End()
 	defer repository.mu.Unlock()
 	if err := ctx.Err(); err != nil {
 		return zero, err
 	}
-	if err := repository.readyLocked(); err != nil {
+	region = trace.StartRegion(ctx, "content.file.verify")
+	err := repository.readyLocked()
+	region.End()
+	if err != nil {
 		return zero, err
 	}
-	candidate := cloneContentState(repository.state)
+	if confirm != nil {
+		if err := ctx.Err(); err != nil {
+			return zero, err
+		}
+		region = trace.StartRegion(ctx, "content.file.confirm")
+		result, confirmed, err := confirm(repository.state)
+		region.End()
+		if err != nil {
+			return zero, err
+		}
+		if err := ctx.Err(); err != nil {
+			return zero, err
+		}
+		if confirmed {
+			if task != nil {
+				trace.Log(ctx, "content.file.result", "confirmed")
+			}
+			return result, nil
+		}
+	}
+	region = trace.StartRegion(ctx, "content.file.clone")
+	candidate := clone(repository.state)
+	region.End()
+	region = trace.StartRegion(ctx, "content.file.mutate")
 	result, err := update(candidate)
+	region.End()
 	if err != nil {
 		return zero, err
 	}
-	payload, err := encodeContentDocument(candidate)
+	digest, err := writeContentState(ctx, repository.path, candidate)
 	if err != nil {
 		return zero, err
 	}
-	if err := ctx.Err(); err != nil {
-		return zero, err
+	region = trace.StartRegion(ctx, "content.file.publish")
+	repository.state, repository.digest = candidate, digest
+	repository.searchState.Store(candidate)
+	region.End()
+	if task != nil {
+		trace.Log(ctx, "content.file.result", "committed")
 	}
-	if err := writeContentFile(repository.path, payload); err != nil {
-		return zero, err
-	}
-	repository.state, repository.digest = candidate, sha256.Sum256(payload)
 	return result, nil
 }
 
 func (repository *FileRepository) readyLocked() error {
-	payload, err := readContentFile(repository.path)
+	digest, err := contentFileDigest(repository.path)
 	if err != nil {
 		return err
 	}
-	if sha256.Sum256(payload) != repository.digest {
+	if digest != repository.digest {
 		return errors.New("content file changed outside this process; reopen the store before writing")
 	}
 	return nil

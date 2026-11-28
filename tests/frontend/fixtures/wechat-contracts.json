@@ -1,0 +1,242 @@
+{
+  "workspace": {
+    "jobs": [
+      {
+        "id": "55edd65890907b68ce83266ad552c514a4554b492fc802f7dcab48c7a202dfe9",
+        "app_id": "wx0123456789abcdef",
+        "post_id": 2,
+        "version": 1,
+        "title": "另一篇文章",
+        "actor": "owner",
+        "auto_publish": false,
+        "status": "uncertain",
+        "stage": "publish",
+        "attempts": 0,
+        "created_at": "2026-11-27T09:15:08.9455783Z",
+        "updated_at": "2026-11-27T09:15:08.9455783Z",
+        "next_at": "2026-11-27T09:15:08.9455783Z",
+        "lease_until": "0001-01-01T00:00:00Z"
+      },
+      {
+        "id": "304bc8fc27679556080b56069cabc28cd878ee583c52929ced056bf013e534b5",
+        "app_id": "wx0123456789abcdef",
+        "post_id": 1,
+        "version": 1,
+        "title": "已保存的示例文章",
+        "actor": "owner",
+        "auto_publish": false,
+        "status": "draft",
+        "stage": "draft",
+        "media_id": "fixture-draft",
+        "attempts": 0,
+        "created_at": "2026-11-27T09:15:08.9455783Z",
+        "updated_at": "2026-11-27T09:15:08.9455783Z",
+        "next_at": "2026-11-27T09:15:08.9455783Z",
+        "lease_until": "0001-01-01T00:00:00Z"
+      }
+    ],
+    "total_jobs": 2,
+    "filtered_jobs": 2,
+    "job_page": 1,
+    "job_pages": 1,
+    "active_jobs": 0,
+    "attention_jobs": 1,
+    "config": {
+      "version": 2,
+      "enabled": true,
+      "collect_enabled": true,
+      "collect_drafts": true,
+      "app_id": "wx0123456789abcdef",
+      "has_secret": true,
+      "auto_sync": false,
+      "auto_publish": false,
+      "include_source": true,
+      "author": "",
+      "thumb_media_id": "fixture-cover",
+      "open_comment": false,
+      "fans_comment": false,
+      "since": "0001-01-01T00:00:00Z"
+    },
+    "posts": [
+      {
+        "id": 4,
+        "version": 1,
+        "title": "/s/second",
+        "status": "draft",
+        "cover": ""
+      },
+      {
+        "id": 3,
+        "version": 1,
+        "title": "/s/firstx",
+        "status": "draft",
+        "cover": ""
+      },
+      {
+        "id": 2,
+        "version": 1,
+        "title": "另一篇文章",
+        "status": "draft",
+        "cover": ""
+      },
+      {
+        "id": 1,
+        "version": 1,
+        "title": "已保存的示例文章",
+        "status": "draft",
+        "cover": ""
+      }
+    ],
+    "selected_post": {
+      "id": 1,
+      "version": 1,
+      "title": "已保存的示例文章",
+      "status": "draft",
+      "cover": ""
+    },
+    "can_collect": true,
+    "can_sync": true,
+    "user_id": 1
+  },
+  "preview": {
+    "applied": false,
+    "articles": [
+      {
+        "url": "https://mp.weixin.qq.com/s/firstx",
+        "key": "2e1d7e3148614af4574e3c6d649abeb15ac4111d68fd3e36bf1d32e744cf446a",
+        "title": "/s/firstx",
+        "author": "",
+        "excerpt": "来源摘要",
+        "body": "<p>可核对的采集正文。</p><a href=\"https://example.test/source\" rel=\"nofollow\">参考来源</a>",
+        "cover": "",
+        "images": [],
+        "preview": "<p>可核对的采集正文。</p><a href=\"https://example.test/source\" rel=\"nofollow\">参考来源</a>",
+        "warnings": [
+          "内容将保存为本站草稿，并保留公众号名称与原文链接"
+        ]
+      },
+      {
+        "url": "https://mp.weixin.qq.com/s/second",
+        "key": "ead1b74ea8153b23566a61227d5fe2773be14cc3f8c75f8becc0d289956dc7a5",
+        "title": "/s/second",
+        "author": "",
+        "excerpt": "来源摘要",
+        "body": "<p>可核对的采集正文。</p><a href=\"https://example.test/source\" rel=\"nofollow\">参考来源</a>",
+        "cover": "",
+        "images": [],
+        "preview": "<p>可核对的采集正文。</p><a href=\"https://example.test/source\" rel=\"nofollow\">参考来源</a>",
+        "warnings": [
+          "内容将保存为本站草稿，并保留公众号名称与原文链接"
+        ]
+      }
+    ],
+    "expires": "2026-11-27T09:30:08Z",
+    "failures": [
+      {
+        "url": "https://mp.weixin.qq.com/s/failed",
+        "message": "无法读取文章，请确认链接可公开访问后重试"
+      }
+    ],
+    "plan": {
+      "source": "wechat-public",
+      "format": "wechat",
+      "revision": "2b51caa1b6b78070d4f1fd7f556ff98177052a5fdead69542bc3116756e4813d",
+      "items": [
+        {
+          "key": "2e1d7e3148614af4574e3c6d649abeb15ac4111d68fd3e36bf1d32e744cf446a",
+          "title": "/s/firstx",
+          "type": "post",
+          "status": "draft",
+          "url": "/posts/wechat-2e1d7e3148614af4574e",
+          "action": "create"
+        },
+        {
+          "key": "ead1b74ea8153b23566a61227d5fe2773be14cc3f8c75f8becc0d289956dc7a5",
+          "title": "/s/second",
+          "type": "post",
+          "status": "draft",
+          "url": "/posts/wechat-ead1b74ea8153b23566a",
+          "action": "create"
+        }
+      ],
+      "new": 2,
+      "existing": 0,
+      "conflicts": 0
+    },
+    "receipts": {
+      "2e1d7e3148614af4574e3c6d649abeb15ac4111d68fd3e36bf1d32e744cf446a": "eyJ1IjoxLCJkIjoid2VjaGF0Oml0ZW06MzkzMTZjMmUxNzA5YzBiMDBlZGI5YTcyYTlhMTJkMzlmYmQ5NjUxZjU2NjkxYTdlYWU5OTUyMTAxYTBiMjFiOCIsInIiOiJjOTM0MDExOTM5MjE5OTU4YTZjYjY3N2EyMzViYzEzZDlkNWE5MWVjNWZlNDZiNWNkNjE3Yjc5ODAwYWYzNWU1IiwiZSI6MTc5NTc3MTgwOH0.reLepPxWNe3c2qXdzzttN2yFOdXo7tUK-jSUS4i91Pg",
+      "ead1b74ea8153b23566a61227d5fe2773be14cc3f8c75f8becc0d289956dc7a5": "eyJ1IjoxLCJkIjoid2VjaGF0Oml0ZW06YWYzYjQyMDU0NjhmYWFhMWRlZjU4NDE3Nzc5MWU5ODBjYzUzMTRlZDk3ZDk2ZmU3NWFiYWQ2MGFjYTNlNjZlYyIsInIiOiI2ZmY4ZGRhNTY5MDM2ZTczNzU1MGExMTUwNDE4YTQxNDA5NDkxNjQzNzU3ZjNhY2Q0Y2NmZWZiNmExMTY4MDE4IiwiZSI6MTc5NTc3MTgwOH0.wYI0crsJg8c3boj9wrpmzQQrZX3UrsvNdFaSTQC_w6o"
+    }
+  },
+  "applied": {
+    "applied": true,
+    "failures": [],
+    "plan": {
+      "source": "wechat-public",
+      "format": "wechat",
+      "revision": "2b51caa1b6b78070d4f1fd7f556ff98177052a5fdead69542bc3116756e4813d",
+      "items": [
+        {
+          "key": "2e1d7e3148614af4574e3c6d649abeb15ac4111d68fd3e36bf1d32e744cf446a",
+          "title": "/s/firstx",
+          "type": "post",
+          "status": "draft",
+          "url": "/posts/wechat-2e1d7e3148614af4574e",
+          "action": "created",
+          "post_id": 3,
+          "version": 1
+        },
+        {
+          "key": "ead1b74ea8153b23566a61227d5fe2773be14cc3f8c75f8becc0d289956dc7a5",
+          "title": "/s/second",
+          "type": "post",
+          "status": "draft",
+          "url": "/posts/wechat-ead1b74ea8153b23566a",
+          "action": "created",
+          "post_id": 4,
+          "version": 1
+        }
+      ],
+      "new": 2,
+      "existing": 0,
+      "conflicts": 0
+    }
+  },
+  "check": {
+    "check": {
+      "post_id": 1,
+      "version": 1,
+      "config_version": 2,
+      "title": "已保存的示例文章",
+      "auto_publish": false,
+      "ready": true,
+      "title_chars": 8,
+      "content_chars": 11,
+      "content_bytes": 19,
+      "images": 0,
+      "checked_images": 0,
+      "upload_bytes": 0,
+      "issues": [],
+      "warnings": [
+        "文章尚未公开，本次不附加“阅读原文”入口。"
+      ],
+      "checked_at": "2026-11-27T09:15:08.9598215Z"
+    }
+  },
+  "queued_job": {
+    "id": "304bc8fc27679556080b56069cabc28cd878ee583c52929ced056bf013e534b5",
+    "app_id": "wx0123456789abcdef",
+    "post_id": 1,
+    "version": 1,
+    "title": "已保存的示例文章",
+    "actor": "owner",
+    "auto_publish": false,
+    "status": "queued",
+    "stage": "prepare",
+    "attempts": 0,
+    "created_at": "2026-11-27T09:15:08.9455783Z",
+    "updated_at": "2026-11-27T09:15:08.9455783Z",
+    "next_at": "2026-11-27T09:15:08.9455783Z",
+    "lease_until": "0001-01-01T00:00:00Z"
+  }
+}

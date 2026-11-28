@@ -642,15 +642,31 @@ func (s *Server) feedbackExport(w http.ResponseWriter, r *http.Request) {
 		s.feedbackError(w, r, e)
 		return
 	}
+	r, ok = s.freshSessionRequest(w, r)
+	if !ok {
+		return
+	}
+	p, ok = s.socialPrincipal(w, r, false)
+	if !ok {
+		return
+	}
 	a := feedbackActor(p)
 	if !feedback.Can(b, a, "moderate") {
 		s.feedbackError(w, r, feedback.ErrForbidden)
 		return
 	}
+	access := func() error { return s.feedbackExportAccess(r, b.Slug) }
+	if e = access(); e != nil {
+		if !s.privateReadAuthError(w, r, e) {
+			s.feedbackError(w, r, e)
+		}
+		return
+	}
 	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
 	w.Header().Set("Content-Disposition", `attachment; filename="feedback-`+b.Slug+`.csv"`)
-	_, _ = w.Write([]byte{0xef, 0xbb, 0xbf})
-	c := csv.NewWriter(w)
+	protected := privateResponse(w, r, access)
+	_, _ = protected.Write([]byte{0xef, 0xbb, 0xbf})
+	c := csv.NewWriter(protected)
 	_ = c.Write([]string{"编号", "标题", "内容", "类型", "分类", "状态", "可见性", "私密", "票数", "提交时间"})
 	cell := func(v string) string {
 		v = strings.TrimSpace(v)
@@ -665,5 +681,9 @@ func (s *Server) feedbackExport(w http.ResponseWriter, r *http.Request) {
 		}
 		_ = c.Write([]string{fmt.Sprint(t.ID), cell(t.Title), cell(t.Body), feedbackKindLabel(t.Kind), cell(t.Category), feedbackStatusLabel(t.Status), t.Visibility, strconv.FormatBool(t.Private), strconv.Itoa(len(t.Votes)), t.CreatedAt.Format(time.RFC3339)})
 	}
+	protected.check(true)
 	c.Flush()
+	if c.Error() != nil {
+		panic(http.ErrAbortHandler)
+	}
 }

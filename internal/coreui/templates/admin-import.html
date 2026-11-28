@@ -1,5 +1,5 @@
 {{define "content"}}
-<section class="import-page" data-content-import data-csrf="{{.Admin.CSRFToken}}" data-readonly="{{.Admin.ReadOnly}}">
+<section class="import-page" data-content-import data-csrf="{{.Admin.CSRFToken}}" data-readonly="{{.Admin.ReadOnly}}" data-user-id="{{.Admin.Principal.UserID}}">
   <header class="admin-page-heading"><h1>内容导入</h1></header>
   {{if .FeatureStatus}}{{template "admin-feature-status" .}}{{end}}
   <div class="import-workspace">

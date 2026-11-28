@@ -4,7 +4,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const {webcrypto} = require('node:crypto');
-const source = fs.readFileSync(path.join(__dirname, '../../internal/coreui/assets/js/chunnel-editor-recovery.js'), 'utf8');
+const source = process.env.NEWPRESS_TEST_GENERATED === '1'
+  ? fs.readFileSync(path.join(__dirname, '../../internal/coreui/assets/js/chunnel-editor-recovery.js'), 'utf8')
+  : require('./helpers/typescript.cjs').compile('frontend/core/editor-recovery.ts');
 const context = vm.createContext({window: {}, URLSearchParams, Date, Map, Set});
 vm.runInContext(source, context);
 const createStore = context.window.ChunnelEditorRecovery.createStore;
@@ -24,6 +26,18 @@ const pending = (existing = false) => {
   const s = snapshot(existing), body = new URLSearchParams(s.draft); body.set('content_source','<p>original text</p>'); body.set('action','save');
   s.pending = {key:'editor-' + id(9), route:s.route, body:body.toString(), wasDirty:true, createdAt:now}; return s;
 };
+
+test('resource fields from the actual article form round-trip with the original uncertain request', () => {
+  const storage = new Storage(), store = createStore(storage, 'id:1', 72, () => now);
+  const copy = pending(true), original = '{"items":[]}', newer = '{"items":[{"id":"draft-resource","title":"later draft"}]}';
+  copy.draft.push(['resources', newer]);
+  const body = new URLSearchParams(copy.pending.body); body.set('resources', original); copy.pending.body = body.toString();
+  store.write(id(1), copy);
+  const saved = store.read(id(1));
+  assert.equal(new URLSearchParams(saved.draft).get('resources'), newer);
+  assert.equal(new URLSearchParams(saved.pending.body).get('resources'), original);
+  assert.equal(new URLSearchParams(saved.pending.body).has('csrf_token'), false);
+});
 
 test('refresh and browser recreation recover later input and the exact original request without CSRF', () => {
   for (const existing of [false,true]) {
@@ -80,6 +94,15 @@ test('snapshot keys are immutable even when a second writer has the same identit
   const original=a.write(id(1),snapshot());
   assert.throws(()=>b.write(id(1),pending()),/collision/);
   assert.equal(a.read(id(1)).raw,original.raw);
+});
+test('non-object recovery records and malformed pending metadata are rejected', () => {
+  for (const value of [null, [], 'draft', 42]) {
+    const storage = new Storage(), store = createStore(storage, 'id:1', 72, () => now);
+    const key = 'newpress:editor-recovery:v1:draft:id%3A1:' + id(1);
+    storage.setItem(key, JSON.stringify(value));
+    assert.throws(() => store.read(id(1)));
+    assert.equal(store.list().length, 0);
+  }
 });
 
 test('a pending request cannot renew its lifetime while later input changes', () => {

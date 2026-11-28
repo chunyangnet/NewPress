@@ -51,6 +51,7 @@
     if (regions.some(region => region.querySelector('form[aria-busy="true"]'))) return false;
     return document.dispatchEvent(new CustomEvent('chunnel:admin-before-update', { cancelable: true, detail: { regions } }));
   };
+  let retryTarget: string | null = null;
   const showError = (message: string) => {
     let status = main.querySelector<HTMLElement>('[data-admin-navigation-error]');
     if (!status) {
@@ -61,10 +62,15 @@
       main.prepend(status);
     }
     status.textContent = message;
+    const retry = document.createElement('button');
+    retry.type = 'button'; retry.textContent = '重试';
+    retry.addEventListener('click', () => { if (retryTarget) void load(retryTarget); });
+    if (retryTarget) status.append(retry);
   };
   type FocusTarget = { href: string } | { name: string };
   const load = async (target: string, { traversal = false, focus = null }: { traversal?: boolean; focus?: FocusTarget | null } = {}) => {
     const url = new URL(target, location.href);
+    retryTarget = url.href;
     const parts = partsFor(url);
     const regions = parts.map(selector => main.querySelector<HTMLElement>(selector));
     if (!regions.every((region): region is HTMLElement => region !== null)) return;

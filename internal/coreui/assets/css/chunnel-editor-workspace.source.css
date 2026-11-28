@@ -260,6 +260,13 @@ html[data-style] body.admin-workbench.is-writing-workspace .editor-wide-body .np
 }
 @media (prefers-reduced-motion: reduce) { html[data-style] body.admin-workbench.is-writing-workspace * { scroll-behavior: auto; } }
 
+/* iOS WebKit sizes wrapped native carets from the line box (WebKit 287429).
+   Use the font's normal line box while keeping spacing between paragraphs. */
+@supports (-webkit-touch-callout: none) {
+  html[data-style] body.admin-workbench.is-writing-workspace .newpress-document,
+  html[data-style] body.admin-workbench.is-writing-workspace .newpress-document :is(p, h1, h2, h3, h4, h5, h6, li, pre) { line-height: normal; }
+}
+
 /* Keep the writing canvas broad; supporting tools follow the document. */
 html[data-style] body.admin-workbench.is-writing-workspace .editor-ai-launch { display:inline-flex; align-items:center; justify-content:center; gap:7px; color:var(--editor-accent); border-color:color-mix(in srgb,var(--editor-accent) 26%,var(--editor-rule)); background:var(--editor-surface); font-weight:650; }
 html[data-style] body.admin-workbench.is-writing-workspace .editor-ai-launch:hover { background:color-mix(in srgb,var(--editor-accent) 6%,var(--editor-surface)); }

@@ -4,9 +4,9 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
-const source = fs.readFileSync(process.env.CHUNNEL_EMOJI_EDITOR_SOURCE || path.join(__dirname, '../../themes/chunnel/assets/js/chunnel-emoji-editor.js'), 'utf8');
-const start = source.indexOf("    editor.addEventListener('keydown', (event) => {");
-const end = source.indexOf("    editor.addEventListener('paste',", start);
+const source = require('./helpers/typescript.cjs').compile('frontend/shared/emoji-editor.ts');
+const start = source.indexOf('editor.addEventListener("keydown", (event) => {');
+const end = source.indexOf('editor.addEventListener("paste",', start);
 assert.ok(start >= 0 && end > start);
 
 function dispatch(options = {}, composing = false, preventForwarded = false) {

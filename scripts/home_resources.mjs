@@ -1,12 +1,13 @@
 import postcss from 'postcss';
 import selectorParser from 'postcss-selector-parser';
 
-// Only move rules that require an internal overlay component. Shells, buttons,
-// generic inputs, navigation, states and shared :is() branches stay in the first
-// sheet, so a closed dialog never changes the visible page when it is loaded.
+// Only move rules that require an overlay component. Dialog shells and their
+// controls are hidden until the existing feature loader has both JS and CSS.
+// Page buttons, generic inputs, navigation, states and shared :is() branches
+// stay in the first sheet. Deferred CSS retains its position before theme settings.
 // On home, emoji editors and their controls are created by the deferred feature
 // script inside conversations; the feed renders content with .newpress-emoji.
-const internal = /^(?:oauth-|message-(?!unread)|conversation-|contact-|saved-|notification-settings-|interaction-(?:login|register|info|drawer|tabs|notices|connection|error|load-more|empty)|quick-actions|toast(?:$|-)|emoji-(?:popover|grid|category|tab|item|empty|editor|source|trigger|search|ai-label|info))/;
+const internal = /^(?:ui-(?:modal|drawer)$|modal-(?:backdrop|close|icon)$|drawer-(?:backdrop|notices)$|oauth-|message-(?!unread)|conversation-|contact-|saved-|notification-settings-|interaction-(?:login|register|info|drawer|tabs|notices|connection|error|load-more|empty)|quick-actions|toast(?:$|-)|emoji-(?:popover|grid|category|tab|item|empty|editor|source|trigger|search|ai-label|info))/;
 function requiresOverlay(selector) {
   return selector.nodes.some(node =>
     node.type === 'class' && internal.test(node.value) ||

@@ -1,87 +1,125 @@
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
-const vm = require('node:vm');
-
-function fixture(variant, replies) {
-  const fields = Object.fromEntries(Object.entries({
-    title: 'Unsent editorial changes', body: 'News body', source_name: '', source_url: '',
-    published_at: '2026-11-01T02:30', published_timezone: 'America/New_York',
-  }).map(([name, value]) => [name, {value}]));
-  const status = {textContent: ''}, label = {textContent: 'America/New_York'};
-  const confirm = {addEventListener(type, listener) {this[type] = listener;}};
-  const review = {hidden: true, querySelector: () => confirm};
-  const form = {
-    dataset: {userId: '7', id: '4', version: '2', endpoint: '/api/v1/admin/flash', admin: 'true'},
-    addEventListener(type, listener) {this[type] = listener;},
-    querySelector: selector => selector === '[name="published_timezone"]' ? fields.published_timezone : selector === '[data-flash-timezone-review]' ? review : null,
-    querySelectorAll: selector => selector === 'button' ? [confirm] : selector === '[data-flash-timezone-label]' ? [label] : [],
-  };
-  const requests = [], navigations = [];
-  let keyNumber = 0;
-  const context = vm.createContext({
-    document: {
-      querySelector: selector => selector === '[data-flash-editor]' ? form : selector === '[data-flash-status]' ? status : null,
-      querySelectorAll: () => [], addEventListener() {},
-    },
-    window: {confirm: () => true, location: {assign: value => navigations.push(value)}},
-    location: {pathname: '/admin/flash/'},
-    crypto: {randomUUID: () => `retry-key-${++keyNumber}`},
-    FormData: class {
-      constructor() {this.values = Object.fromEntries(Object.entries(fields).map(([name, field]) => [name, field.value]));}
-      get(name) {return this.values[name] ?? null;}
-      has(name) {return Object.hasOwn(this.values, name);}
-    },
-    fetch: async (url, options) => {
-      if (url === '/api/v1/social/session') return {ok: true, json: async () => ({authenticated: true, csrf_token: 'csrf'})};
-      requests.push({url, ...options});
-      const response = replies.shift();
-      if (response instanceof Error) throw response;
-      assert.ok(response, 'unexpected write request');
-      return {ok: response.ok, json: async () => response.data};
-    },
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
+const {chromium}=require('playwright'),{compile}=require('./helpers/typescript.cjs'),f=require('./fixtures/publishing.cjs');
+const source=compile('frontend/core/flash.ts');
+const wait=async(page,part)=>page.waitForFunction(part=>document.querySelector('[data-flash-status]')?.textContent.includes(part),part);
+async function fixture(variant,options={}){
+  const browser=await chromium.launch({headless:true}),context=await browser.newContext(),page=await context.newPage(),writes=[],errors=[];
+  let reply,session=f.session(),state=f.engagement(),read,documents=0;
+  page.on('pageerror',error=>errors.push(error.message));page.setDefaultTimeout(7000);
+  await page.route('https://example.test/**',async route=>{
+    const request=route.request(),url=new URL(request.url());
+    if(url.pathname==='/api/v1/social/session')return route.fulfill({json:session});
+    if(request.method()==='POST'){
+      const body=request.postDataJSON();writes.push({body,encoded:request.postData(),key:request.headers()['idempotency-key']});
+      return reply?reply(route,body):route.fulfill({json:f.receipt(body)});
+    }
+    if(url.pathname==='/api/v1/social/engagement')return read?read(route):route.fulfill({json:state});
+    documents++;return route.fulfill({contentType:'text/html; charset=utf-8',body:options.public?f.publicHTML():f.html(options)});
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname, '../../internal/coreui/assets/js', `chunnel-flash${variant === 'source' ? '.source' : ''}.js`), 'utf8'), context);
-  return {fields, status, label, review, requests, navigations, confirm: () => confirm.click(), submit: () => form.submit({preventDefault() {}, submitter: {value: 'save'}})};
+  const mount=()=>page.addScriptTag({content:variant==='typescript'?source:fs.readFileSync('internal/coreui/assets/js/chunnel-flash.js','utf8')});
+  await page.goto(`https://example.test/${options.public?'flash/':options.admin===false?'flash/submit/':'admin/flash/'}?edit=4`);
+  if(options.storageUnavailable)await page.evaluate(()=>{Storage.prototype.getItem=()=>{throw Error('unavailable')};Storage.prototype.setItem=()=>{throw Error('quota')};});
+  await mount();
+  return {page,writes,errors,mount,context,get documents(){return documents},set reply(value){reply=value},set session(value){session=value},set state(value){state=value},set read(value){read=value},
+    save:()=>page.locator('[type=submit][value=save]').click(),retry:()=>page.locator('[data-flash-retry]').click(),
+    close:async()=>{await browser.close();assert.deepEqual(errors,[]);}};
 }
-
-for (const variant of ['source', 'built']) {
-  test(`${variant}: flash retries preserve the original time, timezone, body and key after a lost response`, async () => {
-    const f = fixture(variant, [new Error('Connection lost'), {ok: true, data: {id: 4, version: 3, replayed: true}}]);
-    await f.submit();
-    assert.equal(f.review.hidden, true);
-    assert.equal(f.status.textContent, 'Connection lost');
-    await f.submit();
-    assert.equal(f.requests.length, 2);
-    assert.equal(f.requests[0].body, f.requests[1].body);
-    assert.equal(f.requests[0].headers['Idempotency-Key'], f.requests[1].headers['Idempotency-Key']);
-    const submitted = JSON.parse(f.requests[0].body);
-    assert.equal(submitted.published_at, '2026-11-01T02:30');
-    assert.equal(submitted.published_timezone, 'America/New_York');
-    assert.deepEqual(f.navigations, ['/admin/flash/?edit=4']);
+for(const variant of ['typescript','built']){
+  test(`${variant}: flash unknown save preserves original content, time, key and newer input`,async()=>{
+    const t=await fixture(variant);try{
+      t.reply=route=>route.abort();await t.save();await wait(t.page,'网络');await t.page.locator('[name=body]').fill('保存结果未知之后的新正文');
+      t.reply=(route,body)=>route.fulfill({json:f.receipt(body,{id:99})});await t.retry();await wait(t.page,'回执未确认');assert.equal(t.documents,1);
+      t.reply=(route,body)=>route.fulfill({json:f.receipt(body,{replayed:true})});await t.retry();await wait(t.page,'修改仍保留');
+      assert.equal(t.writes.length,3);for(const write of t.writes.slice(1)){assert.equal(write.encoded,t.writes[0].encoded);assert.equal(write.key,t.writes[0].key);}
+      assert.equal(t.writes[0].body.published_at,'2026-11-01T02:30');assert.equal(t.writes[0].body.published_timezone,'America/New_York');
+      assert.equal(await t.page.locator('[name=body]').inputValue(),'保存结果未知之后的新正文');assert.equal(await t.page.locator('[data-flash-editor]').getAttribute('data-version'),'3');
+      assert.equal(await t.page.locator('[data-disabled]').isDisabled(),true);assert.equal(await t.page.locator('[data-flash-retry]').isVisible(),false);
+      await t.save();await t.page.waitForFunction(()=>!document.querySelector('[data-flash-editor]')?.dataset.flashReady);
+      assert.equal(t.writes.at(-1).body.version,3);assert.equal(t.writes.at(-1).body.body,'保存结果未知之后的新正文');assert.notEqual(t.writes.at(-1).key,t.writes[0].key);
+    }finally{await t.close();}
   });
-
-  test(`${variant}: a changed flash timezone requires explicit review while preserving the unsaved input`, async () => {
-    const rejection = {ok: false, data: {error: {message: 'Please review the changed timezone', details: {published_timezone: 'Asia/Shanghai'}}}};
-    const f = fixture(variant, [rejection, rejection, {ok: true, data: {id: 4, version: 3}}]);
-    await f.submit();
-    assert.equal(f.review.hidden, false);
-    assert.equal(f.label.textContent, 'Asia/Shanghai');
-    assert.equal(f.fields.published_timezone.value, 'America/New_York');
-    assert.equal(f.fields.published_at.value, '2026-11-01T02:30');
-    assert.equal(f.fields.title.value, 'Unsent editorial changes');
-    assert.equal(f.navigations.length, 0);
-    await f.submit();
-    assert.equal(f.requests[1].body, f.requests[0].body);
-    assert.equal(f.requests[1].headers['Idempotency-Key'], f.requests[0].headers['Idempotency-Key']);
-    f.confirm();
-    assert.equal(f.review.hidden, true);
-    assert.equal(f.fields.published_timezone.value, 'Asia/Shanghai');
-    assert.equal(f.fields.published_at.value, '2026-11-01T02:30');
-    assert.equal(f.requests.length, 2, 'review alone cannot submit a write');
-    await f.submit();
-    assert.equal(JSON.parse(f.requests[2].body).published_timezone, 'Asia/Shanghai');
-    assert.notEqual(f.requests[2].headers['Idempotency-Key'], f.requests[0].headers['Idempotency-Key']);
+  test(`${variant}: flash reload restores a pending operation without writing automatically`,async()=>{
+    const t=await fixture(variant);try{
+      t.reply=route=>route.abort();await t.save();await wait(t.page,'网络');await t.page.reload();await t.mount();
+      assert.equal(t.writes.length,1);assert.equal(await t.page.locator('[data-flash-retry]').isVisible(),true);
+      t.reply=(route,body)=>route.fulfill({json:f.receipt(body,{replayed:true})});await t.retry();await t.page.waitForFunction(()=>!document.querySelector('[data-flash-editor]')?.dataset.flashReady);
+      assert.equal(t.writes[0].key,t.writes[1].key);assert.equal(t.writes[0].encoded,t.writes[1].encoded);assert.equal(await t.page.evaluate(()=>sessionStorage.length),0);
+    }finally{await t.close();}
+  });
+  test(`${variant}: flash timezone rejection requires explicit confirmation and keeps the local minute`,async()=>{
+    const t=await fixture(variant);try{
+      t.reply=route=>route.fulfill({status:422,json:{error:{code:'flash.timezone_changed',message:'请核对当前时区',details:{published_timezone:'Asia/Shanghai'}}}});
+      await t.save();await t.page.locator('[data-flash-timezone-review]').waitFor();
+      assert.equal(await t.page.evaluate(()=>sessionStorage.length),0);assert.equal(await t.page.locator('[value=save]').isDisabled(),true);
+      assert.equal(await t.page.locator('[data-flash-timezone-label]').textContent(),'Asia/Shanghai');assert.equal(await t.page.locator('[name=published_timezone]').inputValue(),'America/New_York');
+      await t.page.locator('[data-flash-timezone-review] button').click();assert.equal(t.writes.length,1);assert.equal(await t.page.locator('[name=published_at]').inputValue(),'2026-11-01T02:30');
+      t.reply=undefined;await t.save();await t.page.waitForFunction(()=>!document.querySelector('[data-flash-editor]')?.dataset.flashReady);
+      assert.equal(t.writes[1].body.published_timezone,'Asia/Shanghai');assert.notEqual(t.writes[1].key,t.writes[0].key);
+    }finally{await t.close();}
+  });
+  test(`${variant}: a later timezone refusal cannot release an earlier unknown publication`,async()=>{
+    const t=await fixture(variant);try{
+      t.reply=route=>route.abort();await t.save();await wait(t.page,'网络');
+      t.reply=route=>route.fulfill({status:422,json:{error:{code:'flash.timezone_changed',message:'时区已变化',details:{published_timezone:'Asia/Shanghai'}}}});
+      await t.retry();await wait(t.page,'时区已变化');assert.equal(await t.page.locator('[data-flash-timezone-review]').isVisible(),false);assert.equal(await t.page.locator('[data-flash-retry]').isVisible(),true);
+      await t.page.locator('[name=body]').fill('后续新草稿');t.reply=(route,body)=>route.fulfill({json:f.receipt(body,{replayed:true})});await t.retry();await wait(t.page,'修改仍保留');
+      assert.equal(t.writes[0].key,t.writes[2].key);assert.equal(t.writes[0].encoded,t.writes[2].encoded);
+    }finally{await t.close();}
+  });
+  test(`${variant}: flash withdrawal preserves unsaved content and exposes the next valid save`,async()=>{
+    const t=await fixture(variant,{admin:false,state:'pending'});try{
+      await t.page.locator('[name=body]').fill('撤回前尚未保存的正文');await t.page.locator('[value=withdraw]').click();await wait(t.page,'尚未保存');
+      assert.equal(t.writes[0].body.action,'withdraw');assert.equal(await t.page.locator('[name=body]').inputValue(),'撤回前尚未保存的正文');
+      assert.equal(await t.page.locator('[value=withdraw]').isVisible(),false);assert.equal(await t.page.locator('[value=save]').isVisible(),true);
+      await t.save();await t.page.waitForFunction(()=>!document.querySelector('[data-flash-editor]')?.dataset.flashReady);assert.equal(t.writes[1].body.version,3);
+    }finally{await t.close();}
+  });
+  test(`${variant}: flash edits during save survive and old-account receipts cannot clear recovery`,async()=>{
+    const t=await fixture(variant);try{
+      let release;t.reply=(route,body)=>new Promise(resolve=>{release=async()=>{await route.fulfill({json:f.receipt(body)}).catch(()=>{});resolve();};});
+      await t.save();while(!release)await new Promise(resolve=>setTimeout(resolve,10));await t.page.locator('[name=title]').fill('保存期间的新标题');await release();await wait(t.page,'修改仍保留');
+      assert.equal(await t.page.locator('[name=title]').inputValue(),'保存期间的新标题');
+      release=undefined;await t.save();while(!release)await new Promise(resolve=>setTimeout(resolve,10));
+      await t.page.evaluate(()=>document.dispatchEvent(new CustomEvent('chunnel:session',{detail:{authenticated:true,configured:true,id:8,csrf_token:'other'}})));
+      await release();await wait(t.page,'登录账号已变化');assert.equal(await t.page.locator('[name=title]').inputValue(),'');assert.equal(await t.page.evaluate(()=>sessionStorage.length),1);
+    }finally{await t.close();}
+  });
+  test(`${variant}: state-only withdrawal does not discard an unsent review note`,async()=>{
+    const t=await fixture(variant,{state:'pending'});try{
+      await t.page.locator('[name=review_note]').fill('尚未提交的审核备注');await t.page.locator('[value=withdraw]').click();await wait(t.page,'尚未保存');
+      assert.equal(t.writes[0].body.review_note,'');assert.equal(await t.page.locator('[name=review_note]').inputValue(),'尚未提交的审核备注');assert.equal(t.documents,1);
+    }finally{await t.close();}
+  });
+  test(`${variant}: flash storage failures retain in-memory retry`,async()=>{
+    const t=await fixture(variant,{storageUnavailable:true});try{
+      t.reply=route=>route.abort();await t.save();await wait(t.page,'网络');t.reply=undefined;await t.retry();await t.page.waitForFunction(()=>!document.querySelector('[data-flash-editor]')?.dataset.flashReady);
+      assert.equal(t.writes[0].key,t.writes[1].key);assert.equal(t.writes[0].encoded,t.writes[1].encoded);
+    }finally{await t.close();}
+  });
+  test(`${variant}: flash duplicate controls share desired state and confirmed fresh count`,async()=>{
+    const t=await fixture(variant,{public:true});try{
+      await t.page.waitForFunction(()=>document.querySelector('[data-flash-engagement=like] span').textContent==='5');
+      t.reply=route=>route.fulfill({json:{ok:true,target_id:99,active:true,collection:''}});await t.page.locator('[data-flash-engagement=like]').first().click();await wait(t.page,'回执未确认');
+      assert.deepEqual(await t.page.locator('[data-flash-engagement=like]').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('aria-pressed'))),['false','false']);
+      t.reply=(route,body)=>route.fulfill({json:{ok:true,target_id:body.target_id,active:body.active,collection:body.collection}});t.state=f.engagement({like:[{target_id:4,count:9,active:true}]});
+      await t.page.locator('[data-flash-engagement=like]').last().click();await t.page.waitForFunction(()=>document.querySelector('[data-flash-engagement=like] span').textContent==='9');
+      assert.deepEqual(t.writes[0].body,t.writes[1].body);assert.deepEqual(await t.page.locator('[data-flash-engagement=like]').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('aria-pressed'))),['true','true']);
+      await t.page.locator('.flash-more').first().click();assert.equal(await t.page.locator('.flash-more').first().getAttribute('aria-expanded'),'true');
+    }finally{await t.close();}
+  });
+  test(`${variant}: flash confirmed interaction remains success if the count read fails`,async()=>{
+    const t=await fixture(variant,{public:true});try{
+      await t.page.waitForFunction(()=>document.querySelector('[data-flash-engagement=like] span').textContent==='5');
+      t.reply=(route,body)=>{t.read=route=>route.fulfill({status:503,json:{error:{message:'read unavailable'}}});return route.fulfill({json:{ok:true,target_id:body.target_id,active:body.active,collection:body.collection}});};
+      await t.page.locator('[data-flash-engagement=like]').first().click();await wait(t.page,'互动已保存');assert.equal(await t.page.locator('[data-flash-engagement=like]').first().getAttribute('aria-pressed'),'true');
+    }finally{await t.close();}
+  });
+  test(`${variant}: flash missing targets never become zero or an unverified mutation`,async()=>{
+    const t=await fixture(variant,{public:true});try{
+      await t.page.waitForFunction(()=>document.querySelector('[data-flash-engagement=like] span').textContent==='5');t.state={like:[],bookmark:[],follow:[]};
+      await t.page.evaluate(()=>window.dispatchEvent(new PageTransitionEvent('pagehide',{persisted:true})));await t.page.evaluate(()=>window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true})));
+      await t.page.waitForFunction(()=>!document.querySelector('[data-flash-engagement=like]').disabled);
+      await t.page.locator('[data-flash-engagement=like]').first().click();await wait(t.page,'尚未确认');assert.equal(t.writes.length,0);
+    }finally{await t.close();}
   });
 }

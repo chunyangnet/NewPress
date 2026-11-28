@@ -1,4 +1,5 @@
 import { node } from './dom';
+import { createQueryCache } from './query-cache';
 
 (() => {
   'use strict';
@@ -23,6 +24,8 @@ import { node } from './dom';
   input.setAttribute('aria-expanded', 'false'); input.setAttribute('aria-controls', list.id);
   input.setAttribute('autocomplete', 'off'); input.setAttribute('aria-keyshortcuts', 'Control+k Meta+k');
 
+  const cache = createQueryCache<{ items: unknown[]; total?: unknown }>();
+  document.addEventListener('chunnel:session', () => { cache.clear(); close(); reset(); });
   let timer: ReturnType<typeof setTimeout> | undefined, controller: AbortController | null = null;
   let sequence = 0, active = -1, composing = input.dataset.searchComposing === 'true', options: HTMLAnchorElement[] = [];
   let compositionCanceled = false, canceledValue: string | null = null;
@@ -58,13 +61,18 @@ import { node } from './dom';
     const timeout = setTimeout(() => pending.abort(), 8000);
     list.setAttribute('aria-busy', 'true'); message('正在寻找相关内容…');
     try {
-      const response = await fetch(`/api/v1/posts?${new URLSearchParams({ q: term, limit: '5', sort: 'relevance' })}`, {
-        headers: { Accept: 'application/json' }, credentials: 'same-origin', cache: 'no-store', signal: pending.signal,
-      });
-      if (!response.ok) throw new Error(response.status === 404 ? 'disabled' : 'unavailable');
-      const data: unknown = await response.json();
+      const cached = cache.peek(term);
+      const data = cached ?? await cache.get(term, async () => {
+        const response = await fetch(`/api/v1/posts?${new URLSearchParams({ q: term, limit: '5', sort: 'relevance' })}`, {
+          headers: { Accept: 'application/json' }, credentials: 'same-origin', cache: 'no-store', signal: pending.signal,
+        });
+        if (!response.ok) throw new Error(response.status === 404 ? 'disabled' : 'unavailable');
+        const value: unknown = await response.json();
+        if (pending.signal.aborted) throw new DOMException('Cancelled', 'AbortError');
+        if (!value || typeof value !== 'object' || !('items' in value) || !Array.isArray(value.items)) throw new Error('invalid');
+        return { items: value.items, total: 'total' in value ? value.total : undefined };
+      }, true);
       if (request !== sequence) return;
-      if (!data || typeof data !== 'object' || !('items' in data) || !Array.isArray(data.items)) throw new Error('invalid');
       data.items.slice(0, 5).forEach((item: unknown) => {
         if (!item || typeof item !== 'object' || !('slug' in item) || !('title' in item)) return;
         if (typeof item.slug !== 'string' || !item.slug || /[\/\\?#]/.test(item.slug) || ['.', '..'].includes(item.slug) || typeof item.title !== 'string') return;
@@ -135,6 +143,8 @@ import { node } from './dom';
   form.addEventListener('focusout', (event) => { if (!(event.relatedTarget instanceof Node) || !form.contains(event.relatedTarget)) close(); });
   document.addEventListener('pointerdown', (event) => { if (!(event.target instanceof Node) || !form.contains(event.target)) close(); });
   document.addEventListener('chunnel:overlay', (event) => { if (event.detail.open) close(); });
+  // Keep WebKit from blurring the input and hiding this button before click.
+  retry.addEventListener('pointerdown', event => { if (event.button === 0) event.preventDefault(); });
   retry.addEventListener('click', () => { input.focus({ preventScroll: true }); search(); });
   window.addEventListener('pagehide', close);
   window.ChunnelSearchReady = true;

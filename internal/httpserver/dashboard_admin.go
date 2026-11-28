@@ -1,7 +1,6 @@
 package httpserver
 
 import (
-	"context"
 	"errors"
 	"log/slog"
 	"mime"
@@ -86,8 +85,8 @@ func (s *Server) adminQuickDraftCreate(writer http.ResponseWriter, request *http
 		writeJSON(writer, http.StatusBadRequest, map[string]string{"error": "invalid_quick_draft_form_shape"})
 		return
 	}
-	if !s.auth.CheckCSRF(principal, form.Get("csrf_token")) {
-		writeJSON(writer, http.StatusForbidden, map[string]string{"error": "csrf_validation_failed"})
+	principal, ok = s.refreshContentWrite(writer, request)
+	if !ok {
 		return
 	}
 	if form.Get("action") != "quick_draft" {
@@ -115,7 +114,10 @@ func (s *Server) adminQuickDraftCreate(writer http.ResponseWriter, request *http
 			adminNotice{Message: "快速草稿尚未保存，请检查标记字段", Tone: "error"})
 		return
 	}
-	post, err := s.createQuickDraft(request.Context(), normalized)
+	post, err, ok := s.createQuickDraft(writer, request, normalized)
+	if !ok {
+		return
+	}
 	if err != nil {
 		if validation := content.FieldErrors(err); len(validation) > 0 {
 			quickDraft.FieldErrors = validation
@@ -137,19 +139,25 @@ func (s *Server) adminQuickDraftCreate(writer http.ResponseWriter, request *http
 	http.Redirect(writer, request, "/admin/?notice=quick-draft-created", http.StatusSeeOther)
 }
 
-func (s *Server) createQuickDraft(ctx context.Context, input content.PostInput) (content.Post, error) {
+func (s *Server) createQuickDraft(writer http.ResponseWriter, request *http.Request, input content.PostInput) (content.Post, error, bool) {
 	baseSlug := input.Slug
 	for attempt := 1; attempt <= 20; attempt++ {
 		candidate := input
 		if attempt > 1 {
 			candidate.Slug = suffixedQuickDraftSlug(baseSlug, attempt)
 		}
-		post, err := s.repository.Create(ctx, candidate)
+		if _, ok := s.refreshContentWrite(writer, request); !ok {
+			return content.Post{}, nil, false
+		}
+		post, err := s.repository.Create(request.Context(), candidate)
+		if _, ok := s.refreshContentWrite(writer, request); !ok {
+			return content.Post{}, nil, false
+		}
 		if !errors.Is(err, content.ErrSlugConflict) {
-			return post, err
+			return post, err, true
 		}
 	}
-	return content.Post{}, content.ErrSlugConflict
+	return content.Post{}, content.ErrSlugConflict, true
 }
 
 func suffixedQuickDraftSlug(base string, suffixNumber int) string {
@@ -227,6 +235,7 @@ func (s *Server) renderAdminDashboard(writer http.ResponseWriter, request *http.
 	location := site.TimeLocation(s.siteSnapshot(request.Context()).Settings)
 	dashboard := adminDashboardView{QuickDraft: quickDraft, CheckedAt: now.In(location).Format("15:04:05"), Timezone: location.String()}
 	var posts []content.Post
+	var checkedPosts []content.Post
 	if principal.Can(auth.CapabilityContentRead) {
 		result, err := s.repository.ListAdmin(request.Context(), content.AdminQuery{AuthorID: authorID, Status: content.StatusPublish, Limit: 5})
 		dashboard.PostsError = err != nil
@@ -238,12 +247,14 @@ func (s *Server) renderAdminDashboard(writer http.ResponseWriter, request *http.
 				posts = append(posts, post)
 			}
 		}
+		checkedPosts = append(checkedPosts, result.Items...)
 		drafts, err := s.repository.ListAdmin(request.Context(), content.AdminQuery{AuthorID: authorID, Status: content.StatusDraft, Limit: 5})
 		dashboard.DraftError = err != nil
 		if err != nil {
 			slog.Error("dashboard drafts", "error", err)
 		} else {
 			dashboard.DraftTotal = drafts.Total
+			checkedPosts = append(checkedPosts, drafts.Items...)
 			for _, post := range drafts.Items {
 				dashboard.RecentDrafts = append(dashboard.RecentDrafts, adminRecentDraftView{Post: post, EditURL: "/admin/content/" + strconv.FormatInt(post.ID, 10) + "/edit/", UpdatedLabel: post.UpdatedAt.In(location).Format("01-02 15:04")})
 			}
@@ -254,6 +265,7 @@ func (s *Server) renderAdminDashboard(writer http.ResponseWriter, request *http.
 			slog.Error("dashboard pending content", "error", err)
 		} else {
 			dashboard.PendingTotal = pending.Total
+			checkedPosts = append(checkedPosts, pending.Items...)
 		}
 		scheduled, err := s.repository.ListAdmin(request.Context(), content.AdminQuery{AuthorID: authorID, Status: content.StatusFuture, PublishedAfter: now, PublishedBefore: now.In(location).AddDate(0, 0, 7), PublicationAscending: true, Limit: 5})
 		dashboard.ScheduledError = err != nil
@@ -261,6 +273,7 @@ func (s *Server) renderAdminDashboard(writer http.ResponseWriter, request *http.
 			slog.Error("dashboard scheduled content", "error", err)
 		} else {
 			dashboard.ScheduledTotal = scheduled.Total
+			checkedPosts = append(checkedPosts, scheduled.Items...)
 			for _, post := range scheduled.Items {
 				dashboard.Scheduled = append(dashboard.Scheduled, adminRecentDraftView{Post: post, EditURL: "/admin/content/" + strconv.FormatInt(post.ID, 10) + "/edit/", UpdatedLabel: post.PublishedAt.In(location).Format("01-02 15:04")})
 			}
@@ -279,17 +292,15 @@ func (s *Server) renderAdminDashboard(writer http.ResponseWriter, request *http.
 	data.Admin.NoticeTone = notice.Tone
 	data.Posts = posts
 	data.Dashboard = dashboard
-	if s.moduleEnabled("comments") && (readOnly || principal.Can(auth.CapabilityCommentsModerate)) {
-		if result, commentErr := s.comments.ListAdmin(request.Context(), comment.Query{Status: comment.StatusPending, Limit: 5}); commentErr == nil {
-			queue := make([]adminCommentItemView, 0, len(result.Items))
-			for _, item := range result.Items {
-				queue = append(queue, s.adminCommentItem(request, item))
-			}
-			data.CommentAdmin = adminCommentsView{Items: queue, Total: result.Total, StatusCounts: result.StatusCounts, Status: comment.StatusPending}
+	commentsLoaded := s.moduleEnabled("comments") && (readOnly || principal.Can(auth.CapabilityCommentsModerate))
+	if commentsLoaded {
+		if result, commentErr := s.comments.Snapshot(request.Context()); commentErr == nil {
+			data.CommentAdmin = adminCommentsView{Total: result.StatusCounts[comment.StatusPending], StatusCounts: result.StatusCounts, Status: comment.StatusPending}
 		} else {
 			data.Dashboard.CommentsError = true
-			slog.Error("list pending comments for dashboard", "error", commentErr)
+			slog.Error("read pending comment count for dashboard", "error", commentErr)
 		}
 	}
-	s.render(writer, status, "admin", data)
+	access := func() error { return s.dashboardAccess(request, principal, checkedPosts, commentsLoaded) }
+	s.renderChecked(writer, status, "admin", data, request, s.contentBeforeOutput(writer, request, false, access), access)
 }

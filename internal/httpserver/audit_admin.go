@@ -114,6 +114,10 @@ func (s *Server) adminAuditEventsAPI(writer http.ResponseWriter, request *http.R
 		return
 	}
 	page, err := s.auditPage(request.Context(), query)
+	access := func() error { return s.adminReadAccess(request, auth.CapabilitySystemRead) }
+	if !s.recheckDiagnosticPage(writer, request, access) {
+		return
+	}
 	if err != nil {
 		slog.Error("list audit events API", "error", err, "request_id", request.Header.Get("X-Request-ID"))
 		s.writeAPIError(writer, request, http.StatusServiceUnavailable, "audit.unavailable", "审计事件暂时不可用", nil)
@@ -128,7 +132,7 @@ func (s *Server) adminAuditEventsAPI(writer http.ResponseWriter, request *http.R
 		next.Cursor = page.NextCursor
 		response.Pagination.Next = auditAPIURL(next)
 	}
-	writeJSON(writer, http.StatusOK, response)
+	writePrivateJSON(writer, request, http.StatusOK, response, nil, access, func(err error) { s.diagnosticReadError(writer, request, err) })
 }
 
 func (s *Server) adminToolsAuditExport(writer http.ResponseWriter, request *http.Request) {
@@ -154,6 +158,9 @@ func (s *Server) adminToolsAuditExport(writer http.ResponseWriter, request *http
 		return
 	}
 	page, err := s.auditPage(request.Context(), query)
+	if !s.recheckDiagnosticPage(writer, request, func() error { return s.adminReadAccess(request, auth.CapabilitySystemRead) }) {
+		return
+	}
 	if err != nil {
 		slog.Error("export audit events", "error", err, "request_id", request.Header.Get("X-Request-ID"))
 		s.writeAPIError(writer, request, http.StatusServiceUnavailable, "audit.unavailable", "审计事件暂时不可导出", nil)
@@ -168,7 +175,7 @@ func (s *Server) adminToolsAuditExport(writer http.ResponseWriter, request *http
 			HasMore: page.HasMore, NextCursor: page.NextCursor,
 		},
 	}
-	if err := writeAdminToolJSONAttachment(writer, "newpress-audit-events.json", document); err != nil {
+	if err := s.writeAdminToolJSONAttachment(writer, request, auth.CapabilitySystemRead, "newpress-audit-events.json", document); err != nil {
 		slog.Error("write audit export", "error", err)
 	}
 }
@@ -179,7 +186,11 @@ func (s *Server) auditPage(parent context.Context, query audit.Query) (audit.Pag
 	}
 	ctx, cancel := context.WithTimeout(parent, adminAuditReadTimeout)
 	defer cancel()
-	return s.auditEvents.List(ctx, query)
+	page, err := s.auditEvents.List(ctx, query)
+	if contextErr := ctx.Err(); contextErr != nil {
+		return audit.Page{}, contextErr
+	}
+	return page, err
 }
 
 func (s *Server) auditToolsView(ctx context.Context, query audit.Query) adminAuditView {

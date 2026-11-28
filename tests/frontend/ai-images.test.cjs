@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const {imageProfile, chooseImageConnection, mediaURL} = require('../../internal/coreui/assets/js/chunnel-ai-images.source.js');
-const {chooseConnection} = require('../../internal/coreui/assets/js/chunnel-ai-editor.source.js');
+const {imageProfile, chooseImageConnection, mediaURL} = require('./helpers/typescript.cjs').loadNativeModule('frontend/shared/ai-image-helpers.ts');
+const {chooseConnection} = require('./helpers/typescript.cjs').loadNativeModule('frontend/shared/ai-writing-helpers.ts');
 
 test('writing and image choices stay separate and recover when a provider or model is removed', () => {
   const data = {default_provider:'text', default_image_provider:'nano', providers:[

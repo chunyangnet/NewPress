@@ -218,8 +218,20 @@ func normalizeSettings(input, previous Settings) (Settings, error) {
 }
 
 func (s *SettingsStore) Save(input Settings) (Settings, error) {
+	return s.SaveChecked(input, nil)
+}
+
+// SaveChecked refreshes external authority after waiting for the store lock and
+// immediately before persistence. The callback must not call this store. A
+// committed filesystem write is not rolled back by subsequent revocation.
+func (s *SettingsStore) SaveChecked(input Settings, check func() error) (Settings, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if check != nil {
+		if err := check(); err != nil {
+			return Settings{}, err
+		}
+	}
 	if input.Revision == "" || input.Revision != s.settings.Revision {
 		return Settings{}, failure("settings_conflict", "AI 设置已被其他页面更新，请重新加载后再保存", http.StatusConflict)
 	}
@@ -228,6 +240,11 @@ func (s *SettingsStore) Save(input Settings) (Settings, error) {
 		return Settings{}, err
 	}
 	next.Revision = newRevision()
+	if check != nil {
+		if err := check(); err != nil {
+			return Settings{}, err
+		}
+	}
 	if s.path != "" {
 		if err := writeSettings(s.path, next); err != nil {
 			return Settings{}, failure("settings_write", "AI 设置未能保存到磁盘，请检查数据目录权限后重试", http.StatusInternalServerError)

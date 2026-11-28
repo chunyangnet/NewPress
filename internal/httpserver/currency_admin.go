@@ -171,7 +171,7 @@ func (s *Server) adminCurrencyPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if s.currency == nil && s.currencyCatalog == nil {
-		s.renderFeatureRecovery(w, r, "currency", "", s.adminView("currency", p, readOnly), 503, "")
+		s.renderFeatureRecovery(w, r, "currency", "", s.adminRecoveryIdentity("currency", p, readOnly), 503, "")
 		return
 	}
 	if s.currencyUnavailable(w, r) {
@@ -183,7 +183,7 @@ func (s *Server) adminCurrencyPage(w http.ResponseWriter, r *http.Request) {
 	}
 	cfg, err := s.currencyStore(r).Settings(r.Context())
 	if err != nil {
-		s.renderFeatureRecovery(w, r, "currency", currencyKey(r), s.adminView("currency", p, readOnly), 503, "钱包规则暂时不可读，请检查服务状态后重新检测。")
+		s.renderFeatureRecovery(w, r, "currency", currencyKey(r), s.adminRecoveryIdentity("currency", p, readOnly), 503, "钱包规则暂时不可读，请检查服务状态后重新检测。")
 		return
 	}
 	requestID, err := newCurrencyRequestID()

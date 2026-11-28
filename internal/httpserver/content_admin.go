@@ -76,7 +76,7 @@ func (s *Server) adminContent(writer http.ResponseWriter, request *http.Request)
 		return
 	}
 	readOnly = readOnly || !canCreateContent(principal)
-	s.renderContentList(writer, http.StatusOK, principal, readOnly, query, result, page, contentNoticeFromQuery(request.URL.Query().Get("notice")))
+	s.renderContentList(writer, request, http.StatusOK, principal, readOnly, query, result, page, contentNoticeFromQuery(request.URL.Query().Get("notice")))
 }
 
 func (s *Server) adminContentBulk(writer http.ResponseWriter, request *http.Request) {
@@ -151,7 +151,7 @@ func (s *Server) adminContentNew(writer http.ResponseWriter, request *http.Reque
 		return
 	}
 	input := s.newContentInput(request, principal, postType)
-	s.renderContentEditor(writer, request, http.StatusOK, principal, readOnly, content.Post{}, input, nil, adminNotice{}, false, false)
+	s.renderContentEditor(writer, request, http.StatusOK, principal, readOnly, content.Post{}, input, nil, adminNotice{}, false, nil)
 }
 
 func (s *Server) newContentInput(request *http.Request, principal auth.Principal, postType string) content.PostInput {
@@ -194,7 +194,10 @@ func (s *Server) adminContentCreate(writer http.ResponseWriter, request *http.Re
 	}
 	input, fields := s.parseEditorInput(request, form, principal, time.Now(), content.Post{})
 	if len(fields) > 0 {
-		s.renderContentEditor(writer, request, http.StatusUnprocessableEntity, principal, false, content.Post{}, input, fields, adminNotice{"请检查标记字段后再保存", "error"}, false, false)
+		s.renderContentEditor(writer, request, http.StatusUnprocessableEntity, principal, false, content.Post{}, input, fields, adminNotice{"请检查标记字段后再保存", "error"}, false, nil)
+		return
+	}
+	if !s.recheckContentWrite(writer, request, 0) {
 		return
 	}
 	post, err := s.repository.Create(request.Context(), input)
@@ -247,7 +250,7 @@ func (s *Server) adminContentEdit(writer http.ResponseWriter, request *http.Requ
 	readOnly = readOnly || !canWriteContentObject(principal, post)
 	input := inputFromPost(post)
 	notice := contentNoticeFromQuery(query.Get("notice"))
-	recovered := false
+	var recovered *content.Autosave
 	if query.Get("recovery") == "autosave" {
 		if readOnly {
 			s.renderError(writer, http.StatusForbidden, "当前账号不能加载这篇内容的恢复点")
@@ -255,7 +258,7 @@ func (s *Server) adminContentEdit(writer http.ResponseWriter, request *http.Requ
 		}
 		if autosave, exists := s.loadEditorAutosave(request, post, principal); exists {
 			input = inputFromPost(autosave.Snapshot)
-			recovered = true
+			recovered = &autosave
 			notice = adminNotice{"已把自动保存恢复点载入表单；请核对并正式保存，公开内容和版本号尚未改变。", "success"}
 		} else {
 			notice = adminNotice{"恢复点已过期、被放弃或已由正式保存清除。", "warning"}
@@ -284,6 +287,10 @@ func (s *Server) adminContentUpdate(writer http.ResponseWriter, request *http.Re
 		return
 	}
 	currentPost, err := s.repository.GetByID(request.Context(), id)
+	principal, ok = s.refreshContentWrite(writer, request)
+	if !ok {
+		return
+	}
 	if errors.Is(err, content.ErrNotFound) {
 		s.renderError(writer, http.StatusNotFound, "内容没有找到")
 		return
@@ -317,18 +324,25 @@ func (s *Server) adminContentUpdate(writer http.ResponseWriter, request *http.Re
 	if action == "publish" && form.Has("ai_pro_max") {
 		mutationAction = "save"
 	}
-	switch mutationAction {
-	case "save":
-		input, fields := s.parseEditorMutation(request, form, principal, currentPost)
+	var input content.PostInput
+	if mutationAction == "save" {
+		var fields map[string]string
+		input, fields = s.parseEditorMutation(request, form, principal, currentPost)
 		if len(fields) > 0 {
 			current, loadErr := s.repository.GetByID(request.Context(), id)
 			if loadErr != nil {
 				s.handleContentLoadError(writer, id, loadErr)
 				return
 			}
-			s.renderContentEditor(writer, request, http.StatusUnprocessableEntity, principal, false, current, input, fields, adminNotice{"请检查标记字段后再保存", "error"}, false, false)
+			s.renderContentEditor(writer, request, http.StatusUnprocessableEntity, principal, false, current, input, fields, adminNotice{"请检查标记字段后再保存", "error"}, false, nil)
 			return
 		}
+	}
+	if !s.recheckContentWrite(writer, request, id) {
+		return
+	}
+	switch mutationAction {
+	case "save":
 		updated, err = s.repository.Update(request.Context(), id, mutation, input)
 	case "trash":
 		updated, err = s.repository.ChangeStatus(request.Context(), id, mutation, content.StatusTrash)

@@ -13,7 +13,6 @@ import (
 
 	"newpress.local/newpress/internal/auth"
 	"newpress.local/newpress/internal/comment"
-	"newpress.local/newpress/internal/content"
 )
 
 const (
@@ -164,6 +163,9 @@ func (s *Server) adminCommentsSubmit(writer http.ResponseWriter, request *http.R
 	mutation := comment.Mutation{ExpectedVersion: version, Actor: actor}
 	if action == "delete" {
 		current, err := s.comments.Get(request.Context(), id)
+		if _, ok := s.refreshCommentWrite(writer, request); !ok {
+			return
+		}
 		if err != nil {
 			s.handleAdminCommentFormError(writer, request, principal, filter, err)
 			return
@@ -172,11 +174,17 @@ func (s *Server) adminCommentsSubmit(writer http.ResponseWriter, request *http.R
 			s.renderAdminComments(writer, request, http.StatusConflict, principal, false, filter, adminNotice{"只有回收站中的评论可以永久删除", "warning"})
 			return
 		}
-		if err := s.comments.Delete(request.Context(), id, mutation); err != nil {
+		err = s.comments.Delete(request.Context(), id, mutation)
+		if err == nil {
+			s.forgetCommentOrigin(id)
+		}
+		if _, ok := s.refreshCommentWrite(writer, request); !ok {
+			return
+		}
+		if err != nil {
 			s.handleAdminCommentFormError(writer, request, principal, filter, err)
 			return
 		}
-		s.forgetCommentOrigin(id)
 		http.Redirect(writer, request, adminCommentListURL(filter, "deleted"), http.StatusSeeOther)
 		return
 	}
@@ -185,7 +193,14 @@ func (s *Server) adminCommentsSubmit(writer http.ResponseWriter, request *http.R
 		writeJSON(writer, http.StatusBadRequest, map[string]string{"error": "unknown_comment_action"})
 		return
 	}
-	if _, err := s.comments.ChangeStatus(request.Context(), id, mutation, status); err != nil {
+	if _, ok := s.refreshCommentWrite(writer, request); !ok {
+		return
+	}
+	_, err := s.comments.ChangeStatus(request.Context(), id, mutation, status)
+	if _, ok := s.refreshCommentWrite(writer, request); !ok {
+		return
+	}
+	if err != nil {
 		s.handleAdminCommentFormError(writer, request, principal, filter, err)
 		return
 	}
@@ -212,7 +227,13 @@ func (s *Server) adminCommentsBulkSubmit(writer http.ResponseWriter, request *ht
 		return
 	}
 
+	if _, ok := s.refreshCommentWrite(writer, request); !ok {
+		return
+	}
 	_, err = s.comments.BulkChangeStatus(request.Context(), change)
+	if _, ok := s.refreshCommentWrite(writer, request); !ok {
+		return
+	}
 	switch {
 	case errors.Is(err, comment.ErrVersionConflict):
 		http.Redirect(writer, request, adminCommentListURL(filter, "bulk-conflict"), http.StatusSeeOther)
@@ -261,8 +282,8 @@ func (s *Server) requireAdminCommentWriteForm(writer http.ResponseWriter, reques
 		return auth.Principal{}, nil, false
 	}
 	form := request.PostForm
-	if len(form["csrf_token"]) != 1 || !s.auth.CheckCSRF(principal, form.Get("csrf_token")) {
-		writeJSON(writer, http.StatusForbidden, map[string]string{"error": "csrf_validation_failed"})
+	principal, ok = s.refreshCommentWrite(writer, request)
+	if !ok {
 		return auth.Principal{}, nil, false
 	}
 	return principal, form, true
@@ -340,16 +361,17 @@ func (s *Server) renderAdminComments(writer http.ResponseWriter, request *http.R
 		PostID: filter.PostID, Status: queryStatus, Search: filter.Search,
 		Limit: filter.Limit, Offset: (filter.Page - 1) * filter.Limit,
 	})
+	if !s.commentOperationAccess(writer, request, err) {
+		return
+	}
 	if err != nil {
 		slog.Error("list admin comments", "error", err, "request_id", request.Header.Get("X-Request-ID"))
 		s.renderError(writer, http.StatusInternalServerError, "评论审核队列暂时不可用")
 		return
 	}
-	items := make([]adminCommentItemView, 0, len(result.Items))
-	for _, item := range result.Items {
-		view := s.adminCommentItem(request, item)
-		view.InspectorURL = adminCommentEditorURL(item.ID, filter, "")
-		items = append(items, view)
+	items := s.adminCommentItems(request, result.Items)
+	for i := range items {
+		items[i].InspectorURL = adminCommentEditorURL(items[i].Comment.ID, filter, "")
 	}
 	pages := max(1, (result.Total+filter.Limit-1)/filter.Limit)
 	view := adminCommentsView{
@@ -375,29 +397,8 @@ func (s *Server) renderAdminComments(writer http.ResponseWriter, request *http.R
 	data.IsAdmin = true
 	data.Admin = s.adminView("comments", principal, readOnly)
 	data.CommentAdmin = view
-	s.render(writer, status, "admin-comments", data)
-}
-
-func (s *Server) adminCommentItem(request *http.Request, item comment.Comment) adminCommentItemView {
-	view := adminCommentItemView{
-		Comment: item, PostTitle: "内容 #" + strconv.FormatInt(item.PostID, 10),
-		SourceFingerprint: shortCommentFingerprint(item.AuthorIPHash), CanDelete: item.Status == comment.StatusTrash,
-		InspectorURL: "/admin/comments/" + strconv.FormatInt(item.ID, 10) + "/edit/",
-	}
-	view.StatusLabel, view.StatusTone = adminCommentStatusPresentation(item.Status)
-	post, err := s.repository.GetByID(request.Context(), item.PostID)
-	if err != nil {
-		return view
-	}
-	view.PostTitle = post.Title
-	view.PostType = post.Type
-	view.PostStatus = post.Status
-	view.postAuthorID = post.AuthorID
-	view.PostEditURL = "/admin/content/" + strconv.FormatInt(post.ID, 10) + "/edit/"
-	if content.PublicAt(post, time.Now()) {
-		view.PostPermalink = s.contentPath(post)
-	}
-	return view
+	access := func() error { return s.commentAccess(request) }
+	s.renderChecked(writer, status, "admin-comments", data, request, func() bool { return s.recheckCommentAccess(writer, request) }, access)
 }
 
 func (s *Server) parseAdminCommentQuery(raw string, allowNotice bool) (adminCommentFilter, string, error) {
@@ -451,6 +452,9 @@ func (s *Server) adminCommentReturnFilter(form url.Values) (adminCommentFilter, 
 }
 
 func (s *Server) handleAdminCommentFormError(writer http.ResponseWriter, request *http.Request, principal auth.Principal, filter adminCommentFilter, err error) {
+	if !s.commentOperationAccess(writer, request, err) {
+		return
+	}
 	switch {
 	case errors.Is(err, comment.ErrVersionConflict):
 		s.renderAdminComments(writer, request, http.StatusConflict, principal, false, filter, adminNotice{"评论已被其他审核者更新，队列已刷新", "warning"})
@@ -508,14 +512,17 @@ func (s *Server) adminCommentsAPI(writer http.ResponseWriter, request *http.Requ
 		return
 	}
 	result, err := s.comments.ListAdmin(request.Context(), normalized)
+	if !s.commentOperationAccess(writer, request, err) {
+		return
+	}
 	if err != nil {
 		slog.Error("list admin comments API", "error", err, "request_id", request.Header.Get("X-Request-ID"))
 		s.writeAPIError(writer, request, http.StatusInternalServerError, "comments.unavailable", "评论审核队列暂时不可用", nil)
 		return
 	}
 	items := make([]adminCommentAPIResponse, 0, len(result.Items))
-	for _, item := range result.Items {
-		items = append(items, adminCommentResponse(s.adminCommentItem(request, item)))
+	for _, view := range s.adminCommentItems(request, result.Items) {
+		items = append(items, adminCommentResponse(view))
 	}
 	pages := max(1, (result.Total+perPage-1)/perPage)
 	pagination := adminCommentsPaginationAPIResponse{Page: page, PerPage: perPage, Total: result.Total, Pages: pages}
@@ -525,7 +532,7 @@ func (s *Server) adminCommentsAPI(writer http.ResponseWriter, request *http.Requ
 	if normalized.Offset+len(result.Items) < result.Total {
 		pagination.Next = adminCommentsAPIPageURL(status, normalized.Search, postID, page+1, perPage)
 	}
-	writeJSON(writer, http.StatusOK, adminCommentsAPIResponse{Items: items, Pagination: pagination, StatusCounts: result.StatusCounts})
+	s.writeCommentJSON(writer, request, http.StatusOK, adminCommentsAPIResponse{Items: items, Pagination: pagination, StatusCounts: result.StatusCounts}, nil)
 }
 
 func (s *Server) adminCommentUpdateAPI(writer http.ResponseWriter, request *http.Request) {
@@ -549,18 +556,24 @@ func (s *Server) adminCommentUpdateAPI(writer http.ResponseWriter, request *http
 	if !s.decodeStrictCommentJSON(writer, request, &mutation) {
 		return
 	}
+	principal, ok = s.refreshCommentWrite(writer, request)
+	if !ok {
+		return
+	}
 	mutation.Status = strings.ToLower(strings.TrimSpace(mutation.Status))
 	if mutation.Version <= 0 || !comment.ValidStatus(mutation.Status) {
 		s.writeAPIError(writer, request, http.StatusUnprocessableEntity, "comments.validation_failed", "审核状态或版本不正确", map[string]any{"fields": map[string]string{"status": "必须使用 pending、approved、spam 或 trash", "version": "必须提供当前正整数版本"}})
 		return
 	}
 	updated, err := s.comments.ChangeStatus(request.Context(), id, comment.Mutation{ExpectedVersion: mutation.Version, Actor: principal.Username}, mutation.Status)
+	if _, ok := s.refreshCommentWrite(writer, request); !ok {
+		return
+	}
 	if err != nil {
 		s.handleAdminCommentAPIError(writer, request, id, err)
 		return
 	}
-	writer.Header().Set("ETag", commentETag(updated))
-	writeJSON(writer, http.StatusOK, adminCommentResponse(s.adminCommentItem(request, updated)))
+	s.writeCommentJSON(writer, request, http.StatusOK, adminCommentResponse(s.adminCommentItem(request, updated)), func() { writer.Header().Set("ETag", commentETag(updated)) })
 }
 
 func (s *Server) adminCommentDeleteAPI(writer http.ResponseWriter, request *http.Request) {
@@ -581,32 +594,45 @@ func (s *Server) adminCommentDeleteAPI(writer http.ResponseWriter, request *http
 		return
 	}
 	current, err := s.comments.Get(request.Context(), id)
+	principal, ok = s.refreshCommentWrite(writer, request)
+	if !ok {
+		return
+	}
 	if err != nil {
 		s.handleAdminCommentAPIError(writer, request, id, err)
 		return
 	}
 	if current.Status != comment.StatusTrash {
-		s.writeAPIError(writer, request, http.StatusConflict, "comments.trash_required", "只有回收站中的评论可以永久删除", map[string]any{"current_status": current.Status})
+		s.writeCommentVersionError(writer, request, http.StatusConflict, "comments.trash_required", "只有回收站中的评论可以永久删除", map[string]any{"current_status": current.Status}, nil)
 		return
 	}
 	if !s.requireAdminCommentPrecondition(writer, request, current, "永久删除必须携带当前 If-Match ETag") {
 		return
 	}
-	if err := s.comments.Delete(request.Context(), id, comment.Mutation{ExpectedVersion: current.Version, Actor: principal.Username}); err != nil {
+	err = s.comments.Delete(request.Context(), id, comment.Mutation{ExpectedVersion: current.Version, Actor: principal.Username})
+	if err == nil {
+		s.forgetCommentOrigin(id)
+	}
+	if _, ok := s.refreshCommentWrite(writer, request); !ok {
+		return
+	}
+	if err != nil {
 		s.handleAdminCommentAPIError(writer, request, id, err)
 		return
 	}
-	s.forgetCommentOrigin(id)
 	writer.Header().Set("Cache-Control", "no-store")
 	writer.WriteHeader(http.StatusNoContent)
 }
 
 func (s *Server) requireAdminCommentPrecondition(writer http.ResponseWriter, request *http.Request, current comment.Comment, message string) bool {
+	if !s.recheckCommentAccess(writer, request) {
+		return false
+	}
 	ifMatchValues := request.Header.Values("If-Match")
 	if len(ifMatchValues) != 1 || strings.TrimSpace(ifMatchValues[0]) == "" {
-		s.writeAPIError(writer, request, http.StatusPreconditionRequired, "comments.precondition_required", message, map[string]any{
+		s.writeCommentVersionError(writer, request, http.StatusPreconditionRequired, "comments.precondition_required", message, map[string]any{
 			"current_etag": commentETag(current), "current_version": current.Version,
-		})
+		}, nil)
 		return false
 	}
 	if strings.TrimSpace(ifMatchValues[0]) != commentETag(current) {
@@ -627,6 +653,9 @@ func (s *Server) adminCommentsAPIMethodNotAllowed(allow string) http.HandlerFunc
 }
 
 func (s *Server) handleAdminCommentAPIError(writer http.ResponseWriter, request *http.Request, id int64, err error) {
+	if !s.commentOperationAccess(writer, request, err) {
+		return
+	}
 	switch {
 	case errors.Is(err, comment.ErrNotFound):
 		s.writeAPIError(writer, request, http.StatusNotFound, "comments.not_found", "评论没有找到", nil)
@@ -634,6 +663,9 @@ func (s *Server) handleAdminCommentAPIError(writer http.ResponseWriter, request 
 		s.writeAPIError(writer, request, http.StatusNotFound, "comments.revision_not_found", "评论修订记录没有找到", nil)
 	case errors.Is(err, comment.ErrVersionConflict):
 		current, loadErr := s.comments.Get(request.Context(), id)
+		if !s.commentOperationAccess(writer, request, loadErr) {
+			return
+		}
 		if loadErr == nil {
 			s.writeAdminCommentConflict(writer, request, current)
 			return
@@ -651,10 +683,9 @@ func (s *Server) handleAdminCommentAPIError(writer http.ResponseWriter, request 
 }
 
 func (s *Server) writeAdminCommentConflict(writer http.ResponseWriter, request *http.Request, current comment.Comment) {
-	writer.Header().Set("ETag", commentETag(current))
-	s.writeAPIError(writer, request, http.StatusConflict, "comments.version_conflict", "评论已被其他审核者更新，请重新读取后再操作", map[string]any{
+	s.writeCommentVersionError(writer, request, http.StatusConflict, "comments.version_conflict", "评论已被其他审核者更新，请重新读取后再操作", map[string]any{
 		"current_version": current.Version, "current_status": current.Status, "current_etag": commentETag(current),
-	})
+	}, func() { writer.Header().Set("ETag", commentETag(current)) })
 }
 
 func adminCommentResponse(view adminCommentItemView) adminCommentAPIResponse {

@@ -106,10 +106,10 @@ func (m *Manager) stageUpload(ctx context.Context, reader io.Reader, maximum int
 	hash := sha256.New()
 	var destination io.Writer
 	var file *os.File
+	var buffer *bytes.Buffer
 	if m.root == "" {
-		buffer := &bytes.Buffer{}
+		buffer = &bytes.Buffer{}
 		destination = buffer
-		defer func() { staged.payload = append([]byte(nil), buffer.Bytes()...) }()
 	} else {
 		var err error
 		if _, err := packagefs.LstatNoSymlink(filepath.Join(m.root, "tmp")); err != nil {
@@ -129,8 +129,11 @@ func (m *Manager) stageUpload(ctx context.Context, reader io.Reader, maximum int
 	}
 	limited := &io.LimitedReader{R: contextReader{context: ctx, reader: reader}, N: maximum + 1}
 	size, err := io.Copy(io.MultiWriter(destination, hash, prefix), limited)
+	if err == nil {
+		err = ctx.Err()
+	}
 	if file != nil {
-		if err == nil {
+		if err == nil && size > 0 && size <= maximum {
 			err = file.Sync()
 		}
 		closeErr := file.Close()
@@ -149,6 +152,14 @@ func (m *Manager) stageUpload(ctx context.Context, reader io.Reader, maximum int
 	if size == 0 {
 		staged.discard()
 		return nil, fmt.Errorf("media upload is empty: %w", ErrInvalidInput)
+	}
+	if buffer != nil {
+		// The local buffer has no other owner. Reuse it unless its spare
+		// capacity would retain significant memory across staged variants.
+		staged.payload = buffer.Bytes()
+		if buffer.Cap()-buffer.Len() > 64<<10 {
+			staged.payload = bytes.Clone(staged.payload)
+		}
 	}
 	copy(staged.digest[:], hash.Sum(nil))
 	staged.prefix = append([]byte(nil), prefix.data...)

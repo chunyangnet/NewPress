@@ -22,8 +22,14 @@ for (const name of selected) {
     if (!['GET', 'HEAD'].includes(request.method())) writes.push({ method: request.method(), url: request.url() });
     if (request.resourceType() === 'script') scripts.push(new URL(request.url()).pathname);
   });
+  await context.route('**/*', route => {
+    const request = route.request(), url = new URL(request.url());
+    if (url.origin !== fixture.base || !['GET', 'HEAD'].includes(request.method())) return route.abort('blockedbyclient');
+    if (url.pathname === '/api/v1/admin/updates') return route.fulfill({ status: 503, contentType: 'application/json', body: '{"error":{"message":"unavailable in this fixture"}}' });
+    return route.fallback();
+  });
   const check = label => { evidence.push({ browser: name, check: label }); console.log(`${name}: ${label}`); };
-  const visit = async path => { await page.goto(fixture.base + path); await page.waitForLoadState('networkidle'); };
+  const visit = async path => { await page.goto(fixture.base + path, { waitUntil: 'load' }); };
   try {
     await visit(fixture.login);
     const sourceURLs = await page.locator('script[src]').evaluateAll(nodes => nodes.map(node => node.src));
@@ -73,6 +79,7 @@ for (const name of selected) {
     check('Dirty forms block region replacement; discarding releases navigation.');
 
     await visit('/admin/settings/');
+    await page.locator('[data-settings-target="site-settings-identity"]').click();
     const savebar = page.locator('[data-admin-savebar][data-form-id="site-settings-form"]');
     const field = page.locator('#site-settings-form input[type="text"]:visible:not([readonly]):not([disabled])').first();
     const original = await field.inputValue();

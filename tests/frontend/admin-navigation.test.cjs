@@ -33,7 +33,14 @@ function fixture(path = '/admin/content/') {
     querySelector(selector) { return selector === '.admin-main' ? main : selector === '[data-admin-sidebar]' ? sidebar : style; },
     addEventListener(name, fn) { (documentListeners[name] ||= []).push(fn); },
     dispatchEvent(event) { events.push(event); for (const fn of documentListeners[event.type] || []) fn(event); return !event.defaultPrevented; },
-    createElement() { return { dataset: {}, setAttribute() {} }; } };
+    createTextNode(textContent) { return {textContent}; },
+    createElement() { return { dataset: {}, children: [], listeners: {}, setAttribute() {},
+      addEventListener(name, listener) { this.listeners[name] = listener; },
+      append(...children) { this.children.push(...children); },
+      replaceChildren(...children) { this.children = children; },
+      get textContent() { return this._text || this.children.map(child => child.textContent || '').join(''); },
+      set textContent(value) { this._text = value; this.children = []; }
+    }; } };
   const history = { state: { chunnelScroll: 500, other: 'retained' }, scrollRestoration: 'auto',
     replaceState(state, title, url) { this.state = state; if (url) location.href = new URL(url, location).href; },
     pushState(state, title, url) { entries.push({url: location.href, state: this.state}); this.state = state; location.href = new URL(url, location).href; } };
@@ -98,6 +105,17 @@ test('network failure leaves current content and unlocks a retry', async () => {
   assert.ok(f.main.error); assert.equal(f.main.attributes['data-navigation-loading'], undefined);
   f.click('?status=draft'); f.requests[1].resolve('retry'); await tick();
   assert.equal(f.regions.get('.admin-content-page').label, 'retry'); assert.equal(f.main.error, null);
+});
+
+test('visible retry repeats the failed navigation without committing the failed response', async () => {
+  const f = fixture(); f.click('?status=draft'); f.requests[0].reject(new Error('offline')); await tick();
+  assert.equal(f.entries.length, 0);
+  const retry = f.main.error.children.find(child => child.textContent === '重试');
+  assert.ok(retry); retry.listeners.click();
+  assert.equal(f.requests[1].url, f.requests[0].url);
+  f.requests[1].resolve('retried'); await tick();
+  assert.equal(f.regions.get('.admin-content-page').label, 'retried');
+  assert.equal(f.main.error, null);
 });
 
 test('history restores its own position and yields to user scrolling during fetch', async () => {

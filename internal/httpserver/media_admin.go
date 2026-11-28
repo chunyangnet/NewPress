@@ -153,6 +153,18 @@ func (s *Server) adminMediaUpload(writer http.ResponseWriter, request *http.Requ
 		writeJSON(writer, http.StatusBadRequest, map[string]string{"error": "invalid_form_shape"})
 		return
 	}
+	request, ok = s.freshSessionRequest(writer, request)
+	if !ok {
+		return
+	}
+	principal, readOnly, ok = s.requireAdminPageCapability(writer, request, auth.CapabilityMediaWrite)
+	if !ok {
+		return
+	}
+	if readOnly || !s.auth.Configured() {
+		writeJSON(writer, http.StatusForbidden, map[string]string{"error": "admin_credentials_not_configured"})
+		return
+	}
 	if !s.auth.CheckCSRF(principal, request.MultipartForm.Value["csrf_token"][0]) {
 		writeJSON(writer, http.StatusForbidden, map[string]string{"error": "csrf_validation_failed"})
 		return
@@ -327,7 +339,13 @@ func (s *Server) adminMediaPreview(writer http.ResponseWriter, request *http.Req
 		return
 	}
 	defer reader.Close()
-	serveMediaObject(writer, request, item, reader)
+	request, ok := s.recheckAdminRead(writer, request, auth.CapabilityMediaRead)
+	if !ok {
+		return
+	}
+	writer.Header().Set("Cache-Control", "private, no-store")
+	protected := privateResponse(writer, request, func() error { return s.adminReadAccess(request, auth.CapabilityMediaRead) })
+	serveMediaObject(protected, request, item, reader)
 }
 
 func serveMediaObject(writer http.ResponseWriter, request *http.Request, item media.Item, reader media.ReadSeekCloser) {

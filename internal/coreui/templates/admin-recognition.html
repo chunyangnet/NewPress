@@ -1,5 +1,5 @@
 {{define "content"}}
-<section class="admin-page recognition-admin" data-recognition-admin data-csrf="{{.Admin.CSRFToken}}" data-read-only="{{.Admin.ReadOnly}}">
+<section class="admin-page recognition-admin" data-recognition-admin data-user-id="{{.Admin.Principal.UserID}}" data-csrf="{{.Admin.CSRFToken}}" data-read-only="{{.Admin.ReadOnly}}">
   <header class="admin-page-heading"><div><h1>互动与身份</h1><p>让每一次支持被看见，让每一种贡献有自己的标记。</p></div><a class="admin-button admin-button-secondary" href="/admin/appearance/">文章与评论外观 {{template "icon" "chevron-right"}}</a></header>
   {{if .FeatureStatus}}{{template "admin-feature-status" .}}{{end}}
   <p data-recognition-status class="recognition-status" role="status" aria-live="polite">正在加载配置…</p><noscript><p>启用 JavaScript 后可配置打赏与社区身份。</p></noscript>

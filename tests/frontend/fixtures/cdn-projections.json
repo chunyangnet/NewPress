@@ -1,0 +1,331 @@
+{
+  "snapshot": {
+    "settings": {
+      "version": 2,
+      "profiles": [
+        {
+          "id": "cloudflare",
+          "name": "主站 CF",
+          "provider": "cloudflare",
+          "resource_id": "zone123",
+          "domains": [
+            "example.test",
+            "static.example.test"
+          ],
+          "access_key": "",
+          "auto_purge": true
+        }
+      ],
+      "paused": false,
+      "workers": 2,
+      "max_attempts": 4,
+      "interval_seconds": 3,
+      "auto_content": true,
+      "auto_comments": true,
+      "auto_storage": true,
+      "core_assets": false,
+      "asset_base": "",
+      "static_ttl": 3600,
+      "profile_views": [
+        {
+          "id": "cloudflare",
+          "name": "主站 CF",
+          "provider": "cloudflare",
+          "resource_id": "zone123",
+          "domains": [
+            "example.test",
+            "static.example.test"
+          ],
+          "access_key": "",
+          "auto_purge": true,
+          "secret_saved": true,
+          "token_saved": false
+        }
+      ]
+    },
+    "enabled": true,
+    "jobs": [],
+    "counts": {},
+    "capabilities": [
+      {
+        "id": "cloudflare",
+        "name": "Cloudflare",
+        "operations": [
+          "purge_url",
+          "purge_prefix",
+          "purge_host",
+          "purge_tag",
+          "purge_all",
+          "test",
+          "diagnose",
+          "benchmark"
+        ],
+        "note": "API Token + Zone ID；按套餐决定标签、前缀等权限。无全网预热 API。"
+      },
+      {
+        "id": "tencent",
+        "name": "腾讯云 CDN",
+        "operations": [
+          "purge_url",
+          "purge_directory",
+          "warm",
+          "test",
+          "diagnose"
+        ],
+        "note": "SecretId / SecretKey；支持临时 Token。目录刷新采用 flush。"
+      },
+      {
+        "id": "edgeone",
+        "name": "腾讯云 EdgeOne",
+        "operations": [
+          "purge_url",
+          "purge_prefix",
+          "purge_host",
+          "purge_all",
+          "warm",
+          "test",
+          "diagnose"
+        ],
+        "note": "SecretId / SecretKey + Zone ID；与腾讯 CDN 使用独立接口。"
+      },
+      {
+        "id": "aliyun",
+        "name": "阿里云 CDN",
+        "operations": [
+          "purge_url",
+          "purge_directory",
+          "warm",
+          "test",
+          "diagnose"
+        ],
+        "note": "AccessKey ID / Secret；支持 STS Token。此连接使用 CDN 产品接口。"
+      },
+      {
+        "id": "qiniu",
+        "name": "七牛云 Fusion",
+        "operations": [
+          "purge_url",
+          "purge_directory",
+          "warm",
+          "test",
+          "diagnose"
+        ],
+        "note": "AccessKey / SecretKey；逐项检查无效 URL 和目录。"
+      },
+      {
+        "id": "cloudfront",
+        "name": "Amazon CloudFront",
+        "operations": [
+          "purge_url",
+          "purge_prefix",
+          "purge_all",
+          "test",
+          "diagnose"
+        ],
+        "note": "AccessKey / SecretKey + Distribution ID；全站失效作用于整个分配。"
+      }
+    ]
+  },
+  "routing": {
+    "config": {
+      "version": 2,
+      "dns": [
+        {
+          "id": "dns",
+          "name": "分区 DNS",
+          "provider": "aliyun",
+          "zone": "customer.test",
+          "access_key": "test-access",
+          "secret_saved": true
+        }
+      ],
+      "routes": [
+        {
+          "id": "site",
+          "name": "访客接入",
+          "cf_profile_id": "cloudflare",
+          "dns_profile_id": "dns",
+          "hostname": "app.customer.test",
+          "fallback_origin": "origin.example.test",
+          "target": "customers.example.test",
+          "preferred_target": "preferred.example.net",
+          "preferred_lines": [],
+          "ttl": 600,
+          "manage_existing": false,
+          "health_path": "/health.txt",
+          "expected_body": "",
+          "monitor": false,
+          "interval": 300,
+          "failure_threshold": 3,
+          "recovery_threshold": 3,
+          "cooldown": 900,
+          "auto_failover": false,
+          "auto_recover": false
+        }
+      ]
+    },
+    "reports": {},
+    "plans": [],
+    "tasks": [],
+    "monitors": null
+  },
+  "job": {
+    "id": "11111111111111111111111111111111",
+    "profile_id": "cloudflare",
+    "identity": "",
+    "operation": "benchmark",
+    "targets": [],
+    "status": "succeeded",
+    "source": "manual",
+    "actor": "moderator",
+    "attempts": 1,
+    "created": "2026-11-27T11:58:25.4391375Z",
+    "updated": "2026-11-27T11:58:25.4391375Z",
+    "next": "0001-01-01T00:00:00Z",
+    "benchmark_request": {
+      "url": "https://example.test/cdn-cgi/trace",
+      "candidates": [],
+      "sample_count": 1,
+      "ipv6": false,
+      "rounds": 1,
+      "concurrency": 1,
+      "timeout_seconds": 2,
+      "download_bytes": 0,
+      "minimum_success": 50
+    },
+    "benchmark": {
+      "started": "2026-11-27T11:58:25.4391375Z",
+      "finished": "2026-11-27T11:58:25.4391375Z",
+      "url": "https://example.test/cdn-cgi/trace",
+      "scope": "isolated Go projection",
+      "ip_list_etag": "",
+      "ip_list_fetched": "2026-11-27T11:58:25.4391375Z",
+      "bytes": 8192,
+      "results": [
+        {
+          "ip": "104.16.0.1",
+          "family": "IPv4",
+          "colo": "TEST",
+          "success": 1,
+          "rounds": 1,
+          "success_rate": 100,
+          "tcp_ms": 3,
+          "tls_ms": 5,
+          "ttfb_p50": 10,
+          "ttfb_p95": 12,
+          "mbps": 0,
+          "bytes": 8192,
+          "status_code": 200,
+          "eligible": true
+        }
+      ]
+    }
+  },
+  "task": {
+    "id": "33333333333333333333333333333333",
+    "route_id": "site",
+    "action": "inspect",
+    "actor": "moderator",
+    "status": "succeeded",
+    "created": "2026-11-27T11:58:25.4391375Z",
+    "updated": "2026-11-27T11:58:25.4391375Z"
+  },
+  "plan": {
+    "id": "22222222222222222222222222222222",
+    "route_id": "site",
+    "kind": "route",
+    "created": "2026-11-27T11:58:25.4391375Z",
+    "expires": "2026-11-27T12:28:25.4391375Z",
+    "status": "ready",
+    "actor": "moderator",
+    "changes": [
+      {
+        "kind": "create",
+        "after": {
+          "name": "app.customer.test",
+          "type": "CNAME",
+          "value": "customers.example.test",
+          "line": "default",
+          "ttl": 600,
+          "status": "ENABLE"
+        },
+        "state": "pending"
+      }
+    ],
+    "snapshots": {},
+    "create_hostname": false
+  },
+  "report": {
+    "route_id": "site",
+    "checked": "2026-11-27T11:58:25.4391375Z",
+    "zone_name": "customer.test",
+    "fallback": {
+      "origin": "origin.example.test",
+      "status": "active"
+    },
+    "hostname": {
+      "id": "fixture-host",
+      "hostname": "app.customer.test",
+      "status": "active",
+      "ownership_verification": {
+        "name": "",
+        "type": "",
+        "value": ""
+      },
+      "ssl": {
+        "status": "active",
+        "method": "",
+        "validation_records": null,
+        "dcv_delegation_records": null
+      }
+    },
+    "dns": {
+      "name": "customer.test",
+      "lines": [
+        {
+          "id": "default",
+          "name": "默认"
+        },
+        {
+          "id": "telecom",
+          "name": "电信"
+        }
+      ],
+      "nameservers": [
+        "ns1.example.test"
+      ],
+      "min_ttl": 600,
+      "default_line": "default"
+    },
+    "actual_ns": [
+      "ns1.example.test"
+    ],
+    "delegated": true,
+    "records": null,
+    "validation": null,
+    "preferred": {
+      "healthy": false,
+      "checked": "0001-01-01T00:00:00Z",
+      "samples": 0,
+      "success": 0,
+      "latency_ms": 0,
+      "colos": null,
+      "tls_expires": "0001-01-01T00:00:00Z"
+    },
+    "normal": {
+      "healthy": true,
+      "checked": "2026-11-27T11:58:25.4391375Z",
+      "samples": 1,
+      "success": 1,
+      "latency_ms": 10,
+      "colos": [
+        "TEST"
+      ],
+      "tls_expires": "0001-01-01T00:00:00Z"
+    },
+    "warnings": [
+      "隔离检查结果，仅用于浏览器回归"
+    ],
+    "mode": "unmanaged"
+  }
+}

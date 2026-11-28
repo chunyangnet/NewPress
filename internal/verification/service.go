@@ -214,8 +214,9 @@ func (s *Service) Verify(ctx context.Context, c PublicConfig, source, ip, hostna
 		if !configured(provider) {
 			return "", ErrUnavailable
 		}
-		// Cache the upstream proof itself, independent of scene and client, so a
-		// successful upstream token cannot mint additional local receipts.
+		// Reserve the upstream proof independently of scene and client before
+		// making the request, so concurrent requests cannot reuse the same proof.
+		// Only successful proofs retain the reservation for the replay window.
 		identity := p.Token
 		if c.Provider == "geetest" {
 			identity = p.LotNumber
@@ -231,11 +232,17 @@ func (s *Service) Verify(ctx context.Context, c PublicConfig, source, ip, hostna
 			s.mu.Unlock()
 			return "", ErrInvalid
 		}
-		s.used[key] = time.Now().Add(10 * time.Minute)
+		reservedUntil := time.Now().Add(10 * time.Minute)
+		s.used[key] = reservedUntil
 		s.mu.Unlock()
 		ctx, cancel := context.WithTimeout(ctx, time.Duration(settings.TimeoutSeconds)*time.Second)
 		defer cancel()
 		if err := s.verifyProvider(ctx, provider, c.Scene, ip, hostname, p); err != nil {
+			s.mu.Lock()
+			if expires, ok := s.used[key]; ok && expires.Equal(reservedUntil) {
+				delete(s.used, key)
+			}
+			s.mu.Unlock()
 			return "", err
 		}
 	}

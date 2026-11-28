@@ -193,9 +193,28 @@ func CanEditReply(c Circle, t Topic, r Reply, a Actor) bool {
 	return !c.Archived && !t.Archived && !r.Hidden && !t.Hidden && !t.Locked && (Manages(c, a) || CanPost(c, a) && a.ID == r.AuthorID)
 }
 func Clone(c Circle) Circle {
-	b, _ := json.Marshal(c)
-	var out Circle
-	_ = json.Unmarshal(b, &out)
+	// Snapshots cross storage and transaction boundaries. Copy all mutable
+	// collections without encoding every topic and reply while holding a lock.
+	out := c
+	out.Members = slices.Clone(c.Members)
+	out.Receipts = slices.Clone(c.Receipts)
+	out.Attachments = slices.Clone(c.Attachments)
+	out.Reports = slices.Clone(c.Reports)
+	out.Changes = slices.Clone(c.Changes)
+	out.Topics = slices.Clone(c.Topics)
+	for i := range out.Topics {
+		topic := &out.Topics[i]
+		topic.Attachments = slices.Clone(topic.Attachments)
+		topic.Replies = slices.Clone(topic.Replies)
+		for j := range topic.Replies {
+			topic.Replies[j].Attachments = slices.Clone(topic.Replies[j].Attachments)
+		}
+	}
+	out.Activities = slices.Clone(c.Activities)
+	for i := range out.Activities {
+		out.Activities[i].Mentions = slices.Clone(out.Activities[i].Mentions)
+		out.Activities[i].Recipients = slices.Clone(out.Activities[i].Recipients)
+	}
 	return out
 }
 func Header(c Circle) Circle {

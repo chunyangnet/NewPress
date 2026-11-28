@@ -29,6 +29,8 @@ type BalanceResult struct {
 type balanceEntry struct {
 	fingerprint [32]byte
 	done        chan struct{}
+	waiters     int
+	cancel      context.CancelFunc
 	result      BalanceResult
 	err         error
 	expires     time.Time
@@ -59,68 +61,127 @@ func (s *SettingsStore) balanceProvider(id string) (Provider, error) {
 	}
 	return Provider{}, failure("provider_not_found", "接口已移除，请刷新页面", 404)
 }
-func (s *BalanceService) Query(ctx context.Context, settings *SettingsStore, id string) (BalanceResult, error) {
-	p, err := settings.balanceProvider(id)
-	if err != nil {
-		return BalanceResult{}, err
-	}
+func balanceFingerprint(p Provider) [32]byte {
 	encoded, _ := json.Marshal(struct {
 		Base, Key string
 		Approved  bool
 		Config    BalanceConfig
 	}{p.BaseURL, p.APIKey, p.AllowInsecure, p.Balance})
-	fingerprint := sha256.Sum256(encoded)
-	s.mu.Lock()
-	if e := s.entries[id]; e != nil && e.fingerprint == fingerprint {
-		if e.done != nil {
-			done := e.done
-			s.mu.Unlock()
-			select {
-			case <-done:
-				return s.Query(ctx, settings, id)
-			case <-ctx.Done():
-				return BalanceResult{}, ctx.Err()
-			}
+	return sha256.Sum256(encoded)
+}
+
+func cloneBalanceResult(result BalanceResult) BalanceResult {
+	for _, field := range []**float64{&result.Remaining, &result.Used, &result.Total} {
+		if *field != nil {
+			value := **field
+			*field = &value
 		}
-		if time.Now().Before(e.expires) {
-			result := e.result
+	}
+	return result
+}
+
+func (s *BalanceService) Query(ctx context.Context, settings *SettingsStore, id string) (BalanceResult, error) {
+	for {
+		if err := ctx.Err(); err != nil {
+			return BalanceResult{}, err
+		}
+		p, err := settings.balanceProvider(id)
+		if ctx.Err() != nil {
+			return BalanceResult{}, ctx.Err()
+		}
+		if err != nil {
+			return BalanceResult{}, err
+		}
+		fingerprint := balanceFingerprint(p)
+		s.mu.Lock()
+		if err := ctx.Err(); err != nil {
+			s.mu.Unlock()
+			return BalanceResult{}, err
+		}
+		e := s.entries[id]
+		if e != nil && e.fingerprint == fingerprint && e.done == nil && time.Now().Before(e.expires) {
+			result, err := cloneBalanceResult(e.result), e.err
 			result.Cached = true
 			s.mu.Unlock()
-			return result, e.err
+			return result, err
 		}
-	}
-	if len(s.entries) >= 20 {
-		for key, e := range s.entries {
-			if e.done == nil {
-				delete(s.entries, key)
+		started := e == nil || e.fingerprint != fingerprint || e.done == nil
+		if started {
+			if len(s.entries) >= 20 {
+				for key, entry := range s.entries {
+					if entry.done == nil {
+						delete(s.entries, key)
+					}
+				}
+			}
+			// Browsers share the worker, but each waits with its own context.
+			// The last departing waiter cancels even a queued upstream request.
+			queryCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 10*time.Second)
+			e = &balanceEntry{fingerprint: fingerprint, done: make(chan struct{}), cancel: cancel}
+			s.entries[id] = e
+			go s.query(queryCtx, p, e)
+		}
+		e.waiters++
+		done := e.done
+		s.mu.Unlock()
+		select {
+		case <-done:
+		case <-ctx.Done():
+		}
+		s.mu.Lock()
+		e.waiters--
+		if e.done != nil && e.waiters == 0 {
+			e.cancel()
+			if s.entries[id] == e {
+				delete(s.entries, id)
 			}
 		}
+		result, err := cloneBalanceResult(e.result), e.err
+		s.mu.Unlock()
+		if ctx.Err() != nil {
+			return BalanceResult{}, ctx.Err()
+		}
+		// Changes made while the upstream was pending invalidate its result
+		// for both the initiator and the other callers sharing that request.
+		current, configErr := settings.balanceProvider(id)
+		if configErr != nil {
+			return BalanceResult{}, configErr
+		}
+		if balanceFingerprint(current) != fingerprint {
+			continue
+		}
+		if ctx.Err() != nil {
+			return BalanceResult{}, ctx.Err()
+		}
+		result.Cached = !started
+		return result, err
 	}
-	e := &balanceEntry{fingerprint: fingerprint, done: make(chan struct{})}
-	s.entries[id] = e
-	s.mu.Unlock()
-	// This query is shared by concurrent callers. One browser disconnect must
-	// not cancel a second browser's request; the worker has its own hard timeout.
-	queryCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 10*time.Second)
-	defer cancel()
+}
+
+func (s *BalanceService) query(ctx context.Context, p Provider, e *balanceEntry) {
+	defer e.cancel()
+	var result BalanceResult
+	var err error
 	select {
 	case s.slots <- struct{}{}:
-		e.result, e.err = s.fetch(queryCtx, p)
+		if err = ctx.Err(); err == nil {
+			result, err = s.fetch(ctx, p)
+		}
 		<-s.slots
-	case <-queryCtx.Done():
-		e.err = failure("balance_busy", "余额查询繁忙，请稍后再试", 429)
+	case <-ctx.Done():
+		err = failure("balance_busy", "余额查询繁忙，请稍后再试", 429)
 	}
 	ttl := time.Duration(p.Balance.CacheSeconds) * time.Second
-	if e.err != nil {
+	if err != nil {
 		ttl = time.Minute
 	}
 	s.mu.Lock()
+	e.result, e.err = result, err
 	e.expires = time.Now().Add(ttl)
 	e.result.ExpiresAt = e.expires
 	close(e.done)
 	e.done = nil
 	s.mu.Unlock()
-	return e.result, e.err
 }
 func balancePath(p Provider) string {
 	if p.Balance.Path != "" {

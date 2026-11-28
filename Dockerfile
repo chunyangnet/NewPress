@@ -1,6 +1,13 @@
-ARG NEWPRESS_GO_IMAGE=golang:1.26.11-bookworm@sha256:dc40a13b61304647ed7e5d581d246b86413dfc29d63c6d018310feb93cd98fc0
+ARG NEWPRESS_GO_IMAGE=golang:1.26.11-bookworm@sha256:ea47ee45f1284d60f9cc09cb2c3bb4f508c256b640bd8bb30342ff13d1adcb52
 ARG NEWPRESS_RUNTIME_IMAGE=gcr.io/distroless/static-debian13:nonroot@sha256:f7f8f729987ad0fdf6b05eeeae94b26e6a0f613bdf46feea7fc40f7bd72953e6
 FROM ${NEWPRESS_GO_IMAGE} AS build
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends --only-upgrade libpam0g libpam-modules libpam-modules-bin libpam-runtime \
+    && for package in libpam0g libpam-modules libpam-modules-bin libpam-runtime; do \
+         dpkg --compare-versions "$(dpkg-query -W -f='${Version}' "$package")" ge '1.5.2-6+deb12u3' || exit 1; \
+       done \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src
 COPY go.mod go.sum ./

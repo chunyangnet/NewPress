@@ -12,7 +12,7 @@ function environment() {
   Element.prototype.classList = { add() {}, remove() {}, contains() { return false; } };
   Element.prototype.remove = function () { this.isConnected = false; };
   const globals = { document, window, Element, HTMLInputElement: Element, HTMLTextAreaElement: Element, HTMLSelectElement: Element,
-    crypto, URL, AbortController, DOMException, Error, Event, queueMicrotask, location: { origin: 'https://newpress.test' },
+    crypto, URL, AbortController, DOMException, Error, Event, queueMicrotask, location: { origin: 'https://newpress.test', href: 'https://newpress.test/admin/content/1/edit/' },
     setTimeout(callback, delay) { const id = ++timerID; timers.set(id, { callback, delay }); return id; }, clearTimeout: id => timers.delete(id),
     fetch(url, init = {}) { return new Promise((resolve, reject) => requests.push({ url: String(url), init, reject,
       reply(payload, status = 200) { resolve({ ok: status >= 200 && status < 300, status, json: async () => payload }); },

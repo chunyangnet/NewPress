@@ -2,9 +2,10 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
+const {stripTypeScriptTypes}=require('node:module');
 test('external media retry replaces frames and cancellation cleans timers',()=>{
- const source=fs.readFileSync('internal/coreui/assets/js/newpress-components.source.js','utf8');
- const body=source.slice(source.indexOf('  function player('),source.indexOf('  let worker,'));
+ const source=stripTypeScriptTypes(fs.readFileSync('frontend/core/components.ts','utf8'));
+ const body=source.slice(source.indexOf('  function player('),source.indexOf('  let worker'));
  class Element {
   constructor(tag){this.tag=tag;this.children=[];this.listeners={};this.dataset={};}
   append(...children){for(const c of children){c.parent=this;this.children.push(c);}}
@@ -16,7 +17,7 @@ test('external media retry replaces frames and cancellation cleans timers',()=>{
  root.querySelector=()=>mount;
  const configs=new Map([[root,{provider:'bilibili',uid:'BV1234567890',title:'test'}]]),disposers=new Set(),timers=new Map();
  let seq=0,message='';
- const ctx={configs,disposers,node:tag=>new Element(tag),announce:(_,text)=>message=text,setTimeout:fn=>{timers.set(++seq,fn);return seq;},clearTimeout:id=>timers.delete(id)};
+ const ctx={configs,configFor:root=>configs.get(root),required:(root,selector)=>root.querySelector(selector),disposers,node:tag=>new Element(tag),announce:(_,text)=>message=text,setTimeout:fn=>{timers.set(++seq,fn);return seq;},clearTimeout:id=>timers.delete(id)};
  vm.runInNewContext(body+'\nthis.player=player;',ctx);
  ctx.player(root,button);
  assert.equal(mount.children.filter(x=>x.tag==='iframe').length,1);

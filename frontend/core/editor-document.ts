@@ -17,6 +17,18 @@ export function safeImage(value: string): boolean {
   try { return new URL(value, 'https://newpress.invalid').pathname === value; } catch { return false; }
 }
 
+// Safari may put a copied same-site image in text/html instead of FileList.
+// Keep only canonical local media paths; never import a remote image URL.
+export function pastedImageURL(value: string, pageURL: string): string | null {
+  if (safeImage(value)) return value;
+  const path = value.match(/^https?:\/\/[^/?#]+(\/[^?#]*)$/i)?.[1];
+  if (!path || !safeImage(path)) return null;
+  try {
+    const url = new URL(value), page = new URL(pageURL);
+    return url.origin === page.origin && !url.username && !url.password && url.pathname === path ? path : null;
+  } catch { return null; }
+}
+
 export function documentSchema(): Schema {
   let nodes = addListNodes(basicSchema.spec.nodes, 'paragraph block*', 'block');
   nodes = nodes.update('doc', {content: 'block+', attrs: {tail: {default: ''}}});

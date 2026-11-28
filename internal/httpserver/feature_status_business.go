@@ -17,6 +17,10 @@ import (
 )
 
 func (s *Server) featureStatus(ctx context.Context, feature, object string, a adminView) adminFeatureStatus {
+	return s.featureStatusWithPost(ctx, feature, object, a, nil)
+}
+
+func (s *Server) featureStatusWithPost(ctx context.Context, feature, object string, a adminView, savedPost *content.Post) adminFeatureStatus {
 	snapshot := s.siteSettings.Snapshot()
 	v := adminFeatureStatus{Feature: feature, Object: object, Revision: snapshot.Revision,
 		CheckedAt: time.Now().UTC().Format(time.RFC3339), UserID: a.Principal.UserID, ReadOnly: a.ReadOnly || a.Preview,
@@ -37,7 +41,7 @@ func (s *Server) featureStatus(ctx context.Context, feature, object string, a ad
 		item.Checks = append(item.Checks, check, featureInfo("mode", "手动维护", "编辑已保存的话题不需要文本模型，也不受写作队列暂停影响。"))
 		v.Items = []featureStatusItem{item}
 	case "comments", "article-comments":
-		v.Items = []featureStatusItem{s.commentsFeatureStatus(ctx, feature, object, snapshot.Settings)}
+		v.Items = []featureStatusItem{s.commentsFeatureStatusWithPost(ctx, feature, object, snapshot.Settings, savedPost)}
 	case "features":
 		v.Items = []featureStatusItem{s.pageFeatureStatus(ctx, "feedback", "", snapshot.Settings.Modules), s.pageFeatureStatus(ctx, "links", "", snapshot.Settings.Modules)}
 	case "feedback", "links":
@@ -230,6 +234,10 @@ func (s *Server) wechatFeatureStatus(ctx context.Context, overrides map[string]b
 }
 
 func (s *Server) commentsFeatureStatus(ctx context.Context, feature, object string, settings site.Settings) featureStatusItem {
+	return s.commentsFeatureStatusWithPost(ctx, feature, object, settings, nil)
+}
+
+func (s *Server) commentsFeatureStatusWithPost(ctx context.Context, feature, object string, settings site.Settings, savedPost *content.Post) featureStatusItem {
 	v := s.moduleFeatureStatus("comments", settings.Modules)
 	v.Summary = "全站评论已开启，每篇内容独立决定是否接受新评论。"
 	labels := map[bool]string{true: "开放", false: "关闭"}
@@ -244,7 +252,13 @@ func (s *Server) commentsFeatureStatus(ctx context.Context, feature, object stri
 		return v
 	}
 	id, _ := strconv.ParseInt(object, 10, 64)
-	post, err := s.repository.GetByID(ctx, id)
+	var post content.Post
+	var err error
+	if savedPost != nil && savedPost.ID == id {
+		post = *savedPost
+	} else {
+		post, err = s.repository.GetByID(ctx, id)
+	}
 	if err != nil {
 		v.Checks = append(v.Checks, featureStatusCheck{ID: "post", Label: "本篇设置", State: "error", Reason: "无法读取本篇已保存的评论设置。"})
 		return v

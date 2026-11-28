@@ -33,5 +33,11 @@ export interface ExperienceDependencies extends Pick<InteractionAPI, 'api' | 'ge
   emoji: NonNullable<Window['ChunnelEmoji']>;
 }
 declare global {
-  interface Window { NewPressRecognition?: { decorateComment(meta: HTMLElement, item: PublicComment): void } }
+  interface Window {
+    NewPressRecognition?: {
+      decorateComment(meta: HTMLElement, item: PublicComment): void;
+      badge(value: Partial<PublicBadge>, options?: { interactive?: boolean; decorative?: boolean }): HTMLElement;
+      colors(element: HTMLElement): void;
+    }
+  }
 }

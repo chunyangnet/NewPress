@@ -12,8 +12,8 @@ const doc={createElement:tag=>new Element(tag),createTextNode:text=>({tag:'#text
 const descendants=elements=>elements.flatMap(el=>[el,...descendants(el.children||[])]);
 const table='| 分类 | 数量 | 文章 ID |\n|---|---:|---|\n| 项目日志 | 3 | ID1、ID4、ID6 |\n| 主题设计 | 3 | ID2、ID5、ID8 |\n| 扩展架构 | 3 | ID3、ID7、ID9 |';
 
-for(const path of ['../../internal/coreui/assets/js/chunnel-ai-workbench.source.js','../../internal/coreui/assets/js/chunnel-ai-workbench.js']){
-  const api=require(path);
+for(const path of ['frontend/shared/ai-workbench-helpers.ts']){
+  const api=require('./helpers/typescript.cjs').loadNativeModule(path);
   test(`${path}: SSE handles every chunk boundary and CRLF without losing text`,()=>{
     const stream='event: delta\r\ndata: {"text":"中文"}\r\n\r\nevent: done\ndata: {"saved":true}\n\n';
     for(let split=1;split<stream.length;split++){

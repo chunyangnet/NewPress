@@ -2,7 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
-const source = fs.readFileSync(require('node:path').join(__dirname, '../../internal/coreui/assets/js/chunnel-plugins.js'), 'utf8');
+const {compile}=require('./helpers/typescript.cjs');
+const source=process.env.CHUNNEL_PLUGINS_SOURCE?fs.readFileSync(process.env.CHUNNEL_PLUGINS_SOURCE,'utf8'):compile('frontend/core/plugins.ts');
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
 function fixture({configured = true, readOnly = false, entries} = {}) {
@@ -65,7 +66,7 @@ function fixture({configured = true, readOnly = false, entries} = {}) {
   const dialog = node('dialog', {pluginUninstall: ''}), cancel = node('button'); cancel.cancel = true;
   const confirm = node('button', {uninstallConfirm: ''}), uninstallName = node('span', {uninstallName: ''}), uninstallError = node('p', {uninstallError: ''});
   dialog.append(confirm, cancel, uninstallName, uninstallError); root.append(notice, dialog);
-  const document = {hidden: false, activeElement: null, querySelector: selector => matches(root, selector) ? root : root.querySelector(selector), addEventListener(type, fn) {documentEvents[type] = fn;}};
+  const document = {hidden: false, activeElement: null, querySelector: selector => matches(root, selector) ? root : root.querySelector(selector), addEventListener(type, fn) {documentEvents[type] = fn;},removeEventListener(){}};
   vm.runInNewContext(source, {document, window: {addEventListener(type, fn) {events[type] = fn;}}, location: {reload() {reloads++;}}, AbortController,
     DOMParser: class { parseFromString(html) {return {querySelector: () => pages.get(html) || null};} },
     setTimeout(fn, ms) {const id = ++nextTimer; timers.set(id, {fn, ms}); return id;}, clearTimeout(id) {timers.delete(id);},
@@ -112,7 +113,7 @@ test('category, search and status filters intersect and update counts without re
   f.fire(category('comments')); assert.deepEqual(visible(), ['comment-origin']);
   f.statusFilter.value = 'available'; f.fire(f.statusFilter, 'change');
   assert.deepEqual(visible(), []); assert.equal(f.initial.empty.hidden, false);
-  assert.equal(category('comments').querySelector('[data-category-count]').textContent, 0);
+  assert.equal(category('comments').querySelector('[data-category-count]').textContent, '0');
   f.fire(f.initial.clear); assert.deepEqual(visible(), discoveryEntries.map(entry => entry.slug));
   f.search.value = 'ＳＥＯ   地图'; f.fire(f.search, 'input');
   assert.deepEqual(visible(), ['seo-helper']);
@@ -285,4 +286,14 @@ test('details use a modal and restore focus without refreshing while reading', a
   const count = f.calls.length; f.events.focus(); assert.equal(f.calls.length, count);
   f.fire(drawer.querySelector('[data-plugin-details-close]'));
   assert.equal(drawer.open, false); assert.equal(f.document.activeElement, open);
+});
+
+
+test('confirmed installation remains confirmed when the following market read fails',async()=>{
+ const f=fixture();const action=f.fire(f.initial.button);f.respond(f.posts()[0],{ok:true});await tick();f.respond(f.calls.at(-1),'failed',503);await action;
+ assert.match(f.notice.textContent,/插件操作已完成/);assert.match(f.notice.textContent,/列表暂未刷新/);assert.equal(f.posts().length,1);
+});
+test('region replacement cancels an installation response and prevents market reload',async()=>{
+ const f=fixture();const action=f.fire(f.initial.button),pending=f.posts()[0];f.documentEvents['chunnel:admin-before-replace']({detail:{regions:[f.root]}});
+ assert.equal(pending.options.signal.aborted,true);const count=f.calls.length;f.respond(pending,{ok:true});await action;assert.equal(f.calls.length,count);assert.equal(f.reloads(),0);
 });

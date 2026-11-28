@@ -124,7 +124,14 @@ func (limiter *commentRateLimiter) allow(key string, limit int, now time.Time) (
 	entry, exists := limiter.entries[key]
 	if !exists || now.Sub(entry.Started) >= commentRateWindow || now.Before(entry.Started) {
 		if !exists && len(limiter.entries) >= commentRateKeyLimit {
-			limiter.evictOldestLocked()
+			for existingKey, existing := range limiter.entries {
+				if now.Sub(existing.Started) >= commentRateWindow || now.Before(existing.Started) {
+					delete(limiter.entries, existingKey)
+				}
+			}
+			if len(limiter.entries) >= commentRateKeyLimit {
+				return false, commentRateWindow
+			}
 		}
 		entry = commentRateEntry{Started: now}
 	}
@@ -140,20 +147,6 @@ func (limiter *commentRateLimiter) allow(key string, limit int, now time.Time) (
 	entry.Count++
 	limiter.entries[key] = entry
 	return true, 0
-}
-
-func (limiter *commentRateLimiter) evictOldestLocked() {
-	oldestKey := ""
-	var oldest time.Time
-	for key, entry := range limiter.entries {
-		if oldestKey == "" || entry.LastSeen.Before(oldest) {
-			oldestKey = key
-			oldest = entry.LastSeen
-		}
-	}
-	if oldestKey != "" {
-		delete(limiter.entries, oldestKey)
-	}
 }
 
 func commentTokenPayload(postID, expires int64) string {

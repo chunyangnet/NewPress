@@ -58,7 +58,11 @@ func TestAdminSharedLayoutRenderContract(t *testing.T) {
 			if r.Code != http.StatusOK {
 				t.Fatalf("render status %d", r.Code)
 			}
-			for _, text := range []string{"data-admin-group=\"plugins\"", "chunnel-admin-skin.css", "chunnel-admin-workbench.js", "data-admin-command-input"} {
+			entry := "chunnel-admin-workbench.js"
+			if route == "/admin/content/new/" {
+				entry = "newpress-editor-page.js"
+			}
+			for _, text := range []string{"data-admin-group=\"plugins\"", "chunnel-admin-skin.css", entry, "data-admin-command-input"} {
 				if !strings.Contains(body, text) {
 					t.Errorf("missing shared layout %s", text)
 				}

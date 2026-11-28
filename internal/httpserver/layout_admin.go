@@ -38,7 +38,7 @@ func (s *Server) adminLayout(w http.ResponseWriter, r *http.Request) {
 }
 func (s *Server) renderLayout(w http.ResponseWriter, r *http.Request, status int, p auth.Principal, ro bool, snapshot theme.SettingsSnapshot, fields map[string]string, notice adminNotice) {
 	if !s.themes.Active().Supports(theme.HomeLayoutV1) {
-		s.renderFeatureRecovery(w, r, "layout", "", s.adminView("layout", p, ro), 501, "")
+		s.renderFeatureRecovery(w, r, "layout", "", s.adminRecoveryIdentity("layout", p, ro), 501, "")
 		return
 	}
 	data := s.baseViewFor(w, "可视化布局", "拖动模块，自定义站点首页", "/admin/appearance/layout/")

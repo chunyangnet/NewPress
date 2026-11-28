@@ -4,7 +4,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
-const script = name => fs.readFileSync(path.join(__dirname, '../../internal/coreui/assets/js', name), 'utf8');
+const editor = require('./helpers/editor-save.cjs');
+const script = name => name === 'chunnel-admin-editor.source.js' ? editor.source() : fs.readFileSync(path.join(__dirname, '../../internal/coreui/assets/js', name), 'utf8');
+const autosaveMeta = {post_id: 1, source_version: 1, expires_at: '2026-11-10T05:00:00Z', recovery_url: '/admin/content/1/edit/?recovery=autosave'};
 const deferred = () => { let resolve; const promise = new Promise(done => { resolve = done; }); return {promise, resolve}; };
 
 function autosave(fetch) {
@@ -14,7 +16,9 @@ function autosave(fetch) {
   assert.ok(start >= 0 && end > start);
   const timers = new Map(), details = [], toasts = [];
   const context = vm.createContext({
+    ...editor.context,
     fetch, AbortController, DOMException, URLSearchParams, URL,
+    checkEditorSession: async () => true, editorPageHidden: false,
     autosaveURL: '/admin/content/1/autosave/', submittingEditor: false, pendingEditorSubmission: null, browserRecovery: null,
     serializedEditor: () => 'new draft', editorNeedsAutosave: () => true,
     lastAutosaveSignature: '', autosaveController: null, autosaveStopped: false, timezoneNeedsReview: false,
@@ -23,7 +27,7 @@ function autosave(fetch) {
     setAutosaveDetail: (message, tone) => details.push({message, tone}),
     autosaveErrorMessage: (_, status) => `HTTP ${status}`,
     showToast: (message, tone) => toasts.push({message, tone}),
-    FormData: class { forEach(callback) { callback('new draft', 'content_source'); } },
+    FormData: class { forEach(callback) { callback('new draft', 'content_source'); callback('1', 'version'); } },
     window: {location: {href: 'https://example.test/admin/content/1/edit/', origin: 'https://example.test'}, setTimeout(fn, ms) { timers.set(1, {fn, ms}); return 1; }, clearTimeout(id) { timers.delete(id); }},
   });
   vm.runInContext(source.slice(start, end) + '\nglobalThis.perform = performAutosave;', context);
@@ -42,11 +46,14 @@ test('timezone review pauses automatic and manual recovery writes without consum
 
 test('autosave aborts a hung request and keeps the draft eligible for retry', async () => {
   let signal;
+  const started = deferred();
   const fixture = autosave((_, options) => new Promise((_, reject) => {
     signal = options.signal;
+    started.resolve();
     signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
   }));
   const pending = fixture.save();
+  await started.promise;
   assert.equal(fixture.timers.get(1).ms, 15000);
   fixture.timers.get(1).fn();
   assert.equal(await pending, null);
@@ -71,16 +78,16 @@ test('an incomplete success response does not consume the autosave signature', a
 });
 
 test('confirmed autosave acknowledges the captured draft and clears its deadline', async () => {
-  const payload = {available: true, updated_at: '2026-11-07T05:00:00Z', preview_url: '/admin/content/1/preview/?token=test'};
+  const payload = {...autosaveMeta, available: true, updated_at: '2026-11-07T05:00:00Z', preview_url: '/admin/content/1/preview/?token=test'};
   const fixture = autosave(async () => ({ok: true, json: async () => payload}));
-  assert.equal(await fixture.save(), payload);
+  assert.deepEqual(await fixture.save(), payload);
   assert.equal(fixture.context.lastAutosaveSignature, 'new draft');
   assert.equal(fixture.details.at(-1).tone, 'success');
   assert.equal(fixture.timers.size, 0);
 });
 
 test('autosave rejects malformed acknowledgements and preview addresses outside this draft', async () => {
-  const valid = {available: true, updated_at: '2026-11-07T05:00:00Z', preview_url: '/admin/content/1/preview/?token=test'};
+  const valid = {...autosaveMeta, available: true, updated_at: '2026-11-07T05:00:00Z', preview_url: '/admin/content/1/preview/?token=test'};
   for (const change of [
     {available: 'true'}, {updated_at: 'invalid date'}, {preview_url: {}},
     {preview_url: 'javascript:alert(1)'}, {preview_url: '//external.test/admin/content/1/preview/?token=test'},
@@ -102,11 +109,35 @@ test('conflicting autosave stops retrying instead of overwriting the saved versi
 });
 
 test('a confirmed manual recovery resumes automatic saving after a session pause', async () => {
-  const payload = {available: true, updated_at: '2026-11-09T05:00:00Z', preview_url: '/admin/content/1/preview/?token=test'};
+  const payload = {...autosaveMeta, available: true, updated_at: '2026-11-09T05:00:00Z', preview_url: '/admin/content/1/preview/?token=test'};
   const fixture = autosave(async () => ({ok: true, json: async () => payload}));
   fixture.context.autosaveStopped = true;
-  assert.equal(await fixture.save(), payload);
+  assert.deepEqual(await fixture.save(), payload);
   assert.equal(fixture.context.autosaveStopped, false);
+});
+
+test('automatic recovery refuses an unconfirmed owner and a newer draft during session refresh', async () => {
+  const fixture = autosave(() => assert.fail('unconfirmed draft must not be written'));
+  fixture.context.checkEditorSession = async () => false;
+  assert.equal(await fixture.save(), null);
+  assert.equal(fixture.timers.size, 0);
+  const started = deferred();
+  fixture.context.checkEditorSession = () => started.promise;
+  const saving = fixture.save();
+  fixture.context.serializedEditor = () => 'later input';
+  started.resolve(true);
+  assert.equal(await saving, null);
+  assert.equal(fixture.context.lastAutosaveSignature, '');
+});
+
+test('autosave verifies the article identity, source version and recovery metadata', async () => {
+  const valid = {...autosaveMeta, available: true, updated_at: '2026-11-09T05:00:00Z', preview_url: '/admin/content/1/preview/?token=test'};
+  for (const change of [{post_id: 2}, {post_id: '1'}, {source_version: 2}, {source_version: undefined},
+    {expires_at: 'bad'}, {expires_at: valid.updated_at}, {recovery_url: '/admin/content/2/edit/?recovery=autosave'}]) {
+    const fixture = autosave(async () => ({ok: true, json: async () => ({...valid, ...change})}));
+    assert.equal(await fixture.save(), null);
+    assert.equal(fixture.context.lastAutosaveSignature, '');
+  }
 });
 
 test('timeout while reading the autosave response body cannot report success', async () => {
@@ -127,6 +158,7 @@ function discussion() {
   const gate = deferred(), requests = [], errors = {hidden: true}, input = {value: 'Original text'};
   const state={owner:1,generation:0,busy:false,pending:null};
   const context = vm.createContext({
+    ...editor.context,
     state, input, errorBox: errors,
     getSession: () => gate.promise, run: action => action(),
     signIn: action => action(), showToast() {}, update() {},

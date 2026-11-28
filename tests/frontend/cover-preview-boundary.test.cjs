@@ -49,7 +49,7 @@ function badgeFixture(asset) {
 }
 
 function editorFixture() {
-  const code = source('chunnel-admin-editor.source.js');
+  const code = require('./helpers/editor-save.cjs').source();
   const start = code.indexOf('    const updateCoverPreview =');
   const end = code.indexOf('    editorForm.querySelectorAll', start);
   assert.ok(start > 0 && end > start, 'editor preview handler must be present');

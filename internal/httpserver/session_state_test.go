@@ -95,9 +95,24 @@ func TestSessionHTTPOutageRecoveryDurableLogoutAndRequestCache(t *testing.T) {
 	server.auth = manager
 	handler := server.routes()
 	cookie := &http.Cookie{Name: auth.CookieName, Value: token, Path: "/"}
-	response := serveCookieRequest(handler, http.MethodGet, "https://example.test/admin/", cookie, nil)
+	// Ordinary view helpers share the request snapshot. The real dashboard
+	// additionally revalidates authority after loading private data.
+	cacheHandler := server.sessionState(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		for i := 0; i < 3; i++ {
+			current, selectedToken, ok := server.currentAdminSession(r)
+			if !ok || current.UserID != principal.UserID || current.Username != principal.Username || selectedToken != token {
+				t.Fatal("view helper lost the authenticated request snapshot")
+			}
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	response := serveCookieRequest(cacheHandler, http.MethodGet, "https://example.test/admin/", cookie, nil)
 	if response.Code != http.StatusOK || sessions.gets != 1 || sessions.touches != 1 {
 		t.Fatalf("request did not share one authentication result: status=%d lookups=%d touches=%d", response.Code, sessions.gets, sessions.touches)
+	}
+	response = serveCookieRequest(handler, http.MethodGet, "https://example.test/admin/", cookie, nil)
+	if response.Code != http.StatusOK {
+		t.Fatalf("dashboard authority checks rejected the valid session: status=%d", response.Code)
 	}
 	failure := errors.New("private injected storage error")
 	sessions.getErr = failure
@@ -213,6 +228,9 @@ func TestSessionHTTPOutageRecoveryDurableLogoutAndRequestCache(t *testing.T) {
 	sessions.readyErr = failure
 	for path, want := range map[string]int{"/health/live": http.StatusOK, "/health/ready": http.StatusServiceUnavailable} {
 		response = serveCookieRequest(handler, http.MethodGet, "https://example.test"+path, cookie, nil)
+		if path == "/health/ready" {
+			response = serveLocalReadiness(handler)
+		}
 		if response.Code != want {
 			t.Fatalf("%s status=%d, want %d", path, response.Code, want)
 		}

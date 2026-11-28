@@ -3,6 +3,7 @@
 package aiworkbench
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
@@ -92,6 +93,29 @@ type Preview struct {
 	ExpiresAt time.Time `json:"expires_at"`
 	Context   string    `json:"context"`
 	Focus     string    `json:"focus"`
+	source    *previewSourceCheck
+}
+
+// Source checks are immutable, process-local and never encoded in reports or
+// client previews. The caller supplies each operation's current context.
+type previewSourceCheck struct{ check func(context.Context) error }
+
+func (p Preview) WithSourceCheck(check func(context.Context) error) Preview {
+	p.source = nil
+	if check != nil {
+		p.source = &previewSourceCheck{check: check}
+	}
+	return p
+}
+
+func (p Preview) CheckSource(ctx context.Context) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if p.source != nil {
+		return p.source.check(ctx)
+	}
+	return nil
 }
 
 type ownedPreview struct {
@@ -112,11 +136,28 @@ func NewID() string {
 }
 
 func (p *Previews) Put(owner int64, value Preview, now time.Time) (Preview, error) {
+	return p.PutChecked(owner, value, now, nil)
+}
+
+// Checks run under the preview lock and must not reenter this Previews store.
+// Rejection must not invalidate the user's previous confirmation token.
+func (p *Previews) PutChecked(owner int64, value Preview, now time.Time, check func() error) (Preview, error) {
 	if len(value.Context) > MaxContextBytes {
 		return Preview{}, errors.New("本次资料过长，请缩小输入范围")
 	}
 	p.mu.Lock()
 	defer p.mu.Unlock()
+	if check != nil {
+		if err := check(); err != nil {
+			return Preview{}, err
+		}
+	}
+	value.Token, value.CreatedAt, value.ExpiresAt = NewID(), now.UTC(), now.Add(PreviewTTL).UTC()
+	if check != nil {
+		if err := check(); err != nil {
+			return Preview{}, err
+		}
+	}
 	if p.items == nil {
 		p.items = make(map[string]ownedPreview)
 	}
@@ -128,20 +169,36 @@ func (p *Previews) Put(owner int64, value Preview, now time.Time) (Preview, erro
 	if len(p.items) >= 64 {
 		return Preview{}, errors.New("当前预览任务较多，请稍后重试")
 	}
-	value.Token, value.CreatedAt, value.ExpiresAt = NewID(), now.UTC(), now.Add(PreviewTTL).UTC()
 	p.items[value.Token] = ownedPreview{owner, value}
 	return value, nil
 }
 
 func (p *Previews) Take(owner int64, token string, now time.Time) (Preview, error) {
+	return p.TakeChecked(owner, token, now, nil)
+}
+
+func (p *Previews) TakeChecked(owner int64, token string, now time.Time, check func() error) (Preview, error) {
+	started := time.Now()
 	p.mu.Lock()
 	defer p.mu.Unlock()
+	if check != nil {
+		if err := check(); err != nil {
+			return Preview{}, err
+		}
+	}
 	entry, ok := p.items[token]
 	if !ok || entry.owner != owner {
 		return Preview{}, ErrPreview
 	}
+	if check != nil {
+		if err := check(); err != nil {
+			return Preview{}, err
+		}
+	}
 	delete(p.items, token)
-	if !now.Before(entry.preview.ExpiresAt) {
+	// Preserve the caller's clock while including time spent awaiting the lock
+	// and authority checks. A token must still be live when it is consumed.
+	if !now.Add(time.Since(started)).Before(entry.preview.ExpiresAt) {
 		return Preview{}, ErrPreview
 	}
 	return entry.preview, nil

@@ -17,7 +17,7 @@ test('explore filters stay on their route and the view switch stays in place', (
   assert.match(template, /<button type="button" data-view-toggle="grid"/);
   assert.match(template, /data-view-toggle="list" aria-pressed="\{\{if eq \.Discovery\.View "list"\}\}true/);
   assert.match(read('assets/css/chunnel-portal.source.css'), /\.portal-view-switch :is\(a,button\)/);
-  assert.match(read('assets/js/chunnel.js'), /if \(results\) keepScroll/);
+  assert.match(readFileSync('frontend/shared/chunnel.ts', 'utf8'), /if \(results\) keepScroll/);
 });
 
 test('public and admin use native document restoration and share a synchronous local helper', () => {
@@ -31,11 +31,11 @@ test('public and admin use native document restoration and share a synchronous l
 });
 
 test('in-place panel switches preserve the reader position through one helper', () => {
-  const publicScript = read('assets/js/chunnel.js');
+  const publicScript = readFileSync('frontend/shared/chunnel.ts', 'utf8');
   assert.match(publicScript, /window\.ChunnelScroll\.keep\(change\)/);
   assert.match(publicScript, /if \(preserve\) keepScroll\(change\)/);
   // Account tab/scroll behavior is exercised through both entries in account-loading.test.cjs.
-  assert.match(read('assets/js/chunnel-wechat.source.js'), /selectTab\(name, false, true\)/);
+  assert.match(readFileSync(resolve(__dirname, '../../frontend/core/wechat.ts'), 'utf8'), /selectTab\(name, false, true\)/);
 
   const adminUI = readFileSync(resolve(__dirname, '../../frontend/core/admin-ui.ts'), 'utf8');
   assert.match(adminUI, /preserve && window\.ChunnelScroll/);

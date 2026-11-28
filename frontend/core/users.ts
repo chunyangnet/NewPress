@@ -15,7 +15,7 @@ const drafts = (form: HTMLFormElement) => [...form.querySelectorAll<Control>('in
 const restoreDraft = (form: HTMLFormElement, values: ReturnType<typeof drafts>) => { for (const el of form.querySelectorAll<Control>('input,select,textarea')) { const saved=values.find(v=>v.name===el.name&&(!(el instanceof HTMLInputElement)||!['checkbox','radio'].includes(el.type)||v.value===el.value)); if(!saved)continue; el.value=saved.value;if(el instanceof HTMLInputElement)el.checked=saved.checked;if(el instanceof HTMLSelectElement&&saved.selected)for(const option of el.options)option.selected=saved.selected.includes(option.value); } };
 (() => {
   'use strict';
-  const host = document.querySelector<HTMLElement>('.admin-users-page'); if(!host)return;const page=host;
+  const host = document.querySelector<HTMLElement>('.admin-users-page'); if(!host||host.dataset.userWorkspaceReady==='true'||host.dataset.userWorkspaceRetired==='true')return;const page=host;
   const initial = page.querySelector<HTMLDialogElement>('[data-user-dialog]');
   if (!initial) return; let dialog: HTMLDialogElement = initial;
   let opener: HTMLAnchorElement | null = null, loading: AbortController | null = null, busy = false, generation = 0, recovered: UserOperation | null = null, pendingInvalid = false, nativeUncertain=false;
@@ -309,9 +309,20 @@ const restoreDraft = (form: HTMLFormElement, values: ReturnType<typeof drafts>) 
       const notice=new URL(response.url).searchParams.get('notice');
       if (response.ok && notice !== (creating?'created':data.get('action')==='password'?'password':'updated')) throw new Error('尚未收到保存确认，请重新载入账户核对。');
       if (creating && response.ok) { confirmed=true;sessionStorage.removeItem(nativeKey());nativeUncertain=false;closeAfterCreate(doc); return; }
-      if(next.dataset.csrf!==csrf||next.dataset.userId!==dialog.dataset.userId){runtime.retire();if(response.ok&&data.get('action')==='password')feedback('密码已更新，请重新载入以使用新会话。');return;}const replacement=next.querySelector<HTMLFormElement>('#'+formID);
+      if (next.dataset.userId !== dialog.dataset.userId) { runtime.retire(); return; }
+      const replacement = next.querySelector<HTMLFormElement>('#' + formID);
       if (!replacement) throw new Error('未能读取保存后的账户资料。');
       if(response.ok && BigInt(control(replacement,'version').value)!==BigInt(data.get('version')||'0')+1n)throw new Error('账户保存版本未确认，请重新载入核对。');
+      if (next.dataset.csrf !== csrf) {
+        if (response.ok && data.get('action') === 'password' && dialog.dataset.userId === owner) {
+          confirmed = true;
+          sessionStorage.removeItem(nativeKey());
+          nativeUncertain = false;
+          runtime.retire();
+          feedback('密码已更新，请重新载入以使用新会话。');
+        } else runtime.retire();
+        return;
+      }
       const later=signature(form)!==submittedSignature?drafts(form):null;form.replaceWith(replacement); baselines.delete(form); track(replacement);if(later)restoreDraft(replacement,later);
       if (!response.ok) { if(response.status<500){sessionStorage.removeItem(nativeKey());nativeUncertain=false;}baselines.set(replacement, oldBaseline || ''); feedback(required(next,'[data-user-feedback]').textContent || '请检查输入后重试。', true); replacement.querySelector<HTMLElement>('.has-error input, .has-error textarea')?.focus(); return; }
       confirmed=true;sessionStorage.removeItem(nativeKey());nativeUncertain=false;
@@ -342,5 +353,6 @@ const restoreDraft = (form: HTMLFormElement, values: ReturnType<typeof drafts>) 
   }
   page.addEventListener('click', event => { if(!(event.target instanceof Element))return;const link = event.target.closest<HTMLAnchorElement>('[data-user-edit], [data-user-create]'); if (!link || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0) return; event.preventDefault(); openEditor(link); });
   window.addEventListener('beforeunload', event => { if (dialog.open && (busy || operations.size || dirty())) { event.preventDefault(); event.returnValue = ''; } });
+  page.dataset.userWorkspaceReady = 'true';
   if (dialog.dataset.autoOpen === 'true') mount(dialog);
 })();

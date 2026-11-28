@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const {splitDocument, renderMarkdown, SSEDecoder, readStream, ThinkingTrace, GenerationStats, MAX_THINKING, MAX_OUTPUT, byteLength, chooseConnection, briefProblem} = require('../../internal/coreui/assets/js/chunnel-ai-editor.source.js');
+const {splitDocument, renderMarkdown, SSEDecoder, readStream, ThinkingTrace, GenerationStats, MAX_THINKING, MAX_OUTPUT, byteLength, chooseConnection, briefProblem} = require('./helpers/typescript.cjs').loadNativeModule('frontend/shared/ai-writing-helpers.ts');
 
 test('provider usage stays unknown until reported, and explicit zero is retained', () => {
   const stats = new GenerationStats(); stats.reset('writer', 1000);
@@ -63,7 +63,7 @@ test('usage-only events survive a stream error and late events cannot alter reta
   });
   assert.equal(stats.usage.total_tokens, 50); assert.equal(stats.tps(), 8); assert.equal(stats.state, 'error');
 });
-const {parseModels} = require('../../internal/coreui/assets/js/chunnel-ai-settings.source.js');
+const {parseModels} = require('./helpers/typescript.cjs').loadNativeModule('frontend/shared/ai-settings-data.ts');
 
 const briefs = require('../../internal/aieditor/testdata/briefs.json');
 for (const item of briefs) {

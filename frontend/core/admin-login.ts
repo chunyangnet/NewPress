@@ -1,21 +1,18 @@
+import { bindNativeSubmission } from './admin-native-submit';
+
 (() => {
   'use strict';
   const form = document.querySelector<HTMLFormElement>('.admin-login-form');
   const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
   const original = button?.innerHTML || '';
-  // Lock only the accepted native submission. Keeping the submitter enabled
-  // preserves successful form controls while verification can still cancel.
-  window.addEventListener('submit', event => {
-    if (!form || event.target !== form || event.defaultPrevented) return;
-    if (form.dataset.submitOnce === 'true') { event.preventDefault(); return; }
-    form.dataset.submitOnce = 'true'; form.setAttribute('aria-busy', 'true');
-    if (button) { button.setAttribute('aria-disabled', 'true'); button.dataset.submitState = 'pending'; button.textContent = '正在登录…'; }
-  });
-  window.addEventListener('pageshow', () => {
-    if (!form) return;
-    delete form.dataset.submitOnce; delete form.dataset.verificationSubmitting; delete form.dataset.verificationPending;
-    form.removeAttribute('aria-busy');
-    if (button) { button.removeAttribute('aria-disabled'); delete button.dataset.submitState; button.innerHTML = original; }
+  if (form) bindNativeSubmission(form, {
+    onPending() {
+      if (button) { button.setAttribute('aria-disabled', 'true'); button.dataset.submitState = 'pending'; button.textContent = '正在登录…'; }
+    },
+    onRestore() {
+      delete form.dataset.verificationSubmitting; delete form.dataset.verificationPending;
+      if (button) { button.removeAttribute('aria-disabled'); delete button.dataset.submitState; button.innerHTML = original; }
+    },
   });
   const passwordToggle = document.querySelector<HTMLButtonElement>('[data-password-toggle]');
   passwordToggle?.addEventListener('click', () => {

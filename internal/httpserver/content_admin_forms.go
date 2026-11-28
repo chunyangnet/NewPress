@@ -56,12 +56,11 @@ func (s *Server) requireContentWriteLimit(writer http.ResponseWriter, request *h
 		writeJSON(writer, http.StatusBadRequest, map[string]string{"error": "invalid_content_form"})
 		return auth.Principal{}, nil, false
 	}
-	form := request.PostForm
-	if len(form["csrf_token"]) != 1 || !s.auth.CheckCSRF(principal, form.Get("csrf_token")) {
-		writeJSON(writer, http.StatusForbidden, map[string]string{"error": "csrf_validation_failed"})
+	principal, ok = s.refreshContentWrite(writer, request)
+	if !ok {
 		return auth.Principal{}, nil, false
 	}
-	return principal, form, true
+	return principal, request.PostForm, true
 }
 
 func strictBulkContentFormError(form url.Values) string {

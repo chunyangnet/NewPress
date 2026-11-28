@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:18.4-bookworm@sha256:882236b897e39051d2368c5ccc6cda944904723506b2dfc97f2a8f5bc9afa382
+        image: postgres:18.7-bookworm@sha256:e742a2668255221388004f3a42b6150a2103f5054ab3a4a93ae9e4f01e551c35
         env:
           POSTGRES_DB: newpress_test
           POSTGRES_USER: newpress
@@ -26,6 +26,36 @@ jobs:
           --health-retries 20
     steps:
       - uses: actions/checkout@v4
+      - name: Validate unprivileged proxy configuration
+        run: |
+          image=$(sed -n 's/.*NEWPRESS_PROXY_IMAGE:-\([^}]*\)}.*/\1/p' compose.yaml)
+          test -n "$image"
+          docker build --pull --no-cache --build-arg BASE_IMAGE="$image" -f deploy/Dockerfile.nginx -t newpress-nginx:ci deploy
+          image=newpress-nginx:ci
+          docker run --rm --read-only --user 101:101 --cap-drop ALL \
+            --security-opt no-new-privileges:true \
+            --tmpfs /tmp:size=32m,mode=1777 --add-host app:127.0.0.1 \
+            -v "$PWD/deploy/nginx-main.conf:/etc/nginx/nginx.conf:ro" \
+            -v "$PWD/deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro" \
+            --entrypoint nginx "$image" -t
+      - name: Build patched database and cache images
+        run: |
+          docker build --pull --no-cache -f deploy/Dockerfile.postgres -t newpress-postgres:ci deploy
+          docker build --pull --no-cache -f deploy/Dockerfile.redis -t newpress-redis:ci deploy
+          docker run --rm --entrypoint postgres newpress-postgres:ci --version
+          docker run --rm --entrypoint redis-server newpress-redis:ci --version
+      - name: Update CI database service PAM packages
+        env:
+          DATABASE_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          docker exec --user 0 "$DATABASE_CONTAINER" sh -ec '
+            apt-get update
+            apt-get install -y --no-install-recommends --only-upgrade libpam0g libpam-modules libpam-modules-bin libpam-runtime
+            for package in libpam0g libpam-modules libpam-modules-bin libpam-runtime; do
+              dpkg --compare-versions "$(dpkg-query -W -f="\${Version}" "$package")" ge "1.5.2-6+deb12u3"
+            done
+            rm -rf /var/lib/apt/lists/*
+          '
       - name: Public source boundary
         run: |
           python3 -m unittest discover -s scripts -p 'test_check_public_source.py' -v
@@ -39,6 +69,8 @@ jobs:
           node-version: '22'
       - name: Install frontend dependencies
         run: npm ci --ignore-scripts
+      - name: Frontend dependency vulnerability scan
+        run: npm audit --ignore-scripts --registry=https://registry.npmjs.org
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
       - name: Allow sandboxed Chromium on AppArmor hosts

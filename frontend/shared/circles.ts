@@ -1,6 +1,7 @@
 import {required,field,pageRequests,failure} from './collection-runtime';
 import {record,circleReceipt,circleLatest,circleUpload} from './collection-data';
 import type {CircleCommand,CircleFile} from './collection-data';
+import {composeSnapshot,composeSaved} from './community-draft';
 (() => {
   'use strict';
   const page=document.querySelector<HTMLElement>('[data-circle-page]');if(!page)return;
@@ -18,7 +19,13 @@ import type {CircleCommand,CircleFile} from './collection-data';
   });
   const endpoint=(slug: string)=>'/api/v1/community/circles/'+encodeURIComponent(slug);
   const parse=async(value:unknown)=>record(value);
-  const notify=(message: string,node: HTMLElement)=>{status.hidden=false;status.textContent=message;const local=node.closest('form')?.querySelector('[data-form-status]');if(local)local.textContent=message;};
+  const notify=(message: string,node: HTMLElement)=>{
+    const local=node.closest('form')?.querySelector<HTMLElement>('[data-form-status]');
+    status.textContent=message;status.hidden=!!local;
+    // A second page-top banner shifts the form and can move a retry button
+    // between pointerdown and pointerup while WebKit applies scroll anchoring.
+    if(local){local.hidden=false;local.textContent=message;}
+  };
   const inputFor=(node: HTMLElement)=>{
     const form=node instanceof HTMLFormElement?node:null;
     const action=form?.dataset.circleCommand||node.dataset.circleAction||'';
@@ -35,6 +42,7 @@ import type {CircleCommand,CircleFile} from './collection-data';
     if(busy||requests.lost||node.matches(':disabled'))return;
     if(node.dataset.confirm&&!window.confirm(node.dataset.confirm))return;
     const {slug,cmd}=inputFor(node);
+    const draft=node instanceof HTMLFormElement?composeSnapshot(node):undefined;
     if(cmd.action==='settings'&&cmd.visibility==='public'&&!window.confirm('公开阅读会让所有人看到圈内话题和回复，确认保存这些设置？'))return;
     const signature=JSON.stringify({slug,cmd});let attempt=attempts.get(node);
     if(!attempt||attempt.signature!==signature){attempt={signature,key:crypto.randomUUID()};attempts.set(node,attempt);}cmd.key=attempt.key;
@@ -42,7 +50,7 @@ import type {CircleCommand,CircleFile} from './collection-data';
     try{
       const response=await requests.request(endpoint(slug),{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':root.dataset.csrf || ''},body:JSON.stringify(cmd)});
       const result=circleReceipt(response,slug,cmd);
-      attempts.delete(node);node.dispatchEvent(new Event('community:saved'));notify('已保存，正在打开最新内容…',node);
+      attempts.delete(node);if(node instanceof HTMLFormElement&&draft)composeSaved(node,owner,draft);notify('已保存，正在打开最新内容…',node);
       const workspace=root.hasAttribute('data-circle-workspace');
       let target=(workspace?'/admin/circles/':'/community/')+encodeURIComponent(slug)+'/';
       if(result.topic_id){target+='topics/'+result.topic_id;if(result.reply_id)target+='?page='+Math.max(1,Number(result.reply_page)||1)+'#reply-'+result.reply_id;}

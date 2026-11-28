@@ -13,3 +13,6 @@ Chunnel 的组合资源在 NewPress 源码仓库中维护。运行 `npm ci --ign
 `assets/js/chunnel-color-mode.js`、`chunnel-color-reveal.js` 分别来自 `frontend/shared/color-mode.ts`、`color-reveal.ts`，共享类型在 `color-types.ts`；首页 `chunnel-home.js` 和 `chunnel-home-glass.js` 的外观逻辑也直接编译同一 TS 入口。不要恢复旧 `.source.js` 副本。修改后运行 `node --test tests/frontend/color-mode.test.cjs tests/frontend/color-mode-browser.test.cjs`，并检查首页两套外观的 HTTP 资源预算；同步主题不能延迟到 DOMContentLoaded 后。
 
 后台与 React 统计试用属于核心 UI，不由 Chunnel 提供。主题开发无需 React，不应复制后台入口或修改后台资源。其他独立主题可以采用自己的工具链；仓库的 `scripts/build_theme.mjs` 是独立主题的可选惯例构建器，不替代 Chunnel 的组合构建。
+# 表情、公共控件与阅读源码
+
+`chunnel.js`、`chunnel-emoji.js`、`chunnel-emoji-editor.js`、`chunnel-list-navigation.js` 分别由仓库 `frontend/shared/` 的同名功能 TS 生成；阅读侧栏来自 `frontend/themes/chunnel/reader.ts`。首页 features 直接编译这些 TS，不能手工修改生成脚本。修改后运行 `npm run build:frontend` 和 `node scripts/verify_reading_themes_browser.mjs`。

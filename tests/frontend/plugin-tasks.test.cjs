@@ -3,11 +3,12 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
-const source = fs.readFileSync(path.join(__dirname, '../../internal/coreui/assets/js/chunnel-plugin-runtime.js'), 'utf8');
+const {compile}=require('./helpers/typescript.cjs');
+const source=process.env.CHUNNEL_PLUGIN_RUNTIME_SOURCE?fs.readFileSync(process.env.CHUNNEL_PLUGIN_RUNTIME_SOURCE,'utf8'):compile('frontend/core/plugin-runtime.ts');
 const tick = () => new Promise(resolve => setImmediate(resolve));
 const summary = (status = 'cancelled', extra = {}) => ({ id: 'a'.repeat(64), plugin: 'task-fixture', kind: 'task.execute.v1', status, version: 2, attempts: 0, ...extra });
 
-function fixture({review = false} = {}) {
+function fixture({review = false, execution = false} = {}) {
   const nodes = new Map(), calls = [];
   const make = () => ({ value: '', disabled: false, hidden: false, dataset: {}, children: [], events: {}, attributes: new Map(), text: '',
     get textContent() { return this.text + this.children.map(n => n.textContent).join(''); },
@@ -19,23 +20,27 @@ function fixture({review = false} = {}) {
   const put = name => { const node = make(); nodes.set(name, node); return node; };
   for (const name of ['data-task-status', 'data-task-filter', 'data-task-scope', 'data-task-archive-age', 'data-task-prev', 'data-task-next', 'data-task-list', 'data-task-refresh', 'data-task-create', 'data-task-archive', 'data-fanout-archive', 'data-task-payload']) put('[' + name + ']');
   if (review) for (const name of ['data-task-review-panel', 'data-task-reissue-fields', 'data-task-reissue-payload', 'data-task-reissue-reason', 'data-task-reissue-confirm', 'data-task-reissue-submit', 'data-task-review-close', 'data-task-review-source', 'data-task-review-audit']) put('[' + name + ']');
+  if (execution) {
+    for (const name of ['data-runtime-run','data-runtime-payload','data-runtime-result','data-runtime-preview','data-runtime-status']) put('['+name+']');
+    put('strong');put('p');nodes.get('[data-runtime-preview]').querySelector=selector=>nodes.get(selector);nodes.get('[data-runtime-payload]').value='{}';
+  }
   const get = selector => nodes.get(selector) || null;
   get('[data-task-scope]').value = 'live'; get('[data-task-archive-age]').value = '30'; get('[data-task-payload]').value = '{"keep":"unsaved draft"}';
   if (review) { get('[data-task-review-panel]').hidden = true; get('[data-task-reissue-fields]').hidden = true; get('[data-task-reissue-payload]').value = '{}'; get('[data-task-reissue-confirm]').checked = false; }
   const tasks = make(); tasks.querySelector = get;
   tasks.querySelectorAll = selector => selector.split(',').map(s => get(s.trim())).filter(Boolean);
   let dirty = false, nextKey = 0;
-  const controls = {dirty: () => dirty, start: () => true, success() {}, fail() {}};
+  const controls = {dirty: () => dirty, start: () => true, snapshot:()=>[], success() {}, fail() {}};
   const form = make(); form.reportValidity = () => true; form.querySelectorAll = () => []; form.querySelector = () => null;
   const root = {dataset: {slug: 'task-fixture', userId: '7', csrf: 'csrf', version: '1'},
-    querySelector: selector => selector === '[data-runtime-form]' ? form : selector === '[data-runtime-status]' ? make() : selector === '[data-plugin-tasks]' ? tasks : null};
-  const document = { querySelector: () => root, createElement: () => make() };
-  vm.runInNewContext(source, { document, window: {ChunnelAdminUI: {savebar: () => controls}}, URLSearchParams, TextEncoder, crypto: {randomUUID: () => 'request-' + ++nextKey},
+    querySelectorAll:()=>[],querySelector: selector => selector === '[data-runtime-form]' ? form : selector === '[data-runtime-status]' ? get(selector)||make() : selector === '[data-plugin-tasks]' ? tasks : execution?get(selector):null};
+  const document = {events:{},addEventListener(n,f){this.events[n]=f;},removeEventListener(){}, querySelector: () => root, createElement: () => make() };
+  vm.runInNewContext(source, { document, window: {addEventListener(){},removeEventListener(){},ChunnelAdminUI: {savebar: () => controls}}, URLSearchParams, TextEncoder, AbortController,setTimeout,clearTimeout, crypto: {randomUUID: () => 'request-' + ++nextKey},
     fetch: (url, options) => new Promise((resolve, reject) => calls.push({url, options, resolve, reject})) });
   const fire = (name, type = 'click') => { const target = get(name); return target.events[type]({currentTarget: target, target, preventDefault() {}}); };
   const respond = (result, status = 200) => calls.at(-1).resolve({ok: status < 400, status, json: async () => result});
   const openReview = (id = 'a'.repeat(64)) => { const button = make(); button.dataset.taskId = id; button.closest = selector => selector === '[data-task-review-open]' ? button : null; tasks.events.click({target: button}); };
-  return {get, calls, tasks, root, fire, respond, openReview, dirty: value => { dirty = value; }};
+  return {get, calls, tasks, root,document,form,controls, fire, respond, openReview, dirty: value => { dirty = value; }};
 }
 
 test('archive scopes task maintenance to the current plugin and preserves unsaved parameters', async () => {
@@ -66,7 +71,7 @@ test('site receipt archive uses its shared endpoint and reports the returned rec
 test('history selection resets pagination and removes execution actions', async () => {
   const f = fixture(); let action = f.fire('[data-task-next]');
   assert.equal(new URL(f.calls[0].url, 'https://example.test').searchParams.get('offset'), '20');
-  f.respond({items: [summary('pending')], total: 40}); await action;
+  f.respond({items: Array.from({length:20},(_,index)=>summary('pending',{id:(index+1).toString(16).padStart(64,'0')})), total: 40}); await action;
   assert.equal(f.get('[data-task-list]').children[0].children.length, 1);
   f.get('[data-task-scope]').value = 'archived'; action = f.fire('[data-task-scope]', 'change');
   const query = new URL(f.calls.at(-1).url, 'https://example.test').searchParams;
@@ -249,4 +254,39 @@ test('a first confirmed rejection allows a fresh source review while keeping par
   assert.equal(next.source_version, 3); assert.notEqual(next.key, firstKey);
   f.respond(childSummary({reissue: trace({source_version: 3})}), 202); await tick();
   f.respond({items: [], total: 0}); await action;
+});
+
+
+test('configuration completion acknowledges the submitted snapshot and keeps newer input',async()=>{
+ const f=fixture(),field={name:'message',dataset:{settingType:'text'},value:'submitted'};let acknowledged;
+ f.form.querySelectorAll=selector=>selector==='[data-setting-type]'?[field]:[];f.controls.snapshot=()=>[{input:field,value:field.value}];f.controls.success=s=>{acknowledged=s;};
+ const saving=f.form.events.submit({preventDefault(){}});field.value='typed later';f.respond({ok:true,version:2});await saving;
+ assert.equal(field.value,'typed later');assert.equal(acknowledged[0].value,'submitted');assert.equal(f.root.dataset.version,'2');
+});
+test('ambiguous enqueue retains its original request after edits and dirty configuration',async()=>{
+ const f=fixture();let action=f.fire('[data-task-create]');const original=f.calls.at(-1).options.body;f.calls.at(-1).reject(new TypeError('Failed to fetch'));await action;
+ f.get('[data-task-payload]').value='{"newDraft":2}';f.dirty(true);action=f.fire('[data-task-create]');assert.equal(f.calls.at(-1).options.body,original);
+ f.respond(summary('pending'));await tick();f.respond({items:[],total:0});await action;assert.equal(f.get('[data-task-payload]').value,'{"newDraft":2}');
+});
+test('task list rejects duplicate identifiers and mismatched status filters',async()=>{
+ for(const page of [{items:[summary(),summary()],total:2},{items:[summary('pending')],total:1}]){
+ const f=fixture();f.get('[data-task-filter]').value='cancelled';const action=f.fire('[data-task-refresh]');f.respond(page);await action;assert.equal(f.get('[data-task-list]').children.length,0);
+ }
+});
+test('region replacement cancels runtime reads without applying late rows',async()=>{
+ const f=fixture();const action=f.fire('[data-task-refresh]');const pending=f.calls.at(-1);f.document.events['chunnel:admin-before-replace']({detail:{regions:[f.root]}});
+ assert.equal(pending.options.signal.aborted,true);f.respond({items:[summary()],total:1});await action;assert.equal(f.get('[data-task-list]').children.length,0);
+ const count=f.calls.length;await f.fire('[data-task-create]');assert.equal(f.calls.length,count);
+});
+
+test('trial execution renders Unicode fragment text and rejects empty bodies',async()=>{
+ const f=fixture({execution:true});let action=f.fire('[data-runtime-run]');
+ const fragment={title:'😀'.repeat(120),text:'<img src=x onerror=alert(1)> 😀',tone:'success'};
+ f.respond({fragment});await action;assert.equal(f.get('strong').textContent,fragment.title);assert.equal(f.get('p').textContent,fragment.text);assert.equal(f.get('[data-runtime-preview]').dataset.tone,'success');
+ action=f.fire('[data-runtime-run]');f.respond({fragment:{...fragment,text:''}});await action;assert.match(f.get('[data-runtime-status]').textContent,/预览不完整/);assert.equal(f.get('p').textContent,fragment.text);
+});
+
+test('retired trial execution cannot refill private result nodes',async()=>{
+ const f=fixture({execution:true}),action=f.fire('[data-runtime-run]');f.document.events['chunnel:session']();
+ f.respond({data:{private:'late response'}});await action;assert.equal(f.get('[data-runtime-result]').textContent,'');assert.equal(f.get('[data-runtime-run]').disabled,true);
 });

@@ -20,3 +20,9 @@ test('admin list filters preserve query and publication links remain conditional
   assert.doesNotMatch(admin, /safeHTML .Body/);
   for (const action of ['save','submit','publish','reject','unpublish','restore','trash']) assert.ok(admin.includes(`value="${action}"`));
 });
+
+test('every flash editor template exposes the saved state for permitted action transitions', () => {
+  for (const file of ['internal/coreui/templates/admin-flash.html', 'internal/coreui/templates/flash-submit.html', ...['chunnel', 'docshub', 'nexora'].map(theme => `themes/${theme}/templates/flash-submit.html`)]) {
+    assert.match(read(file), /data-flash-editor[^>]+data-id="{{.Flash.Current.ID}}"[^>]+data-version="{{.Flash.Current.Version}}"[^>]+data-state="{{.Flash.Current.Status}}"/, file);
+  }
+});

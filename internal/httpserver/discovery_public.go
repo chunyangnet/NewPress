@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 
 	"newpress.local/newpress/internal/auth"
 	"newpress.local/newpress/internal/content"
+	"newpress.local/newpress/internal/theme"
 )
 
 type discoveryPageLink struct {
@@ -119,7 +121,10 @@ func (s *Server) explore(writer http.ResponseWriter, request *http.Request) {
 		s.renderError(writer, 400, "搜索、排序或分页参数不正确")
 		return
 	}
-	if query.Search == "" && query.Category == "" && values.Get("sort") == "" && values.Get("page") == "" && values.Get("view") == "" {
+	// The public/v1 explore contract exposes an article list and pagination.
+	// Chunnel and the core fallback additionally provide a navigation directory.
+	publicListing := s.themes.Active().View == theme.PublicViewV1 && s.themes.HasTemplate("explore")
+	if !publicListing && query.Search == "" && query.Category == "" && values.Get("sort") == "" && values.Get("page") == "" && values.Get("view") == "" {
 		data := s.baseViewFor(writer, "发现", "按栏目浏览站点入口", "/explore/")
 		data.Discovery = discoveryView{Directory: true, Sort: "updated", View: "grid"}
 		data.BodyClass, data.ActiveNav = "is-explore", "explore"
@@ -142,7 +147,8 @@ func (s *Server) explore(writer http.ResponseWriter, request *http.Request) {
 		s.renderError(writer, 500, "分类暂时不可用")
 		return
 	}
-	data := s.baseViewFor(writer, "发现内容", "搜索、筛选并发现本站的文章与创作者", discoveryURL("/explore/", values, page))
+	ctx := context.WithValue(request.Context(), navigationCategoriesContextKey{}, categories.Items)
+	data := s.baseViewContext(ctx, "发现内容", "搜索、筛选并发现本站的文章与创作者", discoveryURL("/explore/", values, page))
 	data.Posts, data.SearchQuery, data.Discovery = result.Items, query.Search, view
 	data.Category, data.CategorySlug = query.Category, query.Category
 	for _, category := range categories.Items {

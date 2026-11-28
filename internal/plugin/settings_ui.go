@@ -175,6 +175,13 @@ func (m *Manager) SettingsPages() []SettingsPage {
 	if err != nil {
 		return nil
 	}
+	return SettingsPagesFromInstalled(items)
+}
+
+// SettingsPagesFromInstalled projects a single installed snapshot for display.
+// Callers must obtain a fresh list for each request; this is not an execution
+// authorization check. Keep the same manifest validation as SettingsPages.
+func SettingsPagesFromInstalled(items []Installed) []SettingsPage {
 	registry := NewSettingsRegistry()
 	for _, item := range items {
 		if item.Error != "" || !item.Official {

@@ -1,0 +1,1266 @@
+{
+  "empty_settings": {
+    "revision": "f1d3199e1c21489bf88fb6f7adbef478",
+    "default_provider": "",
+    "providers": []
+  },
+  "preview": {
+    "token": "92598d9e0d70eb1f7ea3b03706e8079f",
+    "task": "operations",
+    "title": "运维诊断",
+    "scope": "隔离系统资料",
+    "start": "2026-11-27",
+    "end": "2026-11-27",
+    "timezone": "UTC",
+    "created_at": "2026-11-27T07:53:14.2199001Z",
+    "expires_at": "2026-11-27T08:03:14.2199001Z",
+    "context": "{\"system\":{\"checks\":[{\"service\":\"隔离服务\",\"status\":\"pass\"}]}}",
+    "focus": "核对状态"
+  },
+  "report": {
+    "id": "52476acb6f65a976c10667fc678815e8",
+    "owner": 1,
+    "task": "operations",
+    "title": "运维诊断",
+    "created_at": "2026-11-27T07:53:14.2199001Z",
+    "provider": "隔离文本接口",
+    "model": "fixture-model",
+    "content": "## 模拟报告\n\n仅用于隔离验收。",
+    "source": {
+      "token": "",
+      "task": "operations",
+      "title": "运维诊断",
+      "scope": "隔离系统资料",
+      "start": "2026-11-27",
+      "end": "2026-11-27",
+      "timezone": "UTC",
+      "created_at": "2026-11-27T07:53:14.2199001Z",
+      "expires_at": "2026-11-27T08:03:14.2199001Z",
+      "context": "{\"system\":{\"checks\":[{\"service\":\"隔离服务\",\"status\":\"pass\"}]}}",
+      "focus": "核对状态"
+    }
+  },
+  "reports": {
+    "reports": [
+      {
+        "id": "52476acb6f65a976c10667fc678815e8",
+        "owner": 1,
+        "task": "operations",
+        "title": "运维诊断",
+        "created_at": "2026-11-27T07:53:14.2199001Z",
+        "provider": "隔离文本接口",
+        "model": "fixture-model"
+      }
+    ]
+  },
+  "settings": {
+    "revision": "8d6b289bbfacc715c7962d48ec105d13",
+    "default_provider": "fixture-text",
+    "providers": [
+      {
+        "id": "fixture-text",
+        "name": "隔离文本接口",
+        "base_url": "https://api.example.test/v1",
+        "has_key": true,
+        "models": [
+          "fixture-model"
+        ],
+        "default_model": "fixture-model",
+        "pricing": [
+          {
+            "model": "fixture-model",
+            "enabled": true,
+            "currency": "USD",
+            "mode": "request",
+            "flat": 0,
+            "multiplier": 1
+          }
+        ],
+        "balance": {
+          "enabled": false,
+          "format": "custom",
+          "auth": "bearer",
+          "currency": "USD",
+          "divisor": 1,
+          "cache_seconds": 300
+        }
+      }
+    ],
+    "telemetry": {
+      "enabled": true,
+      "details": true,
+      "costs": true,
+      "balances": false,
+      "charts": true,
+      "retention_days": 30,
+      "max_records": 5000
+    }
+  },
+  "settings_receipts": [
+    {
+      "after": {
+        "revision": "b261d1ee6b4f24edc55ca4872fa4aec7",
+        "default_provider": "fixture-text",
+        "providers": [
+          {
+            "id": "fixture-text",
+            "name": "新接口名称",
+            "base_url": "https://api.example.test/v1",
+            "has_key": true,
+            "models": [
+              "fixture-model"
+            ],
+            "default_model": "fixture-model",
+            "pricing": [
+              {
+                "model": "fixture-model",
+                "enabled": true,
+                "currency": "USD",
+                "mode": "request",
+                "flat": 0,
+                "multiplier": 1
+              }
+            ],
+            "balance": {
+              "enabled": false,
+              "format": "custom",
+              "auth": "bearer",
+              "has_token": true,
+              "currency": "USD",
+              "divisor": 1,
+              "cache_seconds": 300
+            }
+          }
+        ],
+        "telemetry": {
+          "enabled": true,
+          "details": true,
+          "costs": true,
+          "balances": false,
+          "charts": true,
+          "retention_days": 30,
+          "max_records": 5000
+        }
+      },
+      "before": {
+        "revision": "8d6b289bbfacc715c7962d48ec105d13",
+        "default_provider": "fixture-text",
+        "providers": [
+          {
+            "id": "fixture-text",
+            "name": "隔离文本接口",
+            "base_url": "https://api.example.test/v1",
+            "has_key": true,
+            "models": [
+              "fixture-model"
+            ],
+            "default_model": "fixture-model",
+            "pricing": [
+              {
+                "model": "fixture-model",
+                "enabled": true,
+                "currency": "USD",
+                "mode": "request",
+                "flat": 0,
+                "multiplier": 1
+              }
+            ],
+            "balance": {
+              "enabled": false,
+              "format": "custom",
+              "auth": "bearer",
+              "currency": "USD",
+              "divisor": 1,
+              "cache_seconds": 300
+            }
+          }
+        ],
+        "telemetry": {
+          "enabled": true,
+          "details": true,
+          "costs": true,
+          "balances": false,
+          "charts": true,
+          "retention_days": 30,
+          "max_records": 5000
+        }
+      },
+      "sent": {
+        "revision": "8d6b289bbfacc715c7962d48ec105d13",
+        "default_provider": "fixture-text",
+        "providers": [
+          {
+            "id": "fixture-text",
+            "name": " 新接口名称 ",
+            "base_url": "https://api.example.test/v1",
+            "has_key": true,
+            "models": [
+              "fixture-model"
+            ],
+            "default_model": "fixture-model",
+            "pricing": [
+              {
+                "model": "fixture-model",
+                "enabled": true,
+                "currency": "USD",
+                "mode": "request",
+                "flat": 0,
+                "multiplier": 1
+              }
+            ],
+            "balance": {
+              "enabled": false,
+              "format": "custom",
+              "auth": "bearer",
+              "token": " fixture-balance-token ",
+              "currency": "USD",
+              "divisor": 1,
+              "cache_seconds": 300
+            }
+          }
+        ],
+        "telemetry": {
+          "enabled": true,
+          "details": true,
+          "costs": true,
+          "balances": false,
+          "charts": true,
+          "retention_days": 30,
+          "max_records": 5000
+        }
+      }
+    },
+    {
+      "after": {
+        "revision": "472fbdef93ce47792adbd52f7a5f41e9",
+        "default_provider": "fixture-text",
+        "providers": [
+          {
+            "id": "fixture-text",
+            "protocol": "openai_responses",
+            "name": "新接口名称",
+            "base_url": "https://api.example.test/v1",
+            "has_key": true,
+            "models": [
+              "fixture-model"
+            ],
+            "default_model": "fixture-model",
+            "pricing": [
+              {
+                "model": "fixture-model",
+                "enabled": true,
+                "currency": "USD",
+                "mode": "request",
+                "flat": 0,
+                "multiplier": 1
+              }
+            ],
+            "balance": {
+              "enabled": false,
+              "format": "custom",
+              "auth": "bearer",
+              "has_token": true,
+              "currency": "USD",
+              "divisor": 1,
+              "cache_seconds": 300
+            }
+          }
+        ],
+        "telemetry": {
+          "enabled": true,
+          "details": true,
+          "costs": true,
+          "balances": false,
+          "charts": true,
+          "retention_days": 30,
+          "max_records": 5000
+        }
+      },
+      "before": {
+        "revision": "b261d1ee6b4f24edc55ca4872fa4aec7",
+        "default_provider": "fixture-text",
+        "providers": [
+          {
+            "id": "fixture-text",
+            "name": "新接口名称",
+            "base_url": "https://api.example.test/v1",
+            "has_key": true,
+            "models": [
+              "fixture-model"
+            ],
+            "default_model": "fixture-model",
+            "pricing": [
+              {
+                "model": "fixture-model",
+                "enabled": true,
+                "currency": "USD",
+                "mode": "request",
+                "flat": 0,
+                "multiplier": 1
+              }
+            ],
+            "balance": {
+              "enabled": false,
+              "format": "custom",
+              "auth": "bearer",
+              "has_token": true,
+              "currency": "USD",
+              "divisor": 1,
+              "cache_seconds": 300
+            }
+          }
+        ],
+        "telemetry": {
+          "enabled": true,
+          "details": true,
+          "costs": true,
+          "balances": false,
+          "charts": true,
+          "retention_days": 30,
+          "max_records": 5000
+        }
+      },
+      "sent": {
+        "revision": "b261d1ee6b4f24edc55ca4872fa4aec7",
+        "default_provider": "fixture-text",
+        "providers": [
+          {
+            "id": "fixture-text",
+            "protocol": "openai_responses",
+            "name": "新接口名称",
+            "base_url": "https://api.example.test/v1",
+            "api_key": "fixture-replacement-key",
+            "has_key": true,
+            "models": [
+              "fixture-model"
+            ],
+            "default_model": "fixture-model",
+            "pricing": [
+              {
+                "model": "fixture-model",
+                "enabled": true,
+                "currency": "USD",
+                "mode": "request",
+                "flat": 0,
+                "multiplier": 1
+              }
+            ],
+            "balance": {
+              "enabled": false,
+              "format": "custom",
+              "auth": "bearer",
+              "has_token": true,
+              "currency": "USD",
+              "divisor": 1,
+              "cache_seconds": 300
+            }
+          }
+        ],
+        "telemetry": {
+          "enabled": true,
+          "details": true,
+          "costs": true,
+          "balances": false,
+          "charts": true,
+          "retention_days": 30,
+          "max_records": 5000
+        }
+      }
+    },
+    {
+      "after": {
+        "revision": "43b482392b94c7643b17883bba210013",
+        "default_provider": "fixture-text",
+        "providers": [
+          {
+            "id": "fixture-text",
+            "protocol": "openai_responses",
+            "name": "新接口名称",
+            "base_url": "https://API.example.test:443/v1",
+            "has_key": true,
+            "models": [
+              "fixture-model"
+            ],
+            "default_model": "fixture-model",
+            "pricing": [
+              {
+                "model": "fixture-model",
+                "enabled": true,
+                "currency": "USD",
+                "mode": "request",
+                "flat": 0,
+                "multiplier": 1
+              }
+            ],
+            "balance": {
+              "enabled": false,
+              "format": "custom",
+              "auth": "bearer",
+              "currency": "USD",
+              "divisor": 1,
+              "cache_seconds": 300
+            }
+          }
+        ],
+        "telemetry": {
+          "enabled": true,
+          "details": true,
+          "costs": true,
+          "balances": false,
+          "charts": true,
+          "retention_days": 30,
+          "max_records": 5000
+        }
+      },
+      "before": {
+        "revision": "472fbdef93ce47792adbd52f7a5f41e9",
+        "default_provider": "fixture-text",
+        "providers": [
+          {
+            "id": "fixture-text",
+            "protocol": "openai_responses",
+            "name": "新接口名称",
+            "base_url": "https://api.example.test/v1",
+            "has_key": true,
+            "models": [
+              "fixture-model"
+            ],
+            "default_model": "fixture-model",
+            "pricing": [
+              {
+                "model": "fixture-model",
+                "enabled": true,
+                "currency": "USD",
+                "mode": "request",
+                "flat": 0,
+                "multiplier": 1
+              }
+            ],
+            "balance": {
+              "enabled": false,
+              "format": "custom",
+              "auth": "bearer",
+              "has_token": true,
+              "currency": "USD",
+              "divisor": 1,
+              "cache_seconds": 300
+            }
+          }
+        ],
+        "telemetry": {
+          "enabled": true,
+          "details": true,
+          "costs": true,
+          "balances": false,
+          "charts": true,
+          "retention_days": 30,
+          "max_records": 5000
+        }
+      },
+      "sent": {
+        "revision": "472fbdef93ce47792adbd52f7a5f41e9",
+        "default_provider": "fixture-text",
+        "providers": [
+          {
+            "id": "fixture-text",
+            "protocol": "openai_responses",
+            "name": "新接口名称",
+            "base_url": "https://API.example.test:443/responses/",
+            "api_key": "fixture-replacement-key",
+            "has_key": true,
+            "models": [
+              "fixture-model"
+            ],
+            "default_model": "fixture-model",
+            "pricing": [
+              {
+                "model": "fixture-model",
+                "enabled": true,
+                "currency": "USD",
+                "mode": "request",
+                "flat": 0,
+                "multiplier": 1
+              }
+            ],
+            "balance": {
+              "enabled": false,
+              "format": "custom",
+              "auth": "bearer",
+              "has_token": true,
+              "clear_token": true,
+              "currency": "USD",
+              "divisor": 1,
+              "cache_seconds": 300
+            }
+          }
+        ],
+        "telemetry": {
+          "enabled": true,
+          "details": true,
+          "costs": true,
+          "balances": false,
+          "charts": true,
+          "retention_days": 30,
+          "max_records": 5000
+        }
+      }
+    },
+    {
+      "after": {
+        "revision": "56003a03f6cc399249a3c959a64253d0",
+        "default_provider": "fixture-text",
+        "providers": [
+          {
+            "id": "fixture-text",
+            "protocol": "azure_openai_legacy",
+            "api_version": "2024-10-21",
+            "name": "新接口名称",
+            "base_url": "https://azure.example.test/openai",
+            "has_key": true,
+            "models": [
+              "fixture-model"
+            ],
+            "default_model": "fixture-model",
+            "pricing": [
+              {
+                "model": "fixture-model",
+                "enabled": true,
+                "currency": "USD",
+                "mode": "request",
+                "flat": 0,
+                "multiplier": 1
+              }
+            ],
+            "balance": {
+              "enabled": false,
+              "format": "custom",
+              "auth": "bearer",
+              "currency": "USD",
+              "divisor": 1,
+              "cache_seconds": 300
+            }
+          }
+        ],
+        "telemetry": {
+          "enabled": true,
+          "details": true,
+          "costs": true,
+          "balances": false,
+          "charts": true,
+          "retention_days": 30,
+          "max_records": 5000
+        }
+      },
+      "before": {
+        "revision": "43b482392b94c7643b17883bba210013",
+        "default_provider": "fixture-text",
+        "providers": [
+          {
+            "id": "fixture-text",
+            "protocol": "openai_responses",
+            "name": "新接口名称",
+            "base_url": "https://API.example.test:443/v1",
+            "has_key": true,
+            "models": [
+              "fixture-model"
+            ],
+            "default_model": "fixture-model",
+            "pricing": [
+              {
+                "model": "fixture-model",
+                "enabled": true,
+                "currency": "USD",
+                "mode": "request",
+                "flat": 0,
+                "multiplier": 1
+              }
+            ],
+            "balance": {
+              "enabled": false,
+              "format": "custom",
+              "auth": "bearer",
+              "currency": "USD",
+              "divisor": 1,
+              "cache_seconds": 300
+            }
+          }
+        ],
+        "telemetry": {
+          "enabled": true,
+          "details": true,
+          "costs": true,
+          "balances": false,
+          "charts": true,
+          "retention_days": 30,
+          "max_records": 5000
+        }
+      },
+      "sent": {
+        "revision": "43b482392b94c7643b17883bba210013",
+        "default_provider": "fixture-text",
+        "providers": [
+          {
+            "id": "fixture-text",
+            "protocol": "azure_openai_legacy",
+            "name": "新接口名称",
+            "base_url": "https://azure.example.test",
+            "api_key": "fixture-azure-key",
+            "has_key": true,
+            "models": [
+              "fixture-model"
+            ],
+            "default_model": "fixture-model",
+            "pricing": [
+              {
+                "model": "fixture-model",
+                "enabled": true,
+                "currency": "USD",
+                "mode": "request",
+                "flat": 0,
+                "multiplier": 1
+              }
+            ],
+            "balance": {
+              "enabled": false,
+              "format": "custom",
+              "auth": "bearer",
+              "currency": "USD",
+              "divisor": 1,
+              "cache_seconds": 300
+            }
+          }
+        ],
+        "telemetry": {
+          "enabled": true,
+          "details": true,
+          "costs": true,
+          "balances": false,
+          "charts": true,
+          "retention_days": 30,
+          "max_records": 5000
+        }
+      }
+    },
+    {
+      "after": {
+        "revision": "1d2a3463f9a17f5fcfad4b0fdd8224c1",
+        "default_provider": "fixture-text",
+        "default_image_provider": "fixture-image",
+        "providers": [
+          {
+            "id": "fixture-text",
+            "protocol": "azure_openai_legacy",
+            "api_version": "2024-10-21",
+            "name": "新接口名称",
+            "base_url": "https://azure.example.test/openai",
+            "has_key": true,
+            "models": [
+              "fixture-model"
+            ],
+            "default_model": "fixture-model",
+            "pricing": [
+              {
+                "model": "fixture-model",
+                "enabled": true,
+                "currency": "USD",
+                "mode": "request",
+                "flat": 0,
+                "multiplier": 1
+              }
+            ],
+            "balance": {
+              "enabled": false,
+              "format": "custom",
+              "auth": "bearer",
+              "currency": "USD",
+              "divisor": 1,
+              "cache_seconds": 300
+            }
+          },
+          {
+            "id": "fixture-image",
+            "protocol": "openai_images",
+            "name": "隔离图片接口",
+            "base_url": "https://image.example.test/v1",
+            "has_key": true,
+            "models": [
+              "fixture-image-model"
+            ],
+            "default_model": "fixture-image-model",
+            "balance": {
+              "enabled": false,
+              "format": "custom",
+              "auth": "bearer",
+              "currency": "USD",
+              "divisor": 1,
+              "cache_seconds": 300
+            }
+          }
+        ],
+        "telemetry": {
+          "enabled": true,
+          "details": true,
+          "costs": true,
+          "balances": false,
+          "charts": true,
+          "retention_days": 30,
+          "max_records": 5000
+        }
+      },
+      "before": {
+        "revision": "56003a03f6cc399249a3c959a64253d0",
+        "default_provider": "fixture-text",
+        "providers": [
+          {
+            "id": "fixture-text",
+            "protocol": "azure_openai_legacy",
+            "api_version": "2024-10-21",
+            "name": "新接口名称",
+            "base_url": "https://azure.example.test/openai",
+            "has_key": true,
+            "models": [
+              "fixture-model"
+            ],
+            "default_model": "fixture-model",
+            "pricing": [
+              {
+                "model": "fixture-model",
+                "enabled": true,
+                "currency": "USD",
+                "mode": "request",
+                "flat": 0,
+                "multiplier": 1
+              }
+            ],
+            "balance": {
+              "enabled": false,
+              "format": "custom",
+              "auth": "bearer",
+              "currency": "USD",
+              "divisor": 1,
+              "cache_seconds": 300
+            }
+          }
+        ],
+        "telemetry": {
+          "enabled": true,
+          "details": true,
+          "costs": true,
+          "balances": false,
+          "charts": true,
+          "retention_days": 30,
+          "max_records": 5000
+        }
+      },
+      "sent": {
+        "revision": "56003a03f6cc399249a3c959a64253d0",
+        "default_provider": "fixture-text",
+        "providers": [
+          {
+            "id": "fixture-text",
+            "protocol": "azure_openai_legacy",
+            "api_version": "2024-10-21",
+            "name": "新接口名称",
+            "base_url": "https://azure.example.test/openai",
+            "has_key": true,
+            "models": [
+              "fixture-model"
+            ],
+            "default_model": "fixture-model",
+            "pricing": [
+              {
+                "model": "fixture-model",
+                "enabled": true,
+                "currency": "USD",
+                "mode": "request",
+                "flat": 0,
+                "multiplier": 1
+              }
+            ],
+            "balance": {
+              "enabled": false,
+              "format": "custom",
+              "auth": "bearer",
+              "currency": "USD",
+              "divisor": 1,
+              "cache_seconds": 300
+            }
+          },
+          {
+            "id": "fixture-image",
+            "protocol": "openai_images",
+            "name": "隔离图片接口",
+            "base_url": "https://image.example.test",
+            "api_key": "fixture-image-key",
+            "models": [
+              "fixture-image-model"
+            ],
+            "default_model": "",
+            "balance": {
+              "enabled": false,
+              "format": "",
+              "cache_seconds": 0
+            }
+          }
+        ],
+        "telemetry": {
+          "enabled": true,
+          "details": true,
+          "costs": true,
+          "balances": false,
+          "charts": true,
+          "retention_days": 30,
+          "max_records": 5000
+        }
+      }
+    }
+  ],
+  "usage_empty": {
+    "collapsed": 0,
+    "config": {
+      "balances": false,
+      "charts": true,
+      "costs": true,
+      "details": true,
+      "enabled": true,
+      "max_records": 5000,
+      "retention_days": 30
+    },
+    "end": "2026-11-27",
+    "models": [],
+    "next": 0,
+    "persist_error": false,
+    "persisted_at": "0001-01-01T00:00:00Z",
+    "providers": [
+      {
+        "balance": false,
+        "id": "fixture-text",
+        "models": [
+          "fixture-model"
+        ],
+        "name": "隔离文本接口"
+      }
+    ],
+    "records": [],
+    "retained": 0,
+    "start": "2026-11-27",
+    "timezone": "UTC",
+    "today": "2026-11-27",
+    "totals": {
+      "cache_write": 0,
+      "cached": 0,
+      "cancelled": 0,
+      "cost_known": 0,
+      "cost_partial": 0,
+      "costs": null,
+      "duration_ms": 0,
+      "errors": 0,
+      "first_token_known": 0,
+      "first_token_ms": 0,
+      "images": 0,
+      "input": 0,
+      "input_known": 0,
+      "output": 0,
+      "output_duration_ms": 0,
+      "output_known": 0,
+      "reasoning": 0,
+      "requests": 0,
+      "saturated": false,
+      "speed_output": 0,
+      "success": 0,
+      "tokens": 0,
+      "usage_known": 0
+    },
+    "trend": []
+  },
+  "usage_first": {
+    "collapsed": 0,
+    "config": {
+      "balances": false,
+      "charts": true,
+      "costs": true,
+      "details": true,
+      "enabled": true,
+      "max_records": 5000,
+      "retention_days": 30
+    },
+    "end": "2026-11-27",
+    "models": [
+      {
+        "cache_write": 0,
+        "cached": 0,
+        "cancelled": 1,
+        "cost_known": 1,
+        "cost_partial": 0,
+        "costs": {
+          "USD": 0
+        },
+        "day": "",
+        "duration_ms": 3000,
+        "errors": 1,
+        "first_token_known": 0,
+        "first_token_ms": 0,
+        "images": 0,
+        "input": 0,
+        "input_known": 1,
+        "kind": "",
+        "model": "fixture-model",
+        "output": 0,
+        "output_duration_ms": 1000,
+        "output_known": 1,
+        "provider": "隔离文本接口",
+        "provider_id": "fixture-text",
+        "reasoning": 0,
+        "requests": 3,
+        "saturated": false,
+        "speed_output": 0,
+        "status": "",
+        "success": 1,
+        "tokens": 0,
+        "usage_known": 1
+      }
+    ],
+    "next": 2,
+    "persist_error": false,
+    "persisted_at": "0001-01-01T00:00:00Z",
+    "providers": [
+      {
+        "balance": false,
+        "id": "fixture-text",
+        "models": [
+          "fixture-model"
+        ],
+        "name": "隔离文本接口"
+      }
+    ],
+    "records": [
+      {
+        "at": "2026-11-27T07:53:14.2172531Z",
+        "cost": {
+          "complete": false
+        },
+        "day": "2026-11-27",
+        "duration_ms": 1000,
+        "id": "fixture-cancelled",
+        "images": 0,
+        "kind": "text",
+        "model": "fixture-model",
+        "protocol": "openai_responses",
+        "provider": "隔离文本接口",
+        "provider_id": "fixture-text",
+        "sequence": 3,
+        "status": "cancelled",
+        "usage": {},
+        "user_id": 1
+      },
+      {
+        "at": "2026-11-27T07:53:14.2172531Z",
+        "cost": {
+          "complete": false
+        },
+        "day": "2026-11-27",
+        "duration_ms": 1000,
+        "id": "fixture-error",
+        "images": 0,
+        "kind": "text",
+        "model": "fixture-model",
+        "protocol": "openai_responses",
+        "provider": "隔离文本接口",
+        "provider_id": "fixture-text",
+        "sequence": 2,
+        "status": "error",
+        "usage": {},
+        "user_id": 1
+      }
+    ],
+    "retained": 3,
+    "start": "2026-11-27",
+    "timezone": "UTC",
+    "today": "2026-11-27",
+    "totals": {
+      "cache_write": 0,
+      "cached": 0,
+      "cancelled": 1,
+      "cost_known": 1,
+      "cost_partial": 0,
+      "costs": {
+        "USD": 0
+      },
+      "duration_ms": 3000,
+      "errors": 1,
+      "first_token_known": 0,
+      "first_token_ms": 0,
+      "images": 0,
+      "input": 0,
+      "input_known": 1,
+      "output": 0,
+      "output_duration_ms": 1000,
+      "output_known": 1,
+      "reasoning": 0,
+      "requests": 3,
+      "saturated": false,
+      "speed_output": 0,
+      "success": 1,
+      "tokens": 0,
+      "usage_known": 1
+    },
+    "trend": [
+      {
+        "cache_write": 0,
+        "cached": 0,
+        "cancelled": 1,
+        "cost_known": 1,
+        "cost_partial": 0,
+        "costs": {
+          "USD": 0
+        },
+        "day": "2026-11-27",
+        "duration_ms": 3000,
+        "errors": 1,
+        "first_token_known": 0,
+        "first_token_ms": 0,
+        "images": 0,
+        "input": 0,
+        "input_known": 1,
+        "kind": "",
+        "model": "",
+        "output": 0,
+        "output_duration_ms": 1000,
+        "output_known": 1,
+        "provider": "",
+        "provider_id": "",
+        "reasoning": 0,
+        "requests": 3,
+        "saturated": false,
+        "speed_output": 0,
+        "status": "",
+        "success": 1,
+        "tokens": 0,
+        "usage_known": 1
+      }
+    ]
+  },
+  "usage_second": {
+    "collapsed": 0,
+    "config": {
+      "balances": false,
+      "charts": true,
+      "costs": true,
+      "details": true,
+      "enabled": true,
+      "max_records": 5000,
+      "retention_days": 30
+    },
+    "end": "2026-11-27",
+    "models": [
+      {
+        "cache_write": 0,
+        "cached": 0,
+        "cancelled": 1,
+        "cost_known": 1,
+        "cost_partial": 0,
+        "costs": {
+          "USD": 0
+        },
+        "day": "",
+        "duration_ms": 3000,
+        "errors": 1,
+        "first_token_known": 0,
+        "first_token_ms": 0,
+        "images": 0,
+        "input": 0,
+        "input_known": 1,
+        "kind": "",
+        "model": "fixture-model",
+        "output": 0,
+        "output_duration_ms": 1000,
+        "output_known": 1,
+        "provider": "隔离文本接口",
+        "provider_id": "fixture-text",
+        "reasoning": 0,
+        "requests": 3,
+        "saturated": false,
+        "speed_output": 0,
+        "status": "",
+        "success": 1,
+        "tokens": 0,
+        "usage_known": 1
+      }
+    ],
+    "next": 0,
+    "persist_error": false,
+    "persisted_at": "0001-01-01T00:00:00Z",
+    "providers": [
+      {
+        "balance": false,
+        "id": "fixture-text",
+        "models": [
+          "fixture-model"
+        ],
+        "name": "隔离文本接口"
+      }
+    ],
+    "records": [
+      {
+        "at": "2026-11-27T07:53:14.2172531Z",
+        "cost": {
+          "amount": 0,
+          "complete": true,
+          "currency": "USD",
+          "pricing": {
+            "currency": "USD",
+            "enabled": true,
+            "flat": 0,
+            "mode": "request",
+            "model": "fixture-model",
+            "multiplier": 1
+          }
+        },
+        "day": "2026-11-27",
+        "duration_ms": 1000,
+        "id": "fixture-zero",
+        "images": 0,
+        "kind": "text",
+        "model": "fixture-model",
+        "protocol": "openai_responses",
+        "provider": "隔离文本接口",
+        "provider_id": "fixture-text",
+        "sequence": 1,
+        "status": "success",
+        "usage": {
+          "completion_tokens": 0,
+          "prompt_tokens": 0,
+          "total_source": "reported",
+          "total_tokens": 0
+        },
+        "user_id": 1
+      }
+    ],
+    "retained": 3,
+    "start": "2026-11-27",
+    "timezone": "UTC",
+    "today": "2026-11-27",
+    "totals": {
+      "cache_write": 0,
+      "cached": 0,
+      "cancelled": 1,
+      "cost_known": 1,
+      "cost_partial": 0,
+      "costs": {
+        "USD": 0
+      },
+      "duration_ms": 3000,
+      "errors": 1,
+      "first_token_known": 0,
+      "first_token_ms": 0,
+      "images": 0,
+      "input": 0,
+      "input_known": 1,
+      "output": 0,
+      "output_duration_ms": 1000,
+      "output_known": 1,
+      "reasoning": 0,
+      "requests": 3,
+      "saturated": false,
+      "speed_output": 0,
+      "success": 1,
+      "tokens": 0,
+      "usage_known": 1
+    },
+    "trend": [
+      {
+        "cache_write": 0,
+        "cached": 0,
+        "cancelled": 1,
+        "cost_known": 1,
+        "cost_partial": 0,
+        "costs": {
+          "USD": 0
+        },
+        "day": "2026-11-27",
+        "duration_ms": 3000,
+        "errors": 1,
+        "first_token_known": 0,
+        "first_token_ms": 0,
+        "images": 0,
+        "input": 0,
+        "input_known": 1,
+        "kind": "",
+        "model": "",
+        "output": 0,
+        "output_duration_ms": 1000,
+        "output_known": 1,
+        "provider": "",
+        "provider_id": "",
+        "reasoning": 0,
+        "requests": 3,
+        "saturated": false,
+        "speed_output": 0,
+        "status": "",
+        "success": 1,
+        "tokens": 0,
+        "usage_known": 1
+      }
+    ]
+  },
+  "workbench": {
+    "default_provider": "fixture-text",
+    "max_reports": 100,
+    "providers": [
+      {
+        "default_model": "fixture-model",
+        "id": "fixture-text",
+        "models": [
+          "fixture-model"
+        ],
+        "name": "隔离文本接口"
+      }
+    ],
+    "retention_days": 90,
+    "tasks": [
+      {
+        "id": "operations",
+        "title": "运维诊断",
+        "description": "检查服务状态与资源使用。",
+        "scope": "服务就绪状态、资源指标、存储方式与配置开关",
+        "icon": "activity"
+      },
+      {
+        "id": "briefing",
+        "title": "运营简报",
+        "description": "汇总访问、内容和 AI 用量。",
+        "scope": "所选日期的访问趋势、来源分布、公开热门文章与 AI 聚合用量",
+        "icon": "newspaper"
+      },
+      {
+        "id": "summary",
+        "title": "内容总结",
+        "description": "提炼文章摘要与要点。",
+        "scope": "手动输入材料，或明确选中的一篇当前公开文章",
+        "icon": "list"
+      },
+      {
+        "id": "seo",
+        "title": "SEO 检查",
+        "description": "检查文章标题、摘要与分类。",
+        "scope": "最近 20 篇公开文章的标题、摘要、分类标签与封面状态",
+        "icon": "scan-search"
+      },
+      {
+        "id": "planning",
+        "title": "选题规划",
+        "description": "根据近期内容与访问数据推荐选题。",
+        "scope": "公开近期文章、热门文章与所选日期访问聚合",
+        "icon": "compass"
+      },
+      {
+        "id": "costs",
+        "title": "AI 成本分析",
+        "description": "分析模型用量、费用与响应耗时。",
+        "scope": "所选日期的 AI 请求、模型分布、费用和用量覆盖率",
+        "icon": "coins"
+      }
+    ],
+    "timezone": "UTC"
+  }
+}

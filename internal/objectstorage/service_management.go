@@ -2,7 +2,6 @@ package objectstorage
 
 import (
 	"path"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -113,23 +112,21 @@ func (s *Service) Records(profile, status, query string, page int) (RecordPage, 
 	}
 	query = strings.ToLower(strings.TrimSpace(query))
 	s.mu.Lock()
+	defer s.mu.Unlock()
+	// Clamp before multiplying to keep even an extreme requested page bounded.
+	limit := min(max(1, page), max(1, (len(s.records)+99)/100)) * 100
+	selected := newRecordSelection(limit, true)
 	for _, r := range s.records {
 		if (profile == "" || r.ProfileID == profile) && (status == "" || r.Status == status) && (query == "" || strings.Contains(strings.ToLower(r.Filename+" "+r.RemoteKey), query)) {
-			result.Records = append(result.Records, r)
+			result.Total++
+			selected.add(r)
 		}
 	}
-	s.mu.Unlock()
-	sort.Slice(result.Records, func(i, j int) bool {
-		a, b := result.Records[i], result.Records[j]
-		if a.Updated.Equal(b.Updated) {
-			return a.ID < b.ID
-		}
-		return a.Updated.After(b.Updated)
-	})
-	result.Total = len(result.Records)
 	result.Pages = max(1, (result.Total+99)/100)
 	result.Page = min(max(1, page), result.Pages)
 	start := (result.Page - 1) * 100
-	result.Records = result.Records[start:min(start+100, result.Total)]
+	for _, position := range selected.sorted()[start:min(start+100, result.Total)] {
+		result.Records = append(result.Records, s.records[position.id])
+	}
 	return result, nil
 }

@@ -5,12 +5,31 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"slices"
 	"strings"
 
 	"newpress.local/newpress/internal/auth"
 )
 
 type sessionStateKey struct{}
+
+// Leave room for cookies from older paths without allowing a request to fan
+// out into an unbounded number of storage reads or durable revocations.
+const maxBrowserSessionCookies = 4
+
+func browserSessionTokens(r *http.Request) ([]string, bool) {
+	cookies := r.CookiesNamed(auth.CookieName)
+	if len(cookies) > maxBrowserSessionCookies {
+		return nil, false
+	}
+	var tokens []string
+	for _, cookie := range cookies {
+		if !slices.Contains(tokens, cookie.Value) {
+			tokens = append(tokens, cookie.Value)
+		}
+	}
+	return tokens, true
+}
 
 type requestSessionState struct {
 	principal auth.Principal
@@ -40,12 +59,29 @@ func (s *Server) sessionState(next http.Handler) http.Handler {
 // at a security barrier that promises to notice revocation during a storage read.
 func (s *Server) freshSessionRequest(w http.ResponseWriter, r *http.Request) (*http.Request, bool) {
 	state := requestSessionState{}
+	if previous, cached := r.Context().Value(sessionStateKey{}).(requestSessionState); cached {
+		principal, err := s.originalSessionPrincipal(r.Context(), r)
+		if errors.Is(err, auth.ErrSessionForbidden) {
+			s.writeAPIError(w, r, http.StatusForbidden, "auth.identity_changed", "当前登录身份已变化，请重新发起请求", nil)
+			return nil, false
+		}
+		if err != nil {
+			s.sessionStorageError(w, r)
+			return nil, false
+		}
+		if principal.Username != "" {
+			state = requestSessionState{principal: principal, token: previous.token, ok: true}
+		}
+		return r.WithContext(context.WithValue(r.Context(), sessionStateKey{}, state)), true
+	}
 	if s.auth.Configured() {
-		for _, cookie := range r.Cookies() {
-			if cookie.Name != auth.CookieName {
-				continue
-			}
-			principal, err := s.auth.ResolveSession(r.Context(), cookie.Value)
+		tokens, ok := browserSessionTokens(r)
+		if !ok {
+			s.sessionCookieError(w, r)
+			return nil, false
+		}
+		for _, token := range tokens {
+			principal, err := s.auth.ResolveSession(r.Context(), token)
 			if errors.Is(err, auth.ErrSessionNotFound) {
 				continue
 			}
@@ -53,11 +89,15 @@ func (s *Server) freshSessionRequest(w http.ResponseWriter, r *http.Request) (*h
 				s.sessionStorageError(w, r)
 				return nil, false
 			}
-			state = requestSessionState{principal: principal, token: cookie.Value, ok: true}
+			state = requestSessionState{principal: principal, token: token, ok: true}
 			break
 		}
 	}
 	return r.WithContext(context.WithValue(r.Context(), sessionStateKey{}, state)), true
+}
+
+func (s *Server) sessionCookieError(w http.ResponseWriter, r *http.Request) {
+	s.writeAPIError(w, r, http.StatusBadRequest, "auth.too_many_session_cookies", "登录 Cookie 过多，请清除本站 Cookie 后重试", nil)
 }
 
 func (s *Server) sessionStorageError(w http.ResponseWriter, r *http.Request) {
@@ -74,12 +114,15 @@ func (s *Server) sessionStorageError(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) revokeBrowserSessions(w http.ResponseWriter, r *http.Request) bool {
-	for _, cookie := range r.Cookies() {
-		if cookie.Name == auth.CookieName {
-			if err := s.auth.RevokeSessionContext(r.Context(), cookie.Value); err != nil {
-				s.sessionStorageError(w, r)
-				return false
-			}
+	tokens, ok := browserSessionTokens(r)
+	if !ok {
+		s.sessionCookieError(w, r)
+		return false
+	}
+	for _, token := range tokens {
+		if err := s.auth.RevokeSessionContext(r.Context(), token); err != nil {
+			s.sessionStorageError(w, r)
+			return false
 		}
 	}
 	return true

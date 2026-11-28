@@ -32,6 +32,9 @@ func (s *Server) createContentAPISubmission(writer http.ResponseWriter, request 
 		return
 	}
 	submission.Input = input
+	if _, ok := s.recheckContentAPIWrite(writer, request, 0); !ok {
+		return
+	}
 	result, err := s.repository.Submit(request.Context(), submission)
 	if err != nil {
 		switch {
@@ -53,6 +56,9 @@ func (s *Server) createContentAPISubmission(writer http.ResponseWriter, request 
 // failed receipt read must never fall through into an unprotected creation.
 func (s *Server) replayContentAPISubmission(writer http.ResponseWriter, request *http.Request, principal auth.Principal, submission content.Submission) bool {
 	result, err := s.repository.FindSubmission(request.Context(), submission.Key, submission.Fingerprint)
+	if _, ok := s.recheckContentAPIWrite(writer, request, 0); !ok {
+		return true
+	}
 	if errors.Is(err, content.ErrNotFound) {
 		return false
 	}
@@ -68,6 +74,10 @@ func (s *Server) replayContentAPISubmission(writer http.ResponseWriter, request 
 
 func (s *Server) writeContentAPICreationResult(writer http.ResponseWriter, request *http.Request, principal auth.Principal, id int64, replayed bool) {
 	post, err := s.repository.GetByID(request.Context(), id)
+	principal, ok := s.recheckContentAPIWrite(writer, request, 0)
+	if !ok {
+		return
+	}
 	if err != nil {
 		slog.Error("load idempotent content result", "id", id, "error", err, "request_id", request.Header.Get("X-Request-ID"))
 		s.writeAPIError(writer, request, http.StatusConflict, "request.idempotency_result_unavailable", "幂等请求已完成，但原资源暂时不可读取", map[string]any{"resource_id": id})
@@ -79,7 +89,7 @@ func (s *Server) writeContentAPICreationResult(writer http.ResponseWriter, reque
 	if replayed {
 		writer.Header().Set("Idempotency-Replayed", "true")
 	}
-	s.writeContentAPISuccess(writer, http.StatusCreated, post, true)
+	s.writeContentAPISuccess(writer, request, http.StatusCreated, post, true)
 }
 
 func (s *Server) writeContentAPISubmissionUnconfirmed(writer http.ResponseWriter, request *http.Request, err error) {

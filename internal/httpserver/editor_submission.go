@@ -50,8 +50,15 @@ func (s *Server) adminEditorialSubmission(writer http.ResponseWriter, request *h
 		Action:      form.Get("action"), PostID: current.ID, Actor: principal.Username,
 	}
 	// Confirm a committed request before time-sensitive field/media validation.
-	// Identity, origin, CSRF and object permission were checked by the form route.
-	if result, err := s.repository.FindSubmission(request.Context(), submission.Key, submission.Fingerprint); !errors.Is(err, content.ErrNotFound) {
+	// Refresh authority after lookup, without comparing the current version to
+	// the receipt: later edits do not invalidate a committed request's receipt.
+	previous, lookupErr := s.repository.FindSubmission(request.Context(), submission.Key, submission.Fingerprint)
+	// Creation receipts belong to the request owner even if the new object was
+	// subsequently removed; never turn a known creation into a new submission.
+	if !s.recheckContentWrite(writer, request, current.ID) {
+		return
+	}
+	if result, err := previous, lookupErr; !errors.Is(err, content.ErrNotFound) {
 		if errors.Is(err, idempotency.ErrConflict) {
 			reject(http.StatusConflict, "submission_conflict", "同一重试标识对应不同内容；请核对原保存结果。", nil)
 		} else if err != nil {
@@ -95,6 +102,9 @@ func (s *Server) adminEditorialSubmission(writer http.ResponseWriter, request *h
 		submission.Input = input
 	}
 
+	if !s.recheckContentWrite(writer, request, current.ID) {
+		return
+	}
 	result, err := s.repository.Submit(request.Context(), submission)
 	if err != nil {
 		switch {
@@ -114,6 +124,9 @@ func (s *Server) adminEditorialSubmission(writer http.ResponseWriter, request *h
 			slog.Error("editorial submission not confirmed", "error", err, "post_id", current.ID)
 			reject(http.StatusServiceUnavailable, "result_unconfirmed", "保存结果暂时无法确认，请保留页面并重试同一次保存。", nil)
 		}
+		return
+	}
+	if !s.recheckContentWrite(writer, request, current.ID) {
 		return
 	}
 	s.writeEditorSubmissionResult(writer, key, result)

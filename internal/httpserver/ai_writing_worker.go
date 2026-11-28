@@ -16,6 +16,10 @@ func (s *Server) RunAIWritingQueue(ctx context.Context) {
 }
 
 func (s *Server) writingActorAllowed(ctx context.Context, j aijobs.Job) bool {
+	return s.aiTextActorAllowed(ctx, j, true)
+}
+
+func (s *Server) aiTextActorAllowed(ctx context.Context, j aijobs.Job, requirePluginManagement bool) bool {
 	if !s.auth.Configured() {
 		return false
 	}
@@ -23,7 +27,7 @@ func (s *Server) writingActorAllowed(ctx context.Context, j aijobs.Job) bool {
 	if j.UserID == 0 { // Environment-only administrator, never substitute for a missing persistent account.
 		return errors.Is(err, auth.ErrUserStoreNotAvailable) && j.Author == s.auth.Username()
 	}
-	return err == nil && u.Status == auth.UserStatusActive && u.Can(auth.CapabilityAdminAccess) && u.Can(auth.CapabilityPluginsManage) && (u.Can(auth.CapabilityContentWrite) || u.Can(auth.CapabilityContentWriteOwn))
+	return err == nil && u.Status == auth.UserStatusActive && u.Can(auth.CapabilityAdminAccess) && (!requirePluginManagement || u.Can(auth.CapabilityPluginsManage)) && (u.Can(auth.CapabilityContentWrite) || u.Can(auth.CapabilityContentWriteOwn))
 }
 
 func writingCategories(all []aieditor.Category, typ string, id int64) ([]aieditor.Category, error) {

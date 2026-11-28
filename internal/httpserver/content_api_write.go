@@ -164,6 +164,9 @@ func (s *Server) requireContentAPIObjectWrite(writer http.ResponseWriter, reques
 }
 
 func (s *Server) requireContentAPIPrecondition(writer http.ResponseWriter, request *http.Request, post content.Post) bool {
+	if _, ok := s.recheckContentAPIWrite(writer, request, post.ID); !ok {
+		return false
+	}
 	ifMatch := strings.TrimSpace(request.Header.Get("If-Match"))
 	if ifMatch == "" {
 		s.writeAPIError(writer, request, http.StatusPreconditionRequired, "content.precondition_required", "写入内容必须携带当前 If-Match ETag", map[string]any{
@@ -188,6 +191,9 @@ func strongETagMatches(header, current string) bool {
 }
 
 func (s *Server) writeContentPreconditionFailed(writer http.ResponseWriter, request *http.Request, post content.Post) {
+	if _, ok := s.recheckContentAPIWrite(writer, request, post.ID); !ok {
+		return
+	}
 	writer.Header().Set("ETag", contentAPIETag(post))
 	s.writeAPIError(writer, request, http.StatusPreconditionFailed, "content.precondition_failed", "内容已被其他编辑更新，请重新读取后合并", map[string]any{
 		"current_etag": contentAPIETag(post), "current_version": post.Version,

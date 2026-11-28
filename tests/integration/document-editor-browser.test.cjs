@@ -3,16 +3,19 @@ const assert = require('node:assert/strict');
 const {chromium} = require('playwright');
 const {buildSync} = require('esbuild');
 const path = require('node:path');
+const {readFileSync} = require('node:fs');
 const root = path.resolve(__dirname,'../..');
 const codecBundle=buildSync({entryPoints:[path.join(root,'frontend/core/editor-document.ts')],bundle:true,format:'iife',globalName:'DocumentCodec',write:false}).outputFiles[0].text;
-const editorBundle=buildSync({entryPoints:[path.join(root,'frontend/core/document-editor.ts')],bundle:true,format:'iife',write:false}).outputFiles[0].text;
+const generated=process.env.NEWPRESS_DOCUMENT_EDITOR_GENERATED==='1';
+const editorBundle=generated?readFileSync(path.join(root,'internal/coreui/assets/js/newpress-document-editor.js'),'utf8'):buildSync({entryPoints:[path.join(root,'frontend/core/document-editor.ts')],bundle:true,format:'iife',write:false}).outputFiles[0].text;
 
-test('document editor: real browser editing and lossless source contract', {timeout:60000}, async t => {
+test(`document editor (${generated?'generated':'typescript'}): real browser editing and lossless source contract`, {timeout:60000}, async t => {
   const browser=await chromium.launch({headless:true,...(process.platform==='win32'?{channel:'msedge'}:{})});
   t.after(()=>browser.close());
   const page=await browser.newPage();
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.setContent('<form data-content-editor data-document-editor><div data-composer-toolbar><button type="button" data-document-command="bold">粗体</button><button type="button" data-composer-undo>撤销</button><button type="button" data-composer-redo>重做</button><button type="button" data-composer-mode="source">源码</button><button type="button" data-composer-mode="blocks">可视编辑</button><button type="button" data-block-add="table">表格</button></div><div data-composer-source-pane><textarea data-content-source></textarea></div><div data-composer><b data-composer-count></b><div data-composer-list></div></div><div data-document-table-tools><button type="button" data-document-command="row-add">加行</button><button type="button" data-document-command="column-add">加列</button><button type="button" data-document-command="table-delete">删除表格</button></div><p data-composer-feedback></p></form>');
+  await page.route('https://newpress.test/document-editor/',route=>route.fulfill({contentType:'text/html; charset=utf-8',body:'<form data-content-editor data-document-editor><div data-composer-toolbar><button type="button" data-document-command="bold">粗体</button><button type="button" data-composer-undo>撤销</button><button type="button" data-composer-redo>重做</button><button type="button" data-composer-mode="source">源码</button><button type="button" data-composer-mode="blocks">可视编辑</button><button type="button" data-block-add="table">表格</button></div><div data-composer-source-pane><textarea data-content-source></textarea></div><div data-composer><b data-composer-count></b><div data-composer-list></div></div><div data-document-table-tools><button type="button" data-document-command="row-add">加行</button><button type="button" data-document-command="column-add">加列</button><button type="button" data-document-command="table-delete">删除表格</button></div><p data-composer-feedback></p></form>'}));
+  await page.goto('https://newpress.test/document-editor/');
   await page.addScriptTag({content:codecBundle});
   await page.addScriptTag({content:editorBundle});
   // Article editing starts from its own entry without loading the shop renderer.
@@ -90,6 +93,18 @@ test('document editor: real browser editing and lossless source contract', {time
     await page.evaluate(html=>{const api=ChunnelBlockEditor;api.insert(html,api.capture());},markup);
     assert.equal(await editor.locator('figure img').getAttribute('alt'),'本地图片');
     assert.equal(await editor.locator('figcaption').textContent(),'说明文字');assert.ok((await source()).includes(markup));
+    await page.getByRole('button',{name:'撤销',exact:true}).click();assert.equal(await source(),'<p>图片之前</p>');
+  });
+  await t.test('HTML clipboard images keep same-origin media and undo while rejecting remote or active content',async()=>{
+    await reset('<p>图片之前</p>');await editor.click();await page.keyboard.press('Control+End');
+    await editor.evaluate(node=>{
+      const data=new DataTransfer();
+      data.setData('text/html','<p><img src="https://newpress.test/media/7/copied.png" alt="同站图片"><img src="https://outside.test/media/7/remote.png"><img src="https://newpress.test/admin/private.png"></p>');
+      node.dispatchEvent(new ClipboardEvent('paste',{clipboardData:data,bubbles:true,cancelable:true}));
+    });
+    assert.equal(await editor.locator('img:not(.ProseMirror-separator)').count(),1);
+    assert.equal(await editor.locator('img:not(.ProseMirror-separator)').getAttribute('src'),'/media/7/copied.png');
+    assert.ok(!(await source()).includes('outside.test'));
     await page.getByRole('button',{name:'撤销',exact:true}).click();assert.equal(await source(),'<p>图片之前</p>');
   });
   await t.test('source and visual modes share one body; read-only blocks edits',async()=>{

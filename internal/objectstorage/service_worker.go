@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -116,20 +115,11 @@ func (s *Service) cycle(ctx context.Context) error {
 		if jobCtx.Err() != nil {
 			return jobCtx.Err()
 		}
-		s.mu.Lock()
-		jobs := []Record{}
-		now := time.Now()
-		for _, r := range s.records {
-			if (r.Status == "pending" || r.Status == "syncing") && !r.Next.After(now) {
-				jobs = append(jobs, r)
-			}
-		}
-		s.mu.Unlock()
+		jobs := s.readyJobs(time.Now(), min(c.Workers, 128-batch))
 		if len(jobs) == 0 {
 			return nil
 		}
-		sort.Slice(jobs, func(i, j int) bool { return jobs[i].Updated.Before(jobs[j].Updated) })
-		n := min(c.Workers, len(jobs), 128-batch)
+		n := len(jobs)
 		var wg sync.WaitGroup
 		failures := make([]error, n)
 		for i, r := range jobs[:n] {
@@ -151,6 +141,22 @@ func (s *Service) cycle(ctx context.Context) error {
 	}
 	s.Wake()
 	return nil
+}
+
+func (s *Service) readyJobs(now time.Time, limit int) []Record {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	ready := newRecordSelection(limit, false)
+	for _, r := range s.records {
+		if (r.Status == "pending" || r.Status == "syncing") && !r.Next.After(now) {
+			ready.add(r)
+		}
+	}
+	jobs := make([]Record, len(ready.values))
+	for i, position := range ready.sorted() {
+		jobs[i] = s.records[position.id]
+	}
+	return jobs
 }
 
 func safeError(err error) string {
@@ -319,6 +325,9 @@ func verifyReader(ctx context.Context, reader io.Reader, r Record) error {
 	if err != nil {
 		return err
 	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	if n != r.Size || hex.EncodeToString(h.Sum(nil)) != r.SHA256 {
 		return &OperationError{"文件大小或 SHA-256 校验不一致"}
 	}
@@ -338,8 +347,14 @@ func (r *contextReader) Read(p []byte) (int, error) {
 }
 
 func verifyRemote(ctx context.Context, b Backend, r Record, download bool) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	i, err := b.Head(ctx, r.RemoteKey)
 	if err != nil {
+		return err
+	}
+	if err := ctx.Err(); err != nil {
 		return err
 	}
 	if i.Size != r.Size || i.SHA256 != "" && !strings.EqualFold(i.SHA256, r.SHA256) {

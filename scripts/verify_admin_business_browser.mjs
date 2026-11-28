@@ -18,6 +18,8 @@ for (const name of process.argv[3] ? [process.argv[3]] : Object.keys(engines)) {
   const errors = [], writes = [], intercepted = [];
   const interceptWrites = async route => {
     const request = route.request();
+    // This fixture has no update service; isolate the unrelated dashboard read.
+    if (request.method() === 'GET' && new URL(request.url()).pathname === '/api/v1/admin/updates') return route.fulfill({ status: 503, json: { error: { message: 'fixture update service unavailable' } } });
     if (['GET', 'HEAD'].includes(request.method())) return route.continue();
     intercepted.push({ method: request.method(), url: request.url() });
     return route.fulfill({ status: 204 });
@@ -171,18 +173,20 @@ for (const name of process.argv[3] ? [process.argv[3]] : Object.keys(engines)) {
       assert.equal(await login.locator('input[name="password"]').getAttribute('type'), 'text');
       await login.locator('[data-password-toggle]').click();
       assert.equal(await login.locator('input[name="password"]').getAttribute('type'), 'password');
-      const state = await login.evaluate(() => {
-        const form = document.querySelector('.admin-login-form');
-        form.addEventListener('submit', event => event.preventDefault(), { once: true });
-        form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
-        const cancelled = !form.dataset.submitOnce;
-        form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
-        const locked = form.dataset.submitOnce === 'true';
-        const duplicate = !form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
-        window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }));
-        return { cancelled, locked, duplicate, reset: !form.dataset.submitOnce };
-      });
-      assert.deepEqual(state, { cancelled: true, locked: true, duplicate: true, reset: true });
+      await login.locator('[name=username]').fill('fixture-user');
+      await login.locator('[name=password]').fill('fixture-password');
+      const button = login.locator('.admin-login-form button[type=submit]'), original = await button.textContent();
+      await login.evaluate(() => document.addEventListener('submit', event => event.preventDefault(), { once: true }));
+      const before = intercepted.length;
+      await button.click(); await login.waitForTimeout(50);
+      assert.equal(intercepted.length, before); assert.equal(await button.textContent(), original);
+      assert.notEqual(await login.locator('.admin-login-form').getAttribute('aria-busy'), 'true');
+      await button.click();
+      await login.waitForFunction(() => document.querySelector('.admin-login-form button[type=submit]').dataset.submitState === 'pending');
+      assert.equal(intercepted.length, before + 1);
+      await button.click({ force: true }); await login.waitForTimeout(50); assert.equal(intercepted.length, before + 1);
+      await login.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })));
+      assert.equal(await button.textContent(), original); assert.equal(await button.getAttribute('aria-disabled'), null);
     } finally { await loginContext.close(); }
     check('Admin login preserves password toggle, verification cancellation, duplicate guard and return recovery.');
     assert.deepEqual(errors, []); assert.deepEqual(writes, intercepted);

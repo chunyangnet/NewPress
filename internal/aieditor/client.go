@@ -31,7 +31,10 @@ type Connection struct {
 	// Only settings resolution or an authorized administrator probe can grant
 	// this trust. It is intentionally unavailable to JSON clients.
 	approvedEndpoint string
+	requestAuthority *modelRequestAuthority
 }
+
+type modelRequestAuthority struct{ check func() error }
 
 type Model struct {
 	ID      string `json:"id"`
@@ -176,6 +179,11 @@ func ApproveProbeConnection(c Connection) (Connection, error) {
 }
 
 func (c Connection) requestClient(fallback *http.Client, timeout, headerTimeout time.Duration) (*http.Client, error) {
+	if c.requestAuthority != nil {
+		if err := c.requestAuthority.check(); err != nil {
+			return nil, err
+		}
+	}
 	if c.approvedEndpoint == "" {
 		return fallback, nil
 	}
@@ -258,6 +266,16 @@ func (c *Client) do(ctx context.Context, connection Connection, method, path str
 		return nil, responseFailure(upstreamError(response.StatusCode), response, connection.APIKey)
 	}
 	return response, nil
+}
+
+// ModelsChecked checks every model-list request, including native pagination
+// and image protocols. The hook belongs to this connection copy; it never
+// changes the shared client or a saved connection's endpoint policy.
+func (c *Client) ModelsChecked(ctx context.Context, connection Connection, check func() error) ([]Model, error) {
+	if check != nil {
+		connection.requestAuthority = &modelRequestAuthority{check: check}
+	}
+	return c.Models(ctx, connection)
 }
 
 func (c *Client) Models(ctx context.Context, connection Connection) (modelsResult []Model, resultErr error) {

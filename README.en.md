@@ -32,7 +32,7 @@
 
 ---
 
-NewPress provides posts, pages, a media library, and an administration dashboard for blogs, resource-sharing sites, communities, and business websites. New installations include only Chunnel as the default theme; other themes are installed on demand. Content is stored in local files or PostgreSQL.
+NewPress provides posts, pages, a media library, and an administration dashboard for blogs, resource-sharing sites, communities, and business websites. Fresh installations using the standard Docker image or native installation wizard preinstall only Chunnel as the default theme; other themes are installed on demand. The source tree also includes development example themes. Content is stored in local files or PostgreSQL.
 
 > [!NOTE]
 > The current source version is `1.0.0-beta.1`; a stable release is not yet available. File storage supports a single writer process only. Login sessions are persisted and remain usable across restarts until they expire. See [session persistence and deployment boundaries](SESSION_PERSISTENCE.md).
@@ -130,19 +130,19 @@ Copy-Item .env.example .env
 New-Item -ItemType Directory -Force .secrets | Out-Null
 
 docker compose build migrate
-if ($LASTEXITCODE -ne 0) { throw '镜像构建失败' }
+if ($LASTEXITCODE -ne 0) { throw 'Image build failed' }
 
 $databasePassword = [Convert]::ToHexString([Security.Cryptography.RandomNumberGenerator]::GetBytes(32)).ToLowerInvariant()
 Set-Content -LiteralPath .secrets/postgres_password -Value $databasePassword -Encoding utf8 -NoNewline
 Set-Content -LiteralPath .secrets/database_url -Value "postgres://newpress:$databasePassword@db:5432/newpress?sslmode=disable" -Encoding utf8 -NoNewline
-Read-Host '管理员密码（至少 12 个字符）' -MaskInput |
+Read-Host 'Administrator password (at least 12 characters)' -MaskInput |
     docker run --rm -i --network none newpress:local admin hash-password |
     Set-Content -LiteralPath .secrets/admin_password_hash -Encoding utf8 -NoNewline
-if ($LASTEXITCODE -ne 0) { throw '管理员密码哈希生成失败' }
+if ($LASTEXITCODE -ne 0) { throw 'Administrator password hash generation failed' }
 Remove-Variable databasePassword
 
 docker compose config --quiet
-if ($LASTEXITCODE -ne 0) { throw 'Compose 配置检查失败' }
+if ($LASTEXITCODE -ne 0) { throw 'Compose configuration validation failed' }
 docker compose up -d --no-build --wait
 ```
 
@@ -167,10 +167,10 @@ Open <http://localhost:8080>. To create an administrator and enable dashboard wr
 
 ```powershell
 New-Item -ItemType Directory -Force .secrets | Out-Null
-Read-Host '管理员密码（至少 12 个字符）' -MaskInput |
+Read-Host 'Administrator password (at least 12 characters)' -MaskInput |
     go run ./cmd/newpress admin hash-password |
     Set-Content -LiteralPath .secrets/admin_password_hash -Encoding utf8 -NoNewline
-if ($LASTEXITCODE -ne 0) { throw '管理员密码哈希生成失败' }
+if ($LASTEXITCODE -ne 0) { throw 'Administrator password hash generation failed' }
 
 $env:NEWPRESS_ADMIN_USERNAME = 'admin'
 $env:NEWPRESS_ADMIN_PASSWORD_HASH_FILE = (Resolve-Path .secrets/admin_password_hash).Path
@@ -179,7 +179,7 @@ go run ./cmd/newpress serve
 
 The administrator is created only when the user database is empty. Later bootstrap configuration does not overwrite existing accounts. When running directly, pass configuration through the process environment; the application does not automatically read the project `.env` file.
 
-The default is an empty site. For source-based runs, set `NEWPRESS_SEED_DEMO=true` to load demo content while preserving existing content. The application service in the standard Compose configuration always disables demo content.
+The default is an empty site. With file storage, set `NEWPRESS_SEED_DEMO=true` before the content store is first created to load demo posts. Existing content stores, including initialized empty stores, do not receive demo posts. To start a separate demo site, point `NEWPRESS_DATA_DIR` to a new directory. The application service in the standard Compose configuration always disables demo content.
 
 </details>
 
@@ -283,7 +283,7 @@ docker compose up -d --no-build --wait
 
 The deployment scripts preserve saved base-image references. To upgrade those images, review and edit `NEWPRESS_GO_IMAGE`, `NEWPRESS_RUNTIME_IMAGE`, `NEWPRESS_POSTGRES_IMAGE`, and `NEWPRESS_PROXY_IMAGE` in the environment file. References must include a full SHA-256 digest.
 
-Select additional Compose files with repeated `--compose-file` options. Later deployments reuse the saved list:
+Select additional Compose files in order with repeated `--compose-file` options. Explicit options replace the saved list, so include every additional file you want to retain. Omitting the option reuses the existing list. The base `compose.yaml` is added automatically; specifying only that file clears the overlay selection. For example, to enable mail configuration:
 
 ```bash
 sudo bash scripts/deploy.sh deploy --compose-file deploy/compose.mail.yaml
@@ -292,6 +292,8 @@ sudo bash scripts/deploy.sh deploy --compose-file deploy/compose.mail.yaml
 Before using extras such as the [mail configuration](deploy/compose.mail.yaml), prepare their required service parameters and secrets.
 
 ### Core updates from the dashboard
+
+Online installation requires managed mode started with `newpress run`, as used by standard Docker Compose and the native installation wizard. The local-source `serve` examples do not support online switching. To enable it, build the binary first and start it with `newpress run`.
 
 The `/admin/updates/` dashboard uses both official public sources by default, without GitHub / Gitee access tokens:
 
@@ -303,7 +305,7 @@ The official update public key is embedded in the application. A fresh installat
 
 The server verifies both manifests in parallel and prefers the valid one with the higher signed sequence number. Conflicting contents with the same sequence stop the update. Packages switch only between sources verified to contain the same release. Each source is pinned to the checked commit, and package length and SHA-256 are verified. Existing private Gitee source configuration is retained; switch back to the official public sources in update-source settings. Public requests never carry private tokens.
 
-Read the release notes and confirm that backups can be restored before installing. Source-based updates still require redeployment as described above. Updates to the initial host program, container base images, or deployment protocol also require source / image redeployment. Do not run the first-time installer over an existing directory.
+Read the release notes and confirm that backups can be restored before installing. Source-based updates still require redeployment as described above. Updates to the original supervisor binary, container base images, or deployment protocol also require source / image redeployment. Do not run the first-time installer over an existing directory.
 
 <details>
 <summary>PostgreSQL online updates: recovery receipt</summary>
@@ -318,7 +320,7 @@ For Docker, save the receipt at `.secrets/update-recovery/backup.json`, or under
 sudo bash scripts/deploy.sh deploy --compose-file deploy/compose.update-recovery.yaml
 ```
 
-This configuration needs no Gitee token. The older `deploy/compose.updates-secret.yaml` remains available for private sources. For native PostgreSQL deployments, set `NEWPRESS_UPDATE_BACKUP_RECEIPT_FILE` in the service environment to the absolute path of the restricted receipt file. Back up, verify, and update the receipt for each upgrade. If these conditions cannot be met, use an offline backup and source redeployment instead.
+If mail or other overlays are already enabled, repeat their `--compose-file` options in the command above to retain the complete list. This configuration needs no Gitee token. The older `deploy/compose.updates-secret.yaml` remains available for private sources. For native PostgreSQL deployments, set `NEWPRESS_UPDATE_BACKUP_RECEIPT_FILE` in the service environment to the absolute path of the restricted receipt file. Back up, verify, and update the receipt for each upgrade. If these conditions cannot be met, use an offline backup and source redeployment instead.
 
 </details>
 

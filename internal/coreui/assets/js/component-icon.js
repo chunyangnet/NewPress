@@ -1,2 +1,0 @@
-/* Generated: npm run build:frontend */
-function componentIcon(n){const t="http://www.w3.org/2000/svg",e=document.createElementNS(t,"svg");for(const[r,s]of Object.entries({viewBox:"0 0 24 24",fill:"none",stroke:"currentColor","stroke-width":"1.75","stroke-linecap":"round","stroke-linejoin":"round","aria-hidden":"true",focusable:"false"}))e.setAttribute(r,s);const o=document.createElementNS(t,"use");return o.setAttribute("href",`#icon-${n}`),e.append(o),e}module.exports={componentIcon};

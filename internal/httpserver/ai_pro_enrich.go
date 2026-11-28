@@ -252,6 +252,12 @@ func (s *Server) enrichment(ctx context.Context, j aijobs.Job, p content.Post) (
 	return fmt.Sprintf("已处理 %d 项 · 文章 #%d", count, p.ID), err
 }
 func (s *Server) autoImage(ctx context.Context, j aijobs.Job, title, prompt string) (media.Item, error) {
+	if err := ctx.Err(); err != nil {
+		return media.Item{}, err
+	}
+	if !s.jobCapability(ctx, j, auth.CapabilityMediaWrite) {
+		return media.Item{}, aijobs.ErrActor
+	}
 	provider := s.aiSettings.Snapshot().DefaultImageProvider
 	c, err := s.aiSettings.ResolveImage(aieditor.Connection{ProviderID: provider})
 	if err != nil {
@@ -271,6 +277,12 @@ func (s *Server) autoImage(ctx context.Context, j aijobs.Job, title, prompt stri
 	if err := ctx.Err(); err != nil {
 		return media.Item{}, err
 	}
+	// Generation can take long enough for an administrator to revoke the job
+	// owner's role. Provider output alone does not authorize a media write.
+	if !s.jobCapability(ctx, j, auth.CapabilityMediaWrite) {
+		o.fail(aijobs.ErrActor)
+		return media.Item{}, aijobs.ErrActor
+	}
 	img := imgs[0]
 	item, err := s.media.Upload(ctx, bytes.NewReader(img.Data), media.UploadInput{UploadSource: "ai-pro-image", Title: title, Filename: "ai-" + j.ID + "." + img.Extension, UploadedBy: j.Author}, min(s.effectiveMaxUploadBytes(), aieditor.MaxImageBytes))
 	if err != nil && !errors.Is(err, media.ErrDuplicate) {
@@ -278,6 +290,10 @@ func (s *Server) autoImage(ctx context.Context, j aijobs.Job, title, prompt stri
 		return media.Item{}, err
 	}
 	if item.CanProcessImage() == nil && item.Image.Recipe == 0 {
+		if !s.jobCapability(ctx, j, auth.CapabilityMediaWrite) {
+			o.fail(aijobs.ErrActor)
+			return media.Item{}, aijobs.ErrActor
+		}
 		item, err = s.media.ProcessImage(ctx, item.ID, item.Version, media.ImageInput{FocalX: 50, FocalY: 50})
 		if err != nil {
 			return media.Item{}, err

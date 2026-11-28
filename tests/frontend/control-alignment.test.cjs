@@ -39,6 +39,23 @@ test('sorting controls and compact buttons share desktop and touch heights', () 
   assert.equal(declarations(css, ':root .portal-site .discovery-sort-form', true)['--fluent-control-height'], '44px');
   assert.equal(declarations(css, '.portal-site .ui-button-small', true)['min-height'], '44px');
 });
+test('narrow admin header gives search its own row without squeezing the title', () => {
+  const css = postcss.parse(read(core + 'chunnel-admin-ui.source.css'));
+  const media = css.nodes.find(node => node.type === 'atrule' && node.params === '(max-width:440px)');
+  assert.ok(media);
+  const values = selector => {
+    const rule = media.nodes.find(node => node.type === 'rule' && node.selector === 'html[data-style] body.admin-workbench ' + selector);
+    assert.ok(rule);
+    return Object.fromEntries(rule.nodes.filter(node => node.type === 'decl').map(node => [node.prop, node.value]));
+  };
+  assert.equal(values('.admin-topbar')['flex-wrap'], 'wrap');
+  assert.equal(values('.admin-breadcrumb').flex, '1 1 0');
+  assert.equal(values('.admin-breadcrumb')['max-width'], 'none');
+  assert.equal(values('.admin-command-wrap').flex, '0 0 100%');
+  assert.equal(values('.admin-command-wrap').order, '1');
+  assert.equal(values('.admin-command-wrap')['max-width'], '100%');
+});
+
 test('admin search inner control fits 44px frame and grows for touch', () => {
   const css = read(core + 'chunnel-admin-components.source.css');
   const selector = ':root[data-input-style="fluent"] body.admin-workbench .admin-main form.fluent-input-group[role="search"] > input:not([type="hidden"])';

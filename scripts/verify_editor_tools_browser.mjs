@@ -22,6 +22,7 @@ for (const name of selected) {
   page.on('request', request => { if (!['GET', 'HEAD'].includes(request.method())) writes.push({ method: request.method(), url: request.url() }); });
   page.on('dialog', dialog => dialog.accept());
   await context.route('**/*', route => {
+    if (new URL(route.request().url()).pathname === '/api/v1/admin/updates') return route.fulfill({ status: 503, contentType: 'application/json', body: '{"error":{"message":"unavailable in this fixture"}}' });
     if (['GET', 'HEAD'].includes(route.request().method())) return route.fallback();
     intercepted.push({ method: route.request().method(), url: route.request().url() });
     return route.fulfill({ status: 204 });

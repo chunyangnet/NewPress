@@ -5,6 +5,23 @@ import (
 	"time"
 )
 
+func claimDue(job Job, now time.Time) bool {
+	if now.Before(job.UpdatedAt) {
+		return false
+	}
+	if job.Status == "running" {
+		return !job.LeaseUntil.After(now)
+	}
+	return (job.Status == "pending" || job.Status == "retry") && !job.AvailableAt.After(now)
+}
+
+func claimPrecedes(a, b Job) bool {
+	if a.AvailableAt.Equal(b.AvailableAt) {
+		return a.ID < b.ID
+	}
+	return a.AvailableAt.Before(b.AvailableAt)
+}
+
 // ValidateClaim compares private claim credentials, never a caller's task ID
 // alone. It is a read check, not a transactional fence for external effects.
 func ValidateClaim(current, claim Job, now time.Time) error {
@@ -16,17 +33,15 @@ func ValidateClaim(current, claim Job, now time.Time) error {
 }
 
 func (q *Queue) CheckClaim(ctx context.Context, claim Job, now time.Time) error {
-	state, err := q.Backend.Read(ctx)
-	if err != nil {
-		return err
-	}
-	blocked, err := QuarantineWorkPolicy(state.Quarantines)
-	if err != nil || blocked[claim.ID] {
-		return ErrAuthorization
-	}
-	current, ok := state.Jobs[claim.ID]
-	if !ok {
-		return ErrAuthorization
-	}
-	return ValidateClaim(current, claim, now)
+	return q.readState(ctx, func(state State) error {
+		blocked, err := QuarantineWorkPolicy(state.Quarantines)
+		if err != nil || blocked[claim.ID] {
+			return ErrAuthorization
+		}
+		current, ok := state.Jobs[claim.ID]
+		if !ok {
+			return ErrAuthorization
+		}
+		return ValidateClaim(current, claim, now)
+	})
 }

@@ -2,7 +2,8 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
-const code = fs.readFileSync(path.join(__dirname, '../../internal/coreui/assets/js/chunnel-wechat-drafts.js'), 'utf8');
+const {compile}=require('./helpers/typescript.cjs');
+const code=process.env.CHUNNEL_WECHAT_DRAFTS_SOURCE?fs.readFileSync(process.env.CHUNNEL_WECHAT_DRAFTS_SOURCE,'utf8'):compile('frontend/core/wechat-drafts.ts');
 const key = 'newpress.wechat.collect.42';
 const choices = [{ key:'article-one', digest:'a'.repeat(64), selected:true }];
 function setup() {

@@ -252,7 +252,21 @@ func (s *Server) resourceCheck(ctx context.Context, p content.Post, r resources.
 	return false
 }
 func (s *Server) resourceAccess(ctx context.Context, p content.Post, r resources.Resource, v resources.Variant, f resourceFacts) (bool, []resources.GroupStatus) {
-	return resources.Evaluate(v, func(c resources.Condition) bool { return s.resourceCheck(ctx, p, r, v, c, f) })
+	allowed, groups := resources.Evaluate(v, func(c resources.Condition) bool { return s.resourceCheck(ctx, p, r, v, c, f) })
+	if resourceRequiresAccount(r, v) && f.user == 0 {
+		for i := range groups {
+			groups[i].Passed = false
+			groups[i].Conditions = append(groups[i].Conditions, resources.Check{Kind: "login", Label: "请登录后使用有次数限制的资源"})
+		}
+		return false, groups
+	}
+	return allowed, groups
+}
+
+// Browser cookies are replaceable and cannot enforce per-person quotas.
+// Bind download quotas and quiz attempts to an authenticated account instead.
+func resourceRequiresAccount(r resources.Resource, v resources.Variant) bool {
+	return r.DailyLimit > 0 || r.TotalLimit > 0 || resourceNeeds(v, "quiz")
 }
 
 // resourceVersion applies the same availability and selection rules to state,

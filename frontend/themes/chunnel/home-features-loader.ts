@@ -1,14 +1,17 @@
 import type { HomeLoad } from './home-types';
+import { $ } from './home-dom';
 
 export function initHomeFeatures(entry: URL, load: HomeLoad): () => boolean {
   const controls = '[data-home-checkin], [data-saved-open], [data-favorite], [data-follow], [data-reaction], [data-share], [data-unavailable], [data-account-login], [data-account-register], [data-account-logout], [data-drawer-open], [data-modal-open], [data-message-to], [data-toast]';
   let intent: { target: HTMLElement } | null | undefined, featureReady = false;
-  const status = document.createElement('div');
-  status.className = 'home-feature-status'; status.hidden = true;
-  const message = document.createElement('span'); message.setAttribute('role', 'status');
-  const retry = document.createElement('button'); retry.type = 'button'; retry.textContent = '重试';
-  const dismiss = document.createElement('button'); dismiss.type = 'button'; dismiss.textContent = '取消';
-  status.append(message, retry, dismiss); document.body.append(status);
+  // The theme supplies the hidden status markup with the page, so its initial
+  // script only binds behavior. Missing custom markup must not throw.
+  const status = $('[data-home-feature-status]');
+  const message = status?.children[0] as HTMLSpanElement | undefined;
+  const retry = status?.children[1] as HTMLButtonElement | undefined;
+  const dismiss = status?.children[2] as HTMLButtonElement | undefined;
+  if (!status || !message || !retry || !dismiss) return () => false;
+  document.body.append(status);
   const clear = (restore = false) => {
     const previous = intent; intent = null;
     previous?.target.removeAttribute('aria-busy');

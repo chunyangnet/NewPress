@@ -2,7 +2,6 @@ package objectstorage
 
 import (
 	"context"
-	"sort"
 	"sync"
 	"time"
 
@@ -110,6 +109,7 @@ func (s *Service) Status() (Status, error) {
 	v := Status{Settings: sanitized(s.settings), Enabled: enabled, Running: s.running, Namespace: s.namespace, Counts: map[string]int{}, ProfileCounts: map[string]map[string]int{}, Records: []Record{}, LastError: s.lastError}
 	v.UploadEntries = UploadEntries()
 	v.ProfileBytes = map[string]int64{}
+	latest := newRecordSelection(100, true)
 	for _, r := range s.records {
 		v.Counts[r.Status]++
 		if v.ProfileCounts[r.ProfileID] == nil {
@@ -123,16 +123,10 @@ func (s *Service) Status() (Status, error) {
 			v.SyncedBytes += r.Size
 			v.ProfileBytes[r.ProfileID] += r.Size
 		}
-		v.Records = append(v.Records, r)
+		latest.add(r)
 	}
-	sort.Slice(v.Records, func(i, j int) bool {
-		if !v.Records[i].Updated.Equal(v.Records[j].Updated) {
-			return v.Records[i].Updated.After(v.Records[j].Updated)
-		}
-		return v.Records[i].ID < v.Records[j].ID
-	})
-	if len(v.Records) > 100 {
-		v.Records = v.Records[:100]
+	for _, position := range latest.sorted() {
+		v.Records = append(v.Records, s.records[position.id])
 	}
 	return v, nil
 }

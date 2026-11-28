@@ -1,6 +1,8 @@
 import {record, responseError, errorMessage} from './editor-tool-data';
+import {editorToolReady,registerEditorTool} from './editor-tool-launch';
+import {savedSnippetDraft,snippetDraftStorageKey} from './editor-snippet-draft-state';
+import type {DraftRequest} from './editor-snippet-draft-state';
 
-type DraftRequest = {post_id:number;version:number;digest:string;request_key:string};
 type DraftPlan = {source:{id:number;version:number};type:string;title:string;excerpt:string;cover_url:string;content_html:string;digest:string;occurrences:number;references:{id:number;version:number;snippet_version:number;title:string}[]};
 const positive=(v:unknown):v is number=>Number.isSafeInteger(v)&&Number(v)>0;
 const digest=(v:unknown):v is string=>typeof v==='string'&&/^[a-f0-9]{64}$/.test(v);
@@ -19,15 +21,12 @@ export function draftPlan(v:unknown,id:number,version:number):DraftPlan {
   return v as DraftPlan;
 }
 
-export function draftRequest(v:unknown,id:number):v is DraftRequest {
-  return record(v)&&v.post_id===id&&positive(v.version)&&digest(v.digest)&&digest(v.request_key)&&Object.keys(v).length===4;
-}
-
 (() => {
   const candidate=document.querySelector<HTMLFormElement>('[data-content-editor]');
   const trigger=candidate?.querySelector<HTMLButtonElement>('[data-snippet-draft-open]');
   const box=document.querySelector<HTMLDialogElement>('[data-snippet-draft-dialog]');
   if(!candidate||!trigger||!box)return;
+  if(editorToolReady(trigger))return;
   const form=candidate,launcher=trigger,dialog=box;
   const id=Number(launcher.dataset.post),user=Number(form.dataset.editorUserId||0),login=form.dataset.editorLogin||'';
   if(!positive(id)||!login)return;
@@ -38,11 +37,10 @@ export function draftRequest(v:unknown,id:number):v is DraftRequest {
   const content=dialog.querySelector<HTMLElement>('[data-snippet-draft-content]')!;
   const result=dialog.querySelector<HTMLAnchorElement>('[data-snippet-draft-result]')!;
   const frame=dialog.querySelector<HTMLIFrameElement>('[data-snippet-draft-frame]')!;
-  const storageKey=`newpress:snippet-draft:${user>0?'user:'+user:'legacy:'+login}:${id}`;
-  let pending:DraftRequest|null=null,busy=false,uncertain=false,serial=0,controller:AbortController|null=null;
+  const storageKey=snippetDraftStorageKey(user,login,id);
+  let pending:DraftRequest|null=savedSnippetDraft(storageKey,id),busy=false,uncertain=!!pending,serial=0,controller:AbortController|null=null;
   // Store only confirmation metadata, never article HTML or credentials. The
   // same tab can recover a lost response after refresh without creating twice.
-  try {const saved=JSON.parse(sessionStorage.getItem(storageKey)||'null');if(draftRequest(saved,id)){pending=saved;uncertain=true;}}catch{/* Keep the in-page request if browser storage is unavailable. */}
   function remember():boolean{try{if(pending)sessionStorage.setItem(storageKey,JSON.stringify(pending));else sessionStorage.removeItem(storageKey);return true;}catch{return false;}}
   function controls(){
     dialog.setAttribute('aria-busy',String(busy));preview.disabled=busy||uncertain;
@@ -70,8 +68,8 @@ export function draftRequest(v:unknown,id:number):v is DraftRequest {
     try{await action(n);}catch(e){if(n===serial)status.textContent=errorMessage(e,'请求未完成，请重试');}
     finally{if(n===serial){busy=false;controls();}}
   }
-  launcher.addEventListener('click',()=>{if(dialog.open)return;dialog.showModal();launcher.setAttribute('aria-expanded','true');
-    status.textContent=uncertain?'上次生成结果尚未确认，请使用保留的原请求核对。':'使用正式保存的版本。本页未保存的修改不会复制，请先保存需要的修改。';controls();(uncertain?confirm:preview).focus();});
+  function open(){if(dialog.open)return;dialog.showModal();launcher.setAttribute('aria-expanded','true');
+    status.textContent=uncertain?'上次生成结果尚未确认，请使用保留的原请求核对。':'使用正式保存的版本。本页未保存的修改不会复制，请先保存需要的修改。';controls();(uncertain?confirm:preview).focus();}
   dialog.querySelector('[data-snippet-draft-close]')!.addEventListener('click',()=>{if(!busy)dialog.close();});
   dialog.addEventListener('cancel',event=>{if(busy)event.preventDefault();});
   dialog.addEventListener('close',()=>{if(dialog.open)return;launcher.setAttribute('aria-expanded','false');const menu=launcher.closest('details');if(menu)menu.open=true;launcher.focus({preventScroll:true});});
@@ -118,4 +116,5 @@ export function draftRequest(v:unknown,id:number):v is DraftRequest {
   });});
   window.addEventListener('beforeunload',event=>{if(uncertain||busy&&pending){event.preventDefault();event.returnValue='';}});
   window.addEventListener('pagehide',()=>{serial++;controller?.abort();if(busy&&pending){uncertain=true;remember();}busy=false;controls();});
+  registerEditorTool([launcher],open,false);
 })();

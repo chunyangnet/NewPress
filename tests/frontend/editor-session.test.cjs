@@ -3,7 +3,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
-const source = fs.readFileSync(path.join(__dirname, '../../internal/coreui/assets/js/chunnel-admin-editor.source.js'), 'utf8');
+const editor = require('./helpers/editor-save.cjs');
+const source = editor.source();
 const valid = {authenticated: true, read_only: false, user_id: 42, username: 'writer', csrf_token: 'new-session-token-'.repeat(3), role_capabilities: ['admin:access', 'content:write:own']};
 const response = (payload = valid, status = 200) => ({ok: status === 200, status, json: async () => payload});
 
@@ -11,6 +12,7 @@ function session(fetch) {
   const start = source.indexOf('    const checkEditorSession ='), end = source.indexOf('    const performAutosave =', start);
   const timers = new Map(), messages = [], statuses = [], token = {value: 'old-token'};
   const context = vm.createContext({
+    ...editor.context,
     fetch, AbortController, DOMException, editorOwnerID: 42, editorOwnerLogin: 'writer',
     editorSessionPromise: null, editorSessionController: null, editorPageHidden: false, autosaveStopped: false, pendingEditorSubmission: null,
     editorForm: {querySelectorAll: () => [token]},

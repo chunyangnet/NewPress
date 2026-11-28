@@ -12,12 +12,15 @@ import (
 	"newpress.local/newpress/internal/resources"
 )
 
-func (s *Server) writeContentAPISuccess(writer http.ResponseWriter, status int, post content.Post, location bool) {
-	s.setContentAPIHeaders(writer, post)
-	if location {
-		writer.Header().Set("Location", "/api/v1/admin/contents/"+strconv.FormatInt(post.ID, 10))
+func (s *Server) writeContentAPISuccess(writer http.ResponseWriter, request *http.Request, status int, post content.Post, location bool) {
+	access := func() error { return s.contentObjectAccess(request, post.ID, true, true) }
+	headers := func() {
+		s.setContentAPIHeaders(writer, post)
+		if location {
+			writer.Header().Set("Location", "/api/v1/admin/contents/"+strconv.FormatInt(post.ID, 10))
+		}
 	}
-	writeJSON(writer, status, adminContentResponse(post, time.Now(), s.contentPath))
+	s.writeContentJSON(writer, request, status, adminContentResponse(post, time.Now(), s.contentPath), headers, access)
 }
 
 func (s *Server) setContentAPIHeaders(writer http.ResponseWriter, post content.Post) {

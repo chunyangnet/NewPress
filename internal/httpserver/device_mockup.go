@@ -89,8 +89,9 @@ func (s *Server) deviceMockupReady(ctx context.Context) bool {
 }
 
 func (s *Server) deviceMockupLocalRequest(r *http.Request) bool {
-	client, ok := s.clientIPs.address(r)
-	if !ok || !client.IsLoopback() {
+	// A trusted proxy's loopback fallback is useful for logging, but cannot
+	// authorize the worker to reach local services when client resolution failed.
+	if !s.isLoopbackRequest(r) {
 		return false
 	}
 	public, err := url.Parse(s.config.PublicURL)
@@ -98,11 +99,11 @@ func (s *Server) deviceMockupLocalRequest(r *http.Request) bool {
 		return false
 	}
 	host := public.Hostname()
-	if host == "localhost" {
+	if strings.EqualFold(host, "localhost") {
 		return true
 	}
 	address, err := netip.ParseAddr(host)
-	return err == nil && address.IsLoopback()
+	return err == nil && address.Zone() == "" && address.IsLoopback()
 }
 
 func (s *Server) deviceMockupAPI(w http.ResponseWriter, r *http.Request) {

@@ -3,7 +3,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
-const source = fs.readFileSync(path.join(__dirname, '../../internal/coreui/assets/js/newpress-plugin-webhooks.source.js'), 'utf8');
+const {compile}=require('./helpers/typescript.cjs');
+const source=process.env.NEWPRESS_PLUGIN_WEBHOOKS_SOURCE?fs.readFileSync(process.env.NEWPRESS_PLUGIN_WEBHOOKS_SOURCE,'utf8'):compile('frontend/core/plugin-webhooks.ts');
 const tick = () => new Promise(resolve => setImmediate(resolve));
 const digest = n => n.toString(16).padStart(64, '0');
 const at = '2026-11-25T10:00:00Z';
@@ -18,14 +19,14 @@ function fixture({hidden = false, available = true} = {}) {
   });
   const nodes = new Map(), calls = [], timers = new Map(), created = [], channels = [];
   for (const name of ['filters','list','status','summary','page','prev','next','results','access']) nodes.set(name,make(name));
-  const form = nodes.get('filters'); form.elements={plugin:make('input'),job:make('input'),state:make('select'),limit:make('select')};form.elements.limit.value='20'; form.querySelectorAll=()=>Object.values(form.elements);
+  const form = nodes.get('filters'); form.elements={plugin:make('input'),job:make('input'),state:make('select'),limit:make('select')};Object.defineProperty(form.elements,'namedItem',{value:name=>form.elements[name]});form.elements.limit.value='20'; form.querySelectorAll=()=>Object.values(form.elements);
   const root={dataset:{available:String(available),userId:'7'},querySelector:s=>nodes.get(s.replace('[data-webhook-','').replace(']',''))};
   const document={hidden,events:{},querySelector:()=>root,createElement:tag=>{const node=make(tag);created.push(node);return node;},addEventListener(n,fn){this.events[n]=fn;}};
   const window={events:{},addEventListener(n,fn){this.events[n]=fn;}};
   let tid=0;
   vm.runInNewContext(source,{document,window,URLSearchParams,AbortController,
     setTimeout(fn,ms){const id=++tid;timers.set(id,{fn,ms});return id;},clearTimeout(id){timers.delete(id);},
-    BroadcastChannel:class{constructor(){channels.push(this);}addEventListener(n,fn){this.message=fn;}},
+    BroadcastChannel:class{constructor(){channels.push(this);}addEventListener(n,fn){this.message=fn;}close(){this.closed=true;}},
     fetch:(url,options)=>new Promise((resolve,reject)=>calls.push({url,options,resolve,reject}))});
   const get=n=>nodes.get(n);
   const reply=(body,{index=calls.length-1,status=200,owner='7'}={})=>calls[index].resolve({ok:status>=200&&status<300,status,headers:{get:()=>owner},text:async()=>JSON.stringify(body)});
@@ -101,4 +102,21 @@ test('429 and corruption have distinct recovery messages; file mode performs no 
 
 test('identity response mismatch locks the original page',async()=>{
   const f=fixture();f.reply({user_id:'8',available:true,enabled:true,csrf_token:'other'});await tick();assert.equal(f.form.elements.plugin.disabled,true);assert.equal(f.get('access').hidden,false);
+});
+
+
+test('a malformed review receipt never becomes a confirmed decision',async()=>{
+ const f=fixture();await f.show(page());const form=f.review();form.children[0].children[0].value='received';form.children[1].children[0].value='checked';
+ form.events.submit({preventDefault(){}});await f.confirm();const count=f.calls.length;f.reply({ok:true});await tick();
+ assert.equal(f.calls.length,count);assert.equal(f.get('list').children.length,0);assert.match(f.get('status').textContent,/保存结果待确认/);
+});
+test('a confirmed decision survives a failed subsequent read',async()=>{
+ const f=fixture();await f.show(page());const form=f.review();form.children[0].children[0].value='received';form.children[1].children[0].value='checked';
+ form.events.submit({preventDefault(){}});await f.confirm();f.reply({recorded:true});await tick();f.reply({}, {status:503});await tick();
+ assert.match(f.get('status').textContent,/核对结论已保存/);assert.match(f.get('status').textContent,/列表暂未刷新/);assert.equal(f.calls.filter(x=>x.options.method==='POST').length,1);
+});
+test('admin region replacement aborts a webhook read and closes its session channel',async()=>{
+ const f=fixture();await f.confirm();const pending=f.calls.at(-1);f.document.events['chunnel:admin-before-replace']({detail:{regions:[f.root]}});
+ assert.equal(pending.options.signal.aborted,true);assert.equal(f.channels[0].closed,true);f.reply(page());await tick();
+ assert.equal(f.get('list').children.length,0);const count=f.calls.length;f.fire('filters','submit');assert.equal(f.calls.length,count);
 });

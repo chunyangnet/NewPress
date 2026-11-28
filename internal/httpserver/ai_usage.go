@@ -67,6 +67,10 @@ func (s *Server) adminAIUsagePage(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	access, ok := s.newAIAdminModuleAuthority(w, r, "analytics", false, auth.CapabilitySystemRead)
+	if !ok {
+		return
+	}
 	current, title := "ai-usage", "AI 消耗"
 	if r.URL.Path == "/admin/analytics/ai/requests/" {
 		current, title = "ai-requests", "AI 请求明细"
@@ -74,10 +78,17 @@ func (s *Server) adminAIUsagePage(w http.ResponseWriter, r *http.Request) {
 	data := s.baseViewFor(w, title, "查看模型用量、费用估算与生成请求。", r.URL.Path)
 	data.IsAdmin, data.BodyClass = true, "is-admin is-admin-ai-usage"
 	data.Admin = s.adminView(current, p, readOnly)
-	s.render(w, 200, "admin-ai-usage", data)
+	if !access.recheck(w) {
+		return
+	}
+	s.renderChecked(w, 200, "admin-ai-usage", data, r, func() bool { return access.recheck(w) }, access.access)
 }
 func (s *Server) adminAIUsage(w http.ResponseWriter, r *http.Request) {
 	if _, _, ok := s.requireAdminJSONReadCapability(w, r, auth.CapabilitySystemRead); !ok {
+		return
+	}
+	access, ok := s.newAIAdminModuleAuthority(w, r, "analytics", false, auth.CapabilitySystemRead)
+	if !ok {
 		return
 	}
 	values, ok := s.strictAPIQuery(w, r, map[string]bool{"start": true, "end": true, "provider": true, "model": true, "kind": true, "status": true, "before": true, "limit": true})
@@ -125,6 +136,9 @@ func (s *Server) adminAIUsage(w http.ResponseWriter, r *http.Request) {
 		f.Limit = n
 	}
 	report := s.aiTelemetry.Report(f)
+	if !access.recheck(w) {
+		return
+	}
 	report.Timezone = location.String()
 	report.Today = now.Format("2006-01-02")
 	type providerOption struct {
@@ -138,13 +152,17 @@ func (s *Server) adminAIUsage(w http.ResponseWriter, r *http.Request) {
 		providers = append(providers, providerOption{p.ID, p.Name, p.Models, p.Balance.Enabled})
 	}
 	w.Header().Set("Cache-Control", "no-store")
-	writeJSON(w, 200, struct {
+	access.json(w, struct {
 		aieditor.UsageReport
 		Providers []providerOption `json:"providers"`
 	}{report, providers})
 }
 func (s *Server) adminAIBalance(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.requireAdminJSONWrite(w, r, auth.CapabilitySettingsManage); !ok {
+		return
+	}
+	access, ok := s.newAIAdminAuthority(w, r, true, auth.CapabilitySettingsManage)
+	if !ok {
 		return
 	}
 	if _, ok := s.strictAPIQuery(w, r, nil); !ok {
@@ -156,13 +174,16 @@ func (s *Server) adminAIBalance(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.decodeStrictAPIJSONLimit(w, r, &input, 1024, "1 KiB"); !ok {
 		return
 	}
-	result, err := s.aiBalances.Query(r.Context(), s.aiSettings, input.ProviderID)
+	if !access.recheck(w) {
+		return
+	}
+	result, err := access.balance(input.ProviderID)
 	if err != nil {
-		s.aiEditorError(w, r, err)
+		access.fail(w, err)
 		return
 	}
 	w.Header().Set("Cache-Control", "no-store")
-	writeJSON(w, 200, result)
+	access.json(w, result)
 }
 func (s *Server) registerAIUsageRoutes(mux routeRegistrar) {
 	mux.HandleFunc("GET /admin/analytics/ai/{$}", s.adminAIUsagePage)

@@ -350,6 +350,19 @@ func DecodeJSONWithNumbers[T any](reader io.Reader, limit int64, label string) (
 	return result, err
 }
 
+// DecodeJSONBytesWithNumbers applies the same strict checks and exact number
+// handling to an already-owned document without copying it through io.ReadAll.
+// The caller must keep payload unchanged until the call returns. The standard
+// decoder still owns its input buffer; returned values do not borrow payload.
+func DecodeJSONBytesWithNumbers[T any](payload []byte, limit int64, label string) (T, error) {
+	var result T
+	if limit <= 0 || limit == math.MaxInt64 {
+		return result, fmt.Errorf("decode %s: invalid JSON limit", label)
+	}
+	err := decodeJSONPayloadInto(payload, limit, label, &result, true)
+	return result, err
+}
+
 // DecodeJSONInto applies DecodeJSON's checks to an existing destination, retaining
 // defaults for omitted fields. Ambiguous documents are rejected before decoding.
 func DecodeJSONInto(reader io.Reader, limit int64, label string, target any) error {
@@ -364,6 +377,10 @@ func decodeJSONInto(reader io.Reader, limit int64, label string, target any, use
 	if err != nil {
 		return fmt.Errorf("read %s: %w", label, err)
 	}
+	return decodeJSONPayloadInto(payload, limit, label, target, useNumbers)
+}
+
+func decodeJSONPayloadInto(payload []byte, limit int64, label string, target any, useNumbers bool) error {
 	if len(payload) == 0 {
 		return fmt.Errorf("decode %s: JSON document is empty", label)
 	}
@@ -670,89 +687,14 @@ func validateUniqueJSON(payload []byte, target reflect.Type) error {
 	if err := validateJSONUnicode(payload); err != nil {
 		return err
 	}
-	// Token reads opening delimiters separately, so it does not enforce the
-	// full-document nesting limit used by Decode. Check syntax before our
-	// recursive duplicate-field walk can descend into an over-nested value.
+	// Check full-document syntax and the standard nesting limit before the
+	// duplicate-field scanner descends into values or skips scalar bytes.
 	if !json.Valid(payload) {
 		var raw json.RawMessage
 		return json.Unmarshal(payload, &raw) // Preserve the standard syntax error.
 	}
-	decoder := json.NewDecoder(bytes.NewReader(payload))
-	decoder.UseNumber()
-	if err := consumeUniqueJSONValue(decoder, target); err != nil {
-		return err
-	}
-	if token, err := decoder.Token(); err != io.EOF {
-		if err != nil {
-			return err
-		}
-		return fmt.Errorf("unexpected trailing JSON token %v", token)
-	}
-	return nil
-}
-
-func consumeUniqueJSONValue(decoder *json.Decoder, target reflect.Type) error {
-	token, err := decoder.Token()
-	if err != nil {
-		return err
-	}
-	delimiter, ok := token.(json.Delim)
-	if !ok {
-		return nil
-	}
-	target = jsonDestinationType(target)
-	switch delimiter {
-	case '{':
-		seen := make(map[string]struct{})
-		fields := make(map[string]string)
-		for decoder.More() {
-			keyToken, err := decoder.Token()
-			if err != nil {
-				return err
-			}
-			key, ok := keyToken.(string)
-			if !ok {
-				return errors.New("JSON object key must be a string")
-			}
-			if _, exists := seen[key]; exists {
-				return fmt.Errorf("duplicate JSON field %q", key)
-			}
-			seen[key] = struct{}{}
-			child, field := jsonObjectField(target, key)
-			if field != "" {
-				if previous, exists := fields[field]; exists {
-					return fmt.Errorf("duplicate JSON field %q (alias of %q)", key, previous)
-				}
-				fields[field] = key
-			}
-			if err := consumeUniqueJSONValue(decoder, child); err != nil {
-				return err
-			}
-		}
-		closing, err := decoder.Token()
-		if err != nil || closing != json.Delim('}') {
-			return errors.New("invalid JSON object")
-		}
-	case '[':
-		index := 0
-		for decoder.More() {
-			var child reflect.Type
-			if target != nil && (target.Kind() == reflect.Slice || target.Kind() == reflect.Array && index < target.Len()) {
-				child = target.Elem()
-			}
-			if err := consumeUniqueJSONValue(decoder, child); err != nil {
-				return err
-			}
-			index++
-		}
-		closing, err := decoder.Token()
-		if err != nil || closing != json.Delim(']') {
-			return errors.New("invalid JSON array")
-		}
-	default:
-		return fmt.Errorf("unexpected JSON delimiter %q", delimiter)
-	}
-	return nil
+	scanner := uniqueJSONScanner{payload: payload}
+	return scanner.value(target)
 }
 
 func validateArchivePath(name string) (string, error) {

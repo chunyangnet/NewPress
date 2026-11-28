@@ -3,8 +3,9 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
-const source = fs.readFileSync(process.env.CHUNNEL_WECHAT_SOURCE || path.join(__dirname, '../../internal/coreui/assets/js/chunnel-wechat.source.js'), 'utf8');
-const draftSource = fs.readFileSync(path.join(__dirname, '../../internal/coreui/assets/js/chunnel-wechat-drafts.js'), 'utf8');
+const {compile}=require('./helpers/typescript.cjs');
+const source=process.env.CHUNNEL_WECHAT_SOURCE?fs.readFileSync(process.env.CHUNNEL_WECHAT_SOURCE,'utf8'):compile('frontend/core/wechat.ts');
+const draftSource=process.env.CHUNNEL_WECHAT_DRAFTS_SOURCE?fs.readFileSync(process.env.CHUNNEL_WECHAT_DRAFTS_SOURCE,'utf8'):compile('frontend/core/wechat-drafts.ts');
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
 function fixture(search = '', options = {}) {
@@ -19,6 +20,8 @@ function fixture(search = '', options = {}) {
       this.children.forEach(detach); this.children = []; this.append(...children);
     }
     get firstChild() { return this.children[0]; }
+    get options(){return this.children;}
+    get name(){return this.attrs.name||'';}
     addEventListener(name, fn) { this.events[name] = fn; }
     setAttribute(name, value) { this.attrs[name] = value; }
     contains(node) { return this.children.some(child => child === node || child.contains(node)); }
@@ -27,14 +30,14 @@ function fixture(search = '', options = {}) {
     close(value) { this.open = false; this.returnValue = value; this.events.close?.(); }
     closest(selector) { return selector === this.tagName || selector === '[hidden]' && this.hidden || this.tagName === 'button' && this.dataset.action ? this : this.parent?.closest(selector); }
     reset() { Object.values(this.elements || {}).forEach(node => { node.value = ''; }); }
-    querySelector(selector) { if (selector === 'fieldset') return this.fieldset ||= new Node('fieldset'); return this.querySelectorAll(selector)[0] || null; }
+    querySelector(selector) {const name=selector.match(/^\[name=([^\]]+)\]$/)?.[1];if(name)return this.elements?.[name]||null;if (selector === 'fieldset') return this.fieldset ||= new Node('fieldset'); return this.querySelectorAll(selector)[0] || null; }
     querySelectorAll(selector) {
       const result = [], match = node => selector.split(',').some(s => s === node.tagName || s === 'input[type=checkbox]' && node.tagName === 'input' && node.type === 'checkbox' || s === '[data-wechat-retry]' && node.dataset.wechatRetry !== undefined || s.startsWith('.') && node.className.split(' ').includes(s.slice(1)));
       const walk = node => { for (const child of node.children) { if (match(child)) result.push(child); walk(child); } }; walk(this); return result;
     }
   }
   const get = selector => { if (!nodes.has(selector)) nodes.set(selector, new Node()); return nodes.get(selector); };
-  const form = (selector, fields) => { const n = get(selector); n.elements = {}; fields.forEach(field => { const input = new Node('input'); n.elements[field] = input; n.append(input); }); return n; };
+  const form = (selector, fields) => { const n = get(selector); n.elements = {};Object.defineProperty(n.elements,'namedItem',{value:key=>n.elements[key]||null}); fields.forEach(field => { const input = new Node('input'); n.elements[field] = input; n.append(input); }); return n; };
   form('[data-wechat-config]', ['app_id', 'author', 'thumb_media_id', 'enabled', 'collect_enabled', 'collect_drafts', 'auto_sync', 'auto_publish', 'include_source', 'open_comment', 'fans_comment', 'app_secret', 'clear_secret']);
   form('[data-wechat-sync]', ['q', 'post_id']);
   form('[data-wechat-collect]', ['urls']);
@@ -53,7 +56,7 @@ function fixture(search = '', options = {}) {
     removeItem: key => { if (storageState.fail) throw new Error('暂存不可用'); stored.delete(key); },
   } };
   vm.runInNewContext(draftSource, { window, Date, TextEncoder, Uint8Array });
-  vm.runInNewContext(source, { document, window, location: { search }, URL, URLSearchParams, AbortController, DOMException, Date, setTimeout(fn, ms) { timers.set(++timerID, { fn, ms }); return timerID; }, clearTimeout(id) { timers.delete(id); }, fetch(url, options) {
+  vm.runInNewContext(source, { document, window, Node,Element:Node,HTMLElement:Node,HTMLInputElement:Node,HTMLSelectElement:Node,HTMLTextAreaElement:Node,HTMLAnchorElement:class {static [Symbol.hasInstance](node){return node?.tagName==='a';}}, location: { search }, URL, URLSearchParams, AbortController, DOMException, Date, setTimeout(fn, ms) { timers.set(++timerID, { fn, ms }); return timerID; }, clearTimeout(id) { timers.delete(id); }, fetch(url, options) {
     if(url==='/api/v1/admin/session'){
       sessionCalls.push(options);
       if (!session.pending) return Promise.resolve({status:session.status,ok:session.status===200,json:async()=>session.payload});
@@ -69,7 +72,7 @@ function fixture(search = '', options = {}) {
   const emit = (selector, event, data = {}) => get(selector).events[event]?.({ preventDefault() {}, ...data });
   return { get, calls, timers, emit, tabs, docEvents, winEvents, session, sessionCalls, root, stored, storageState, window, document };
 }
-const workspace = overrides => ({ user_id:42, config: { app_id: 'wx0123456789abcdef', author:'',thumb_media_id:'',version: 2, enabled: true, collect_enabled: true,auto_sync:false,auto_publish:false,include_source:true,open_comment:false,fans_comment:false }, can_sync: true, can_collect: true, jobs: [], posts: [], job_page: 1, job_pages: 1, total_jobs: 0, filtered_jobs: 0, active_jobs: 0, attention_jobs: 0, ...overrides });
+const workspace = overrides => {const value=({ user_id:42, config: { since:'0001-01-01T00:00:00Z', app_id: 'wx0123456789abcdef', author:'',thumb_media_id:'',version: 2, enabled: true, collect_enabled: true,auto_sync:false,auto_publish:false,include_source:true,open_comment:false,fans_comment:false }, can_sync: true, can_collect: true, jobs: [], posts: [], job_page: 1, job_pages: 1, total_jobs: 0, filtered_jobs: 0, active_jobs: 0, attention_jobs: 0, ...overrides });value.posts=value.posts.map(post=>({cover:'',...post}));if(value.selected_post)value.selected_post={cover:'',...value.selected_post};value.jobs=value.jobs.map(job=>({title:'任务',post_id:1,version:1,actor:'owner',auto_publish:false,stage:'prepare',attempts:0,created_at:new Date().toISOString(),updated_at:new Date().toISOString(),next_at:'0001-01-01T00:00:00Z',lease_until:'0001-01-01T00:00:00Z',...job}));return value;};
 const preview = () => ({ articles: ['one', 'two'].map(key => ({ key, title: key, author: '公众号', excerpt:'', body:'<p>预览</p>', cover:'', images: [], warnings: [], url: 'https://mp.weixin.qq.com/s/' + key, preview: '<p>预览</p>' })), receipts: { one: 'receipt-one', two: 'receipt-two' }, expires: new Date(Date.now() + 600000).toISOString(), failures: [], plan: { new: 2, existing: 0, conflicts: 0, items: ['one', 'two'].map(key => ({ key, action: 'create' })) } });
 async function ready(search) { const f = fixture(search); f.calls[0].respond(workspace()); await tick(); return f; }
 const recoveryKey = 'newpress.wechat.collect.42';
@@ -794,7 +797,7 @@ test('oversized image selections remain reviewable and can be reduced before any
 
 test('collection image budget counts shared links once including independent covers and excludes existing posts',async()=>{
   const f=await ready(),data=preview();data.articles[0].images=collectionImages(0,26);data.articles[1].images=collectionImages(24,26);
-  data.articles.push({...data.articles[0],key:'existing',images:collectionImages(100,30)});data.plan.items.push({key:'existing',action:'changed',post_id:55});
+  data.articles.push({...data.articles[0],key:'existing',images:collectionImages(100,30)});data.plan.items.push({key:'existing',action:'changed',post_id:55});data.plan.existing=1;
   await collectImageBatch(f,data);
   assert.equal(f.get('[data-wechat-image-count]').textContent,'50 / 50 张');assert.equal(f.get('[data-wechat-apply]').disabled,false);
   const next=structuredClone(data);next.articles[0].cover='https://mmbiz.qpic.cn/cover';next.articles[0].images.push(next.articles[0].cover);
@@ -825,9 +828,9 @@ test('failed preview and disabled collection retain the image budget without unl
 });
 
 test('a successful per-link retry recalculates the budget while preserving prior article choices',async()=>{
-  const f=await ready(),data=preview();data.articles=[data.articles[0]];data.articles[0].images=collectionImages(0,26);data.plan.items=[{key:'one',action:'create'}];data.receipts={one:'receipt-one'};data.failures=[{url:'https://mp.weixin.qq.com/s/second',message:'读取失败'}];
+  const f=await ready(),data=preview();data.articles=[data.articles[0]];data.articles[0].images=collectionImages(0,26);data.plan.items=[{key:'one',action:'create'}];data.plan.new=1;data.receipts={one:'receipt-one'};data.failures=[{url:'https://mp.weixin.qq.com/s/second',message:'读取失败'}];
   await collectImageBatch(f,data);f.get('[data-wechat-collection]').querySelectorAll('[data-wechat-retry]')[0].events.click();await tick();
-  const next=preview();next.articles=[next.articles[1]];next.articles[0].images=collectionImages(26,26);next.plan.items=[{key:'two',action:'create'}];next.receipts={two:'receipt-two'};
+  const next=preview();next.articles=[next.articles[1]];next.articles[0].images=collectionImages(26,26);next.plan.items=[{key:'two',action:'create'}];next.plan.new=1;next.receipts={two:'receipt-two'};
   f.calls.at(-1).respond(next);await tick();
   assert.equal(f.get('[data-wechat-image-count]').textContent,'52 / 50 张');assert.equal(f.get('[data-wechat-apply]').disabled,true);
   assert.deepEqual(f.get('[data-wechat-collection]').querySelectorAll('input[type=checkbox]').map(c=>c.checked),[true,true]);
@@ -1045,7 +1048,7 @@ test('retrying one failed link preserves successful previews and unchecked choic
   retry.events.click(); await tick();
   assert.deepEqual(f.calls.at(-1).body, { urls: ['https://mp.weixin.qq.com/s/failed'] });
   assert.equal(retry.disabled, true);
-  const later = preview(); later.articles = [{ ...later.articles[0], key: 'three', title: 'three' }]; later.receipts = { three: 'receipt-three' }; later.plan.items = [{ key: 'three', action: 'create' }];
+  const later = preview(); later.articles = [{ ...later.articles[0], key: 'three', title: 'three' }]; later.receipts = { three: 'receipt-three' }; later.plan.items = [{ key: 'three', action: 'create' }];later.plan.new=1;
   f.calls.at(-1).respond(later); await tick();
   const remaining = f.get('[data-wechat-collection]').querySelectorAll('input[type=checkbox]');
   assert.deepEqual(remaining.map(node => [node.dataset.key, node.checked]), [['one', true], ['two', false], ['three', true]]);
@@ -1097,7 +1100,7 @@ test('a retried alternate URL for an existing article preserves its unchecked ch
   const beforeNote = f.get('[data-wechat-apply-note]').textContent;
   const checks = f.get('[data-wechat-collection]').querySelectorAll('input[type=checkbox]'); checks[1].checked = false; checks[1].events.change();
   f.get('[data-wechat-collection]').querySelectorAll('[data-wechat-retry]')[0].events.click(); await tick();
-  const later = preview(); later.articles = [later.articles[1]]; later.receipts = { two: 'renewed-receipt-two' }; later.plan.items = [{ key: 'two', action: 'create' }]; later.expires = new Date(Date.parse(original.expires) + 60000).toISOString();
+  const later = preview(); later.articles = [later.articles[1]]; later.receipts = { two: 'renewed-receipt-two' }; later.plan.items = [{ key: 'two', action: 'create' }];later.plan.new=1; later.expires = new Date(Date.parse(original.expires) + 60000).toISOString();
   f.calls.at(-1).respond(later); await tick();
   const remaining = f.get('[data-wechat-collection]').querySelectorAll('input[type=checkbox]');
   assert.deepEqual(remaining.map(node => [node.dataset.key, node.checked]), [['one', true], ['two', false]]);
@@ -1403,4 +1406,38 @@ test('a retried changed article merges without changing pending new article choi
   assert.deepEqual(f.get('[data-wechat-collection]').querySelectorAll('input[type=checkbox]').map(n=>[n.dataset.key,n.checked]), [['one',true],['two',false]]);
   assert.equal(f.get('[data-wechat-collection]').querySelectorAll('details').length, 3);
   assert.equal(f.get('[data-wechat-collection]').querySelectorAll('.wechat-imported-link').length, 1);
+});
+
+
+test('confirmed config save preserves inputs made during acknowledgement and readback',async()=>{
+ const f=await ready(),form=f.get('[data-wechat-config]');form.elements.author.value='submitted';f.emit('[data-wechat-config]','input');f.emit('[data-wechat-config]','submit');await tick();
+ form.elements.author.value='later';form.elements.app_secret.value='later-private-secret';f.emit('[data-wechat-config]','input');
+ f.calls.at(-1).respond({config:{...workspace().config,version:3,author:'submitted'}});await tick();
+ assert.equal(form.elements.author.value,'later');assert.equal(form.elements.app_secret.value,'later-private-secret');
+ f.calls.at(-1).respond(workspace({config:{...workspace().config,version:3,author:'submitted'}}));await tick();
+ assert.equal(form.elements.author.value,'later');assert.match(f.get('[data-wechat-status]').textContent,/后续修改/);
+ f.emit('[data-wechat-config]','submit');await tick();assert.equal(f.calls.at(-1).body.config.version,3);
+});
+
+test('late response after session event cannot replace the retained original draft',async()=>{
+ const f=await ready(),form=f.get('[data-wechat-config]');form.elements.author.value='private';f.emit('[data-wechat-config]','input');f.emit('[data-wechat-config]','submit');await tick();const pending=f.calls.at(-1);
+ f.docEvents['chunnel:session']({detail:{authenticated:true,id:99,csrf_token:'foreign'}});assert.equal(pending.options.signal.aborted,true);
+ pending.respond({config:{...workspace().config,version:3,author:'private'}});await tick();
+ assert.equal(form.elements.author.value,'private');assert.equal(f.get('[data-wechat-recovery]').hidden,false);assert.equal(form.fieldset.disabled,true);
+ f.session.payload={...f.session.payload,user_id:99};f.emit('[data-wechat-recover]','click');await tick();assert.equal(form.fieldset.disabled,true);
+});
+
+test('partial navigation cancels an active read and prevents late preview mounting',async()=>{
+ const f=await ready();await startFocusedPreview(f);const pending=f.calls.at(-1);f.docEvents['chunnel:admin-before-replace']({detail:{regions:[{contains:node=>node===f.root}]}});
+ assert.equal(pending.options.signal.aborted,true);pending.respond(preview());await tick();assert.equal(f.get('[data-wechat-collection]').querySelectorAll('details').length,0);
+});
+
+test('a mismatched queued article is not reported as successful synchronization',async()=>{
+ const f=await selectionFixture();f.emit('[data-wechat-sync]','submit');await tick();
+ const sample=require('./fixtures/wechat-contracts.json');f.calls.at(-1).respond({job:{...sample.queued_job,post_id:99}});await tick();assert.match(f.get('[data-wechat-status]').textContent,/同步回执/);assert.equal(f.calls.at(-1).url,'/api/v1/admin/wechat/sync');
+});
+
+test('an invalid job-action receipt leaves the operation unconfirmed',async()=>{
+ const f=fixture();f.calls[0].respond(workspace({jobs:[{id:'waiting',app_id:'wx0123456789abcdef',title:'任务',status:'failed'}]}));await tick();
+ const button=f.get('[data-wechat-jobs]').querySelectorAll('button').find(node=>node.dataset.action==='retry');f.emit('[data-wechat-jobs]','click',{target:button});await tick();f.calls.at(-1).respond({ok:'true'});await tick();assert.match(f.get('[data-wechat-status]').textContent,/回执未确认/);
 });

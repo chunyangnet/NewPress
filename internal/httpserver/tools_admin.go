@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"runtime"
 	"sort"
+	"strconv"
 	"time"
 
 	"newpress.local/newpress/internal/audit"
@@ -227,6 +228,15 @@ func (s *Server) adminTools(writer http.ResponseWriter, request *http.Request) {
 }
 
 func (s *Server) renderAdminTools(writer http.ResponseWriter, request *http.Request, status int, principal auth.Principal, readOnly bool, importView adminNavigationImportView, notice adminNotice, auditQueries ...audit.Query) {
+	capabilities := []string{auth.CapabilitySystemRead, auth.CapabilitySettingsManage, auth.CapabilityAppearanceManage, auth.CapabilityNavigationManage}
+	if request.Method != http.MethodGet && request.Method != http.MethodHead {
+		capabilities = []string{auth.CapabilityNavigationManage}
+	}
+	access := func() error { return s.diagnosticPageAccess(request, principal, capabilities...) }
+	check := func() bool { return s.recheckDiagnosticPage(writer, request, access) }
+	if !check() {
+		return
+	}
 	data := s.baseViewFor(writer, "工具与迁移", "生成无敏感信息支持报告，导出可移植配置，并说明备份与恢复范围", "/admin/tools/")
 	data.BodyClass = "is-admin is-admin-tools"
 	data.ActiveNav = "account"
@@ -240,7 +250,10 @@ func (s *Server) renderAdminTools(writer http.ResponseWriter, request *http.Requ
 	data.Tools.NavigationImport = importView
 	data.Admin.Notice = notice.Message
 	data.Admin.NoticeTone = notice.Tone
-	s.render(writer, status, "admin-tools", data)
+	if !check() {
+		return
+	}
+	s.renderChecked(writer, status, "admin-tools", data, request, check, access)
 }
 
 func (s *Server) adminToolsSupportReport(writer http.ResponseWriter, request *http.Request) {
@@ -251,7 +264,7 @@ func (s *Server) adminToolsSupportReport(writer http.ResponseWriter, request *ht
 		return
 	}
 	report := s.buildSupportReport(request.Context())
-	if err := writeAdminToolJSONAttachment(writer, "newpress-support-report.json", report); err != nil {
+	if err := s.writeAdminToolJSONAttachment(writer, request, auth.CapabilitySystemRead, "newpress-support-report.json", report); err != nil {
 		slog.Error("write support report", "error", err)
 	}
 }
@@ -272,7 +285,7 @@ func (s *Server) adminToolsNavigationExport(writer http.ResponseWriter, request 
 		return
 	}
 	document := s.navigationExport(snapshot, time.Now().UTC())
-	if err := writeAdminToolJSONAttachment(writer, "newpress-navigation-export.json", document); err != nil {
+	if err := s.writeAdminToolJSONAttachment(writer, request, auth.CapabilityNavigationManage, "newpress-navigation-export.json", document); err != nil {
 		slog.Error("write navigation export", "error", err)
 	}
 }
@@ -609,18 +622,23 @@ func toolsNoticeFromQuery(value string) adminNotice {
 	}
 }
 
-func writeAdminToolJSONAttachment(writer http.ResponseWriter, filename string, value any) error {
+func (s *Server) writeAdminToolJSONAttachment(writer http.ResponseWriter, request *http.Request, capability, filename string, value any) error {
 	var encoded bytes.Buffer
 	encoder := json.NewEncoder(&encoded)
 	encoder.SetIndent("", "  ")
 	if err := encoder.Encode(value); err != nil {
 		return err
 	}
+	request, ok := s.recheckAdminRead(writer, request, capability)
+	if !ok {
+		return nil
+	}
 	writer.Header().Set("Content-Type", "application/json; charset=utf-8")
 	writer.Header().Set("Content-Disposition", `attachment; filename="`+filename+`"`)
 	writer.Header().Set("Cache-Control", "no-store")
 	writer.Header().Set("Pragma", "no-cache")
 	writer.Header().Set("Expires", "0")
-	_, err := writer.Write(encoded.Bytes())
+	writer.Header().Set("Content-Length", strconv.Itoa(encoded.Len()))
+	_, err := privateResponse(writer, request, func() error { return s.adminReadAccess(request, capability) }).Write(encoded.Bytes())
 	return err
 }

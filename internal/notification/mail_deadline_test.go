@@ -52,6 +52,7 @@ func TestDeliverySharesLeaseAcrossClaimPreparationAndSMTP(t *testing.T) {
 		{"slow-claim", 61 * time.Second, 0, true, false},
 		{"slow-preparation", 0, 61 * time.Second, true, false},
 		{"combined-delay", 31 * time.Second, 31 * time.Second, true, false},
+		{"recipient-revalidation-budget", 0, 31 * time.Second, true, false},
 		{"remaining-smtp-budget", 10 * time.Second, 10 * time.Second, false, false},
 		{"smtp-timeout", 10 * time.Second, 10 * time.Second, false, true},
 	} {

@@ -18,6 +18,7 @@
         <span class="search-kind">文章</span>
         <input type="search" name="q" value="{{.SearchQuery}}" placeholder="搜索标题、作者或关键词" aria-label="搜索" maxlength="80" data-search-input>
         <button type="submit" aria-label="执行搜索">{{template "icon" "search"}}</button>
+        {{if eq .BodyClass "is-home"}}<div class="search-preview" data-home-search-status hidden><p class="search-preview-status" role="status"></p><button type="button" class="search-preview-retry">重试预览</button></div>{{end}}
       </form>{{end}}
       {{if index .ThemeValues "search_enabled"}}<button class="header-search-toggle header-icon-action" type="button" aria-label="打开搜索" aria-controls="header-search" data-focus-search>{{template "icon" "search"}}</button>{{end}}
       {{template "color-mode" .}}

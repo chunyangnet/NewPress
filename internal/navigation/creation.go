@@ -78,7 +78,9 @@ func (store *FileStore) FindCreation(ctx context.Context, key, fingerprint strin
 	if err := ValidateCreationKey(key, fingerprint); err != nil {
 		return CreationResult{}, err
 	}
-	store.mu.RLock()
+	if err := store.mu.RLockContext(ctx); err != nil {
+		return CreationResult{}, err
+	}
 	defer store.mu.RUnlock()
 	if err := ctx.Err(); err != nil {
 		return CreationResult{}, err
@@ -86,7 +88,11 @@ func (store *FileStore) FindCreation(ctx context.Context, key, fingerprint strin
 	if store.persistFault != nil {
 		return CreationResult{}, store.persistFault
 	}
-	return findCreation(store.creations, key, fingerprint)
+	result, err := findCreation(store.creations, key, fingerprint)
+	if contextErr := ctx.Err(); contextErr != nil {
+		return CreationResult{}, contextErr
+	}
+	return result, err
 }
 
 func (store *FileStore) CreateOnce(ctx context.Context, request Creation) (CreationResult, error) {
@@ -96,7 +102,9 @@ func (store *FileStore) CreateOnce(ctx context.Context, request Creation) (Creat
 	if err := ValidateCreationKey(request.Key, request.Fingerprint); err != nil {
 		return CreationResult{}, err
 	}
-	store.mu.Lock()
+	if err := store.mu.LockContext(ctx); err != nil {
+		return CreationResult{}, err
+	}
 	defer store.mu.Unlock()
 	if err := ctx.Err(); err != nil {
 		return CreationResult{}, err

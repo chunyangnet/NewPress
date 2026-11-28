@@ -1,17 +1,39 @@
 package httpserver
 
 import (
+	"context"
 	"io"
 	"mime"
 	"net/http"
-	"newpress.local/newpress/internal/auth"
-	"newpress.local/newpress/internal/objectstorage"
 	"path"
 	"strconv"
+
+	"newpress.local/newpress/internal/auth"
+	"newpress.local/newpress/internal/objectstorage"
 )
 
+func (s *Server) objectStorageFileContext(r *http.Request, principal auth.Principal) context.Context {
+	_, token, ok := s.currentAdminSession(r)
+	return objectstorage.WithFileAuthorization(r.Context(), func(ctx context.Context) error {
+		if !ok {
+			return auth.ErrSessionNotFound
+		}
+		// Recheck the session that authorized this request. A second cookie must
+		// not silently take over a transfer after the original session is revoked.
+		current, err := s.auth.ResolveSession(ctx, token)
+		if err != nil {
+			return err
+		}
+		if current.UserID != principal.UserID || current.Username != principal.Username ||
+			!current.Can(auth.CapabilityAdminAccess) || !current.Can(auth.CapabilityPluginsManage) {
+			return auth.ErrSessionForbidden
+		}
+		return nil
+	})
+}
+
 func (s *Server) objectStorageFiles(w http.ResponseWriter, r *http.Request) {
-	_, readOnly, ok := s.requireAdminJSONReadCapability(w, r, auth.CapabilityPluginsManage)
+	p, readOnly, ok := s.requireAdminJSONReadCapability(w, r, auth.CapabilityPluginsManage)
 	if !ok {
 		return
 	}
@@ -33,8 +55,9 @@ func (s *Server) objectStorageFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Cache-Control", "private, no-store")
+	ctx := s.objectStorageFileContext(r, p)
 	if q.Get("download") == "1" {
-		reader, _, err := s.objectStorage.RemoteDownload(r.Context(), q.Get("profile"), q.Get("key"), version)
+		reader, info, err := s.objectStorage.RemoteDownload(ctx, q.Get("profile"), q.Get("key"), version)
 		if err != nil {
 			s.objectStorageError(w, r, err, false)
 			return
@@ -43,10 +66,23 @@ func (s *Server) objectStorageFiles(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/octet-stream")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": path.Base(q.Get("key"))}))
-		_, _ = io.Copy(w, reader)
+		if info.Size >= 0 {
+			w.Header().Set("Content-Length", strconv.FormatInt(info.Size, 10))
+		}
+		written, err := io.Copy(w, reader)
+		if err != nil {
+			if written > 0 {
+				// Status and file bytes have already been sent. Abort the stream
+				// so a partial file cannot be mistaken for a successful download.
+				panic(http.ErrAbortHandler)
+			}
+			w.Header().Del("Content-Disposition")
+			w.Header().Del("Content-Length")
+			s.objectStorageError(w, r, err, false)
+		}
 		return
 	}
-	page, err := s.objectStorage.RemoteList(r.Context(), q.Get("profile"), q.Get("key"), q.Get("token"), version)
+	page, err := s.objectStorage.RemoteList(ctx, q.Get("profile"), q.Get("key"), q.Get("token"), version)
 	if err != nil {
 		s.objectStorageError(w, r, err, false)
 		return
@@ -75,7 +111,7 @@ func (s *Server) objectStorageFileAction(w http.ResponseWriter, r *http.Request)
 	if _, ok = s.decodeStrictAPIJSONLimit(w, r, &body, 8192, "8 KiB"); !ok || !s.pluginIdentity(w, r, p, body.UserID) {
 		return
 	}
-	if err := s.objectStorage.RemoteAction(r.Context(), body.Profile, body.Key, body.TargetProfile, body.Target, body.Action, body.Version); err != nil {
+	if err := s.objectStorage.RemoteAction(s.objectStorageFileContext(r, p), body.Profile, body.Key, body.TargetProfile, body.Target, body.Action, body.Version); err != nil {
 		s.objectStorageError(w, r, err, false)
 		return
 	}
@@ -101,7 +137,7 @@ func (s *Server) objectStorageFileUpload(w http.ResponseWriter, r *http.Request)
 	}
 	version, _ := strconv.ParseInt(q.Get("version"), 10, 64)
 	r.Body = http.MaxBytesReader(w, r.Body, objectstorage.RemoteUploadLimit)
-	if err := s.objectStorage.RemoteUpload(r.Context(), q.Get("profile"), q.Get("key"), version, r.Body, "application/octet-stream"); err != nil {
+	if err := s.objectStorage.RemoteUpload(s.objectStorageFileContext(r, p), q.Get("profile"), q.Get("key"), version, r.Body, "application/octet-stream"); err != nil {
 		s.objectStorageError(w, r, err, false)
 		return
 	}

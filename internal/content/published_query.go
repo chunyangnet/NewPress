@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"net/url"
-	"sort"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -107,7 +106,8 @@ func (repository *MemoryRepository) SearchPublished(ctx context.Context, query P
 	defer repository.mu.RUnlock()
 	now := repository.now()
 	needle := NormalizePublicSearchText(query.Search)
-	scores := make(map[int64]int)
+	categorySlug := NormalizeTermSlug(query.Category)
+	categoryName := NormalizePublicSearchText(query.Category)
 	selected := make(map[int64]int, len(query.PostIDs))
 	for i, id := range query.PostIDs {
 		selected[id] = i
@@ -116,8 +116,50 @@ func (repository *MemoryRepository) SearchPublished(ctx context.Context, query P
 	for _, id := range query.AuthorIDs {
 		selectedAuthors[id] = true
 	}
-	posts := make([]Post, 0)
-	for _, post := range repository.posts {
+	// Clamp before addition so a maximum-int offset cannot overflow or reserve
+	// an unbounded prefix. All matches are still scanned for the exact total.
+	prefix := 0
+	if query.Offset < len(repository.posts) {
+		prefix = query.Offset + min(query.Limit, len(repository.posts)-query.Offset)
+	}
+	window := publishedWindow{limit: prefix}
+	window.before = func(a, b publishedCandidate) bool {
+		left, right := &repository.posts[a.index], &repository.posts[b.index]
+		if query.Sort == "published" && !query.IgnorePinning && left.IsPinned() != right.IsPinned() {
+			return left.IsPinned()
+		}
+		switch query.Sort {
+		case "relevance":
+			if a.score != b.score {
+				return a.score > b.score
+			}
+			if !left.PublishedAt.Equal(right.PublishedAt) {
+				return left.PublishedAt.After(right.PublishedAt)
+			}
+		case "selection":
+			return selected[left.ID] < selected[right.ID]
+		case "title":
+			if a.title != b.title {
+				return a.title < b.title
+			}
+		case "updated":
+			if !left.UpdatedAt.Equal(right.UpdatedAt) {
+				return left.UpdatedAt.After(right.UpdatedAt)
+			}
+		case "oldest":
+			if !left.PublishedAt.Equal(right.PublishedAt) {
+				return left.PublishedAt.Before(right.PublishedAt)
+			}
+			return left.ID < right.ID
+		default:
+			if !left.PublishedAt.Equal(right.PublishedAt) {
+				return left.PublishedAt.After(right.PublishedAt)
+			}
+		}
+		return left.ID > right.ID
+	}
+	total := 0
+	for index, post := range repository.posts {
 		if err := ctx.Err(); err != nil {
 			return PublishedPage{}, err
 		}
@@ -136,7 +178,7 @@ func (repository *MemoryRepository) SearchPublished(ctx context.Context, query P
 		if query.Category != "" {
 			matched := false
 			for _, term := range post.Categories {
-				if term.Slug == NormalizeTermSlug(query.Category) || NormalizePublicSearchText(term.Name) == NormalizePublicSearchText(query.Category) {
+				if term.Slug == categorySlug || NormalizePublicSearchText(term.Name) == categoryName {
 					matched = true
 					break
 				}
@@ -145,64 +187,44 @@ func (repository *MemoryRepository) SearchPublished(ctx context.Context, query P
 				continue
 			}
 		}
+		candidate := publishedCandidate{index: index}
 		if needle != "" {
-			score := PublicSearchScore(post, needle)
-			if score == 0 {
+			candidate.score = publicSearchScore(post, needle, repository.searchBodies.body(post.ContentHTML))
+			if candidate.score == 0 {
 				continue
 			}
-			scores[post.ID] = score
 		}
-		posts = append(posts, post)
+		total++
+		if query.Sort == "title" && prefix > 0 {
+			candidate.title = NormalizePublicSearchText(post.Title)
+		}
+		window.add(candidate)
 	}
-	sort.Slice(posts, func(i, j int) bool {
-		left, right := posts[i], posts[j]
-		if query.Sort == "published" && !query.IgnorePinning && left.IsPinned() != right.IsPinned() {
-			return left.IsPinned()
-		}
-		switch query.Sort {
-		case "relevance":
-			if scores[left.ID] != scores[right.ID] {
-				return scores[left.ID] > scores[right.ID]
-			}
-			if !left.PublishedAt.Equal(right.PublishedAt) {
-				return left.PublishedAt.After(right.PublishedAt)
-			}
-		case "selection":
-			return selected[left.ID] < selected[right.ID]
-		case "title":
-			if NormalizePublicSearchText(left.Title) != NormalizePublicSearchText(right.Title) {
-				return NormalizePublicSearchText(left.Title) < NormalizePublicSearchText(right.Title)
-			}
-		case "updated":
-			if !left.UpdatedAt.Equal(right.UpdatedAt) {
-				return left.UpdatedAt.After(right.UpdatedAt)
-			}
-		case "oldest":
-			if !left.PublishedAt.Equal(right.PublishedAt) {
-				return left.PublishedAt.Before(right.PublishedAt)
-			}
-			return left.ID < right.ID
-		default:
-			if !left.PublishedAt.Equal(right.PublishedAt) {
-				return left.PublishedAt.After(right.PublishedAt)
-			}
-		}
-		return left.ID > right.ID
-	})
-	total := len(posts)
+	if err := ctx.Err(); err != nil {
+		return PublishedPage{}, err
+	}
+	window.order()
+	if err := ctx.Err(); err != nil {
+		return PublishedPage{}, err
+	}
 	start := min(query.Offset, total)
 	end := start + min(query.Limit, total-start)
 	items := make([]Post, end-start)
-	for i, post := range posts[start:end] {
-		items[i] = clonePost(post)
+	for i := range items {
+		items[i] = clonePost(repository.posts[window.items[start+i].index])
 	}
 	return PublishedPage{Items: items, Total: total}, nil
 }
 
 func (repository *FileRepository) SearchPublished(ctx context.Context, query PublishedQuery) (PublishedPage, error) {
-	repository.mu.RLock()
-	defer repository.mu.RUnlock()
-	return repository.state.SearchPublished(ctx, query)
+	if err := ctx.Err(); err != nil {
+		return PublishedPage{}, err
+	}
+	// File writes deep-copy posts and install a new state only after durable
+	// replacement. Atomic publication also lets a new query read the last
+	// committed state while a writer prepares or persists its next candidate.
+	// Its shared body cache has its own lock and stores only pure projections.
+	return repository.searchState.Load().SearchPublished(ctx, query)
 }
 
 // AuthorURL resolves the actual owner instead of pointing every byline at the

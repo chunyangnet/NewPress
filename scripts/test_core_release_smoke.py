@@ -5,12 +5,14 @@ import base64
 import contextlib
 import datetime as dt
 import hashlib
+import html
 import http.cookiejar
 import http.server
 import json
 import os
 from pathlib import Path
 import queue
+import re
 import secrets
 import shutil
 import socket
@@ -86,7 +88,8 @@ def postgres(pg_bin, temp, env):
         pg('pg_ctl', '-D', cluster, '-m', 'fast', '-w', 'stop', stdout=subprocess.DEVNULL)
 
 
-def exercise(root, seed, public, host, platform, env, on_download, db=None, pg=None, image=None, withdrawn=None):
+def exercise(root, seed, public, host, platform, env, on_download, db=None, pg=None, image=None, withdrawn=None,
+             evidence_dir=None, expect_frontend_change=False):
     root.mkdir()
     site = root / 'site'; site.mkdir()
     proof = root / 'proof'; proof.mkdir()
@@ -132,6 +135,23 @@ def exercise(root, seed, public, host, platform, env, on_download, db=None, pg=N
         return json.loads(request('/api/v1/admin/updates/'+path, data, method, {'Origin':base, 'Content-Type':'application/json', 'X-CSRF-Token':csrf}))
     def status():
         return json.loads(request('/api/v1/admin/updates'))
+    def frontend_snapshot():
+        page = request('/admin/content/new/').decode('utf-8')
+        assets, revisions = {}, set()
+        for encoded in re.findall(r'(?:src|href)="([^"]+)"', page):
+            url = html.unescape(encoded)
+            match = re.fullmatch(r'/core-assets/([a-f0-9]+)/(.+)', urllib.parse.urlsplit(url).path)
+            if not match:
+                continue
+            revisions.add(match[1])
+            with client.open(base + url, timeout=10) as response:
+                assert response.headers.get('ETag') and 'immutable' in response.headers.get('Cache-Control', '')
+                digest = hashlib.sha256(response.read()).hexdigest()
+            if match[2] in assets:
+                assert assets[match[2]] == digest
+            assets[match[2]] = digest
+        assert len(revisions) == 1 and 'js/newpress-document-editor.js' in assets
+        return {'revision': next(iter(revisions)), 'assets': assets}
     def finish_check():
         snap = status(); phase = snap['state']['phase']
         if phase == 'failed':
@@ -167,8 +187,10 @@ def exercise(root, seed, public, host, platform, env, on_download, db=None, pg=N
         wait(closed,20)
     with (root / 'app.log').open('wb') as log:
         proc = start()
+        frontend = {'platform': platform, 'storage': 'postgresql' if pg else 'files', 'completed': False}
         try:
             wait(lambda: request('/health/ready')); csrf = login()
+            frontend['before'] = frontend_snapshot()
             initial = status()
             assert initial['current'] == BASE
             defaults = initial['policy']
@@ -240,6 +262,10 @@ def exercise(root, seed, public, host, platform, env, on_download, db=None, pg=N
             assert guard_duration == dt.timedelta(seconds=window), guard_duration
             assert any(entry['message'].find('观察') >= 0 for entry in result['logs'])
             csrf = login(); assert status()['current'] == TARGET
+            frontend['upgraded'] = frontend_snapshot()
+            if expect_frontend_change:
+                assert frontend['upgraded']['revision'] != frontend['before']['revision'], 'Old and new builds must contain distinct frontend resources'
+                assert frontend['upgraded']['assets'] != frontend['before']['assets']
             active=json.loads((site/'updates/active.json').read_bytes()); assert active['version']==TARGET
             selected=site/'updates/releases'/active['id']/'themes/starter'
             assert (selected/'site-only.txt').read_bytes()==b'local edit' and json.loads((selected/'theme.json').read_bytes())['version']=='2.1.0'
@@ -254,6 +280,8 @@ def exercise(root, seed, public, host, platform, env, on_download, db=None, pg=N
             csrf = login()
             restarted = status()
             assert restarted['current'] == TARGET and restarted['policy'] == saved
+            frontend['restarted'] = frontend_snapshot()
+            assert frontend['restarted'] == frontend['upgraded']
             print(f'PASS {platform} saved update policy applied to cutover and persisted across restart', flush=True)
             if not pg:
                 # Simulate a failed boot of this isolated staged executable after the supervisor exits.
@@ -268,7 +296,10 @@ def exercise(root, seed, public, host, platform, env, on_download, db=None, pg=N
                 wait(restored_version, 60)
                 csrf = login()
                 assert status()['current'] == BASE and not (site/'updates/guard.json').exists()
+                frontend['rolled_back'] = frontend_snapshot()
+                assert frontend['rolled_back'] == frontend['before'], 'Rollback changed the previous frontend bytes or resource revision'
                 print(f'PASS {platform} persisted post-commit rollback after supervisor restart', flush=True)
+                print(f'PASS {platform} original frontend revision and every linked asset byte restored after rollback', flush=True)
             if withdrawn is not None:
                 write('check')
                 checked = wait(finish_check)
@@ -288,15 +319,26 @@ def exercise(root, seed, public, host, platform, env, on_download, db=None, pg=N
                 assert final['current'] == BASE and 'available' not in final and '序号' in final['discovery']['message']
                 print(f'PASS {platform} signed withdrawal during download, no switch, older commit rejected', flush=True)
             print(f'PASS {platform} {"Docker" if image else "native"} {"PostgreSQL restore" if pg else "file recovery archive"} signed HTTP cutover, site theme, restart',flush=True)
+            frontend['completed'] = True
         finally:
             stop(proc)
+            if evidence_dir:
+                (evidence_dir / (root.name + '-frontend.json')).write_text(json.dumps(frontend, indent=2) + '\n', encoding='utf-8')
 
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--pg-bin',type=Path,help='also test an isolated cluster using PostgreSQL server and client binaries')
     parser.add_argument('--docker-image',help='also exercise a read-only non-root Linux container using host networking')
+    parser.add_argument('--seed-source', type=Path, help='build the previous executable from this separate source snapshot')
+    parser.add_argument('--evidence-dir', type=Path, help='new directory for resource revision and SHA256 acceptance reports; no credentials are retained')
     args=parser.parse_args()
+    seed_source = args.seed_source.resolve() if args.seed_source else ROOT
+    if not (seed_source / 'go.mod').is_file() or not (seed_source / 'cmd/newpress').is_dir():
+        parser.error('--seed-source must contain the NewPress Go source and CLI test fixture')
+    if args.evidence_dir:
+        args.evidence_dir = args.evidence_dir.resolve()
+        args.evidence_dir.mkdir(parents=True, exist_ok=False)
     env={k:v for k,v in os.environ.items() if not k.upper().startswith('NEWPRESS_')}
     platform='/'.join(run(['go','env','GOOS','GOARCH'],cwd=ROOT,capture_output=True,text=True).stdout.split())
     with tempfile.TemporaryDirectory(prefix='newpress-ota-smoke-') as tmp:
@@ -310,7 +352,7 @@ def main():
         revoked = (withdrawal_dir/'updates/stable.json').read_bytes()
         assert not (withdrawal_dir/'packages').exists()
         on_download, withdrawn = queue.Queue(), threading.Event()
-        run(['go','test','-c','-trimpath','-o',str(seed),'./cmd/newpress'],cwd=ROOT,env=dict(env,CGO_ENABLED='0'))
+        run(['go','test','-c','-trimpath','-o',str(seed),'./cmd/newpress'],cwd=seed_source,env=dict(env,CGO_ENABLED='0'))
         signed=(package/'updates/stable.json').read_bytes(); m=json.loads(base64.b64decode(json.loads(signed)['payload'])); artifact=m['artifacts'][0]; payload=package/artifact['path']
         assert payload.stat().st_size==artifact['size'] and hashlib.sha256(payload.read_bytes()).hexdigest()==artifact['sha256']
         class Provider(http.server.BaseHTTPRequestHandler):
@@ -350,12 +392,13 @@ def main():
             env['NEWPRESS_TEST_CORE_RELEASE_FIXTURE']=host
             common=(seed,Path(str(key)+'.pub').read_text().strip(),host,platform,env,on_download)
             try:
-                exercise(root/'file', *common, withdrawn=withdrawn)
+                acceptance = {'evidence_dir': args.evidence_dir, 'expect_frontend_change': seed_source != ROOT}
+                exercise(root/'file', *common, withdrawn=withdrawn, **acceptance)
                 if args.pg_bin:
                     with postgres(args.pg_bin.resolve(),root,env) as (db,pg):
-                        exercise(root/'pg',*common,db=db,pg=pg,image=args.docker_image)
+                        exercise(root/'pg',*common,db=db,pg=pg,image=args.docker_image, **acceptance)
                 elif args.docker_image:
-                    exercise(root/'container',*common,image=args.docker_image)
+                    exercise(root/'container',*common,image=args.docker_image, **acceptance)
             finally:
                 server.shutdown(); thread.join()
 

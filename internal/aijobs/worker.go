@@ -57,12 +57,18 @@ func (q *Queue) Run(ctx context.Context, allowed func() bool, generate Generate)
 }
 
 func (q *Queue) step(parent context.Context, now time.Time, generate Generate) (bool, error) {
+	if err := parent.Err(); err != nil {
+		return false, err
+	}
 	var job Job
 	var generation uint64
 	ctx, cancel := context.WithCancel(parent)
 	defer cancel()
 	// Claim and persist a single attempt before starting any billable work.
 	err := q.with(true, 0, func(path string, g uint64) error {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
 		if q.state.Paused || q.active != "" {
 			return nil
 		}
@@ -82,6 +88,9 @@ func (q *Queue) step(parent context.Context, now time.Time, generate Generate) (
 		j.Version++
 		j.Attempts++
 		j.Updated = now.UTC()
+		if err := ctx.Err(); err != nil {
+			return err
+		}
 		if err := writeQueueState(path, next); err != nil {
 			return err
 		}

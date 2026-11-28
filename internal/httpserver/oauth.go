@@ -344,6 +344,12 @@ func (s *Server) socialOAuthPending(w http.ResponseWriter, r *http.Request) {
 			s.accessError(w, r, err)
 			return
 		}
+		// The browser proof must still refer to an active, bound identity
+		// before it can disclose the account's current contact details.
+		if u.Status != auth.UserStatusActive || !secretEqual(u.OAuthBindings[pending.Provider], pending.ExternalKey) {
+			s.writeAPIError(w, r, 401, "auth.binding_expired", "快捷登录已过期，请重新授权", nil)
+			return
+		}
 	}
 	writeJSON(w, 200, map[string]any{"provider": site.LoginProviderNames[pending.Provider], "binding_id": pending.BindingID, "display_name": pending.Name, "existing": pending.UserID > 0, "required": missingOAuthBindings(p, u), "email": u.Email, "phone": u.Phone, "username": u.Username})
 }

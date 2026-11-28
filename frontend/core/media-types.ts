@@ -38,3 +38,25 @@ export interface MediaPicker {
 }
 
 export type ComponentMediaSelection = (url: string, item: MediaImage) => void;
+
+export interface MediaOpenRequest {
+  launcher: HTMLElement;
+  mode: 'body' | 'cover' | 'component' | 'field';
+  file: File | null;
+  pick: MediaPickerOptions | null;
+  selection: EditorSourceSelection | null;
+  component: ComponentMediaSelection | null;
+  error: string;
+  valid(): boolean;
+}
+
+export interface MediaPickerRuntime {
+  dialog: HTMLDialogElement;
+  open(request: MediaOpenRequest): Promise<void>;
+}
+
+declare global {
+  interface Window {
+    NewPressMediaRuntime?: MediaPickerRuntime;
+  }
+}

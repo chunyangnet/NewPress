@@ -40,7 +40,7 @@ func (s *FileStore) AckActivity(ctx context.Context, key string) error {
 		return nil
 	}
 	event := audit.Event{Action: "comment.notification.ack", ObjectType: "comment_registry", ObjectID: "all", Actor: "system", Metadata: map[string]any{"event_count": 1}}
-	if err := s.persistActivitiesLocked(s.items, s.revisions, s.nextID, s.updatedAt, &event, candidate); err != nil {
+	if err := s.persistActivitiesContextLocked(ctx, s.items, s.revisions, s.nextID, s.updatedAt, &event, candidate); err != nil {
 		return err
 	}
 	s.activities = candidate

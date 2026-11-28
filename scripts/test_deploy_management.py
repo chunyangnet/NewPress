@@ -292,8 +292,9 @@ class ManagementTests(unittest.TestCase):
             self.assertEqual(deploy.main(["restart", "--yes"]), 0)
             self.assertEqual(deploy.main(["stop", "--yes"]), 0)
         self.assertEqual(command.call_args_list[0].args[1:], ("restart", "--no-deps", "app", "proxy"))
-        self.assertEqual(command.call_args_list[1].args[1:], ("stop", "proxy", "app"))
-        ready.assert_called_once_with("http://127.0.0.1:8080/health/ready", 180)
+        self.assertEqual(command.call_args_list[1].args[1:], ("up", "-d", "--no-build", "--no-recreate", "--no-deps", "--wait", "--wait-timeout", "180", "app", "proxy"))
+        self.assertEqual(command.call_args_list[2].args[1:], ("stop", "proxy", "app"))
+        ready.assert_called_once_with("http://127.0.0.1:8080/health/live", 180)
 
     def test_stop_requires_yes_or_confirmation_and_cancel_does_nothing(self):
         self.docker_management()

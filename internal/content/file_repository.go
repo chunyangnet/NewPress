@@ -33,6 +33,9 @@ func (repository *FileRepository) GetPublishedFlashBySlug(ctx context.Context, s
 }
 
 func (repository *FileRepository) ListAdmin(ctx context.Context, query AdminQuery) (AdminList, error) {
+	if err := ctx.Err(); err != nil {
+		return AdminList{}, err
+	}
 	repository.mu.RLock()
 	defer repository.mu.RUnlock()
 	return repository.state.ListAdmin(ctx, query)
@@ -111,7 +114,7 @@ func (repository *FileRepository) RestoreRevision(ctx context.Context, id, revis
 }
 
 func (repository *FileRepository) SaveAutosave(ctx context.Context, autosave Autosave) (Autosave, error) {
-	return fileContentChange(ctx, repository, func(state *MemoryRepository) (Autosave, error) {
+	return fileContentChangeWithClone(ctx, repository, nil, cloneAutosaveContentState, func(state *MemoryRepository) (Autosave, error) {
 		return state.SaveAutosave(ctx, autosave)
 	})
 }
@@ -129,7 +132,7 @@ func (repository *FileRepository) UpdateTerm(ctx context.Context, id int64, muta
 }
 
 func (repository *FileRepository) DeleteAutosave(ctx context.Context, id int64, owner string) error {
-	_, err := fileContentChange(ctx, repository, func(state *MemoryRepository) (struct{}, error) {
+	_, err := fileContentChangeWithClone(ctx, repository, nil, cloneAutosaveContentState, func(state *MemoryRepository) (struct{}, error) {
 		return struct{}{}, state.DeleteAutosave(ctx, id, owner)
 	})
 	return err

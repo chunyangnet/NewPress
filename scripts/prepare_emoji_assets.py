@@ -124,17 +124,17 @@ def main() -> None:
     config = json.loads((SOURCE / "catalog.json").read_text(encoding="utf-8"))
     packs = [{key: pack[key] for key in ("id", "name", "prefix", "names")} for pack in config["packs"]]
     block = "  // BEGIN GENERATED EMOJI CATALOG\n  const packs = " + json.dumps(packs, ensure_ascii=False, indent=2).replace("\n", "\n  ") + ";\n  // END GENERATED EMOJI CATALOG"
+    script = ROOT / "frontend/shared/emoji.ts"
+    source = script.read_text(encoding="utf-8")
+    prepared, count = re.subn(r"  // BEGIN GENERATED EMOJI CATALOG.*?  // END GENERATED EMOJI CATALOG", lambda _: block, source, flags=re.S)
+    if count != 1:
+        raise SystemExit(f"Missing catalog markers: {script}")
+    if args.check:
+        if source != prepared:
+            raise SystemExit(f"Stale emoji catalog: {script}")
+    else:
+        script.write_text(prepared, encoding="utf-8", newline="\n")
     for target in TARGETS:
-        script = target / "js/chunnel-emoji.js"
-        source = script.read_text(encoding="utf-8")
-        prepared, count = re.subn(r"  // BEGIN GENERATED EMOJI CATALOG.*?  // END GENERATED EMOJI CATALOG", lambda _: block, source, flags=re.S)
-        if count != 1:
-            raise SystemExit(f"Missing catalog markers: {script}")
-        if args.check:
-            if source != prepared:
-                raise SystemExit(f"Stale emoji catalog: {script}")
-        else:
-            script.write_text(prepared, encoding="utf-8", newline="\n")
         for name, data in output.items():
             path = target / name
             if args.check:

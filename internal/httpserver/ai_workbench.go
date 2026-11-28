@@ -2,9 +2,7 @@ package httpserver
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -62,15 +60,26 @@ func (s *Server) adminAIWorkbenchPage(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	access, ok := s.newAIAdminAuthority(w, r, false, auth.CapabilitySystemRead)
+	if !ok {
+		return
+	}
 	w.Header().Set("Cache-Control", "no-store")
 	data := s.baseViewFor(w, "AI 工作台", "站点运维、运营简报与内容分析", "/admin/ai/")
 	data.IsAdmin, data.BodyClass = true, "is-admin is-admin-ai-workbench"
 	data.Admin = s.adminView("ai-workbench", p, readOnly)
-	s.render(w, http.StatusOK, "admin-ai-workbench", data)
+	if !access.recheck(w) {
+		return
+	}
+	s.renderChecked(w, http.StatusOK, "admin-ai-workbench", data, r, func() bool { return access.recheck(w) }, access.access)
 }
 
 func (s *Server) adminAIWorkbench(w http.ResponseWriter, r *http.Request) {
 	if _, _, ok := s.requireAdminJSONReadCapability(w, r, auth.CapabilitySystemRead); !ok {
+		return
+	}
+	access, ok := s.newAIAdminAuthority(w, r, false, auth.CapabilitySystemRead)
+	if !ok {
 		return
 	}
 	if _, ok := s.strictAPIQuery(w, r, nil); !ok {
@@ -90,11 +99,15 @@ func (s *Server) adminAIWorkbench(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.Header().Set("Cache-Control", "no-store")
-	writeJSON(w, 200, map[string]any{"tasks": aiworkbench.Tasks(), "providers": providers, "default_provider": settings.DefaultProvider, "timezone": s.siteLocation(r.Context()).String(), "retention_days": aiworkbench.RetentionDays, "max_reports": aiworkbench.MaxReports})
+	access.json(w, map[string]any{"tasks": aiworkbench.Tasks(), "providers": providers, "default_provider": settings.DefaultProvider, "timezone": s.siteLocation(r.Context()).String(), "retention_days": aiworkbench.RetentionDays, "max_reports": aiworkbench.MaxReports})
 }
 
 func (s *Server) adminAIWorkbenchArticles(w http.ResponseWriter, r *http.Request) {
 	if _, _, ok := s.requireAdminJSONReadCapability(w, r, auth.CapabilitySystemRead); !ok {
+		return
+	}
+	access, ok := s.newAIAdminAuthority(w, r, false, auth.CapabilitySystemRead)
+	if !ok {
 		return
 	}
 	q, ok := s.strictAPIQuery(w, r, map[string]bool{"search": true})
@@ -108,22 +121,32 @@ func (s *Server) adminAIWorkbenchArticles(w http.ResponseWriter, r *http.Request
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 	result, err := s.repository.SearchPublished(ctx, content.PublishedQuery{Search: q.Get("search"), Limit: 20})
+	if !access.recheck(w) {
+		return
+	}
 	if err != nil {
 		s.writeAPIError(w, r, 503, "ai.articles_unavailable", "公开文章暂时无法读取", nil)
 		return
 	}
 	items := []map[string]any{}
+	sources := &workbenchSources{server: s, versions: make(map[int64]int64)}
 	for _, p := range result.Items {
-		if content.PublicAt(p, time.Now()) {
+		if p.Type == content.TypePost && content.PublicAt(p, time.Now()) {
 			items = append(items, map[string]any{"id": p.ID, "title": p.Title})
+			sources.add(p.ID, p.Version)
 		}
 	}
+	access.sourceCheck = sources.check
 	w.Header().Set("Cache-Control", "no-store")
-	writeJSON(w, 200, map[string]any{"items": items, "total": result.Total})
+	access.json(w, map[string]any{"items": items, "total": result.Total})
 }
 
 func (s *Server) adminAIWorkbenchPreview(w http.ResponseWriter, r *http.Request) {
 	p, ok := s.requireAdminJSONWrite(w, r, auth.CapabilitySystemRead)
+	if !ok {
+		return
+	}
+	access, ok := s.newAIAdminAuthority(w, r, true, auth.CapabilitySystemRead)
 	if !ok {
 		return
 	}
@@ -134,20 +157,44 @@ func (s *Server) adminAIWorkbenchPreview(w http.ResponseWriter, r *http.Request)
 	if _, ok := s.decodeStrictAPIJSONLimit(w, r, &input, 64<<10, "64 KiB"); !ok {
 		return
 	}
+	if !access.recheck(w) {
+		return
+	}
 	if err := input.Validate(); err != nil {
 		s.writeAPIError(w, r, 400, "ai.invalid_task", err.Error(), nil)
 		return
 	}
-	preview, err := s.workbenchPreview(r.Context(), input)
-	if err == nil {
-		preview, err = s.aiPreviews.Put(p.UserID, preview, time.Now())
-	}
+	var preview aiworkbench.Preview
+	var previewErr error
+	err := access.wait(func(ctx context.Context, check func() error) error {
+		preview, previewErr = s.workbenchPreview(ctx, input)
+		if previewErr == nil {
+			source := preview
+			preview, previewErr = s.aiPreviews.PutChecked(p.UserID, preview, time.Now(), func() error {
+				sourceErr := source.CheckSource(ctx)
+				if err := check(); err != nil {
+					return err
+				}
+				return sourceErr
+			})
+		}
+		return nil
+	})
 	if err != nil {
-		s.writeAPIError(w, r, 400, "ai.preview_unavailable", err.Error(), nil)
+		access.fail(w, err)
+		return
+	}
+	if previewErr != nil {
+		if errors.Is(previewErr, errAIWorkbenchSourceChanged) || errors.Is(previewErr, errAIWorkbenchSourceUnavailable) {
+			access.fail(w, previewErr)
+			return
+		}
+		s.writeAPIError(w, r, 400, "ai.preview_unavailable", previewErr.Error(), nil)
 		return
 	}
 	w.Header().Set("Cache-Control", "no-store")
-	writeJSON(w, 200, preview)
+	access.sourceCheck = preview.CheckSource
+	access.json(w, preview)
 }
 
 func (s *Server) adminAIWorkbenchReports(w http.ResponseWriter, r *http.Request) {
@@ -155,11 +202,15 @@ func (s *Server) adminAIWorkbenchReports(w http.ResponseWriter, r *http.Request)
 	if !ok {
 		return
 	}
+	access, ok := s.newAIAdminAuthority(w, r, false, auth.CapabilitySystemRead)
+	if !ok {
+		return
+	}
 	if _, ok := s.strictAPIQuery(w, r, nil); !ok {
 		return
 	}
 	w.Header().Set("Cache-Control", "no-store")
-	writeJSON(w, 200, map[string]any{"reports": s.aiReports.List(p.UserID, time.Now())})
+	access.json(w, map[string]any{"reports": s.aiReports.List(p.UserID, time.Now())})
 }
 
 func (s *Server) adminAIWorkbenchReport(w http.ResponseWriter, r *http.Request) {
@@ -167,16 +218,23 @@ func (s *Server) adminAIWorkbenchReport(w http.ResponseWriter, r *http.Request) 
 	if !ok {
 		return
 	}
+	access, ok := s.newAIAdminAuthority(w, r, false, auth.CapabilitySystemRead)
+	if !ok {
+		return
+	}
 	if _, ok := s.strictAPIQuery(w, r, nil); !ok {
 		return
 	}
 	report, err := s.aiReports.Get(p.UserID, r.PathValue("id"), time.Now())
+	if !access.recheck(w) {
+		return
+	}
 	if err != nil {
 		s.writeAPIError(w, r, 404, "ai.report_not_found", aiworkbench.ErrNotFound.Error(), nil)
 		return
 	}
 	w.Header().Set("Cache-Control", "no-store")
-	writeJSON(w, 200, report)
+	access.json(w, report)
 }
 
 func (s *Server) adminAIWorkbenchDelete(w http.ResponseWriter, r *http.Request) {
@@ -184,10 +242,22 @@ func (s *Server) adminAIWorkbenchDelete(w http.ResponseWriter, r *http.Request) 
 	if !ok {
 		return
 	}
+	access, ok := s.newAIAdminAuthority(w, r, true, auth.CapabilitySystemRead)
+	if !ok {
+		return
+	}
 	if _, ok := s.strictAPIQuery(w, r, nil); !ok {
 		return
 	}
-	err := s.aiReports.Delete(p.UserID, r.PathValue("id"), time.Now())
+	var err error
+	accessErr := access.wait(func(_ context.Context, check func() error) error {
+		err = s.aiReports.DeleteChecked(p.UserID, r.PathValue("id"), time.Now(), check)
+		return nil
+	})
+	if accessErr != nil {
+		access.fail(w, accessErr)
+		return
+	}
 	if errors.Is(err, aiworkbench.ErrNotFound) {
 		s.writeAPIError(w, r, 404, "ai.report_not_found", err.Error(), nil)
 		return
@@ -197,11 +267,15 @@ func (s *Server) adminAIWorkbenchDelete(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	w.Header().Set("Cache-Control", "no-store")
-	writeJSON(w, 200, map[string]bool{"deleted": true})
+	access.json(w, map[string]bool{"deleted": true})
 }
 
 func (s *Server) adminAIWorkbenchGenerate(w http.ResponseWriter, r *http.Request) {
 	p, ok := s.requireAdminJSONWrite(w, r, auth.CapabilitySystemRead)
+	if !ok {
+		return
+	}
+	access, ok := s.newAIAdminAuthority(w, r, true, auth.CapabilitySystemRead)
 	if !ok {
 		return
 	}
@@ -214,6 +288,9 @@ func (s *Server) adminAIWorkbenchGenerate(w http.ResponseWriter, r *http.Request
 		Model      string `json:"model"`
 	}
 	if _, ok := s.decodeStrictAPIJSONLimit(w, r, &input, 2048, "2 KiB"); !ok {
+		return
+	}
+	if !access.recheck(w) {
 		return
 	}
 	if len(input.Token) != 32 || input.ProviderID == "" {
@@ -230,44 +307,65 @@ func (s *Server) adminAIWorkbenchGenerate(w http.ResponseWriter, r *http.Request
 		s.writeAPIError(w, r, 429, "ai.busy", "已有 AI 任务正在生成，请先停止或稍后重试", nil)
 		return
 	}
-	preview, err := s.aiPreviews.Take(p.UserID, input.Token, time.Now())
+	started := false
+	defer func() {
+		if !started {
+			s.aiState.release(p.UserID)
+		}
+	}()
+	deadline, stopDeadline := context.WithTimeout(r.Context(), aieditor.GenerationTimeout)
+	defer stopDeadline()
+	ctx, cancel := context.WithCancelCause(deadline)
+	defer cancel(nil)
+	stopModule := context.AfterFunc(access.module, func() { cancel(errAIAdminInactive) })
+	defer stopModule()
+	checked := *access
+	checked.request = r.WithContext(ctx)
+	guard := &aiGenerationGuard{ctx: ctx, cancel: cancel, access: checked.access}
+	preview, err := s.aiPreviews.TakeChecked(p.UserID, input.Token, time.Now(), func() error { return guard.check(true) })
+	if err == nil {
+		checked.sourceCheck = preview.CheckSource
+	}
+	if accessErr := guard.check(true); accessErr != nil {
+		access.fail(w, accessErr)
+		return
+	}
 	if err != nil {
-		s.aiState.release(p.UserID)
 		s.writeAPIError(w, r, 409, "ai.preview_expired", err.Error(), nil)
 		return
 	}
-	ctx, cancel := context.WithTimeout(r.Context(), aieditor.GenerationTimeout)
-	defer cancel()
 	controller := http.NewResponseController(w)
 	_ = controller.SetWriteDeadline(time.Now().Add(aieditor.GenerationTimeout + 10*time.Second))
 	w.Header().Set("Content-Type", "text/event-stream; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-store, no-transform")
 	w.Header().Set("X-Accel-Buffering", "no")
-	writeEvent := func(event aiStreamEvent) bool {
-		encoded, err := json.Marshal(event.Data)
-		if err != nil {
-			return false
-		}
-		if _, err := fmt.Fprintf(w, "event: %s\ndata: %s\n\n", event.Name, encoded); err != nil {
-			return false
-		}
-		return controller.Flush() == nil
-	}
-	if !writeEvent(aiStreamEvent{"ready", map[string]string{"model": connection.Model}}) {
-		s.aiState.release(p.UserID)
+	stream := &aiEventStream{writer: w, request: r, controller: controller, guard: guard, firstPayload: true}
+	if err := stream.write(aiStreamEvent{"ready", map[string]string{"model": connection.Model}}); err != nil {
+		w.Header().Del("X-Accel-Buffering")
+		access.fail(w, err)
 		return
 	}
 	events := make(chan aiStreamEvent, 4)
-	send := func(event aiStreamEvent) error {
-		select {
-		case events <- event:
-			return nil
-		case <-ctx.Done():
-			return ctx.Err()
-		}
-	}
+	started = true
 	go func() {
+		defer close(events)
 		defer s.aiState.release(p.UserID)
+		if err := guard.check(true); err != nil {
+			return
+		}
+		firstEvent := true
+		send := func(event aiStreamEvent) error {
+			if err := guard.check(firstEvent || event.Name == "done" || event.Name == "error"); err != nil {
+				return err
+			}
+			firstEvent = false
+			select {
+			case <-ctx.Done():
+				return context.Cause(ctx)
+			case events <- event:
+				return nil
+			}
+		}
 		observed := s.observeAI(input.ProviderID, connection, "text", p.UserID)
 		observed.record.Purpose = preview.Task
 		defer observed.finish(ctx)
@@ -284,15 +382,16 @@ func (s *Server) adminAIWorkbenchGenerate(w http.ResponseWriter, r *http.Request
 				}
 				return send(aiStreamEvent{"delta", map[string]string{"text": text}})
 			},
-			Thinking: func(aieditor.ThinkingDelta) error { observed.first(); return nil },
+			Thinking: func(aieditor.ThinkingDelta) error { observed.first(); return guard.check(false) },
 			Usage: func(usage aieditor.Usage) error {
 				observed.record.Usage = usage
 				return send(aiStreamEvent{"usage", usage})
 			},
 		})
 		observed.record.Usage = result.Usage
-		if err == nil && ctx.Err() != nil {
-			err = ctx.Err()
+		if accessErr := guard.check(true); accessErr != nil {
+			observed.fail(accessErr)
+			return
 		}
 		if err != nil {
 			observed.fail(err)
@@ -312,31 +411,53 @@ func (s *Server) adminAIWorkbenchGenerate(w http.ResponseWriter, r *http.Request
 			_ = send(aiStreamEvent{"error", map[string]string{"message": "模型未返回完整报告，已保留收到的文字，请缩短材料后重试。"}})
 			return
 		}
-		observed.record.Status, observed.record.ErrorCode = "success", ""
 		name, _ := s.aiSettings.Accounting(input.ProviderID, connection.Model)
 		preview.Token = ""
 		report := aiworkbench.Report{ID: aiworkbench.NewID(), Owner: p.UserID, Task: preview.Task, Title: preview.Title, CreatedAt: time.Now().UTC(), Provider: name, Model: connection.Model, Content: result.Text, Source: &preview}
-		if err := s.aiReports.Save(report, time.Now()); err != nil {
-			_ = send(aiStreamEvent{"done", map[string]any{"report": report, "saved": false, "warning": "报告已生成，但保存失败。请复制或导出后重试。", "usage": result.Usage}})
+		saveErr := s.aiReports.SaveChecked(report, time.Now(), func() error { return guard.check(true) })
+		if accessErr := guard.check(true); accessErr != nil {
+			observed.fail(accessErr)
 			return
 		}
-		_ = send(aiStreamEvent{"done", map[string]any{"report": report, "saved": true, "usage": result.Usage}})
+		data := map[string]any{"report": report, "saved": saveErr == nil, "usage": result.Usage}
+		if saveErr != nil {
+			data["warning"] = "报告已生成，但保存失败。请复制或导出后重试。"
+		}
+		if err := send(aiStreamEvent{"done", data}); err != nil {
+			observed.fail(err)
+			return
+		}
+		observed.record.Status, observed.record.ErrorCode = "success", ""
 	}()
 	heartbeat := time.NewTicker(10 * time.Second)
 	defer heartbeat.Stop()
+	authority := time.NewTicker(time.Second)
+	defer authority.Stop()
 	for {
 		select {
 		case <-ctx.Done():
-			if r.Context().Err() == nil {
-				writeEvent(aiStreamEvent{"error", map[string]string{"message": "生成超时，请重新预览后重试。"}})
-			}
+			stream.stop(context.Cause(ctx))
 			return
-		case <-heartbeat.C:
-			if !writeEvent(aiStreamEvent{"ping", struct{}{}}) {
+		case <-authority.C:
+			if err := guard.check(false); err != nil {
+				stream.stop(err)
 				return
 			}
-		case event := <-events:
-			if !writeEvent(event) || event.Name == "done" || event.Name == "error" {
+		case <-heartbeat.C:
+			if err := stream.write(aiStreamEvent{"ping", struct{}{}}); err != nil {
+				stream.stop(err)
+				return
+			}
+		case event, ok := <-events:
+			if !ok {
+				stream.stop(context.Cause(ctx))
+				return
+			}
+			if err := stream.write(event); err != nil {
+				stream.stop(err)
+				return
+			}
+			if event.Name == "done" || event.Name == "error" {
 				return
 			}
 		}

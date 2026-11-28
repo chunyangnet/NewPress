@@ -133,7 +133,14 @@ func (s *Server) adminCommentEditSubmit(writer http.ResponseWriter, request *htt
 			&input, fields, "", nil, adminNotice{"评论编辑字段没有通过服务端校验", "error"})
 		return
 	}
+	principal, ok = s.refreshCommentWrite(writer, request)
+	if !ok {
+		return
+	}
 	updated, err := s.comments.Edit(request.Context(), id, comment.Mutation{ExpectedVersion: version, Actor: adminCommentActor(principal)}, input)
+	if _, ok := s.refreshCommentWrite(writer, request); !ok {
+		return
+	}
 	switch {
 	case errors.Is(err, comment.ErrVersionConflict):
 		s.renderAdminCommentEditor(writer, request, http.StatusConflict, principal, false, id, filter, nil, nil, "", nil,
@@ -184,12 +191,22 @@ func (s *Server) adminCommentReplySubmit(writer http.ResponseWriter, request *ht
 			adminNotice{"站方回复超过当前讨论策略上限", "error"})
 		return
 	}
+	principal, ok = s.refreshCommentWrite(writer, request)
+	if !ok {
+		return
+	}
 	input := comment.ReplyInput{
 		ParentID: id, ExpectedParentVersion: version, UserID: principal.UserID,
 		AuthorName: principal.Label(), AuthorEmail: adminCommentReplyEmail(principal), ContentSource: contentSource,
 		Actor: adminCommentActor(principal),
 	}
 	created, err := s.comments.Reply(request.Context(), input)
+	if err == nil {
+		s.captureCommentOrigin(request, created.ID)
+	}
+	if _, ok := s.refreshCommentWrite(writer, request); !ok {
+		return
+	}
 	switch {
 	case errors.Is(err, comment.ErrVersionConflict):
 		s.renderAdminCommentEditor(writer, request, http.StatusConflict, principal, false, id, filter, nil, nil,
@@ -212,7 +229,6 @@ func (s *Server) adminCommentReplySubmit(writer http.ResponseWriter, request *ht
 		s.renderError(writer, http.StatusInternalServerError, "站方回复提交失败")
 		return
 	}
-	s.captureCommentOrigin(request, created.ID)
 	http.Redirect(writer, request, adminCommentEditorURL(created.ID, filter, "replied"), http.StatusSeeOther)
 }
 
@@ -235,9 +251,16 @@ func (s *Server) adminCommentRevisionRestoreSubmit(writer http.ResponseWriter, r
 		writeJSON(writer, http.StatusBadRequest, map[string]string{"error": "invalid_comment_revision_restore_mutation"})
 		return
 	}
+	principal, ok = s.refreshCommentWrite(writer, request)
+	if !ok {
+		return
+	}
 	updated, err := s.comments.RestoreRevision(request.Context(), id, sourceVersion, comment.Mutation{
 		ExpectedVersion: version, Actor: adminCommentActor(principal),
 	})
+	if _, ok := s.refreshCommentWrite(writer, request); !ok {
+		return
+	}
 	switch {
 	case errors.Is(err, comment.ErrVersionConflict):
 		s.renderAdminCommentEditor(writer, request, http.StatusConflict, principal, false, id, filter, nil, nil, "", nil,
@@ -270,6 +293,9 @@ func (s *Server) renderAdminCommentEditor(writer http.ResponseWriter, request *h
 	replyErrors map[string]string, notice adminNotice,
 ) {
 	item, err := s.comments.Get(request.Context(), id)
+	if !s.commentOperationAccess(writer, request, err) {
+		return
+	}
 	if errors.Is(err, comment.ErrNotFound) {
 		s.renderError(writer, http.StatusNotFound, "评论没有找到")
 		return
@@ -280,18 +306,25 @@ func (s *Server) renderAdminCommentEditor(writer http.ResponseWriter, request *h
 		return
 	}
 	revisions, err := s.comments.ListRevisions(request.Context(), id, comment.MaxRevisionLimit)
+	if !s.commentOperationAccess(writer, request, err) {
+		return
+	}
 	if err != nil {
 		slog.Error("load admin comment revisions", "id", id, "error", err, "request_id", request.Header.Get("X-Request-ID"))
 		s.renderError(writer, http.StatusInternalServerError, "评论修订记录暂时不可用")
 		return
 	}
-	itemView := s.adminCommentItem(request, item)
-	var parentView *adminCommentItemView
+	items := []comment.Comment{item}
 	if item.ParentID > 0 {
 		if parent, loadErr := s.comments.Get(request.Context(), item.ParentID); loadErr == nil {
-			view := s.adminCommentItem(request, parent)
-			parentView = &view
+			items = append(items, parent)
 		}
+	}
+	views := s.adminCommentItems(request, items)
+	itemView := views[0]
+	var parentView *adminCommentItemView
+	if len(views) > 1 {
+		parentView = &views[1]
 	}
 	depth := s.adminCommentDepth(request, item)
 	canReply := !readOnly && principal.Can(auth.CapabilityCommentsModerate) && depth < comment.MaxThreadDepth &&
@@ -334,7 +367,8 @@ func (s *Server) renderAdminCommentEditor(writer http.ResponseWriter, request *h
 	data.Admin = s.adminView("comments", principal, readOnly)
 	data.CommentAdmin = adminCommentsView{Status: filter.Status, Search: filter.Search, PostID: filter.PostID, Page: filter.Page}
 	data.CommentEditor = view
-	s.render(writer, status, "admin-comment-editor", data)
+	access := func() error { return s.commentAccess(request) }
+	s.renderChecked(writer, status, "admin-comment-editor", data, request, func() bool { return s.recheckCommentAccess(writer, request) }, access)
 }
 
 func (s *Server) adminCommentDepth(request *http.Request, item comment.Comment) int {
@@ -472,12 +506,14 @@ func (s *Server) adminCommentAPI(writer http.ResponseWriter, request *http.Reque
 		return
 	}
 	item, err := s.comments.Get(request.Context(), id)
+	if !s.commentOperationAccess(writer, request, err) {
+		return
+	}
 	if err != nil {
 		s.handleAdminCommentAPIError(writer, request, id, err)
 		return
 	}
-	writer.Header().Set("ETag", commentETag(item))
-	writeJSON(writer, http.StatusOK, adminCommentResponse(s.adminCommentItem(request, item)))
+	s.writeCommentJSON(writer, request, http.StatusOK, adminCommentResponse(s.adminCommentItem(request, item)), func() { writer.Header().Set("ETag", commentETag(item)) })
 }
 
 func (s *Server) adminCommentEditAPI(writer http.ResponseWriter, request *http.Request) {
@@ -501,6 +537,10 @@ func (s *Server) adminCommentEditAPI(writer http.ResponseWriter, request *http.R
 	if !s.decodeStrictCommentJSON(writer, request, &body) {
 		return
 	}
+	principal, ok = s.refreshCommentWrite(writer, request)
+	if !ok {
+		return
+	}
 	if body.Version <= 0 {
 		s.writeAPIError(writer, request, http.StatusUnprocessableEntity, "comments.validation_failed", "评论版本不正确", map[string]any{"fields": map[string]string{"version": "必须提供当前正整数版本"}})
 		return
@@ -511,6 +551,9 @@ func (s *Server) adminCommentEditAPI(writer http.ResponseWriter, request *http.R
 		return
 	}
 	updated, err := s.comments.Edit(request.Context(), id, comment.Mutation{ExpectedVersion: body.Version, Actor: adminCommentActor(principal)}, input)
+	if _, ok := s.refreshCommentWrite(writer, request); !ok {
+		return
+	}
 	if err != nil {
 		if len(comment.FieldErrors(err)) > 0 {
 			s.writeAPIError(writer, request, http.StatusUnprocessableEntity, "comments.validation_failed", "评论编辑字段没有通过仓库校验", map[string]any{"fields": comment.FieldErrors(err)})
@@ -519,8 +562,7 @@ func (s *Server) adminCommentEditAPI(writer http.ResponseWriter, request *http.R
 		s.handleAdminCommentAPIError(writer, request, id, err)
 		return
 	}
-	writer.Header().Set("ETag", commentETag(updated))
-	writeJSON(writer, http.StatusOK, adminCommentResponse(s.adminCommentItem(request, updated)))
+	s.writeCommentJSON(writer, request, http.StatusOK, adminCommentResponse(s.adminCommentItem(request, updated)), func() { writer.Header().Set("ETag", commentETag(updated)) })
 }
 
 func (s *Server) adminCommentReplyAPI(writer http.ResponseWriter, request *http.Request) {
@@ -544,6 +586,10 @@ func (s *Server) adminCommentReplyAPI(writer http.ResponseWriter, request *http.
 	if !s.decodeStrictCommentJSON(writer, request, &body) {
 		return
 	}
+	principal, ok = s.refreshCommentWrite(writer, request)
+	if !ok {
+		return
+	}
 	maxLength := min(comment.MaxContentRunes, s.siteSettings.Snapshot().Settings.Discussion.MaxLength)
 	if utf8.RuneCountInString(strings.TrimSpace(body.ContentSource)) > maxLength {
 		s.writeAPIError(writer, request, http.StatusUnprocessableEntity, "comments.validation_failed", "站方回复超过当前讨论策略上限", map[string]any{"fields": map[string]string{"content_source": "不能超过 " + strconv.Itoa(maxLength) + " 个字符"}})
@@ -554,6 +600,12 @@ func (s *Server) adminCommentReplyAPI(writer http.ResponseWriter, request *http.
 		AuthorName: principal.Label(), AuthorEmail: adminCommentReplyEmail(principal), ContentSource: body.ContentSource,
 		Actor: adminCommentActor(principal),
 	})
+	if err == nil {
+		s.captureCommentOrigin(request, created.ID)
+	}
+	if _, ok := s.refreshCommentWrite(writer, request); !ok {
+		return
+	}
 	if err != nil {
 		switch {
 		case errors.Is(err, comment.ErrInvalidParent):
@@ -565,10 +617,10 @@ func (s *Server) adminCommentReplyAPI(writer http.ResponseWriter, request *http.
 		}
 		return
 	}
-	writer.Header().Set("Location", "/api/v1/admin/comments/"+strconv.FormatInt(created.ID, 10))
-	s.captureCommentOrigin(request, created.ID)
-	writer.Header().Set("ETag", commentETag(created))
-	writeJSON(writer, http.StatusCreated, adminCommentResponse(s.adminCommentItem(request, created)))
+	s.writeCommentJSON(writer, request, http.StatusCreated, adminCommentResponse(s.adminCommentItem(request, created)), func() {
+		writer.Header().Set("Location", "/api/v1/admin/comments/"+strconv.FormatInt(created.ID, 10))
+		writer.Header().Set("ETag", commentETag(created))
+	})
 }
 
 func (s *Server) adminCommentRevisionsAPI(writer http.ResponseWriter, request *http.Request) {
@@ -584,6 +636,9 @@ func (s *Server) adminCommentRevisionsAPI(writer http.ResponseWriter, request *h
 		return
 	}
 	revisions, err := s.comments.ListRevisions(request.Context(), id, comment.MaxRevisionLimit)
+	if !s.commentOperationAccess(writer, request, err) {
+		return
+	}
 	if err != nil {
 		if errors.Is(err, comment.ErrNotFound) {
 			s.writeAPIError(writer, request, http.StatusNotFound, "comments.not_found", "评论没有找到", nil)
@@ -601,8 +656,7 @@ func (s *Server) adminCommentRevisionsAPI(writer http.ResponseWriter, request *h
 			ContentHTML: revision.ContentHTML, Actor: revision.Actor, CreatedAt: revision.CreatedAt,
 		})
 	}
-	writer.Header().Set("Cache-Control", "no-store")
-	writeJSON(writer, http.StatusOK, adminCommentRevisionsAPIResponse{Items: items})
+	s.writeCommentJSON(writer, request, http.StatusOK, adminCommentRevisionsAPIResponse{Items: items}, nil)
 }
 
 func (s *Server) adminCommentRestoreRevisionAPI(writer http.ResponseWriter, request *http.Request) {
@@ -628,6 +682,10 @@ func (s *Server) adminCommentRestoreRevisionAPI(writer http.ResponseWriter, requ
 		return
 	}
 	current, err := s.comments.Get(request.Context(), id)
+	principal, ok = s.refreshCommentWrite(writer, request)
+	if !ok {
+		return
+	}
 	if err != nil {
 		s.handleAdminCommentAPIError(writer, request, id, err)
 		return
@@ -638,10 +696,12 @@ func (s *Server) adminCommentRestoreRevisionAPI(writer http.ResponseWriter, requ
 	updated, err := s.comments.RestoreRevision(request.Context(), id, sourceVersion, comment.Mutation{
 		ExpectedVersion: current.Version, Actor: adminCommentActor(principal),
 	})
+	if _, ok := s.refreshCommentWrite(writer, request); !ok {
+		return
+	}
 	if err != nil {
 		s.handleAdminCommentAPIError(writer, request, id, err)
 		return
 	}
-	writer.Header().Set("ETag", commentETag(updated))
-	writeJSON(writer, http.StatusOK, adminCommentResponse(s.adminCommentItem(request, updated)))
+	s.writeCommentJSON(writer, request, http.StatusOK, adminCommentResponse(s.adminCommentItem(request, updated)), func() { writer.Header().Set("ETag", commentETag(updated)) })
 }

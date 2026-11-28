@@ -2,6 +2,7 @@ package content
 
 import (
 	"strings"
+	"unicode/utf8"
 
 	"golang.org/x/net/html"
 )
@@ -18,41 +19,56 @@ var publicSearchCase = func() map[rune]rune {
 // NormalizePublicSearchText has a versioned, locale-independent SQL equivalent.
 // It folds simple lowercase and whitespace, without stemming or accent removal.
 func NormalizePublicSearchText(value string) string {
-	var out strings.Builder
-	out.Grow(len(value))
-	space := false
-	for _, c := range value {
-		if strings.ContainsRune(publicSearchSpaces, c) {
-			space = out.Len() > 0
+	// Most stored labels and repeated query fields already satisfy the frozen
+	// rules. Return that immutable string without allocating a second copy.
+	// Once a change is needed, normalize only the remaining suffix; the prefix
+	// was checked byte-for-byte and can be copied directly.
+	for index, c := range value {
+		changed := false
+		if c < utf8.RuneSelf {
+			changed = c >= 'A' && c <= 'Z' || c >= '\t' && c <= '\r' ||
+				c == ' ' && (index == 0 || index+1 == len(value) || value[index-1] == ' ')
+		} else if strings.ContainsRune(publicSearchSpaces, c) {
+			changed = true
+		} else if _, ok := publicSearchCase[c]; ok {
+			changed = true
+		} else if c == utf8.RuneError {
+			_, size := utf8.DecodeRuneInString(value[index:])
+			changed = size == 1
+		}
+		if !changed {
 			continue
 		}
-		if space {
-			out.WriteByte(' ')
-			space = false
+		// Let the streaming normalizer handle a preceding space too. Otherwise
+		// a following whitespace change could emit a duplicate/trailing space.
+		if index > 0 && value[index-1] == ' ' {
+			index--
 		}
-		if lower, ok := publicSearchCase[c]; ok {
-			c = lower
+		var text publicSearchNormalizer
+		text.out.Grow(len(value))
+		text.out.WriteString(value[:index])
+		for _, tail := range value[index:] {
+			text.writeRune(tail)
 		}
-		out.WriteRune(c)
+		return text.finish()
 	}
-	return out.String()
+	return value
 }
 
 // PublicSearchBody extracts static text nodes from already sanitized HTML.
 // Attributes, comments, scripts and dynamic widget data are not searchable.
 func PublicSearchBody(contentHTML string) string {
 	tokens := html.NewTokenizer(strings.NewReader(contentHTML))
-	var text strings.Builder
-	text.Grow(len(contentHTML))
+	var text publicSearchNormalizer
 	ignored := 0
 	for {
 		kind := tokens.Next()
 		switch kind {
 		case html.ErrorToken:
-			return NormalizePublicSearchText(text.String())
+			return text.finish()
 		case html.TextToken:
 			if ignored == 0 {
-				text.Write(tokens.Text())
+				text.write(tokens.Text())
 			}
 		case html.StartTagToken, html.EndTagToken, html.SelfClosingTagToken:
 			name, _ := tokens.TagName()
@@ -66,7 +82,7 @@ func PublicSearchBody(contentHTML string) string {
 				}
 			}
 			if ignored == 0 && publicSearchBlock(tag) {
-				text.WriteByte(' ')
+				text.write([]byte{' '})
 			}
 		}
 	}
@@ -88,6 +104,13 @@ func PublicSearchScore(post Post, normalizedNeedle string) int {
 	if normalizedNeedle == "" {
 		return 0
 	}
+	return publicSearchScore(post, normalizedNeedle, PublicSearchBody(post.ContentHTML))
+}
+
+func publicSearchScore(post Post, normalizedNeedle, normalizedBody string) int {
+	if normalizedNeedle == "" {
+		return 0
+	}
 	score := 0
 	for _, field := range []struct {
 		value  string
@@ -105,7 +128,7 @@ func PublicSearchScore(post Post, normalizedNeedle string) int {
 			}
 		}
 	}
-	if strings.Contains(PublicSearchBody(post.ContentHTML), normalizedNeedle) {
+	if strings.Contains(normalizedBody, normalizedNeedle) {
 		score++
 	}
 	return score

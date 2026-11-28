@@ -198,6 +198,20 @@ func (s *Server) adminContentImportAPI(w http.ResponseWriter, r *http.Request) {
 		response.Targets = append(response.Targets, importAuthor{u.ID, u.DisplayName})
 	}
 	if apply {
+		// Parsing and repository reads can outlive the request's initial
+		// authorization. Recheck the session immediately before the write.
+		r, ok = s.freshSessionRequest(w, r)
+		if !ok {
+			return
+		}
+		current, authorized := s.requireAdminJSONWrite(w, r, auth.CapabilitySettingsManage)
+		if !authorized {
+			return
+		}
+		if current.UserID != p.UserID || !canImport(current) {
+			s.writeAPIError(w, r, 403, "import.capability_required", "需要站点设置、全站内容和分类管理权限", nil)
+			return
+		}
 		response.Plan, err = s.repository.ApplyImport(ctx, doc.Batch, claims.Revision)
 		if err != nil {
 			s.importError(w, r, err)

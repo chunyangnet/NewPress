@@ -63,7 +63,7 @@ No official affiliation is claimed.
 
 TypeScript 7.0.2 (Apache-2.0) is a development-only compiler; deployment still uses
 prebuilt assets. Terser 5.51.4 (BSD-2-Clause) is a development-only compressor for
-the homepage bundles; its implementation is not included in browser assets.
+the homepage and immediate editor bundles; its implementation is not included in browser assets.
 React, React DOM and Scheduler (MIT), Apache ECharts and zrender
 (Apache-2.0), and tslib (0BSD) are bundled only in the interactive analytics entry.
 Exact versions are pinned in `package-lock.json`. The frontend build extracts the

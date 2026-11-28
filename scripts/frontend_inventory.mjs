@@ -23,7 +23,7 @@ const references = await Promise.all([...browserFiles.filter(name => name.endsWi
 const migrated = new Map(frontendEntries.flatMap(entry => entry.outputs.map(output => [output.path, entry])));
 const sourceSet = new Set(browserFiles);
 const assets = [];
-for (const path of browserFiles.filter(name => /\.(?:js|ts|tsx)$/.test(name))) {
+for (const path of browserFiles.filter(name => /\.(?:mjs|js|ts|tsx)$/.test(name))) {
   const data = await readFile(resolve(root, path));
   const text = data.toString('utf8');
   const entry = migrated.get(path);

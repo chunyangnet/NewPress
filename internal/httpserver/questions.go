@@ -112,7 +112,7 @@ func (s *Server) questionsPage(w http.ResponseWriter, r *http.Request) {
 	if s.questions == nil {
 		if r.URL.Path == "/admin/questions/" {
 			if p, ro, ok := s.requireAdminPageCapability(w, r, auth.CapabilityCommentsModerate); ok {
-				s.renderFeatureRecovery(w, r, "questions", "", s.adminView("questions", p, ro), 503, "")
+				s.renderFeatureRecovery(w, r, "questions", "", s.adminRecoveryIdentity("questions", p, ro), 503, "")
 			}
 			return
 		}

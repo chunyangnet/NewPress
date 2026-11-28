@@ -20,7 +20,7 @@ test('CDN worker retains revision but uses page origin', () => {
   const workerURL=new URL('newpress-highlight-worker.js',scriptURL);
   const local=new URL(workerURL.pathname,'https://site.example.test');
   assert.equal(local.href,'https://site.example.test/core-assets/1234567890abcdef12345678/js/newpress-highlight-worker.js');
-  assert.match(fs.readFileSync('internal/coreui/assets/js/newpress-components.source.js','utf8'),/new Worker\(new URL\(workerURL.pathname, window.location.origin\)\)/);
+  assert.match(fs.readFileSync('frontend/core/components.ts','utf8'),/new Worker\(new URL\(workerURL.pathname, window.location.origin\)\)/);
 });
 test('installation entry retains integrity, TLS and explicit registry selection', () => {
  const script=fs.readFileSync('scripts/install_frontend.mjs','utf8');

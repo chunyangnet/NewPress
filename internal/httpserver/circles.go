@@ -328,24 +328,7 @@ func (s *Server) circleProjectionMode(r *http.Request, management bool) (circles
 			}
 			topics = append(topics, t)
 		}
-		activity := func(t community.Topic) time.Time {
-			latest := t.CreatedAt
-			for _, reply := range t.Replies {
-				if (!reply.Hidden || out.Circle.Manage) && reply.CreatedAt.After(latest) {
-					latest = reply.CreatedAt
-				}
-			}
-			return latest
-		}
-		sort.Slice(topics, func(i, j int) bool {
-			if topics[i].Pinned != topics[j].Pinned {
-				return topics[i].Pinned
-			}
-			if out.Sort == "active" && !activity(topics[i]).Equal(activity(topics[j])) {
-				return activity(topics[i]).After(activity(topics[j]))
-			}
-			return topics[i].ID > topics[j].ID
-		})
+		sortCircleTopics(topics, out.Sort, out.Circle.Manage)
 		out.Total = len(topics)
 		out.Pages = max(1, (out.Total+19)/20)
 		out.Page = min(page, out.Pages)

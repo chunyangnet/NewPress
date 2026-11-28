@@ -49,12 +49,19 @@ func (s *Server) adminCommentReplyDraftAPI(w http.ResponseWriter, r *http.Reques
 	if _, ok := s.decodeStrictAPIJSONLimit(w, r, &input, 1024, "1 KiB"); !ok {
 		return
 	}
+	principal, ok = s.refreshCommentWrite(w, r)
+	if !ok {
+		return
+	}
 	id, err := positivePathID(r.PathValue("id"))
 	if err != nil {
 		s.writeAPIError(w, r, http.StatusNotFound, "comments.not_found", "评论没有找到", nil)
 		return
 	}
 	item, err := s.comments.Get(r.Context(), id)
+	if _, ok := s.refreshCommentWrite(w, r); !ok {
+		return
+	}
 	if errors.Is(err, comment.ErrNotFound) {
 		s.writeAPIError(w, r, http.StatusNotFound, "comments.not_found", "评论没有找到", nil)
 		return
@@ -63,11 +70,19 @@ func (s *Server) adminCommentReplyDraftAPI(w http.ResponseWriter, r *http.Reques
 		s.writeAPIError(w, r, http.StatusInternalServerError, "comments.unavailable", "无法读取当前评论", nil)
 		return
 	}
-	if (item.Status != comment.StatusApproved && item.Status != comment.StatusPending) || s.adminCommentDepth(r, item) >= comment.MaxThreadDepth {
+	depth := s.adminCommentDepth(r, item)
+	if _, ok := s.refreshCommentWrite(w, r); !ok {
+		return
+	}
+	if (item.Status != comment.StatusApproved && item.Status != comment.StatusPending) || depth >= comment.MaxThreadDepth {
 		s.writeAPIError(w, r, http.StatusConflict, "comments.reply_not_allowed", "当前评论状态或讨论层级不允许生成回复草稿", nil)
 		return
 	}
 	post, err := s.repository.GetByID(r.Context(), item.PostID)
+	principal, ok = s.refreshCommentWrite(w, r)
+	if !ok {
+		return
+	}
 	if errors.Is(err, content.ErrNotFound) {
 		s.writeAPIError(w, r, http.StatusNotFound, "comments.post_not_found", "评论所属内容没有找到", nil)
 		return
@@ -108,8 +123,32 @@ func (s *Server) adminCommentReplyDraftAPI(w http.ResponseWriter, r *http.Reques
 	observed.record.Purpose = "comment_reply_draft"
 	defer observed.finish(ctx)
 	messages := aiCommentReplyMessages(item, post)
+	access := func() error { return s.aiCommentReplyAccess(r, item, post, lease) }
+	if err := access(); err != nil {
+		observed.fail(err)
+		s.aiCommentReplyAccessError(w, r, err)
+		return
+	}
+	var authorityErr error
+	var checkedAt time.Time
+	checkStream := func() error {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		// Check the first frame and at most once per second thereafter; model
+		// deltas must not turn into an unbounded number of permission reads.
+		if checkedAt.IsZero() || time.Since(checkedAt) >= time.Second {
+			authorityErr = access()
+			checkedAt = time.Now()
+		}
+		return authorityErr
+	}
 	result, err := s.aiClient.StreamWithCallbacks(ctx, connection, messages, aiCommentReplyMaxTokens, aieditor.StreamCallbacks{
+		Thinking: func(aieditor.ThinkingDelta) error { return checkStream() },
 		Delta: func(text string) error {
+			if err := checkStream(); err != nil {
+				return err
+			}
 			if text != "" {
 				observed.first()
 			}
@@ -117,10 +156,18 @@ func (s *Server) adminCommentReplyDraftAPI(w http.ResponseWriter, r *http.Reques
 		},
 		Usage: func(usage aieditor.Usage) error {
 			observed.record.Usage = usage
-			return nil
+			return checkStream()
 		},
 	})
 	observed.record.Usage = result.Usage
+	if authorityErr == nil {
+		authorityErr = access()
+	}
+	if authorityErr != nil {
+		observed.fail(authorityErr)
+		s.aiCommentReplyAccessError(w, r, authorityErr)
+		return
+	}
 	if err == nil {
 		err = ctx.Err()
 	}
@@ -142,8 +189,16 @@ func (s *Server) adminCommentReplyDraftAPI(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	observed.record.Status, observed.record.ErrorCode = "success", ""
-	w.Header().Set("Cache-Control", "no-store")
-	writeJSON(w, http.StatusOK, aiCommentReplyDraftResponse{Draft: draft, Model: connection.Model})
+	writePrivateJSON(w, r, http.StatusOK, aiCommentReplyDraftResponse{Draft: draft, Model: connection.Model}, nil, func() error {
+		err := access()
+		if err != nil {
+			observed.fail(err)
+		}
+		return err
+	}, func(err error) {
+		observed.fail(err)
+		s.aiCommentReplyAccessError(w, r, err)
+	})
 }
 
 func aiCommentReplyMessages(item comment.Comment, post content.Post) []aieditor.Message {
@@ -162,10 +217,26 @@ func aiCommentReplyMessages(item comment.Comment, post content.Post) []aieditor.
 }
 
 func aiCommentContext(value string, maxRunes int) string {
+	if maxRunes < 0 {
+		panic("negative AI context limit")
+	}
 	value = strings.TrimSpace(value)
-	if utf8.RuneCountInString(value) <= maxRunes {
+	if len(value) <= maxRunes {
 		return value
 	}
-	runes := []rune(value)
-	return string(runes[:maxRunes]) + "…[已截断]"
+	// Decode only enough runes to locate the retained prefix. Converting the
+	// entire article to []rune allocates in proportion to the discarded body.
+	for end := range value {
+		if maxRunes == 0 {
+			prefix := value[:end]
+			if !utf8.ValidString(prefix) {
+				// Match the former rune conversion for malformed bytes, but only
+				// within the bounded prefix. Short values remain unchanged.
+				prefix = string([]rune(prefix))
+			}
+			return prefix + "…[已截断]"
+		}
+		maxRunes--
+	}
+	return value
 }

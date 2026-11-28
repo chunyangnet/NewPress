@@ -147,6 +147,14 @@ func (s *Server) adminMediaUploadAPI(writer http.ResponseWriter, request *http.R
 		s.writeAPIError(writer, request, http.StatusBadRequest, "media.invalid_form", "上传字段未知、重复或缺失", nil)
 		return
 	}
+	request, ok = s.freshSessionRequest(writer, request)
+	if !ok {
+		return
+	}
+	principal, ok = s.requireAdminJSONWrite(writer, request, auth.CapabilityMediaWrite)
+	if !ok {
+		return
+	}
 	values := request.MultipartForm.Value
 	if !s.auth.CheckCSRF(principal, values["csrf_token"][0]) {
 		s.writeAPIError(writer, request, http.StatusForbidden, "auth.csrf_validation_failed", "上传表单已失效，请重新打开编辑器", nil)

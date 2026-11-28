@@ -252,6 +252,10 @@ func (s *Server) objectStorageRecords(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) objectStorageError(w http.ResponseWriter, r *http.Request, err error, validation bool) {
+	if errors.Is(err, auth.ErrSessionUnavailable) {
+		s.sessionStorageError(w, r)
+		return
+	}
 	status, code, message := http.StatusUnprocessableEntity, "storage.operation", objectstorage.PublicError(err)
 	if validation {
 		message = err.Error()
@@ -261,6 +265,13 @@ func (s *Server) objectStorageError(w http.ResponseWriter, r *http.Request, err 
 	}
 	if errors.Is(err, plugin.ErrInactive) {
 		status, code, message = http.StatusNotFound, "storage.inactive", "对象存储插件尚未安装或状态已变化"
+	}
+	if errors.Is(err, auth.ErrSessionNotFound) {
+		w.Header().Set("WWW-Authenticate", `NewPressSession realm="admin"`)
+		status, code, message = http.StatusUnauthorized, "auth.authentication_required", "需要有效的管理员会话"
+	}
+	if errors.Is(err, auth.ErrSessionForbidden) {
+		status, code, message = http.StatusForbidden, "auth.capability_required", "当前账号没有管理云端文件的权限"
 	}
 	s.writeAPIError(w, r, status, code, message, nil)
 }

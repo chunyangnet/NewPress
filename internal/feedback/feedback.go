@@ -226,7 +226,19 @@ func CanEdit(b Board, a Actor, t Item) bool {
 	return CanSee(b, a, t) && (Can(b, a, "moderate") || a.ID > 0 && a.ID == t.AuthorID && t.Status == "new" && !t.Locked && Can(b, a, "submit") && b.Settings.Submissions)
 }
 func Header(b Board) Board { b.Items = nil; b.Receipts = nil; return Clone(b) }
-func Clone(b Board) Board  { v, _ := json.Marshal(b); var c Board; _ = json.Unmarshal(v, &c); return c }
+func Clone(b Board) Board {
+	b.Settings.Kinds = slices.Clone(b.Settings.Kinds)
+	b.Settings.Categories = slices.Clone(b.Settings.Categories)
+	b.Settings.Permissions = slices.Clone(b.Settings.Permissions)
+	b.Items = slices.Clone(b.Items)
+	for i := range b.Items {
+		b.Items[i].Votes = slices.Clone(b.Items[i].Votes)
+		b.Items[i].Replies = slices.Clone(b.Items[i].Replies)
+		b.Items[i].History = slices.Clone(b.Items[i].History)
+	}
+	b.Receipts = slices.Clone(b.Receipts)
+	return b
+}
 func DecodeBoard(data []byte) (Board, error) {
 	var b Board
 	if len(data) > MaxBoardBytes {

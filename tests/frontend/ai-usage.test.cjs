@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-for (const path of ['../../internal/coreui/assets/js/chunnel-ai-usage.source.js','../../internal/coreui/assets/js/chunnel-ai-usage.js']) {
-  const api = require(path);
+for (const path of ['frontend/shared/ai-usage-helpers.ts']) {
+  const api = require('./helpers/typescript.cjs').loadNativeModule(path);
   test(`${path}: unknown usage stays unknown and zero remains zero`, () => {
     assert.equal(api.compact(undefined),'—');assert.equal(api.count(null),'—');assert.equal(api.money(undefined,'USD'),'未计价');assert.equal(api.money(0,'USD'),'USD 0.00');
     assert.equal(api.tps(undefined,1000),'—');assert.equal(api.tps(20,100),'—');assert.equal(api.tps(20,1000),'20.0 tps');

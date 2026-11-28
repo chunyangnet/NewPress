@@ -21,7 +21,7 @@ function fixture({ composing = false, dismissed = false, initialFocus = false, b
   class Element {
     constructor(tag = 'div') {
       this.tag = tag; this.children = []; this.listeners = new Map(); this.attributes = new Map();
-      this.dataset = {}; this.hidden = false; this.value = ''; this.textContent = ''; this.scrollTop = 0;
+      this.dataset = {}; this.hidden = false; this.value = ''; this.textContent = ''; this.scrollTop = 0; this.isConnected = true;
       this.bounds = { top: 0, bottom: 100 }; this.clicks = 0;
     }
     addEventListener(type, fn) { this.listeners.set(type, [...(this.listeners.get(type) || []), fn]); }
@@ -37,7 +37,7 @@ function fixture({ composing = false, dismissed = false, initialFocus = false, b
     append(...children) { for (const child of children) { child.parent = this; this.children.push(child); } }
     get firstChild() { return this.children[0]; }
     get lastChild() { return this.children.at(-1); }
-    remove() { if (this.parent) this.parent.children = this.parent.children.filter(child => child !== this); }
+    remove() { this.isConnected = false; if (this.parent) this.parent.children = this.parent.children.filter(child => child !== this); }
     replaceChildren(...children) { this.children = []; this.append(...children); }
     contains(target) { return target === this || this.children.some(child => child.contains(target)); }
     setAttribute(name, value) { this.attributes.set(name, String(value)); }
@@ -61,7 +61,13 @@ function fixture({ composing = false, dismissed = false, initialFocus = false, b
   if (dismissed) input.dataset.searchDismissed = 'true';
   input.value = initialFocus ? '初始' : '';
   form.querySelector = selector => selector === '[data-search-input]' ? input : null;
-  document.querySelector = selector => selector === '[data-search-box]' ? form : selector === '[data-search-input]' ? input : null;
+  const bootstrapStatus = new Element('div'); bootstrapStatus.className = 'search-preview'; bootstrapStatus.hidden = true;
+  const bootstrapCopy = new Element('p'), bootstrapRetry = new Element('button');
+  bootstrapCopy.className = 'search-preview-status'; bootstrapCopy.setAttribute('role', 'status');
+  bootstrapRetry.className = 'search-preview-retry'; bootstrapRetry.type = 'button';
+  bootstrapStatus.append(bootstrapCopy, bootstrapRetry);
+  if (bootstrap) form.append(bootstrapStatus);
+  document.querySelector = selector => selector === '[data-search-box]' ? form : selector === '[data-search-input]' ? input : selector === '[data-home-search-status]' && bootstrap ? bootstrapStatus : null;
   document.querySelectorAll = () => [launcher];
   document.createElement = tag => new Element(tag);
   document.createDocumentFragment = () => new Element('fragment');
@@ -266,6 +272,28 @@ test('failed lazy search can retry without scrolling or losing the query', async
   assert.equal(f.input.lastFocus.preventScroll, true); assert.equal(f.input.value, '保留关键词');
   f.finishScript(); await flush(); f.advance(240);
   assert.equal(f.requests.length, 1); assert.equal(f.form.getAttribute('aria-busy'), null);
+});
+
+for (const bootstrap of [false, true]) test(`pointer retry survives a browser that blurs buttons without focusing them (bootstrap=${bootstrap})`, async () => {
+  const f = fixture({ bootstrap });
+  if (bootstrap) {
+    f.input.focus(); f.type('保留关键词'); f.document.head.lastChild.onerror();
+  } else f.start('保留关键词').reject(new Error('offline'));
+  await flush();
+  const panel = f.panel, retry = bootstrap ? panel.lastChild : f.retry;
+  assert.equal(retry.hidden, false);
+  const down = retry.emit('pointerdown', { button: 0 });
+  // WebKit's pointer default blurs the input with no relatedTarget, hiding
+  // the panel before mouseup/click. Canceling that default preserves the hit.
+  if (!down.defaultPrevented) {
+    f.document.activeElement = f.document.body;
+    f.input.emit('focusout', { relatedTarget: null });
+  }
+  assert.equal(panel.hidden, false, 'the retry button disappeared before click');
+  retry.click();
+  if (bootstrap) { f.finishScript(); await flush(); f.advance(240); }
+  assert.equal(f.input.value, '保留关键词');
+  assert.equal(f.requests.length, bootstrap ? 1 : 2);
 });
 
 }

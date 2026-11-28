@@ -70,12 +70,12 @@ func (s *Server) adminAIProMaxPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if s.plugins == nil {
-		s.renderFeatureRecovery(w, r, "ai-queue", "", s.adminView("plugins", principal, readOnly), http.StatusServiceUnavailable, "")
+		s.renderFeatureRecovery(w, r, "ai-queue", "", s.adminRecoveryIdentity("plugins", principal, readOnly), http.StatusServiceUnavailable, "")
 		return
 	}
 	items, err := s.plugins.List()
 	if err != nil {
-		s.renderFeatureRecovery(w, r, "ai-queue", "", s.adminView("plugins", principal, readOnly), http.StatusInternalServerError, "")
+		s.renderFeatureRecovery(w, r, "ai-queue", "", s.adminRecoveryIdentity("plugins", principal, readOnly), http.StatusInternalServerError, "")
 		return
 	}
 	installed := false
@@ -87,7 +87,7 @@ func (s *Server) adminAIProMaxPage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if !installed {
-		s.renderFeatureRecovery(w, r, "ai-queue", "", s.adminView("plugins", principal, readOnly), http.StatusNotFound, "")
+		s.renderFeatureRecovery(w, r, "ai-queue", "", s.adminRecoveryIdentity("plugins", principal, readOnly), http.StatusNotFound, "")
 		return
 	}
 

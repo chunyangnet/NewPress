@@ -333,7 +333,7 @@ func (m *Manager) ProcessImage(ctx context.Context, id, expectedVersion int64, i
 		if err := ctx.Err(); err != nil {
 			return current, err
 		}
-		createdObject, err := m.commitObject(entry.upload, entry.object)
+		createdObject, err := m.commitObject(ctx, entry.upload, entry.object)
 		if err != nil {
 			return current, err
 		}

@@ -1,4 +1,47 @@
 .admin-settings-panels { min-width: 0; }
+.writing-templates { border-top: 1px solid var(--line); padding: 28px 24px; scroll-margin-top: 90px; }
+.ai-settings-section .writing-templates :is(input:not([type=checkbox]), textarea, select) { background: var(--paper); color: var(--ink); }
+.wt-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+.wt-eyebrow { color: var(--admin-brand); font-size: 12px; letter-spacing: .1em; }
+.wt-heading h3 { margin: 6px 0; color: var(--ink); font-size: 21px; font-weight: 600; }
+.wt-heading p, .wt-import p, .wt-history p { color: var(--muted); font-size: 13px; line-height: 1.8; margin: 8px 0; }
+.wt-heading > button { flex-shrink: 0; }
+.wt-workspace { display: grid; grid-template-columns: minmax(180px, 240px) minmax(0, 1fr); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.wt-library { padding: 16px; border-right: 1px solid var(--line); background: var(--paper); min-width: 0; }
+.wt-list-heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+.wt-library [data-wt-list] { max-height: 650px; overflow-y: auto; }
+.wt-list-item { display: grid; gap: 7px; width: 100%; padding: 14px 12px; margin: 0 0 6px; text-align: left; background: transparent; color: var(--ink); border: 1px solid transparent; border-radius: 7px; cursor: pointer; overflow-wrap: anywhere; }
+.wt-list-item strong { font-size: 14px; font-weight: 500; }
+.wt-list-item small { color: var(--muted); font-size: 12px; }
+.wt-list-item[aria-pressed=true] { background: var(--tone-surface, var(--white)); border-color: var(--admin-brand); }
+.wt-detail { padding: 22px; min-width: 0; }
+.wt-detail-heading { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.wt-detail-heading strong { font-size: 17px; overflow-wrap: anywhere; }
+.wt-detail-heading span { font-size: 12px; color: var(--admin-brand); }
+.wt-meta, .wt-empty { font-size: 12px; line-height: 1.8; color: var(--muted); overflow-wrap: anywhere; white-space: pre-wrap; }
+.wt-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; margin-top: 22px; }
+.wt-fields label, .wt-import > label, .wt-history > label { display: grid; gap: 8px; font-size: 13px; min-width: 0; }
+.wt-fields small { color: var(--muted); font-size: 12px; line-height: 1.7; }
+.wt-wide { grid-column: 1 / -1; }
+.wt-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+.wt-history { border-top: 1px solid var(--line); margin-top: 22px; padding-top: 18px; }
+.wt-history summary, .wt-import summary { cursor: pointer; font-size: 14px; font-weight: 500; padding: 6px 0; }
+.wt-history label, .wt-import > label, .wt-import > button { margin-top: 14px; }
+.writing-templates pre { margin: 16px 0; padding: 16px; border: 1px solid var(--line); border-radius: 7px; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 360px; overflow-y: auto; background: var(--paper); color: var(--ink); font: inherit; font-size: 13px; line-height: 1.8; }
+.wt-import { border-top: 1px solid var(--line); margin-top: 24px; padding-top: 18px; }
+.wt-import .wt-confirm { display: flex; align-items: start; gap: 10px; font-size: 13px; margin-bottom: 16px; }
+.wt-confirm input { margin: 3px 0 0; accent-color: var(--admin-brand); }
+.wt-status { color: var(--muted); font-size: 13px; line-height: 1.8; margin: 18px 0 0; }
+.wt-pending { border: 1px solid var(--admin-brand); border-radius: 8px; padding: 16px; margin-top: 12px; font-size: 13px; line-height: 1.8; }
+.wt-pending p { margin: 0 0 12px; }
+@media (max-width: 900px) {
+  .wt-workspace, .wt-fields { grid-template-columns: minmax(0, 1fr); }
+  .wt-library { border-right: 0; border-bottom: 1px solid var(--line); }
+  .wt-library [data-wt-list] { max-height: 220px; }
+  .wt-heading { align-items: start; }
+  .writing-templates { padding: 24px 16px; }
+  .wt-detail { padding: 18px 14px; }
+}
 .ai-settings-section [hidden] { display: none !important; }
 .ai-settings-section > form { padding: 24px; }
 .ai-settings-section header p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }

@@ -546,25 +546,11 @@ func (s *Service) deliver(ctx context.Context, j Job, now time.Time) error {
 		defer cancel()
 		return s.Store.FinishMail(finishCtx, j, state, now.Add(time.Since(started)))
 	}
-	p, err := s.Store.Preferences(ctx, j.UserID)
+	p, u, ok, err := s.mailRecipient(ctx, j)
 	if err != nil {
 		return errors.Join(err, finish("retry"))
 	}
-	if j.Kind == Weekly {
-		if !p.Weekly || !p.WeeklySince.Before(j.Event.Due) {
-			return finish("cancelled")
-		}
-	} else if !WantsEmail(p, j.Delivery) {
-		return finish("cancelled")
-	}
-	u, err := s.Users.GetUser(ctx, j.UserID)
-	if errors.Is(err, auth.ErrUserNotFound) {
-		return finish("cancelled")
-	}
-	if err != nil {
-		return errors.Join(err, finish("retry"))
-	}
-	if u.Status != auth.UserStatusActive || u.EmailVerifiedAt == nil {
+	if !ok {
 		return finish("cancelled")
 	}
 	settings := s.Settings()
@@ -590,6 +576,15 @@ func (s *Service) deliver(ctx context.Context, j Job, now time.Time) error {
 		}
 		body = view.Title + "\n\n" + strings.TrimRight(settings.PublicURL, "/") + view.URL
 	}
+	// Resolving content, especially a paged weekly digest, can block. Refresh
+	// consent and the verified destination before crossing the SMTP boundary.
+	p, u, ok, err = s.mailRecipient(ctx, j)
+	if err != nil {
+		return errors.Join(err, finish("retry"))
+	}
+	if !ok {
+		return finish("cancelled")
+	}
 	body += "\n\n你已在站点订阅此类邮件。通知设置：\n" + strings.TrimRight(settings.PublicURL, "/") + "/account/?view=notifications\n停止邮件订阅：\n" + strings.TrimRight(settings.PublicURL, "/") + fmt.Sprintf("/account/notifications/unsubscribe/?u=%d&t=%s", u.ID, UnsubscribeToken(p))
 	id := sha256.Sum256([]byte(p.UnsubscribeKey + "\n" + j.Key))
 	if err := ctx.Err(); err != nil {
@@ -603,4 +598,29 @@ func (s *Service) deliver(ctx context.Context, j Job, now time.Time) error {
 		return finish("retry")
 	}
 	return finish("sent")
+}
+
+func (s *Service) mailRecipient(ctx context.Context, j Job) (Preferences, auth.User, bool, error) {
+	if err := ctx.Err(); err != nil {
+		return Preferences{}, auth.User{}, false, err
+	}
+	p, err := s.Store.Preferences(ctx, j.UserID)
+	if err != nil {
+		return Preferences{}, auth.User{}, false, err
+	}
+	if j.Kind == Weekly {
+		if !p.Weekly || !p.WeeklySince.Before(j.Event.Due) {
+			return Preferences{}, auth.User{}, false, nil
+		}
+	} else if !WantsEmail(p, j.Delivery) {
+		return Preferences{}, auth.User{}, false, nil
+	}
+	u, err := s.Users.GetUser(ctx, j.UserID)
+	if errors.Is(err, auth.ErrUserNotFound) {
+		return Preferences{}, auth.User{}, false, nil
+	}
+	if err != nil {
+		return Preferences{}, auth.User{}, false, err
+	}
+	return p, u, u.Status == auth.UserStatusActive && u.EmailVerifiedAt != nil, nil
 }

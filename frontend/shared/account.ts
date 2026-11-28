@@ -1,3 +1,6 @@
+import { loadingPlaceholder } from './ui-state';
+import { createQueryCache } from './query-cache';
+import type { LibraryData } from './account-data';
 import type {} from './account-types';
 import { mountReferrals } from './referrals';
 import { parseLibrary, parseProfile, errorMessage } from './account-data';
@@ -21,8 +24,10 @@ export function mountAccount(): void {
   const link = (text: string, href: string, cls = '') => { const el = node('a', cls, text); el.href = href; return el; };
   const button = (text: string, action: () => unknown | Promise<unknown>, cls = '') => { const el = node('button', cls, text); el.type = 'button'; el.addEventListener('click', () => run(async () => { el.disabled = true; try { await action(); } finally { el.disabled = false; } })); return el; };
   const renderedUser = Number(root.dataset.accountUser);
+  const libraryCache = createQueryCache<LibraryData>({ ttl: 15000, capacity: 20 });
   let accountChanged = false;
   document.addEventListener('chunnel:session', (event) => {
+    libraryCache.clear();
     if (!event.detail?.authenticated || (Number(event.detail.id) || 0) !== renderedUser) {
       accountChanged = true; serial++; root.hidden = true;
       $('[data-library-list]')?.replaceChildren();
@@ -57,6 +62,15 @@ export function mountAccount(): void {
   securityTab.append(icon('user-round'), node('span', '', '账号安全'), icon('chevron-right'));
   navigation.querySelector('[data-library-tab="profile"]')?.before(securityTab);
   let profileBusy = false;
+  let profileBaseline: string | null = null;
+  const profileSignature = () => {
+    const profile = $<HTMLFormElement>('[data-profile-form]');
+    return JSON.stringify(['display_name', 'locale', 'bio'].map(key => valueField(profile, key).value).concat(String(input(profile, 'remove_avatar').checked)));
+  };
+  const profileDirty = () => profileBaseline !== null && profileSignature() !== profileBaseline;
+  window.addEventListener('beforeunload', event => {
+    if (!accountChanged && (profileDirty() || profileBusy)) { event.preventDefault(); event.returnValue = ''; }
+  });
   const statusFilter = node('label', 'account-status-filter'), statusSelect = node('select');
   statusSelect.name = 'status'; statusSelect.setAttribute('aria-label', '内容状态'); statusFilter.append(statusSelect); form.insertBefore(statusFilter, form.querySelector('[type=submit]'));
   const labels: Record<string, string> = { draft: '草稿', publish: '已发布', future: '定时发布', pending: '待审核', private: '私密', trash: '回收站', approved: '已发布' };
@@ -116,7 +130,9 @@ export function mountAccount(): void {
     $('[data-account-folders]').hidden = false;
     if (restoreFocus) navigation.querySelector<HTMLElement>('[aria-pressed="true"]')?.focus({ preventScroll: true });
   }
+  let stopLoading = () => {};
   async function load(): Promise<void> {
+    stopLoading();
     if (accountChanged) return;
     const request = ++serial;
     const query = new URLSearchParams({ kind, page: String(page), q: valueField(form, 'q').value });
@@ -145,13 +161,14 @@ export function mountAccount(): void {
     if (kind === 'identity') { status.textContent = ''; await window.NewPressIdentity?.load(); return; }
     if (kind === 'progression') { status.textContent = ''; await window.ChunnelProgression?.load(); return; }
     list.setAttribute('aria-busy', 'true');
+    stopLoading = loadingPlaceholder(list, retain);
     try {
-      const rawData = await api(`/api/v1/social/${own ? 'own-content' : 'library'}?${query}`);
+      const requestedKind = kind;
+      const data = await libraryCache.get(`${renderedUser}:${query}`, async () => parseLibrary(await api(`/api/v1/social/${own ? 'own-content' : 'library'}?${query}`), requestedKind));
       if (request !== serial || accountChanged) return;
-      const data = parseLibrary(rawData, kind);
       return await keepScroll(async () => {
         pages = data.pages;
-        if (page > pages) { page = pages; await load(); return; }
+        if (page > pages) { page = pages; libraryCache.clear(); await load(); return; }
         status.textContent = ''; status.dataset.state = 'ready'; $('[data-library-total]').textContent = `共 ${data.total} ${kind === 'follow' ? '人' : kind === 'comments' ? '条' : '篇'}`;
         if (kind === 'bookmark') {
           const selectedCollection = selection(form, 'collection').value;
@@ -160,7 +177,7 @@ export function mountAccount(): void {
           Object.keys(data.collections).filter(Boolean).sort((a, b) => a.localeCompare(b, 'zh-CN')).forEach((name) => { const option = node('option', '', `${name} · ${data.collections[name]}`); option.value = name; options.push(option); const suggestion = node('option'); suggestion.value = name; datalist.append(suggestion); });
           selection(form, 'collection').replaceChildren(...options); selection(form, 'collection').value = options.some(option => option.value === selectedCollection) ? selectedCollection : '';
           // Removing or moving the final article in a folder invalidates that filter.
-          if (selectedCollection && selection(form, 'collection').value !== selectedCollection) { page = 1; await load(); return; }
+          if (selectedCollection && selection(form, 'collection').value !== selectedCollection) { page = 1; libraryCache.clear(); await load(); return; }
           paintCollections(data.collections);
           if (selectedCollection) $('[data-library-description]').textContent = '收藏夹 · ' + selectedCollection;
         }
@@ -184,7 +201,7 @@ export function mountAccount(): void {
       status.dataset.state = 'error';
       $('[data-library-total]').textContent = retain ? '更新失败，保留上次内容' : '';
       status.replaceChildren(icon('circle-help'), node('p', '', errorMessage(error, '暂时无法加载，请稍后重试。')), button('重新加载', load, 'ui-button ui-button-secondary ui-button-small'));
-    } finally { if (request === serial) list.removeAttribute('aria-busy'); }
+    } finally { if (request === serial) { stopLoading(); list.removeAttribute('aria-busy'); } }
   }
   async function loadSecurity(request: number) {
     try {
@@ -203,7 +220,7 @@ export function mountAccount(): void {
           if (bound) {
             if (!window.confirm('确认解除此平台绑定？解绑后将无法通过该平台登录当前账号。')) return;
             await api(`/api/v1/social/oauth-bindings/${id}/remove`, { method: 'POST', body: { version: data.version } });
-            if (kind === 'security' && !accountChanged) await load();
+            if (kind === 'security' && !accountChanged) { libraryCache.clear(); await load(); }
           } else {
             const result = await api(`/api/v1/social/oauth-bindings/${id}/start`, { method: 'POST', body: {} });
             if (typeof result.url !== 'string') throw new Error('授权地址无效');
@@ -235,7 +252,7 @@ export function mountAccount(): void {
       valueField($<HTMLFormElement>('[data-collection-form]'), 'collection').value = item.collection || ''; $('[data-collection-error]').textContent = '';
       $<HTMLDialogElement>('[data-collection-dialog]').showModal();
     }));
-    if (kind === 'bookmark' || kind === 'like') actions.append(button(kind === 'bookmark' ? '取消收藏' : '取消点赞', async () => { if (entryKind === 'bookmark' || entryKind === 'like') await engagement.set(entryKind, item.id, false); await load(); }));
+    if (kind === 'bookmark' || kind === 'like') actions.append(button(kind === 'bookmark' ? '取消收藏' : '取消点赞', async () => { if (entryKind === 'bookmark' || entryKind === 'like') await engagement.set(entryKind, item.id, false); libraryCache.clear(); await load(); }));
     if (actions.children.length) footer.append(actions);
     if (item.cover_url && item.cover_url.startsWith('/') && !item.cover_url.startsWith('//')) { const cover = link('', item.url, 'library-entry-cover'), img = node('img'); cover.setAttribute('aria-label', '阅读：' + item.title); img.src = item.cover_url; img.alt = ''; img.width = 136; img.height = 106; img.loading = 'lazy'; cover.append(img); el.append(cover); }
     copy.append(footer); el.append(copy);
@@ -244,7 +261,7 @@ export function mountAccount(): void {
   function person(item: LibraryItem) {
     const el = node('article', 'account-person'), copy = node('div');
     const name = node('b'); name.append(link(item.name, `/authors/${item.id}/`)); copy.append(name, node('small', '', '@' + item.username));
-    el.append(node('span', 'account-person-avatar', [...item.name][0] || 'N'), copy, button('取消关注', async () => { await engagement.set('follow', item.id, false); await load(); }, 'ui-button ui-button-secondary ui-button-small'));
+    el.append(node('span', 'account-person-avatar', [...item.name][0] || 'N'), copy, button('取消关注', async () => { await engagement.set('follow', item.id, false); libraryCache.clear(); await load(); }, 'ui-button ui-button-secondary ui-button-small'));
     return el;
   }
   function ownEntry(item: LibraryItem) {
@@ -273,11 +290,14 @@ export function mountAccount(): void {
   }
   async function loadProfile(request = ++serial) {
     if (profileBusy) return;
+    if (profileDirty()) { status.textContent = '已保留未保存的资料，请先保存后再刷新。'; return; }
+    const signature = profileSignature();
     const profile = $<HTMLFormElement>('[data-profile-form]'); profileLock(true);
     try {
       const rawData = await api('/api/v1/social/profile'); if (request !== serial || accountChanged) return; const data = parseProfile(rawData, renderedUser);
+      if (profileSignature() !== signature) { valueField(profile, 'version').value = String(data.version); profileBaseline ??= signature; status.textContent = '资料已加载，已保留读取期间的新输入。'; return; }
       for (const key of ['username', 'display_name', 'locale', 'version', 'bio'] as const) valueField(profile, key).value = String(data[key]);
-      paintAvatar(data); status.textContent = ''; $('[data-profile-result]').textContent = '';
+      paintAvatar(data); profileBaseline = profileSignature(); status.textContent = ''; $('[data-profile-result]').textContent = '';
     } catch (error) { if (request === serial) status.textContent = errorMessage(error); }
     finally { profileLock(false); if (!valueField(profile, 'version').value) { required<HTMLButtonElement>(profile, '[type=submit]').disabled = true; $<HTMLButtonElement>('[data-avatar-form] [type=submit]').disabled = true; } if (kind === 'profile' && request !== serial) run(load); }
   }
@@ -287,7 +307,7 @@ export function mountAccount(): void {
     if (!isView(next) || next === kind) return;
     keepScroll(() => { kind = next; page = 1; form.reset(); run(load); });
   }));
-  form.addEventListener('submit', (event) => { event.preventDefault(); keepScroll(() => { page = 1; run(load); }); });
+  form.addEventListener('submit', (event) => { event.preventDefault(); libraryCache.clear(); keepScroll(() => { page = 1; run(load); }); });
   selection(form, 'collection').addEventListener('change', () => keepScroll(() => { page = 1; run(load); }));
   statusSelect.addEventListener('change', () => keepScroll(() => { page = 1; run(load); }));
   root.querySelectorAll<HTMLElement>('[data-library-page]').forEach((el) => el.addEventListener('click', () => keepScroll(() => { page = Math.max(1, Math.min(pages, page + Number(el.dataset.libraryPage))); run(load); })));
@@ -296,7 +316,7 @@ export function mountAccount(): void {
     event.preventDefault(); const collection = $<HTMLFormElement>('[data-collection-form]'), submit = required<HTMLButtonElement>(collection, '[type=submit]');
     if (submit.disabled || !editing || accountChanged) return; const item = editing; submit.disabled = true;
     run(async () => {
-      try { await engagement.set('bookmark', item.id, true, input(collection, 'collection').value.trim()); $<HTMLDialogElement>('[data-collection-dialog]').close(); await load(); }
+      try { await engagement.set('bookmark', item.id, true, input(collection, 'collection').value.trim()); $<HTMLDialogElement>('[data-collection-dialog]').close(); libraryCache.clear(); await load(); }
       catch (error) { $('[data-collection-error]').textContent = errorMessage(error); }
       finally { submit.disabled = false; }
     });
@@ -305,13 +325,21 @@ export function mountAccount(): void {
   $<HTMLFormElement>('[data-profile-form]').addEventListener('submit', (event) => {
     event.preventDefault(); const profile = $<HTMLFormElement>('[data-profile-form]'), submit = required<HTMLButtonElement>(profile, '[type=submit]');
     if (submit.disabled || profileBusy || accountChanged) return; profileLock(true);
+    const submitted = profileSignature();
+    $('[data-profile-result]').textContent = '正在保存资料…';
     run(async () => {
       try {
         const rawData = await api('/api/v1/social/profile', { method: 'POST', body: { display_name: valueField(profile, 'display_name').value, locale: valueField(profile, 'locale').value, bio: valueField(profile, 'bio').value, remove_avatar: input(profile, 'remove_avatar').checked, version: Number(valueField(profile, 'version').value) } });
         if (accountChanged) return; const data = parseProfile(rawData, renderedUser);
         valueField(profile, 'version').value = String(data.version); $('[data-profile-heading]').textContent = data.display_name;
+        const changed = profileSignature() !== submitted;
+        const removeAvatar = input(profile, 'remove_avatar').checked;
         paintAvatar(data);
-        $('[data-profile-result]').textContent = '资料已保存。'; await getSession(true);
+        if (changed) input(profile, 'remove_avatar').checked = removeAvatar;
+        profileBaseline = changed ? submitted : profileSignature();
+        $('[data-profile-result]').textContent = changed ? '资料已保存，后续输入尚未保存。' : '资料已保存。';
+        try { await getSession(true); }
+        catch { if (!accountChanged) $('[data-profile-result]').textContent = '资料已保存，账号显示暂未刷新，无需重复保存。'; }
       } catch (error) { $('[data-profile-result]').textContent = errorMessage(error); }
       finally { profileLock(false); }
     });

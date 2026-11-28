@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '../..');
 const template = fs.readFileSync(path.join(root, 'internal/coreui/templates/admin-editor.html'), 'utf8');
-const script = fs.readFileSync(path.join(root, 'internal/coreui/assets/js/chunnel-editor-workspace.source.js'), 'utf8');
+const script = require('node:module').stripTypeScriptTypes(fs.readFileSync(path.join(root, 'frontend/core/editor-workspace.ts'), 'utf8'));
 test('writing canvas leads with title and body, supporting tools follow below', () => {
  const canvas = template.split('<div class="admin-editor-canvas">')[1].split('<aside class="admin-editor-sidebar"')[0];
  assert.match(canvas, /name="title"/); assert.match(canvas, /name="content_source"/);
@@ -27,7 +27,7 @@ test('workspace preserves invalid-field access and confirms publication via exis
  assert.doesNotMatch(template, /name="action" value="publish"/);
 });
 
-const {needsPublicationReview} = require('../../internal/coreui/assets/js/chunnel-editor-workspace.source.js');
+const {needsPublicationReview} = require('./helpers/typescript.cjs').loadNativeModule('frontend/core/editor-workspace.ts');
 test('ordinary updates skip review, visibility and schedule changes require review', () => {
  assert.equal(needsPublicationReview('publish','publish','',''),false);
  assert.equal(needsPublicationReview('draft','draft','',''),false);

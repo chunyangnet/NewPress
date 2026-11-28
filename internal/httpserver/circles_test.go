@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"newpress.local/newpress/internal/auth"
 	"newpress.local/newpress/internal/community"
 	"path/filepath"
@@ -24,16 +25,24 @@ func TestCirclesReadinessRequiresEnabledStore(t *testing.T) {
 	s.config.CommunityEnabled = true
 	for _, store := range []community.Store{nil, unavailableCircles{}} {
 		s.SetCommunityStore(store)
-		r := serveContentAPI(handler, nil, "GET", "https://example.test/health/ready", "", nil)
+		r := serveLocalReadiness(handler)
 		if r.Code != 503 {
 			t.Fatalf("enabled unavailable community ready: %d", r.Code)
 		}
 	}
 	s.config.CommunityEnabled = false
-	r := serveContentAPI(handler, nil, "GET", "https://example.test/health/ready", "", nil)
+	r := serveLocalReadiness(handler)
 	if r.Code != 200 {
 		t.Fatalf("disabled community gates readiness: %d", r.Code)
 	}
+}
+
+func serveLocalReadiness(handler http.Handler) *httptest.ResponseRecorder {
+	r := httptest.NewRequest(http.MethodGet, "http://127.0.0.1/health/ready", nil)
+	r.RemoteAddr = "127.0.0.1:12345"
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, r)
+	return w
 }
 
 func TestCirclesHTTPPermissionsAndPrivacy(t *testing.T) {

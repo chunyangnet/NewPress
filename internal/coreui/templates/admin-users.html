@@ -1,5 +1,5 @@
 {{define "content"}}
-<section class="admin-page admin-users-page" data-user-id="{{.Admin.Principal.UserID}}" data-csrf="{{.Admin.CSRFToken}}" data-read-only="{{.Admin.ReadOnly}}">
+<section class="admin-page admin-users-page" data-users-workspace-src="{{asset "js/newpress-users-workspace.js"}}?v={{.UIAssetVersion}}" data-user-id="{{.Admin.Principal.UserID}}" data-csrf="{{.Admin.CSRFToken}}" data-read-only="{{.Admin.ReadOnly}}">
   <header class="admin-page-heading admin-users-heading"><div><h1>用户与权限</h1><p>管理账户资料、会员权益与积分资产</p></div>{{if .Users.CanManage}}<a class="ui-button ui-button-primary" href="/admin/users/?create=1" data-user-create>{{template "icon" "plus"}}创建用户</a>{{end}}</header>
 
   {{if and .Users.CanManage (not .Admin.ReadOnly)}}

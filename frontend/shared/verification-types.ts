@@ -17,6 +17,8 @@ interface TencentResult {ret:number;ticket:string;randstr:string}
 interface TencentWidget {show():void;destroy?():void}
 declare global {
   interface Window {
+    DocsHubVerification?: VerificationAPI;
+    NexoraVerification?: VerificationAPI;
     [key:`__chunnelVerificationReady${number}`]:(()=>void)|undefined;
     turnstile?:CaptchaWidget;hcaptcha?:CaptchaWidget;grecaptcha?:RecaptchaWidget;
     initGeetest4?:(options:{captchaId:string;product:string;language:string},callback:(widget:GeetestWidget)=>void)=>void;

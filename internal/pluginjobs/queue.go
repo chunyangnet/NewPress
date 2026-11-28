@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"errors"
 	"regexp"
-	"sort"
 	"time"
 	"unicode/utf8"
 
@@ -243,30 +242,19 @@ func (q *Queue) Claim(ctx context.Context, now time.Time) (Job, bool, error) {
 		if err != nil {
 			return err
 		}
-		ids := make([]string, 0, len(s.Jobs))
-		for id := range s.Jobs {
-			ids = append(ids, id)
+		var selected Job
+		for id, job := range s.Jobs {
+			if blocked[id] || !claimDue(job, now) || job.Attempts >= MaxAttempts {
+				continue
+			}
+			if selected.ID == "" || claimPrecedes(job, selected) {
+				selected = job
+			}
 		}
-		sort.Slice(ids, func(i, j int) bool {
-			a, b := s.Jobs[ids[i]], s.Jobs[ids[j]]
-			if a.AvailableAt.Equal(b.AvailableAt) {
-				return a.ID < b.ID
-			}
-			return a.AvailableAt.Before(b.AvailableAt)
-		})
-		for _, id := range ids {
-			if blocked[id] {
-				continue
-			}
-			j := s.Jobs[id]
-			expired := j.Status == "running" && !j.LeaseUntil.After(now)
-			if !expired && ((j.Status != "pending" && j.Status != "retry") || j.AvailableAt.After(now)) {
-				continue
-			}
-			if now.Before(j.UpdatedAt) {
-				continue
-			}
-			if j.Attempts >= MaxAttempts {
+		// Preserve the previous ordered walk: expire exhausted tasks preceding
+		// the chosen task, or every due exhausted task when none can be claimed.
+		for id, j := range s.Jobs {
+			if !blocked[id] && claimDue(j, now) && j.Attempts >= MaxAttempts && (selected.ID == "" || claimPrecedes(j, selected)) {
 				j.Status = "failed"
 				j.ErrorCode = "lease_expired"
 				j.LeaseToken = ""
@@ -274,18 +262,18 @@ func (q *Queue) Claim(ctx context.Context, now time.Time) (Job, bool, error) {
 				j.Version++
 				j.UpdatedAt = now.UTC()
 				s.Jobs[id] = j
-				continue
 			}
-			j.Status = "running"
-			j.Attempts++
-			j.Version++
-			j.UpdatedAt = now.UTC()
-			j.LeaseUntil = now.Add(LeaseDuration).UTC()
-			j.LeaseToken = hex.EncodeToString(token[:])
-			s.Jobs[id] = j
-			out = j
+		}
+		if selected.ID != "" {
+			selected.Status = "running"
+			selected.Attempts++
+			selected.Version++
+			selected.UpdatedAt = now.UTC()
+			selected.LeaseUntil = now.Add(LeaseDuration).UTC()
+			selected.LeaseToken = hex.EncodeToString(token[:])
+			s.Jobs[selected.ID] = selected
+			out = selected
 			found = true
-			break
 		}
 		return nil
 	})

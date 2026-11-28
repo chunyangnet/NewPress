@@ -12,6 +12,9 @@ import (
 )
 
 func (store *FileStore) Create(ctx context.Context, input CreateInput) (Comment, error) {
+	if err := ctx.Err(); err != nil {
+		return Comment{}, err
+	}
 	if store == nil {
 		return Comment{}, errors.New("comment store is nil")
 	}
@@ -58,7 +61,7 @@ func (store *FileStore) createLocked(ctx context.Context, normalized CreateInput
 		}
 		submissions[submission.Key] = SubmissionReceipt{Key: submission.Key, Fingerprint: submission.Fingerprint, CommentID: item.ID, PostID: item.PostID, CreatedAt: now}
 	}
-	if err := store.persistLocked(candidate, store.revisions, store.nextID+1, now, &event, submissions); err != nil {
+	if err := store.persistContextLocked(ctx, candidate, store.revisions, store.nextID+1, now, &event, submissions); err != nil {
 		return Comment{}, err
 	}
 	store.submissions = submissions
@@ -68,7 +71,10 @@ func (store *FileStore) createLocked(ctx context.Context, normalized CreateInput
 	return item, nil
 }
 
-func (store *FileStore) Edit(_ context.Context, id int64, mutation Mutation, input EditInput) (Comment, error) {
+func (store *FileStore) Edit(ctx context.Context, id int64, mutation Mutation, input EditInput) (Comment, error) {
+	if err := ctx.Err(); err != nil {
+		return Comment{}, err
+	}
 	if store == nil || id <= 0 || mutation.ExpectedVersion <= 0 {
 		return Comment{}, ErrInvalidInput
 	}
@@ -82,6 +88,9 @@ func (store *FileStore) Edit(_ context.Context, id int64, mutation Mutation, inp
 	}
 	store.mu.Lock()
 	defer store.mu.Unlock()
+	if err := ctx.Err(); err != nil {
+		return Comment{}, err
+	}
 	item, ok := store.items[id]
 	if !ok {
 		return Comment{}, ErrNotFound
@@ -115,7 +124,7 @@ func (store *FileStore) Edit(_ context.Context, id int64, mutation Mutation, inp
 	event := audit.Event{Action: "comment.edit", ObjectType: "comment", ObjectID: fmt.Sprint(id), Actor: auditActor(actor), Metadata: map[string]any{
 		"from_version": mutation.ExpectedVersion, "version": item.Version, "status": item.Status, "revision_count": len(candidateRevisions[id]),
 	}}
-	if err := store.persistLocked(candidateItems, candidateRevisions, store.nextID, now, &event); err != nil {
+	if err := store.persistContextLocked(ctx, candidateItems, candidateRevisions, store.nextID, now, &event); err != nil {
 		return Comment{}, err
 	}
 	store.items = candidateItems
@@ -124,7 +133,10 @@ func (store *FileStore) Edit(_ context.Context, id int64, mutation Mutation, inp
 	return item, nil
 }
 
-func (store *FileStore) RestoreRevision(_ context.Context, id, sourceVersion int64, mutation Mutation) (Comment, error) {
+func (store *FileStore) RestoreRevision(ctx context.Context, id, sourceVersion int64, mutation Mutation) (Comment, error) {
+	if err := ctx.Err(); err != nil {
+		return Comment{}, err
+	}
 	if store == nil || id <= 0 || sourceVersion <= 0 || mutation.ExpectedVersion <= 0 {
 		return Comment{}, ErrInvalidInput
 	}
@@ -134,6 +146,9 @@ func (store *FileStore) RestoreRevision(_ context.Context, id, sourceVersion int
 	}
 	store.mu.Lock()
 	defer store.mu.Unlock()
+	if err := ctx.Err(); err != nil {
+		return Comment{}, err
+	}
 	item, ok := store.items[id]
 	if !ok {
 		return Comment{}, ErrNotFound
@@ -185,7 +200,7 @@ func (store *FileStore) RestoreRevision(_ context.Context, id, sourceVersion int
 	event := audit.Event{Action: "comment.revision.restore", ObjectType: "comment", ObjectID: fmt.Sprint(id), Actor: auditActor(actor), Metadata: map[string]any{
 		"from_version": mutation.ExpectedVersion, "restored_version": sourceVersion, "version": item.Version, "status": item.Status, "revision_count": len(candidateRevisions[id]),
 	}}
-	if err := store.persistLocked(candidateItems, candidateRevisions, store.nextID, now, &event); err != nil {
+	if err := store.persistContextLocked(ctx, candidateItems, candidateRevisions, store.nextID, now, &event); err != nil {
 		return Comment{}, err
 	}
 	store.items = candidateItems
@@ -194,7 +209,10 @@ func (store *FileStore) RestoreRevision(_ context.Context, id, sourceVersion int
 	return item, nil
 }
 
-func (store *FileStore) Reply(_ context.Context, input ReplyInput) (Comment, error) {
+func (store *FileStore) Reply(ctx context.Context, input ReplyInput) (Comment, error) {
+	if err := ctx.Err(); err != nil {
+		return Comment{}, err
+	}
 	if store == nil {
 		return Comment{}, errors.New("comment store is nil")
 	}
@@ -204,6 +222,9 @@ func (store *FileStore) Reply(_ context.Context, input ReplyInput) (Comment, err
 	}
 	store.mu.Lock()
 	defer store.mu.Unlock()
+	if err := ctx.Err(); err != nil {
+		return Comment{}, err
+	}
 	parent, ok := store.items[normalized.ParentID]
 	if !ok {
 		return Comment{}, ErrNotFound
@@ -229,7 +250,7 @@ func (store *FileStore) Reply(_ context.Context, input ReplyInput) (Comment, err
 		"post_id": item.PostID, "parent_id": item.ParentID, "user_id": item.UserID, "parent_version": normalized.ExpectedParentVersion,
 		"version": item.Version, "status": item.Status, "staff_reply": true,
 	}}
-	if err := store.persistLocked(candidate, store.revisions, store.nextID+1, now, &event); err != nil {
+	if err := store.persistContextLocked(ctx, candidate, store.revisions, store.nextID+1, now, &event); err != nil {
 		return Comment{}, err
 	}
 	store.items = candidate
@@ -238,13 +259,19 @@ func (store *FileStore) Reply(_ context.Context, input ReplyInput) (Comment, err
 	return item, nil
 }
 
-func (store *FileStore) ListRevisions(_ context.Context, id int64, limit int) ([]Revision, error) {
+func (store *FileStore) ListRevisions(ctx context.Context, id int64, limit int) ([]Revision, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	if store == nil || id <= 0 {
 		return nil, ErrNotFound
 	}
 	limit = NormalizeRevisionLimit(limit)
 	store.mu.RLock()
 	defer store.mu.RUnlock()
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	if _, ok := store.items[id]; !ok {
 		return nil, ErrNotFound
 	}
@@ -253,10 +280,16 @@ func (store *FileStore) ListRevisions(_ context.Context, id int64, limit int) ([
 	for index := len(source) - 1; index >= 0 && len(result) < limit; index-- {
 		result = append(result, source[index])
 	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
-func (store *FileStore) ChangeStatus(_ context.Context, id int64, mutation Mutation, status string) (Comment, error) {
+func (store *FileStore) ChangeStatus(ctx context.Context, id int64, mutation Mutation, status string) (Comment, error) {
+	if err := ctx.Err(); err != nil {
+		return Comment{}, err
+	}
 	status = strings.ToLower(strings.TrimSpace(status))
 	if store == nil || id <= 0 || !ValidStatus(status) {
 		return Comment{}, ErrInvalidInput
@@ -267,6 +300,9 @@ func (store *FileStore) ChangeStatus(_ context.Context, id int64, mutation Mutat
 	}
 	store.mu.Lock()
 	defer store.mu.Unlock()
+	if err := ctx.Err(); err != nil {
+		return Comment{}, err
+	}
 	item, ok := store.items[id]
 	if !ok {
 		return Comment{}, ErrNotFound
@@ -285,7 +321,7 @@ func (store *FileStore) ChangeStatus(_ context.Context, id int64, mutation Mutat
 	event := audit.Event{Action: "comment.status." + status, ObjectType: "comment", ObjectID: fmt.Sprint(id), Actor: auditActor(mutation.Actor), Metadata: map[string]any{
 		"from_status": store.items[id].Status, "status": status, "from_version": mutation.ExpectedVersion, "version": item.Version,
 	}}
-	if err := store.persistLocked(candidate, store.revisions, store.nextID, now, &event); err != nil {
+	if err := store.persistContextLocked(ctx, candidate, store.revisions, store.nextID, now, &event); err != nil {
 		return Comment{}, err
 	}
 	store.items = candidate
@@ -293,7 +329,10 @@ func (store *FileStore) ChangeStatus(_ context.Context, id int64, mutation Mutat
 	return item, nil
 }
 
-func (store *FileStore) BulkChangeStatus(_ context.Context, change BulkStatusChange) ([]Comment, error) {
+func (store *FileStore) BulkChangeStatus(ctx context.Context, change BulkStatusChange) ([]Comment, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	if store == nil {
 		return nil, errors.New("comment store is nil")
 	}
@@ -303,6 +342,9 @@ func (store *FileStore) BulkChangeStatus(_ context.Context, change BulkStatusCha
 	}
 	store.mu.Lock()
 	defer store.mu.Unlock()
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 
 	// Complete the read/validation phase before creating the candidate map so a
 	// missing row or stale version can never leak a partial in-memory change.
@@ -334,7 +376,7 @@ func (store *FileStore) BulkChangeStatus(_ context.Context, change BulkStatusCha
 	event := audit.Event{Action: "comment.status." + normalized.Status, ObjectType: "comment_batch", ObjectID: "bulk", Actor: auditActor(actor), Metadata: map[string]any{
 		"first_comment_id": updated[0].ID, "last_comment_id": updated[len(updated)-1].ID, "comment_count": len(updated), "status": normalized.Status,
 	}}
-	if err := store.persistLocked(candidate, store.revisions, store.nextID, now, &event); err != nil {
+	if err := store.persistContextLocked(ctx, candidate, store.revisions, store.nextID, now, &event); err != nil {
 		return nil, err
 	}
 	store.items = candidate
@@ -342,7 +384,10 @@ func (store *FileStore) BulkChangeStatus(_ context.Context, change BulkStatusCha
 	return updated, nil
 }
 
-func (store *FileStore) Delete(_ context.Context, id int64, mutation Mutation) error {
+func (store *FileStore) Delete(ctx context.Context, id int64, mutation Mutation) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	if store == nil || id <= 0 {
 		return ErrNotFound
 	}
@@ -351,6 +396,9 @@ func (store *FileStore) Delete(_ context.Context, id int64, mutation Mutation) e
 	}
 	store.mu.Lock()
 	defer store.mu.Unlock()
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	item, ok := store.items[id]
 	if !ok {
 		return ErrNotFound
@@ -368,7 +416,7 @@ func (store *FileStore) Delete(_ context.Context, id int64, mutation Mutation) e
 	event := audit.Event{Action: "comment.delete", ObjectType: "comment", ObjectID: fmt.Sprint(id), Actor: auditActor(mutation.Actor), Metadata: map[string]any{
 		"version": mutation.ExpectedVersion, "deleted_count": len(deletedIDs),
 	}}
-	if err := store.persistLocked(candidate, candidateRevisions, store.nextID, now, &event); err != nil {
+	if err := store.persistContextLocked(ctx, candidate, candidateRevisions, store.nextID, now, &event); err != nil {
 		return err
 	}
 	store.items = candidate

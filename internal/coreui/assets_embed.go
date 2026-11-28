@@ -14,6 +14,7 @@ import "embed"
 //go:embed assets/css/chunnel-admin-base.css
 //go:embed assets/css/chunnel-admin-controls.css
 //go:embed assets/css/chunnel-admin-directory.css
+//go:embed assets/css/chunnel-admin-invitations.css
 //go:embed assets/css/chunnel-admin-layout-workspace.css
 //go:embed assets/css/chunnel-admin-login-skin.css
 //go:embed assets/css/chunnel-admin-login.css
@@ -198,8 +199,8 @@ import "embed"
 //go:embed assets/js/chunnel-wallet.js
 //go:embed assets/js/chunnel-wechat-drafts.js
 //go:embed assets/js/chunnel-wechat.js
+//go:embed assets/js/chunnel-writing-templates.js
 //go:embed assets/js/chunnel.js
-//go:embed assets/js/component-icon.js
 //go:embed assets/js/newpress-analytics-loader.js
 //go:embed assets/js/newpress-analytics.js
 //go:embed assets/js/newpress-client.js
@@ -208,7 +209,13 @@ import "embed"
 //go:embed assets/js/newpress-components.js
 //go:embed assets/js/newpress-device-mockup.js
 //go:embed assets/js/newpress-document-editor.js
+//go:embed assets/js/newpress-editor-emoji-picker.js
+//go:embed assets/js/newpress-editor-insert-tools.js
+//go:embed assets/js/newpress-editor-media-dialog.js
+//go:embed assets/js/newpress-editor-media-loader.js
+//go:embed assets/js/newpress-editor-page.js
 //go:embed assets/js/newpress-editor-snippets.js
+//go:embed assets/js/newpress-editor-tools-loader.js
 //go:embed assets/js/newpress-highlight-worker.js
 //go:embed assets/js/newpress-navigation-badges.js
 //go:embed assets/js/newpress-plugin-records.js
@@ -226,4 +233,5 @@ import "embed"
 //go:embed assets/js/newpress-shop.js
 //go:embed assets/js/newpress-snippets.js
 //go:embed assets/js/newpress-themes.js
+//go:embed assets/js/newpress-users-workspace.js
 var files embed.FS

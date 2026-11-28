@@ -57,8 +57,14 @@ func attachmentID(slug, key string, user int64) string {
 // removes its unreferenced object; an ambiguous storage failure retains it and
 // admits only the same retry until recovery, bounding otherwise invisible files.
 func (f *Files) Upload(ctx context.Context, store Store, slug string, actor Actor, key string, version int64, name string, reader io.Reader, now time.Time) (Attachment, Result, error) {
+	if err := ctx.Err(); err != nil {
+		return Attachment{}, Result{}, err
+	}
 	f.uploads.Lock()
 	defer f.uploads.Unlock()
+	if err := ctx.Err(); err != nil {
+		return Attachment{}, Result{}, err
+	}
 	id := attachmentID(slug, key, actor.ID)
 	if f.uncertain != "" && f.uncertain != id {
 		return Attachment{}, Result{}, errors.New("community: an attachment commit needs retry or startup recovery")
@@ -110,6 +116,9 @@ func NewFiles(root string) (*Files, error) {
 	return f, nil
 }
 func (f *Files) Stage(ctx context.Context, slug, key string, user int64, name string, reader io.Reader) (Attachment, error) {
+	if err := ctx.Err(); err != nil {
+		return Attachment{}, err
+	}
 	if !ValidSlug(slug) || !keyPattern.MatchString(key) || user <= 0 {
 		return Attachment{}, ErrInvalid
 	}
@@ -117,7 +126,7 @@ func (f *Files) Stage(ctx context.Context, slug, key string, user int64, name st
 	if !textValid(name, 1, 140, false) || strings.ContainsAny(name, `/\`) {
 		return Attachment{}, ErrInvalid
 	}
-	data, err := io.ReadAll(io.LimitReader(reader, MaxAttachmentBytes+1))
+	data, err := io.ReadAll(io.LimitReader(attachmentContextReader{ctx, reader}, MaxAttachmentBytes+1))
 	if err != nil {
 		return Attachment{}, err
 	}
@@ -154,6 +163,9 @@ func (f *Files) Stage(ctx context.Context, slug, key string, user int64, name st
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
+	if err = ctx.Err(); err != nil {
+		return Attachment{}, err
+	}
 	if f.root == "" {
 		if old, ok := f.memory[file.ID]; ok && !bytes.Equal(old, data) {
 			return Attachment{}, ErrConflict
@@ -165,7 +177,7 @@ func (f *Files) Stage(ctx context.Context, slug, key string, user int64, name st
 	if err = packagefs.MkdirAllNoSymlink(f.root, 0700); err != nil {
 		return Attachment{}, err
 	}
-	if old, err := f.readLocked(file.ID); err == nil {
+	if old, err := f.readLocked(ctx, file.ID); err == nil {
 		if !bytes.Equal(old, data) {
 			return Attachment{}, ErrConflict
 		}
@@ -199,7 +211,10 @@ func (f *Files) Stage(ctx context.Context, slug, key string, user int64, name st
 	}
 	return file, nil
 }
-func (f *Files) readLocked(id string) ([]byte, error) {
+func (f *Files) readLocked(ctx context.Context, id string) ([]byte, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	if !fileIDPattern.MatchString(id) {
 		return nil, ErrInvalid
 	}
@@ -218,7 +233,7 @@ func (f *Files) readLocked(id string) ([]byte, error) {
 	if info.Size() > MaxAttachmentBytes {
 		return nil, ErrCapacity
 	}
-	data, err := io.ReadAll(io.LimitReader(file, MaxAttachmentBytes+1))
+	data, err := io.ReadAll(io.LimitReader(attachmentContextReader{ctx, file}, MaxAttachmentBytes+1))
 	if len(data) > MaxAttachmentBytes {
 		return nil, ErrCapacity
 	}
@@ -230,7 +245,7 @@ func (f *Files) Read(ctx context.Context, file Attachment) ([]byte, error) {
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	data, err := f.readLocked(file.ID)
+	data, err := f.readLocked(ctx, file.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +253,28 @@ func (f *Files) Read(ctx context.Context, file Attachment) ([]byte, error) {
 	if int64(len(data)) != file.Size || hex.EncodeToString(digest[:]) != file.SHA256 {
 		return nil, ErrInvalid
 	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	return data, nil
+}
+
+// Readers may return buffered bytes together with EOF after cancellation.
+// Discard those bytes and stop further reads instead of consuming the full cap.
+type attachmentContextReader struct {
+	ctx    context.Context
+	reader io.Reader
+}
+
+func (r attachmentContextReader) Read(p []byte) (int, error) {
+	if err := r.ctx.Err(); err != nil {
+		return 0, err
+	}
+	n, err := r.reader.Read(p)
+	if contextErr := r.ctx.Err(); contextErr != nil {
+		return 0, contextErr
+	}
+	return n, err
 }
 func (f *Files) Remove(id string) error {
 	if !fileIDPattern.MatchString(id) {

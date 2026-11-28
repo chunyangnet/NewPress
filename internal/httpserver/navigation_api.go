@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
@@ -371,6 +372,10 @@ func (s *Server) adminNavigationSourcesAPI(writer http.ResponseWriter, request *
 }
 
 func (s *Server) publicNavigationLocationAPI(writer http.ResponseWriter, request *http.Request) {
+	if request.Context().Err() != nil {
+		panic(http.ErrAbortHandler)
+	}
+	writer.Header().Set("Cache-Control", "no-store")
 	if _, ok := s.strictAPIQuery(writer, request, nil); !ok {
 		return
 	}
@@ -379,7 +384,16 @@ func (s *Server) publicNavigationLocationAPI(writer http.ResponseWriter, request
 		s.writeAPIError(writer, request, http.StatusNotFound, "navigation.location_not_found", "导航位置没有找到", nil)
 		return
 	}
-	menu, err := s.navigation.GetLocation(request.Context(), location)
+	ctx, cancel := context.WithTimeout(request.Context(), navigationReadTimeout)
+	defer cancel()
+	menu, err := s.navigation.GetLocation(ctx, location)
+	if request.Context().Err() != nil {
+		panic(http.ErrAbortHandler)
+	}
+	if ctx.Err() != nil {
+		s.writeAPIError(writer, request, http.StatusServiceUnavailable, "navigation.unavailable", "导航配置暂时不可用", nil)
+		return
+	}
 	if errors.Is(err, navigation.ErrNotFound) {
 		s.writeAPIError(writer, request, http.StatusNotFound, "navigation.location_unassigned", "导航位置尚未分配菜单", map[string]any{"location": location})
 		return

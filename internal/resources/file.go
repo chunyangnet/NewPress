@@ -7,9 +7,11 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"maps"
 	"newpress.local/newpress/internal/packagefs"
 	"os"
 	"path/filepath"
+	"slices"
 	"sync"
 )
 
@@ -74,9 +76,24 @@ func (b *FileBackend) unchanged() error {
 	return nil
 }
 func clone(s State) State {
-	body, _ := json.Marshal(s)
-	var out State
-	_ = json.Unmarshal(body, &out)
+	// Keep snapshots isolated without serializing the entire history while
+	// holding the backend lock. Copy every mutable nested value as well.
+	out := s
+	out.Submissions = maps.Clone(s.Submissions)
+	for key, submission := range out.Submissions {
+		submission.Fields = maps.Clone(submission.Fields)
+		out.Submissions[key] = submission
+	}
+	out.Deliveries = slices.Clone(s.Deliveries)
+	out.Unlocks = slices.Clone(s.Unlocks)
+	out.Purchases = maps.Clone(s.Purchases)
+	for key, purchase := range out.Purchases {
+		if purchase.Terms.EndsAt != nil {
+			ends := *purchase.Terms.EndsAt
+			purchase.Terms.EndsAt = &ends
+			out.Purchases[key] = purchase
+		}
+	}
 	return out
 }
 func (b *FileBackend) Read(ctx context.Context) (State, error) {

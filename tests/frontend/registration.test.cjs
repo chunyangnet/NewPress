@@ -173,15 +173,37 @@ test('an existing OAuth account is asked only for its missing binding fields', a
 
 for (const variant of ['TypeScript', 'generated']) test(`${variant}: native admin login locks only uncancelled submissions and recovers on browser return`, () => {
   const form = new Element(), button = new Element(), listeners = {};
+  const microtasks = [], timers = new Map(); let nextTimer = 0;
   button.innerHTML = '登录'; form.selectors.set('button[type="submit"]', button);
   const source = variant === 'TypeScript' ? require('./helpers/typescript.cjs').compile('frontend/core/admin-login.ts') : fs.readFileSync(path.join(__dirname, '../../internal/coreui/assets/js/chunnel-admin-login.js'), 'utf8');
   vm.runInNewContext(source, {
     document: { querySelector: selector => selector === '.admin-login-form' ? form : null }, window: { addEventListener: (key, fn) => listeners[key] = fn },
+    queueMicrotask: fn => microtasks.push(fn),
+    setTimeout: fn => { const id = ++nextTimer; timers.set(id, fn); return id; }, clearTimeout: id => timers.delete(id),
   });
-  listeners.submit({ target: form, defaultPrevented: true }); assert.equal(form.dataset.submitOnce, undefined);
-  listeners.submit({ target: form, defaultPrevented: false }); assert.equal(form.dataset.submitOnce, 'true'); assert.equal(button.disabled, false);
-  let cancelled = false; listeners.submit({ target: form, preventDefault() { cancelled = true; } }); assert.equal(cancelled, true);
-  listeners.pageshow(); assert.equal(form.dataset.submitOnce, undefined); assert.equal(button.innerHTML, '登录');
+  const submit = (defaultPrevented = false) => {
+    const event = { target: form, defaultPrevented, preventDefault() { this.defaultPrevented = true; } };
+    form.listeners.submit(event); return event;
+  };
+  const flushMicrotasks = () => { while (microtasks.length) microtasks.shift()(); };
+  const flushTasks = () => { const callbacks = [...timers.values()]; timers.clear(); callbacks.forEach(fn => fn()); };
+  submit(true); flushMicrotasks(); assert.equal(form.hasAttribute('aria-busy'), false);
+  const cancelledLater = submit(); flushMicrotasks(); cancelledLater.preventDefault(); flushTasks();
+  assert.equal(form.hasAttribute('aria-busy'), false); assert.equal(timers.size, 0);
+  assert.equal(submit().defaultPrevented, false);
+  assert.equal(submit().defaultPrevented, true, 'duplicates are blocked before deferred locking');
+  flushMicrotasks(); assert.equal(form.hasAttribute('aria-busy'), false); assert.equal(button.disabled, false);
+  assert.equal(button.dataset.submitState, undefined, 'native submission keeps its submitter until serialization');
+  flushTasks(); assert.equal(form.attributes.get('aria-busy'), 'true');
+  assert.equal(button.dataset.submitState, 'pending'); assert.equal(button.textContent, '正在登录…');
+  listeners.pageshow({ persisted: false }); assert.equal(submit().defaultPrevented, true);
+  form.dataset.verificationSubmitting = 'true'; form.dataset.verificationPending = 'true';
+  listeners.pageshow({ persisted: true });
+  assert.equal(form.attributes.get('aria-busy'), 'false'); assert.equal(button.innerHTML, '登录');
+  assert.equal(button.hasAttribute('aria-disabled'), false); assert.equal(button.dataset.submitState, undefined);
+  assert.equal(form.dataset.verificationSubmitting, undefined); assert.equal(form.dataset.verificationPending, undefined);
+  assert.equal(submit().defaultPrevented, false); flushMicrotasks();
+  listeners.pageshow({ persisted: true }); assert.equal(timers.size, 0, 'restoration retires a pending visual lock');
 });
 
 test('phone prefix and local number produce the same canonical target for codes and registration', async () => {

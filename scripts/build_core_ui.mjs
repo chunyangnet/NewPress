@@ -3,6 +3,7 @@ import { readFile, writeFile, readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build, transform } from 'esbuild';
+import postcss from 'postcss';
 import { motionCSS } from './motion.mjs';
 import { buildIconSprite } from './build_icons.mjs';
 import { frontendEntries, frontendRoot, compileFrontendEntry, frontendBanner } from './frontend_entries.mjs';
@@ -15,7 +16,7 @@ await buildIconSprite(resolve(root, '../templates/partials/icons.html'), check);
 const read = name => readFile(resolve(root, name), 'utf8');
 const products = new Map();
 const bundled = new Set(['css/chunnel-admin.css', ...['shared', 'directory', 'sessions', 'workflows'].map(name => `css/chunnel-admin-${name}.css`),
-  'js/newpress-highlight-worker.js', 'js/newpress-components.js', 'js/chunnel-component-library.js']);
+  'js/chunnel-component-library.js']);
 const combined = new Set(['chunnel-admin-workspace', 'chunnel-admin-components', 'chunnel-home-editor', 'chunnel-foundation', 'chunnel-shell', 'chunnel-nav', 'newpress-component-view', 'newpress-components-chunnel']);
 for (const folder of ['css', 'js']) {
   for (const file of await readdir(resolve(root, folder))) {
@@ -38,6 +39,16 @@ const adminSkin = (await Promise.all(['chunnel-claude', 'chunnel-claude-admin'].
   products.get(`css/${name}.css`) ?? await read(`css/${name}.css`)))).join('\n');
 products.set('css/chunnel-admin-login-skin.css', adminSkin);
 products.set('css/chunnel-admin-skin.css', adminSkin + '\n' + products.get('css/chunnel-admin-ui.css'));
+// The user directory needs invitation controls, without registration forms and
+// public access-page layout. Keep the source cascade and responsive containers.
+const invitations = postcss.parse(await read('css/chunnel-access.css'));
+invitations.walkRules(rule => {
+  const selectors = rule.selectors.filter(selector => /^(?:\.admin-invitations|\.invitation-row)(?![\w-])/.test(selector));
+  if (selectors.length) rule.selectors = selectors;
+  else rule.remove();
+});
+invitations.walkAtRules(rule => { if (rule.nodes && !rule.nodes.some(node => node.type !== 'comment')) rule.remove(); });
+products.set('css/chunnel-admin-invitations.css', invitations.toString());
 // These styles load together in the editor. Preserve their original cascade
 // order and share one compression dictionary instead of five requests. Other
 // screens keep the individual stylesheets.

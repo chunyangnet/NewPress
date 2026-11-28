@@ -12,24 +12,28 @@ export function initHomeSession(load: HomeLoad, featuresReady: () => boolean): v
   const options = { signal: lifecycle.signal };
   const preferences = () => {
     let value: Record<string, unknown>; try { value = object(JSON.parse(localStorage.getItem('chunnel.preferences') || '{}')) || {}; } catch { value = {}; }
+    // Normalize stored URLs once per refresh, not once per visible card.
+    const saved = (Array.isArray(value.saved) ? value.saved.slice(0, 200) : []).flatMap(candidate => {
+      const item = object(candidate);
+      if (!item || typeof item.title !== 'string' || typeof item.url !== 'string' || !item.url.trim()) return [];
+      try {
+        const url = new URL(item.url, location.origin);
+        if (url.origin === location.origin && ['http:', 'https:'].includes(url.protocol))
+          return [[url.pathname + url.hash, ['/', '/market/'].includes(item.url) && item.title]];
+      } catch { /* Ignore invalid local preferences. */ }
+      return [];
+    });
+    const following = Array.isArray(value.following) ? value.following.slice(0, 200) : [];
     $$('[data-favorite]').forEach((button) => {
       const card = button.closest('article'); if (!card) return;
       const title = card.querySelector('h3')?.textContent?.trim() || '';
-      const active = Array.isArray(value.saved) && value.saved.slice(0, 200).some((value: unknown) => {
-        const item = object(value);
-        if (!item || typeof item.title !== 'string' || typeof item.url !== 'string' || !item.url.trim()) return false;
-        try {
-          const url = new URL(item.url, location.origin);
-          if (url.origin !== location.origin || !['http:', 'https:'].includes(url.protocol)) return false;
-          return url.pathname + url.hash === card.dataset.contentUrl || (item.title === title && ['/', '/market/'].includes(item.url));
-        } catch { return false; }
-      });
+      const active = saved.some(([url, legacy]) => url === card.dataset.contentUrl || legacy === title);
       button.setAttribute('aria-pressed', String(active)); button.classList.toggle('is-favorite', active);
       button.setAttribute('aria-label', `${active ? '取消本机收藏' : '收藏到本机'}：${title}`);
       button.querySelector('use')?.setAttribute('href', `#icon-${active ? 'heart-fill' : 'heart'}`);
     });
     $$('[data-follow]').forEach((button) => {
-      const active = Array.isArray(value.following) && value.following.slice(0, 200).includes(button.dataset.follow);
+      const active = following.includes(button.dataset.follow);
       button.setAttribute('aria-pressed', String(active)); button.classList.toggle('is-following', active);
       button.querySelector('use')?.setAttribute('href', `#icon-${active ? 'check' : 'plus'}`);
       if (button.lastChild) button.lastChild.textContent = active ? '已关注' : '关注';

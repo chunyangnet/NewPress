@@ -15,6 +15,12 @@ func (m *Manager) Upload(ctx context.Context, reader io.Reader, input UploadInpu
 	if m == nil || reader == nil {
 		return Item{}, ErrInvalidInput
 	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if err := ctx.Err(); err != nil {
+		return Item{}, err
+	}
 	normalized, err := normalizeUploadInput(input)
 	if err != nil {
 		return Item{}, err
@@ -49,11 +55,19 @@ func (m *Manager) Upload(ctx context.Context, reader io.Reader, input UploadInpu
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	// Staging and waiting for the library lock may outlive the caller.
+	if err := ctx.Err(); err != nil {
+		return Item{}, err
+	}
 	if existingID, ok := m.checksumIndex[indexKey]; ok {
-		if m.items[existingID].Status() == StatusTrash {
-			return m.items[existingID], ErrDuplicateTrash
+		existing := m.items[existingID]
+		if existing.Status() == StatusTrash {
+			return existing, ErrDuplicateTrash
 		}
-		return m.items[existingID], ErrDuplicate
+		if err := m.verifyDuplicateObjectLocked(ctx, staged, existing); err != nil {
+			return Item{}, err
+		}
+		return existing, ErrDuplicate
 	}
 	now := time.Now().UTC()
 	id := m.nextID
@@ -69,7 +83,7 @@ func (m *Manager) Upload(ctx context.Context, reader io.Reader, input UploadInpu
 		ChecksumSHA256: checksum, UploadedBy: normalized.UploadedBy, CreatedAt: now, UpdatedAt: now,
 		UploadSource: normalized.UploadSource,
 	}
-	createdObject, err := m.commitObject(staged, item)
+	createdObject, err := m.commitObject(ctx, staged, item)
 	if err != nil {
 		return Item{}, err
 	}

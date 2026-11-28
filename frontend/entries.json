@@ -1,5 +1,327 @@
 [
   {
+    "name": "editor-emoji-picker",
+    "source": "frontend/shared/emoji.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-editor-emoji-picker.js"
+      }
+    ],
+    "pages": [
+      "article/page source emoji picker after explicit activation; reuses a runtime from a late download"
+    ],
+    "composites": [],
+    "tests": [
+      "scripts/verify_editor_emoji_loading_browser.mjs",
+      "scripts/verify_editor_workspace_browser.mjs",
+      "internal/httpserver/editor_tools_resources_test.go"
+    ]
+  },
+  {
+    "name": "editor-tools-loader",
+    "source": "frontend/core/editor-tools-loader.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-editor-tools-loader.js"
+      }
+    ],
+    "pages": [
+      "admin content editor"
+    ],
+    "composites": [
+      "newpress-editor-page.js"
+    ],
+    "tests": [
+      "tests/frontend/editor-tools-loader.test.cjs",
+      "scripts/verify_editor_loading_browser.mjs",
+      "scripts/verify_editor_script_retry_browser.mjs"
+    ]
+  },
+  {
+    "name": "editor-insert-tools",
+    "source": "frontend/core/editor-insert-tools.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-editor-insert-tools.js"
+      }
+    ],
+    "pages": [
+      "admin content editor explicit insertion and independent draft dialogs"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/editor-tools.test.cjs",
+      "tests/frontend/snippets.test.cjs",
+      "tests/frontend/snippet-drafts.test.cjs",
+      "scripts/verify_editor_loading_browser.mjs",
+      "scripts/verify_editor_script_retry_browser.mjs"
+    ]
+  },
+  {
+    "name": "docshub",
+    "source": "frontend/themes/docshub/main.ts",
+    "outputs": [
+      {
+        "scope": "docshub",
+        "path": "themes/docshub/assets/js/docshub.js"
+      }
+    ],
+    "pages": [
+      "DocsHub public pages"
+    ],
+    "composites": [],
+    "tests": []
+  },
+  {
+    "name": "docshub-mode",
+    "source": "frontend/themes/docshub/mode.ts",
+    "outputs": [
+      {
+        "scope": "docshub",
+        "path": "themes/docshub/assets/js/docshub-mode.js"
+      }
+    ],
+    "pages": [
+      "DocsHub before styles"
+    ],
+    "composites": [],
+    "tests": []
+  },
+  {
+    "name": "docshub-consent",
+    "source": "frontend/themes/docshub/consent.ts",
+    "outputs": [
+      {
+        "scope": "docshub",
+        "path": "themes/docshub/assets/js/docshub-consent.js"
+      }
+    ],
+    "pages": [
+      "DocsHub consent"
+    ],
+    "composites": [],
+    "tests": []
+  },
+  {
+    "name": "docshub-checkin",
+    "source": "frontend/themes/docshub/checkin.ts",
+    "outputs": [
+      {
+        "scope": "docshub",
+        "path": "themes/docshub/assets/js/docshub-checkin.js"
+      }
+    ],
+    "pages": [
+      "DocsHub rewards"
+    ],
+    "composites": [],
+    "tests": []
+  },
+  {
+    "name": "docshub-verification",
+    "source": "frontend/themes/docshub/verification.ts",
+    "outputs": [
+      {
+        "scope": "docshub",
+        "path": "themes/docshub/assets/js/docshub-verification.js"
+      }
+    ],
+    "pages": [
+      "DocsHub forms"
+    ],
+    "composites": [],
+    "tests": []
+  },
+  {
+    "name": "nexora-verification",
+    "source": "frontend/themes/nexora/verification.ts",
+    "outputs": [
+      {
+        "scope": "nexora",
+        "path": "themes/nexora/assets/js/nexora-verification.js"
+      }
+    ],
+    "pages": [
+      "Nexora forms"
+    ],
+    "composites": [],
+    "tests": []
+  },
+  {
+    "name": "nexora",
+    "source": "frontend/themes/nexora/main.ts",
+    "outputs": [
+      {
+        "scope": "nexora",
+        "path": "themes/nexora/assets/js/nexora.js"
+      }
+    ],
+    "pages": [
+      "Nexora public pages"
+    ],
+    "composites": [],
+    "tests": []
+  },
+  {
+    "name": "component-library",
+    "source": "frontend/core/component-library.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-component-library.js"
+      }
+    ],
+    "pages": [
+      "admin article and shop component library on explicit interaction"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/component-library.test.cjs"
+    ]
+  },
+  {
+    "name": "emoji-editor",
+    "source": "frontend/shared/emoji-editor.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-emoji-editor.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-emoji-editor.js"
+      }
+    ],
+    "pages": [
+      "Emoji text editors"
+    ],
+    "composites": [
+      "chunnel-home-features.js"
+    ],
+    "tests": [
+      "tests/frontend/emoji-editor-plaintext.test.cjs",
+      "tests/frontend/emoji-editor-composition.test.cjs"
+    ]
+  },
+  {
+    "name": "emoji",
+    "source": "frontend/shared/emoji.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-emoji.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-emoji.js"
+      }
+    ],
+    "pages": [
+      "Emoji picker and rendering"
+    ],
+    "composites": [
+      "chunnel-home-features.js"
+    ],
+    "tests": [
+      "tests/frontend/emoji-owner-lifecycle.test.cjs",
+      "tests/frontend/emoji-picker-composition.test.cjs"
+    ]
+  },
+  {
+    "name": "chunnel",
+    "source": "frontend/shared/chunnel.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel.js"
+      }
+    ],
+    "pages": [
+      "Shared public controls"
+    ],
+    "composites": [
+      "chunnel-home-features.js"
+    ],
+    "tests": [
+      "tests/frontend/scroll-stability.test.cjs"
+    ]
+  },
+  {
+    "name": "list-navigation",
+    "source": "frontend/shared/list-navigation.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-list-navigation.js"
+      },
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-list-navigation.js"
+      }
+    ],
+    "pages": [
+      "Public lists"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/scroll-stability.test.cjs"
+    ]
+  },
+  {
+    "name": "questions",
+    "source": "frontend/core/questions.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-questions.js"
+      }
+    ],
+    "pages": [
+      "Questions and moderation"
+    ],
+    "composites": [],
+    "tests": []
+  },
+  {
+    "name": "chunnel-reader",
+    "source": "frontend/themes/chunnel/reader.ts",
+    "outputs": [
+      {
+        "scope": "chunnel",
+        "path": "themes/chunnel/assets/js/chunnel-reader.js"
+      }
+    ],
+    "pages": [
+      "Chunnel article reader"
+    ],
+    "composites": [],
+    "tests": []
+  },
+  {
+    "name": "editor-recovery",
+    "source": "frontend/core/editor-recovery.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-editor-recovery.js"
+      }
+    ],
+    "pages": [
+      "admin content editor browser recovery"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/editor-browser-recovery.test.cjs"
+    ]
+  },
+  {
     "name": "color-mode",
     "source": "frontend/shared/color-mode.ts",
     "outputs": [
@@ -235,6 +557,31 @@
       "tests/frontend/admin-navigation.test.cjs",
       "internal/httpserver/admin_resources_test.go",
       "scripts/verify_admin_workbench_browser.mjs"
+    ]
+  },
+  {
+    "name": "editor-page",
+    "source": "frontend/core/editor-page.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-editor-page.js"
+      }
+    ],
+    "pages": [
+      "article and page editor initial enhancements and tool launchers, preserving immediate continuous editing"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/editor-submission.test.cjs",
+      "internal/httpserver/editor_tools_resources_test.go",
+      "scripts/verify_editor_workspace_browser.mjs",
+      "scripts/verify_admin_workbench_browser.mjs",
+      "scripts/verify_editor_loading_browser.mjs",
+      "scripts/verify_media_loading_browser.mjs",
+      "scripts/verify_component_loading_browser.mjs",
+      "scripts/verify_editor_emoji_loading_browser.mjs",
+      "scripts/verify_editor_script_retry_browser.mjs"
     ]
   },
   {
@@ -568,7 +915,9 @@
     "pages": [
       "admin content editor"
     ],
-    "composites": [],
+    "composites": [
+      "internal/coreui/assets/js/newpress-editor-insert-tools.js"
+    ],
     "tests": [
       "tests/frontend/editor-tools.test.cjs",
       "scripts/verify_editor_tools_browser.mjs"
@@ -584,9 +933,12 @@
       }
     ],
     "pages": [
-      "admin content editor"
+      "admin content editor explicit insertion",
+      "admin shop editor"
     ],
-    "composites": [],
+    "composites": [
+      "internal/coreui/assets/js/newpress-editor-insert-tools.js"
+    ],
     "tests": [
       "tests/frontend/article-widgets.test.cjs",
       "tests/frontend/editor-tools.test.cjs",
@@ -660,7 +1012,9 @@
     "pages": [
       "admin content editor"
     ],
-    "composites": [],
+    "composites": [
+      "newpress-editor-page.js"
+    ],
     "tests": [
       "tests/frontend/editor-tools.test.cjs",
       "scripts/verify_editor_tools_browser.mjs"
@@ -678,7 +1032,9 @@
     "pages": [
       "admin content editor: component library on explicit open/edit"
     ],
-    "composites": [],
+    "composites": [
+      "newpress-editor-page.js"
+    ],
     "tests": [
       "tests/frontend/component-loader.test.cjs",
       "scripts/verify_component_loading_browser.mjs"
@@ -1269,7 +1625,9 @@
     "pages": [
       "admin content editor"
     ],
-    "composites": [],
+    "composites": [
+      "internal/coreui/assets/js/newpress-editor-insert-tools.js"
+    ],
     "tests": [
       "tests/frontend/snippets.test.cjs"
     ]
@@ -1588,6 +1946,809 @@
       "tests/frontend/shop-catalog-merge.test.cjs",
       "tests/frontend/shop-raffle.test.cjs",
       "scripts/verify_shop_admin_browser.mjs"
+    ]
+  },
+  {
+    "name": "users",
+    "source": "frontend/core/users-loader.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-users.js"
+      }
+    ],
+    "pages": [
+      "user directory and explicit workspace bootstrap"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/account-admin-data.test.cjs",
+      "scripts/verify_account_admin_browser.mjs"
+    ]
+  },
+  {
+    "name": "access-settings",
+    "source": "frontend/core/access-settings.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-access-settings.js"
+      }
+    ],
+    "pages": [
+      "administrator login and SMS service settings"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/account-admin-data.test.cjs",
+      "scripts/verify_account_admin_browser.mjs"
+    ]
+  },
+  {
+    "name": "registration-codes",
+    "source": "frontend/core/registration-codes.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-registration-codes.js"
+      }
+    ],
+    "pages": [
+      "administrator registration inventory and policy"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/account-admin-data.test.cjs",
+      "tests/frontend/registration-codes.test.cjs",
+      "scripts/verify_account_admin_browser.mjs"
+    ]
+  },
+  {
+    "name": "verification-settings",
+    "source": "frontend/core/verification-settings.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-verification-settings.js"
+      }
+    ],
+    "pages": [
+      "administrator verification provider settings and preview"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/account-admin-data.test.cjs",
+      "scripts/verify_account_admin_browser.mjs"
+    ]
+  },
+  {
+    "name": "users-workspace",
+    "source": "frontend/core/users.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-users-workspace.js"
+      }
+    ],
+    "pages": [
+      "explicit user create/edit dialog, memberships, wallets and recognition"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/account-admin-data.test.cjs",
+      "scripts/verify_account_admin_browser.mjs"
+    ]
+  },
+  {
+    "name": "ai-settings",
+    "source": "frontend/core/ai-settings.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-ai-settings.js"
+      }
+    ],
+    "pages": [
+      "administrator AI providers, model prices and balance settings"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/ai-admin-data.test.cjs",
+      "tests/frontend/ai-settings.test.cjs",
+      "scripts/verify_ai_admin_browser.mjs"
+    ]
+  },
+  {
+    "name": "ai-usage",
+    "source": "frontend/core/ai-usage.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-ai-usage.js"
+      }
+    ],
+    "pages": [
+      "administrator AI usage reports and requests"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/ai-admin-data.test.cjs",
+      "tests/frontend/ai-usage.test.cjs",
+      "scripts/verify_ai_admin_browser.mjs"
+    ]
+  },
+  {
+    "name": "ai-workbench",
+    "source": "frontend/core/ai-workbench.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-ai-workbench.js"
+      }
+    ],
+    "pages": [
+      "administrator AI task previews and private reports"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/ai-admin-data.test.cjs",
+      "tests/frontend/ai-workbench.test.cjs",
+      "scripts/verify_ai_admin_browser.mjs"
+    ]
+  },
+  {
+    "name": "ai-loader",
+    "source": "frontend/core/ai-loader.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-ai-loader.js"
+      }
+    ],
+    "pages": [
+      "explicit article AI writing and image launch"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/ai-admin-data.test.cjs",
+      "tests/frontend/ai-loader.test.cjs",
+      "scripts/verify_ai_admin_browser.mjs"
+    ]
+  },
+  {
+    "name": "ai-editor",
+    "source": "frontend/core/ai-editor.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-ai-editor.js"
+      }
+    ],
+    "pages": [
+      "explicit AI writing dialog in continuous content editor"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/ai-writing-data.test.cjs",
+      "scripts/verify_ai_writing_browser.mjs"
+    ]
+  },
+  {
+    "name": "ai-images",
+    "source": "frontend/core/ai-images.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-ai-images.js"
+      }
+    ],
+    "pages": [
+      "explicit AI image generation and cover/body insertion"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/ai-writing-data.test.cjs",
+      "scripts/verify_ai_writing_browser.mjs"
+    ]
+  },
+  {
+    "name": "ai-pro-editor",
+    "source": "frontend/core/ai-pro-editor.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-ai-pro-editor.js"
+      }
+    ],
+    "pages": [
+      "AI Pro metadata and selected-paragraph suggestions"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/ai-writing-data.test.cjs",
+      "scripts/verify_ai_writing_browser.mjs"
+    ]
+  },
+  {
+    "name": "ai-pro-max",
+    "source": "frontend/core/ai-pro-max.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-ai-pro-max.js"
+      }
+    ],
+    "pages": [
+      "AI Pro Max topic suggestions and native queue forms"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/ai-writing-data.test.cjs",
+      "scripts/verify_ai_writing_browser.mjs"
+    ]
+  },
+  {
+    "name": "writing-templates",
+    "source": "frontend/core/writing-templates.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-writing-templates.js"
+      }
+    ],
+    "pages": [
+      "versioned writing template administration"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/ai-writing-data.test.cjs",
+      "scripts/verify_ai_writing_browser.mjs"
+    ]
+  },
+  {
+    "name": "wechat",
+    "source": "frontend/core/wechat.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-wechat.js"
+      }
+    ],
+    "pages": [
+      "WeChat connection, collection and synchronization workspace"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/wechat-data.test.cjs",
+      "tests/frontend/wechat-workspace.test.cjs",
+      "tests/frontend/wechat-drafts.test.cjs",
+      "scripts/verify_wechat_browser.mjs"
+    ]
+  },
+  {
+    "name": "wechat-drafts",
+    "source": "frontend/core/wechat-drafts.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-wechat-drafts.js"
+      }
+    ],
+    "pages": [
+      "Explicit per-tab WeChat collection draft recovery"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/wechat-data.test.cjs",
+      "tests/frontend/wechat-workspace.test.cjs",
+      "tests/frontend/wechat-drafts.test.cjs",
+      "scripts/verify_wechat_browser.mjs"
+    ]
+  },
+  {
+    "name": "plugins",
+    "source": "frontend/core/plugins.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-plugins.js"
+      }
+    ],
+    "pages": [
+      "Plugin marketplace and comment origin administration"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/plugin-data.test.cjs",
+      "tests/frontend/plugins.test.cjs",
+      "tests/frontend/plugins-market.test.cjs",
+      "scripts/verify_plugins_browser.mjs"
+    ]
+  },
+  {
+    "name": "plugin-runtime",
+    "source": "frontend/core/plugin-runtime.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-plugin-runtime.js"
+      }
+    ],
+    "pages": [
+      "Plugin configuration, execution and reviewed task reissue"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/plugin-data.test.cjs",
+      "tests/frontend/plugin-tasks.test.cjs",
+      "scripts/verify_plugins_browser.mjs"
+    ]
+  },
+  {
+    "name": "plugin-records",
+    "source": "frontend/core/plugin-records.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-plugin-records.js"
+      }
+    ],
+    "pages": [
+      "Read-only shared plugin records and quarantine review"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/plugin-data.test.cjs",
+      "tests/frontend/plugin-shared-review.test.cjs",
+      "scripts/verify_plugins_browser.mjs"
+    ]
+  },
+  {
+    "name": "plugin-webhooks",
+    "source": "frontend/core/plugin-webhooks.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-plugin-webhooks.js"
+      }
+    ],
+    "pages": [
+      "Plugin Webhook outcome review"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/plugin-data.test.cjs",
+      "tests/frontend/plugin-webhooks.test.cjs",
+      "scripts/verify_plugins_browser.mjs"
+    ]
+  },
+  {
+    "name": "updates",
+    "source": "frontend/core/updates.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-updates.js"
+      }
+    ],
+    "pages": [
+      "Core update policy, source and progress receipt"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/core-updates.test.cjs",
+      "scripts/verify_updates_browser.mjs"
+    ]
+  },
+  {
+    "name": "extension-updates",
+    "source": "frontend/core/extension-updates.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-extension-updates.js"
+      }
+    ],
+    "pages": [
+      "Theme and plugin updates"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/extension-updates.test.cjs",
+      "scripts/verify_updates_browser.mjs"
+    ]
+  },
+  {
+    "name": "system",
+    "source": "frontend/core/system.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-system.js"
+      }
+    ],
+    "pages": [
+      "System status"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/system-status.test.cjs",
+      "scripts/verify_updates_browser.mjs"
+    ]
+  },
+  {
+    "name": "themes",
+    "source": "frontend/core/themes.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-themes.js"
+      }
+    ],
+    "pages": [
+      "Theme marketplace"
+    ],
+    "composites": [],
+    "tests": [
+      "scripts/verify_updates_browser.mjs"
+    ]
+  },
+  {
+    "name": "announcements",
+    "source": "frontend/core/announcements.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-announcements.js"
+      }
+    ],
+    "pages": [
+      "Announcement deletion confirmation"
+    ],
+    "composites": [],
+    "tests": [
+      "scripts/verify_updates_browser.mjs"
+    ]
+  },
+  {
+    "name": "cdn",
+    "source": "frontend/core/cdn.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-cdn.js"
+      }
+    ],
+    "pages": [
+      "CDN connections, policy, queue and benchmark"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/cdn-data.test.cjs",
+      "tests/frontend/cdn-session.test.cjs",
+      "scripts/verify_cdn_browser.mjs"
+    ]
+  },
+  {
+    "name": "cdn-routing",
+    "source": "frontend/core/cdn-routing.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-cdn-routing.js"
+      }
+    ],
+    "pages": [
+      "CDN SaaS setup, DNS routing and reviewed plans"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/cdn-data.test.cjs",
+      "tests/frontend/cdn-session.test.cjs",
+      "scripts/verify_cdn_browser.mjs"
+    ]
+  },
+  {
+    "name": "object-storage",
+    "source": "frontend/core/object-storage.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-object-storage.js"
+      }
+    ],
+    "pages": [
+      "Object storage connections, migration and cloud files"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/transfer-data.test.cjs",
+      "tests/frontend/transfer-session.test.cjs",
+      "scripts/verify_storage_import_browser.mjs"
+    ]
+  },
+  {
+    "name": "content-import",
+    "source": "frontend/core/content-import.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-import.js"
+      }
+    ],
+    "pages": [
+      "Content import preview and apply"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/transfer-data.test.cjs",
+      "tests/frontend/transfer-session.test.cjs",
+      "scripts/verify_storage_import_browser.mjs"
+    ]
+  },
+  {
+    "name": "admin-editor",
+    "source": "frontend/core/admin-editor.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-admin-editor.js"
+      }
+    ],
+    "pages": [
+      "admin article editor"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/editor-submission.test.cjs",
+      "tests/frontend/editor-session.test.cjs",
+      "tests/frontend/editor-timezone.test.cjs",
+      "tests/frontend/editor-reliability.test.cjs",
+      "tests/frontend/editor-workspace.test.cjs"
+    ]
+  },
+  {
+    "name": "editor-workspace",
+    "source": "frontend/core/editor-workspace.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-editor-workspace.js"
+      }
+    ],
+    "pages": [
+      "admin article editor"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/editor-submission.test.cjs",
+      "tests/frontend/editor-session.test.cjs",
+      "tests/frontend/editor-timezone.test.cjs",
+      "tests/frontend/editor-reliability.test.cjs",
+      "tests/frontend/editor-workspace.test.cjs"
+    ]
+  },
+  {
+    "name": "highlight-worker",
+    "source": "frontend/core/highlight-worker.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-highlight-worker.js"
+      }
+    ],
+    "pages": [
+      "article code components on explicit highlighting"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/code-highlighting.test.cjs"
+    ]
+  },
+  {
+    "name": "components",
+    "source": "frontend/core/components.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-components.js"
+      }
+    ],
+    "pages": [
+      "public article and shop components"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/components-data.test.cjs",
+      "scripts/verify_public_components_browser.mjs"
+    ]
+  },
+  {
+    "name": "device-mockup",
+    "source": "frontend/core/device-mockup.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-device-mockup.js"
+      }
+    ],
+    "pages": [
+      "admin device mockup studio"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/device-mockup-data.test.cjs",
+      "scripts/verify_public_components_browser.mjs"
+    ]
+  },
+  {
+    "name": "resources",
+    "source": "frontend/core/resources.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-resources.js"
+      }
+    ],
+    "pages": [
+      "public article resources, private editor preview and download history"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/resources-unlock.test.cjs",
+      "tests/frontend/resource-public-data.test.cjs",
+      "scripts/verify_resources_browser.mjs"
+    ]
+  },
+  {
+    "name": "recognition",
+    "source": "frontend/core/recognition.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-recognition.js"
+      }
+    ],
+    "pages": [
+      "public medals, article tips and account identity"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/recognition.test.cjs",
+      "tests/frontend/recognition-data.test.cjs",
+      "scripts/verify_recognition_migration_browser.mjs"
+    ]
+  },
+  {
+    "name": "recognition-admin",
+    "source": "frontend/core/recognition-admin.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-recognition-admin.js"
+      }
+    ],
+    "pages": [
+      "admin recognition settings and member reviews"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/recognition.test.cjs",
+      "tests/frontend/recognition-data.test.cjs",
+      "scripts/verify_recognition_migration_browser.mjs"
+    ]
+  },
+  {
+    "name": "community-compose",
+    "source": "frontend/core/community-compose.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-community-compose.js"
+      }
+    ],
+    "pages": [
+      "question and circle drafts, filters and writing tools"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/community-compose.test.cjs",
+      "scripts/verify_publishing_browser.mjs"
+    ]
+  },
+  {
+    "name": "flash",
+    "source": "frontend/core/flash.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-flash.js"
+      }
+    ],
+    "pages": [
+      "flash timeline, public submissions and admin publishing"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/flash-data.test.cjs",
+      "tests/frontend/flash-publication.test.cjs",
+      "scripts/verify_publishing_browser.mjs"
+    ]
+  },
+  {
+    "name": "images",
+    "source": "frontend/core/images.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-images.js"
+      }
+    ],
+    "pages": [
+      "admin media focal point and crop previews"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/image-focus.test.cjs",
+      "scripts/verify_final_scripts_browser.mjs"
+    ]
+  },
+  {
+    "name": "analytics-lite",
+    "source": "frontend/analytics/lite.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/chunnel-analytics.js"
+      }
+    ],
+    "pages": [
+      "default lightweight server-rendered analytics report"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/analytics-chart.test.cjs",
+      "scripts/verify_final_scripts_browser.mjs"
+    ]
+  },
+  {
+    "name": "editor-media-loader",
+    "source": "frontend/core/editor-media-loader.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-editor-media-loader.js"
+      }
+    ],
+    "pages": [
+      "admin article editor explicit media interaction"
+    ],
+    "composites": [
+      "newpress-editor-page.js"
+    ],
+    "tests": [
+      "tests/frontend/media-loader.test.cjs",
+      "scripts/verify_media_loading_browser.mjs",
+      "scripts/verify_editor_script_retry_browser.mjs"
+    ]
+  },
+  {
+    "name": "editor-media-dialog",
+    "source": "frontend/core/editor-media-dialog.ts",
+    "outputs": [
+      {
+        "scope": "core",
+        "path": "internal/coreui/assets/js/newpress-editor-media-dialog.js"
+      }
+    ],
+    "pages": [
+      "admin article editor explicit media interaction"
+    ],
+    "composites": [],
+    "tests": [
+      "tests/frontend/media-loader.test.cjs",
+      "scripts/verify_media_loading_browser.mjs",
+      "scripts/verify_editor_script_retry_browser.mjs"
     ]
   }
 ]

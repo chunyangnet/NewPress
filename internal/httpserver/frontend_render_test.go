@@ -96,11 +96,12 @@ func TestFrontendPageResourceAndLandmarkContract(t *testing.T) {
 				login := test.path == "/admin/login/"
 				for resource, want := range map[string]bool{
 					"chunnel-admin-base.css": true, "chunnel-admin-login.css": login,
-					"chunnel-admin-login.js": login, "chunnel-admin.css": false, "chunnel-admin.js": !login,
+					"chunnel-admin-login.js": login, "chunnel-admin.css": false, "chunnel-admin.js": !login && test.path != "/admin/content/new/",
 					"chunnel-admin-shared.css": !login, "chunnel-admin-workflows.css": !login,
 					"chunnel-admin-controls.css": true, "chunnel-admin-skin.css": !login,
 					"chunnel-admin-login-skin.css": login,
-					"chunnel-admin-editor.js":      test.path == "/admin/content/new/",
+					"newpress-editor-page.js":      test.path == "/admin/content/new/",
+					"chunnel-admin-editor.js":      false,
 					"chunnel-admin-menu.js":        test.path == "/admin/navigation/",
 				} {
 					if strings.Contains(body, resource) != want {
@@ -112,7 +113,7 @@ func TestFrontendPageResourceAndLandmarkContract(t *testing.T) {
 				"chunnel-admin-workspace.css":        strings.HasPrefix(test.path, "/admin/") && test.path != "/admin/appearance/",
 				"chunnel-admin-layout-workspace.css": test.path == "/admin/appearance/",
 				"chunnel-reader.css":                 test.reader || test.page, "chunnel-reader.js": test.reader,
-				"chunnel-emoji-editor.js": test.emoji, "chunnel-emoji.js": test.emoji,
+				"chunnel-emoji-editor.js": test.emoji && test.path != "/admin/content/new/", "chunnel-emoji.js": test.emoji && test.path != "/admin/content/new/",
 				"chunnel-glass.css": test.glass, "chunnel-interactions.css": test.interactions,
 				"chunnel-foundation.css": test.path != "/" && !strings.HasPrefix(test.path, "/admin/"),
 				"chunnel-explore.css":    test.path == "/explore/",

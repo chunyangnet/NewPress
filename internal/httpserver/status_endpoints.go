@@ -18,6 +18,13 @@ func (s *Server) live(writer http.ResponseWriter, _ *http.Request) {
 }
 
 func (s *Server) ready(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Cache-Control", "no-store")
+	// Deep readiness traverses private business state. Only a reliably resolved
+	// loopback probe may invoke it; forwarded headers alone never grant access.
+	if !s.isLoopbackRequest(request) {
+		http.NotFound(writer, request)
+		return
+	}
 	writer.Header().Set("X-NewPress-Instance", os.Getenv("NEWPRESS_UPDATE_INSTANCE"))
 	ctx, cancel := context.WithTimeout(request.Context(), 2*time.Second)
 	defer cancel()

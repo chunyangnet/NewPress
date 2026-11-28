@@ -109,7 +109,12 @@ test('proxy pins DNS, preserves origin Host, and blocks unapproved hosts and red
 test('HTTPS CONNECT obeys the same destination boundary and closes tunnels', async t => {
   const { targetPolicy, requestGuard, createPinnedProxy } = await network;
   let hits = 0;
-  const target = net.createServer(socket => { hits++; socket.pipe(socket); });
+  const target = net.createServer(socket => {
+    hits++;
+    // Deliberate tunnel shutdown may reset the fixture's peer on Windows.
+    socket.on('error', error => assert.equal(error.code, 'ECONNRESET'));
+    socket.pipe(socket);
+  });
   const port = await listen(target);
   t.after(() => close(target));
   const policy = await targetPolicy(new URL('https://tunnel.invalid:' + port), false, { resolve: async () => ['127.0.0.1'] });
@@ -185,7 +190,10 @@ test('a continuously streaming HTTP response still reaches its absolute deadline
 
 test('an active CONNECT tunnel still reaches its absolute deadline', { timeout: 5000 }, async t => {
   const { targetPolicy, requestGuard, createPinnedProxy } = await network;
-  const target = net.createServer(socket => socket.pipe(socket));
+  const target = net.createServer(socket => {
+    socket.on('error', error => assert.equal(error.code, 'ECONNRESET'));
+    socket.pipe(socket);
+  });
   const port = await listen(target);
   const policy = await targetPolicy(new URL('https://deadline.invalid:' + port), false, { resolve: async () => ['127.0.0.1'] });
   const proxy = await createPinnedProxy(requestGuard(policy), { tunnelTimeoutMs: 100 });

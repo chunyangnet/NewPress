@@ -1,0 +1,23 @@
+{{define "writing-templates"}}
+<div class="writing-templates" data-writing-templates data-csrf="{{.Admin.CSRFToken}}" data-user-id="{{.Admin.Principal.UserID}}" data-username="{{.Admin.Principal.Username}}">
+  <div class="wt-heading"><div><span class="wt-eyebrow">团队写作</span><h3>共用一套写作习惯</h3><p>保存提示词与版本，供作者在 AI 编辑器中选用。每次保存保留历史。</p></div><button type="button" class="admin-button admin-button-quiet" data-wt-new disabled>新建模板</button></div>
+  <div class="wt-workspace">
+    <aside class="wt-library" aria-label="团队模板列表"><div class="wt-list-heading"><strong data-wt-count>模板库</strong><button type="button" class="admin-button admin-button-quiet" data-wt-reload>刷新列表</button></div><div data-wt-list></div></aside>
+    <div class="wt-detail">
+      <form data-wt-form>
+        <div class="wt-detail-heading"><strong data-wt-heading>新模板</strong><span data-wt-version>尚未保存</span></div>
+        <p class="wt-meta" data-wt-identity></p>
+        <fieldset data-wt-fields {{if .Admin.ReadOnly}}disabled{{end}}>
+          <div class="wt-fields"><label>模板名称<input data-wt-title maxlength="80" required autocomplete="off"></label><label>基础写作模式<select data-wt-base required></select><small>沿用此模式的原稿要求。</small></label><label class="wt-wide">用途说明<textarea data-wt-description rows="2" maxlength="300"></textarea></label><label class="wt-wide">写作提示词<textarea data-wt-instruction rows="8" maxlength="12000" required spellcheck="false"></textarea></label><label class="wt-wide">示例素材<textarea data-wt-example rows="3" maxlength="8000"></textarea><small>供作者参考；生成时仍由作者填写本次素材。请勿在模板内填写密钥或私人资料。</small></label></div>
+        </fieldset>
+        <div class="wt-actions"><button type="submit" class="admin-button admin-button-primary" data-wt-save disabled>保存为新版本</button><button type="button" class="admin-button admin-button-quiet" data-wt-archive disabled>归档</button><button type="button" class="admin-button admin-button-quiet" data-wt-draft-export>下载当前输入</button></div>
+      </form>
+      <details class="wt-history" data-wt-history hidden><summary>版本记录与来源</summary><label>查看版本<select data-wt-history-select></select></label><pre data-wt-history-preview></pre><div class="wt-actions"><button type="button" class="admin-button admin-button-quiet" data-wt-export>导出此版本</button><button type="button" class="admin-button admin-button-quiet" data-wt-restore>恢复为新的启用版本</button></div><p>恢复会追加版本；归档后的模板从作者列表隐藏，已有生成内容保留。</p></details>
+    </div>
+  </div>
+  <details class="wt-import"><summary>从 JSON 文件导入模板</summary><p>先预览并确认，再建立独立模板。导入保留来源标识；站点完整备份另行保留原标识、全部历史和请求记录。</p><label>选择文件（最多 128 KiB）<input type="file" accept=".json,application/json" data-wt-import-file></label><label>或粘贴导出内容<textarea data-wt-import-document rows="4" spellcheck="false"></textarea></label><button type="button" class="admin-button admin-button-quiet" data-wt-import-preview>预览导入</button><div data-wt-import-review hidden><pre data-wt-import-summary></pre><label class="wt-confirm"><input type="checkbox" data-wt-import-confirm>我已核对提示词，确认创建独立模板</label><button type="button" class="admin-button admin-button-primary" data-wt-import-save disabled>确认导入</button></div></details>
+  <p class="wt-status" data-wt-status role="status" aria-live="polite">正在加载团队模板…</p>
+  <div class="wt-pending" data-wt-pending hidden><p>本次保存结果尚未确认。原请求暂存于当前页面，关闭或刷新页面会丢失。</p><button type="button" class="admin-button admin-button-primary" data-wt-retry>重试原请求并核对结果</button><button type="button" class="admin-button admin-button-quiet" data-wt-dismiss>结束核对，保留当前输入</button></div>
+  <noscript><p>请启用 JavaScript 后管理团队模板。</p></noscript>
+</div>
+{{end}}

@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
-const source = fs.readFileSync('themes/chunnel/assets/js/chunnel-emoji.js', 'utf8');
+const source = require('./helpers/typescript.cjs').compile('frontend/shared/emoji.ts');
 
 function fixture() {
   const listeners = new Map();
@@ -12,16 +12,17 @@ function fixture() {
   const calls = { filters: 0, positions: 0, focus: 0, closes: 0 };
   const choice = { focus() { calls.focus++; }, parentElement: { querySelectorAll: () => [choice] } };
   const grid = { querySelector: () => choice };
-  const context = vm.createContext({ document, search, panel, grid, WeakSet,
+  class Element { static [Symbol.hasInstance](value) { return !!value?.closest; } }
+  const context = vm.createContext({ document, search, panel, grid, WeakSet, Element,
     populate() { calls.filters++; }, position() { calls.positions++; }, close() { panel.hidden = true; calls.closes++; },
     getComputedStyle: () => ({ gridTemplateColumns: '24px' }),
   });
-  const setup = source.indexOf('  const composing = new WeakSet();');
-  if (setup >= 0) vm.runInContext(source.slice(setup, source.indexOf('  const scriptURL', setup)), context);
-  const keyboard = source.indexOf("  panel.addEventListener('keydown'");
-  vm.runInContext(source.slice(keyboard, source.indexOf("  closeButton.addEventListener", keyboard)), context);
-  const escape = source.indexOf("  document.addEventListener('keydown'");
-  vm.runInContext(source.slice(escape, source.indexOf("  document.addEventListener('chunnel:overlay'", escape)), context);
+  const setup = source.indexOf('const composing = /* @__PURE__ */ new WeakSet();');
+  if (setup >= 0) vm.runInContext(source.slice(setup, source.indexOf('  if (!(document.currentScript', setup)), context);
+  const keyboard = source.indexOf('  panel.addEventListener("keydown"');
+  vm.runInContext(source.slice(keyboard, source.indexOf('  closeButton.addEventListener', keyboard)), context);
+  const escape = source.indexOf('  document.addEventListener("keydown"');
+  vm.runInContext(source.slice(escape, source.indexOf('  document.addEventListener("chunnel:overlay"', escape)), context);
   const emit = (where, type, extra = {}) => {
     const event = { target: where, key: '', keyCode: 0, isComposing: false, prevented: false, stopped: false,
       preventDefault() { this.prevented = true; }, stopImmediatePropagation() { this.stopped = true; }, ...extra };

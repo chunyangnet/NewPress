@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"regexp"
 	"strconv"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -91,11 +92,19 @@ func TestAccountAdminBrowserFixture(t *testing.T) {
 		http.SetCookie(w, cookie)
 		http.Redirect(w, r, "/admin/users/", http.StatusSeeOther)
 	})
+	mux.HandleFunc("POST /fixture/native-users", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/fixture/users-result?"+r.URL.RawQuery, http.StatusSeeOther)
+	})
 	// Browser route interception applies only to the first request in a redirect
 	// chain. Render a disposable native-form receipt here without updating users.
 	mux.HandleFunc("GET /fixture/users-result", func(w http.ResponseWriter, r *http.Request) {
 		request := r.Clone(r.Context())
 		request.URL.Path = "/admin/users/"
+		query := request.URL.Query()
+		query.Del("fixture_version")
+		query.Del("fixture_name")
+		query.Del("fixture_rotate")
+		request.URL.RawQuery = query.Encode()
 		result := httptest.NewRecorder()
 		handler.ServeHTTP(result, request)
 		body := result.Body.String()
@@ -107,6 +116,9 @@ func TestAccountAdminBrowserFixture(t *testing.T) {
 			body = regexp.MustCompile(`name="display_name" value="[^"]*"`).ReplaceAllStringFunc(body, func(string) string {
 				return `name="display_name" value="` + html.EscapeString(r.URL.Query().Get("fixture_name")) + `"`
 			})
+		}
+		if r.URL.Query().Get("fixture_rotate") == "true" {
+			body = strings.ReplaceAll(body, owner.CSRFToken, "fixture-rotated-csrf")
 		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(result.Code)

@@ -47,6 +47,10 @@ test('native form locking preserves submitter serialization, cancellation and di
   const control = bindNativeSubmission(form, { onPending() { renders++; }, onRestore() { resets++; } });
   const cancelled = form.emit('submit'); cancelled.preventDefault(); await Promise.resolve(); f.flush();
   assert.equal(control.pending(), false); assert.equal(renders, 0);
+  const ancestorCancelled = form.emit('submit');
+  await Promise.resolve(); ancestorCancelled.preventDefault(); f.flush();
+  assert.equal(control.pending(), false); assert.equal(renders, 0, 'a microtask checkpoint before ancestor cancellation cannot lock the form');
+  assert.notEqual(form.getAttribute('aria-busy'), 'true');
   form.emit('submit'); assert.equal(form.emit('submit').defaultPrevented, true);
   await Promise.resolve(); assert.equal(control.pending(), true); assert.equal(renders, 0, 'leave successful submitter controls intact until serialization');
   f.window.emit('pageshow', { persisted: true }); f.flush(); assert.equal(renders, 0); assert.equal(resets, 1);

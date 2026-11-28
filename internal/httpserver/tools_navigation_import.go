@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
@@ -112,18 +113,25 @@ func (s *Server) adminToolsNavigationImport(writer http.ResponseWriter, request 
 }
 
 func (s *Server) adminToolsNavigationImportPreview(writer http.ResponseWriter, request *http.Request, principal auth.Principal) {
-	if err := request.ParseMultipartForm(navigationImportFileMaxBytes); err != nil {
+	parseErr := request.ParseMultipartForm(navigationImportFileMaxBytes)
+	if request.MultipartForm != nil {
+		defer request.MultipartForm.RemoveAll()
+	}
+	request, principal, ok := s.recheckNavigationImport(writer, request)
+	if !ok {
+		return
+	}
+	if parseErr != nil {
 		status := http.StatusBadRequest
 		message := "导航导入请求格式不正确"
 		var maximum *http.MaxBytesError
-		if errors.As(err, &maximum) {
+		if errors.As(parseErr, &maximum) {
 			status = http.StatusRequestEntityTooLarge
 			message = "导航导入请求超过 512 KiB，未读取或执行任何内容"
 		}
 		s.renderAdminTools(writer, request, status, principal, false, adminNavigationImportView{}, adminNotice{Message: message, Tone: "error"})
 		return
 	}
-	defer request.MultipartForm.RemoveAll()
 	form := request.PostForm
 	if !strictNavigationImportPreviewForm(form, request.MultipartForm.File) {
 		writeJSON(writer, http.StatusBadRequest, map[string]string{"error": "invalid_navigation_import_preview_shape"})
@@ -156,6 +164,10 @@ func (s *Server) adminToolsNavigationImportPreview(writer http.ResponseWriter, r
 		return
 	}
 	current, err := s.navigation.Snapshot(request.Context())
+	request, principal, ok = s.recheckNavigationImport(writer, request)
+	if !ok {
+		return
+	}
 	if err != nil {
 		slog.Error("snapshot navigation import preview", "error", err)
 		s.renderAdminTools(writer, request, http.StatusServiceUnavailable, principal, false, adminNavigationImportView{}, adminNotice{Message: "当前导航快照不可用，无法生成安全差异预览", Tone: "error"})
@@ -166,11 +178,16 @@ func (s *Server) adminToolsNavigationImportPreview(writer http.ResponseWriter, r
 }
 
 func (s *Server) adminToolsNavigationImportApply(writer http.ResponseWriter, request *http.Request, principal auth.Principal) {
-	if err := request.ParseForm(); err != nil {
+	parseErr := request.ParseForm()
+	request, principal, ok := s.recheckNavigationImport(writer, request)
+	if !ok {
+		return
+	}
+	if parseErr != nil {
 		status := http.StatusBadRequest
 		message := "导航导入确认请求格式不正确"
 		var maximum *http.MaxBytesError
-		if errors.As(err, &maximum) {
+		if errors.As(parseErr, &maximum) {
 			status = http.StatusRequestEntityTooLarge
 			message = "导航导入确认请求超过 512 KiB，未执行任何替换"
 		}
@@ -203,6 +220,10 @@ func (s *Server) adminToolsNavigationImportApply(writer http.ResponseWriter, req
 		s.renderNavigationImportValidationError(writer, request, principal, err)
 		return
 	}
+	request, principal, ok = s.recheckNavigationImport(writer, request)
+	if !ok {
+		return
+	}
 	result, err := s.navigation.ReplaceAll(request.Context(), navigation.RegistryMutation{
 		ExpectedRevision: expectedRevision,
 		Actor:            principal.Username,
@@ -226,6 +247,37 @@ func (s *Server) adminToolsNavigationImportApply(writer http.ResponseWriter, req
 		return
 	}
 	http.Redirect(writer, request, "/admin/tools/?notice=navigation-imported", http.StatusSeeOther)
+}
+
+// Keep the session chosen at the request boundary. Another cookie must not
+// take over an import after the original session is revoked during body I/O.
+func (s *Server) recheckNavigationImport(writer http.ResponseWriter, request *http.Request) (*http.Request, auth.Principal, bool) {
+	previous, token, hadSession := s.currentAdminSession(request)
+	state := requestSessionState{}
+	if hadSession {
+		principal, err := s.auth.ResolveSession(request.Context(), token)
+		if err != nil && !errors.Is(err, auth.ErrSessionNotFound) {
+			s.sessionStorageError(writer, request)
+			return nil, auth.Principal{}, false
+		}
+		if err == nil {
+			if principal.UserID != previous.UserID || principal.Username != previous.Username {
+				s.renderError(writer, http.StatusForbidden, "当前登录身份已变化，请重新发起导航导入")
+				return nil, auth.Principal{}, false
+			}
+			state = requestSessionState{principal: principal, token: token, ok: true}
+		}
+	}
+	request = request.WithContext(context.WithValue(request.Context(), sessionStateKey{}, state))
+	principal, readOnly, ok := s.requireAdminPageCapability(writer, request, auth.CapabilityNavigationManage)
+	if !ok {
+		return nil, auth.Principal{}, false
+	}
+	if readOnly || !s.auth.Configured() {
+		writeJSON(writer, http.StatusForbidden, map[string]string{"error": "admin_credentials_not_configured"})
+		return nil, auth.Principal{}, false
+	}
+	return request, principal, true
 }
 
 func (s *Server) renderNavigationImportValidationError(writer http.ResponseWriter, request *http.Request, principal auth.Principal, err error) {

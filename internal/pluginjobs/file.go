@@ -53,36 +53,76 @@ func NewFileBackend(path string) (*FileBackend, error) {
 }
 
 func readStateFile(path string) ([]byte, bool, error) {
-	f, info, err := packagefs.OpenRegularNoSymlink(path)
-	if errors.Is(err, os.ErrNotExist) {
-		return nil, false, nil
-	}
+	var body bytes.Buffer
+	exists, err := readStateFileTo(context.Background(), path, &body)
 	if err != nil {
 		return nil, false, err
+	}
+	return body.Bytes(), exists, nil
+}
+
+// Stream integrity checks into a hash without allocating the entire snapshot.
+// Startup/maintenance readers can still collect the same verified bytes.
+func readStateFileTo(ctx context.Context, path string, destination io.Writer) (bool, error) {
+	if err := ctx.Err(); err != nil {
+		return false, err
+	}
+	f, info, err := packagefs.OpenRegularNoSymlink(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
 	}
 	defer f.Close()
 	if info.Size() > MaxSnapshotBytes {
-		return nil, false, ErrCapacity
+		return false, ErrCapacity
 	}
-	body, err := io.ReadAll(io.LimitReader(f, MaxSnapshotBytes+1))
+	if buffer, ok := destination.(*bytes.Buffer); ok {
+		buffer.Grow(int(info.Size()) + bytes.MinRead)
+	}
+	var size int64
+	reader := io.LimitReader(&stateFileReader{ctx: ctx, reader: f}, MaxSnapshotBytes+1)
+	if _, ok := destination.(io.ReaderFrom); ok {
+		size, err = io.Copy(destination, reader)
+	} else {
+		// A larger fixed buffer reduces small file reads during hash checks,
+		// without retaining or allocating a queue-sized byte slice.
+		size, err = io.CopyBuffer(destination, reader, make([]byte, 128<<10))
+	}
 	if err != nil {
-		return nil, false, err
+		return false, err
 	}
-	if len(body) > MaxSnapshotBytes {
-		return nil, false, ErrCapacity
+	if size > MaxSnapshotBytes {
+		return false, ErrCapacity
+	}
+	if err := ctx.Err(); err != nil {
+		return false, err
 	}
 	after, err := f.Stat()
 	if err != nil {
-		return nil, false, err
+		return false, err
 	}
 	current, err := packagefs.LstatNoSymlink(path)
 	if err != nil {
-		return nil, false, err
+		return false, err
 	}
-	if !os.SameFile(info, after) || !os.SameFile(info, current) || info.Size() != after.Size() || info.Size() != int64(len(body)) || !info.ModTime().Equal(after.ModTime()) || !after.ModTime().Equal(current.ModTime()) || after.Size() != current.Size() {
-		return nil, false, ErrConflict
+	if !os.SameFile(info, after) || !os.SameFile(info, current) || info.Size() != after.Size() || info.Size() != size || !info.ModTime().Equal(after.ModTime()) || !after.ModTime().Equal(current.ModTime()) || after.Size() != current.Size() {
+		return false, ErrConflict
 	}
-	return body, true, nil
+	return true, ctx.Err()
+}
+
+type stateFileReader struct {
+	ctx    context.Context
+	reader io.Reader
+}
+
+func (r *stateFileReader) Read(p []byte) (int, error) {
+	if err := r.ctx.Err(); err != nil {
+		return 0, err
+	}
+	return r.reader.Read(p)
 }
 func cloneState(s State) State {
 	out := State{Schema: s.Schema, Kind: s.Kind, Jobs: make(map[string]Job, len(s.Jobs))}
@@ -124,29 +164,26 @@ func cloneState(s State) State {
 	}
 	return out
 }
-func (b *FileBackend) unchanged() error {
+func (b *FileBackend) unchanged(ctx context.Context) error {
 	if b.path == "" {
-		return nil
+		return ctx.Err()
 	}
-	body, exists, err := readStateFile(b.path)
+	hash := sha256.New()
+	exists, err := readStateFileTo(ctx, b.path, hash)
 	if err != nil {
 		return err
 	}
-	if exists != b.exists || (exists && sha256.Sum256(body) != b.digest) {
+	if exists != b.exists || (exists && !bytes.Equal(hash.Sum(nil), b.digest[:])) {
 		return ErrConflict
 	}
 	return nil
 }
 func (b *FileBackend) Read(ctx context.Context) (State, error) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	if err := ctx.Err(); err != nil {
+	var state State
+	if err := b.readState(ctx, func(current State) error { state = cloneState(current); return nil }); err != nil {
 		return State{}, err
 	}
-	if err := b.unchanged(); err != nil {
-		return State{}, err
-	}
-	return cloneState(b.state), nil
+	return state, nil
 }
 func (b *FileBackend) Update(ctx context.Context, fn func(*State) error) error {
 	b.mu.Lock()
@@ -154,7 +191,7 @@ func (b *FileBackend) Update(ctx context.Context, fn func(*State) error) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	if err := b.unchanged(); err != nil {
+	if err := b.unchanged(ctx); err != nil {
 		return err
 	}
 	next := cloneState(b.state)
@@ -221,7 +258,7 @@ func (b *FileBackend) Update(ctx context.Context, fn func(*State) error) error {
 		if err = ctx.Err(); err != nil {
 			return err
 		}
-		if err = b.unchanged(); err != nil {
+		if err = b.unchanged(ctx); err != nil {
 			return err
 		}
 		if err = packagefs.ReplaceRegularFileNoSymlink(f.Name(), b.path); err != nil {

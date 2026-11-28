@@ -1,0 +1,7 @@
+const orderId='np_0123456789abcdef0123456789ab';
+function resourceState(kind='payment') {
+  const condition={id:'price',kind,label:kind==='points'?'使用 1.00 积分':'支付 9.90 CNY',amount:kind==='points'?100:990,currency:kind==='points'?'main':'CNY',passed:false,purchasable:true};
+  return {post:1,id:'bundle',title:'完整资源',author:1,revision:'a'.repeat(64),csrf:'csrf-1',user_id:'2',logged_in:true,payment_version:'2',starts_at:null,ends_at:null,timezone:'Asia/Shanghai',daily_used:0,total_used:0,remaining:2,selection:'all',channels:[{key:'gateway',name:'测试支付',currency:'CNY'}],refund_policy:'原退款规则',disclaimer:'原支付说明',variants:[{id:'full',name:'完整版本',kind:'download',available:true,allowed:false,blocked:'',groups:[{name:'购买',passed:false,conditions:[condition]}],downloads:[{id:'file',name:'文件',provider:'direct',provider_name:'直接下载'}],questions:[],fields:null,quiz_passed:false,form_complete:false,pass_percent:100,attempts_remaining:3}]};
+}
+function order(patch={}) { return {title:'完整资源',checkout:{provider_order_id:''},qr_url:'',target_currency:'',credit:'0',plan:'',days:0,created_at:new Date().toISOString(),paid_at:'0001-01-01T00:00:00Z',completed_at:'0001-01-01T00:00:00Z',error_code:'',disclaimer:'',refund_policy:'',resource_url:'/posts/resource#resource-bundle',resource_ends_at:'0001-01-01T00:00:00Z',id:orderId,user_id:'2',kind:'resource',amount:'9.90',currency:'CNY',status:'pending',expires_at:new Date(Date.now()+1800000).toISOString(),...patch}; }
+module.exports={resourceState,order,orderId};

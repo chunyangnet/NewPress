@@ -4,9 +4,8 @@
 <html lang="{{.Site.Locale}}" data-input-style="fluent" data-choice-controls data-site-timezone="{{.Site.Timezone}}" data-style="{{if eq (index .ThemeValues "visual_style") "liquid-glass"}}liquid-glass{{else}}classic{{end}}">
 <head>
   <meta charset="utf-8">
-  {{if .Editor.FormAction}}<script src="{{asset "js/chunnel-article-badge-editor.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="{{asset "js/chunnel-scroll.js"}}?v={{.UIAssetVersion}}&amp;ui=resources-20261114-1" defer></script>
+  {{if not .Editor.FormAction}}<script src="{{asset "js/chunnel-scroll.js"}}?v={{.UIAssetVersion}}&amp;ui=resources-20261114-1" defer></script>{{end}}
   <title>{{.PageTitle}}</title>
   <meta name="description" content="{{.Description}}">
   {{range .Integrations.Verification}}<meta name="{{.Name}}" content="{{.Content}}">{{end}}
@@ -37,7 +36,7 @@
   {{if .ExtensionUpdates.Marketplace}}<link rel="stylesheet" href="{{asset "css/newpress-themes.css"}}">{{end}}
   {{if .Editor.FormAction}}<link rel="stylesheet" href="{{asset "css/chunnel-editor-content.css"}}?v={{.UIAssetVersion}}"><meta data-component-style-anchor>{{else if eq .Admin.Current "shop"}}<link rel="stylesheet" href="{{asset "css/chunnel-composer.css"}}?v={{.UIAssetVersion}}"><link rel="stylesheet" href="{{asset "css/newpress-article-widgets.css"}}?v={{.UIAssetVersion}}"><link rel="stylesheet" href="{{asset "css/chunnel-editor-widgets.css"}}?v={{.UIAssetVersion}}"><link rel="stylesheet" href="{{asset "css/newpress-components.css"}}?v={{.UIAssetVersion}}"><link rel="stylesheet" href="{{asset "css/chunnel-component-library.css"}}?v={{.UIAssetVersion}}">{{end}}
   
-  {{if or (eq .BodyClass "is-account-access") (eq .BodyClass "is-admin is-admin-users")}}<link rel="stylesheet" href="{{asset "css/chunnel-access.css"}}?v={{.UIAssetVersion}}">{{end}}
+  {{if eq .Admin.Current "users"}}<link rel="stylesheet" href="{{asset "css/chunnel-admin-invitations.css"}}?v={{.UIAssetVersion}}">{{end}}
   {{if and (ne .BodyClass "is-home") (or (not .IsAdmin) .Editor.FormAction (eq .Admin.Current "comments"))}}<link rel="stylesheet" href="{{asset "css/chunnel-interactions.css"}}?v={{.UIAssetVersion}}&amp;ui=resources-20261114-1">{{end}}
   {{if and (ne .BodyClass "is-home") (or (eq (index .ThemeValues "visual_style") "liquid-glass") (and .IsAdmin (eq .Admin.Current "appearance")))}}<link rel="stylesheet" href="{{asset "css/chunnel-glass.css"}}?v={{.UIAssetVersion}}">{{end}}
   {{if and .IsAdmin (ne .Admin.Current "login")}}<link rel="stylesheet" href="{{asset "css/chunnel-admin-settings.css"}}?v={{.UIAssetVersion}}&amp;ui=20261114">{{end}}
@@ -89,7 +88,7 @@
   <link rel="stylesheet" href="{{.ThemeCSSURL}}">
   <link rel="stylesheet" href="{{asset "css/chunnel-color-mode.css"}}?v={{.UIAssetVersion}}&amp;ui=color-mode-20261118-2">
 {{if or (eq .Kind "single") (eq .BodyClass "is-account") (eq .BodyClass "is-author") (eq .BodyClass "is-admin is-admin-recognition") (eq .BodyClass "is-admin is-admin-progression")}}<link rel="stylesheet" href="/core-assets/css/newpress-recognition.css"><script src="/core-assets/js/newpress-client.js" defer></script><script src="/core-assets/js/newpress-recognition.js" defer></script>{{end}}
-  {{if .Editor.FormAction}}<link rel="stylesheet" href="{{asset "css/chunnel-editor-workspace.css"}}?v={{.UIAssetVersion}}"><script src="{{asset "js/chunnel-editor-workspace.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+  {{if .Editor.FormAction}}<link rel="stylesheet" href="{{asset "css/chunnel-editor-workspace.css"}}?v={{.UIAssetVersion}}">{{end}}
   {{if eq .Admin.Current "snippets"}}<link rel="stylesheet" href="{{asset "css/newpress-snippets.css"}}?v={{.UIAssetVersion}}">{{end}}
 </head>
 <body class="{{.BodyClass}} {{.ThemeClass}} admin-workbench{{if .Editor.FormAction}} is-writing-workspace{{end}}">
@@ -107,12 +106,12 @@
       </div>
     </div>
     {{end}}
-    {{if $mediaPicker}}{{template "admin-media-picker" .}}<script src="{{asset "js/chunnel-admin-media.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+    {{if $mediaPicker}}{{template "admin-media-picker" .}}{{if not .Editor.FormAction}}<script src="{{asset "js/chunnel-admin-media.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}{{end}}
     <div class="admin-toast-stack" aria-live="polite" aria-atomic="false" data-admin-toast-stack></div>
     {{if eq .Admin.Current "login"}}<script src="{{asset "js/chunnel-time.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
-    {{if ne .Admin.Current "login"}}<script src="{{asset "js/chunnel-admin-workbench.js"}}?v={{.UIAssetVersion}}&amp;ui=module-design-20261115-3" data-choice-entry="{{asset "js/chunnel-selects.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+    {{if .Editor.FormAction}}<script src="{{asset "js/newpress-editor-page.js"}}?v={{.UIAssetVersion}}" data-editor-emoji-script="{{asset "js/newpress-editor-emoji-picker.js"}}?v={{.UIAssetVersion}}" data-editor-media-loader data-media-script="{{asset "js/newpress-editor-media-dialog.js"}}?v={{.UIAssetVersion}}" data-component-loader data-component-script="{{asset "js/chunnel-component-library.js"}}?v={{.UIAssetVersion}}" data-component-style="{{asset "css/chunnel-editor-components.css"}}?v={{.UIAssetVersion}}" data-editor-tools-loader data-editor-tools-script="{{asset "js/newpress-editor-insert-tools.js"}}?v={{.UIAssetVersion}}" defer></script>{{else if ne .Admin.Current "login"}}<script src="{{asset "js/chunnel-admin-workbench.js"}}?v={{.UIAssetVersion}}&amp;ui=module-design-20261115-3" data-choice-entry="{{asset "js/chunnel-selects.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
   {{if eq .Admin.Current "login"}}<script src="{{asset "js/chunnel-admin-login.js"}}?v={{.UIAssetVersion}}" defer></script>
-    {{else}}{{if .Editor.FormAction}}<script src="{{asset "js/chunnel-editor-recovery.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}<script src="{{asset "js/chunnel-admin.js"}}?v={{.UIAssetVersion}}&amp;ui=admin-20261114-2" defer></script>{{if .Editor.FormAction}}<script src="{{asset "js/chunnel-admin-editor.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}{{if eq .Admin.Current "navigation"}}<script src="{{asset "js/chunnel-admin-menu.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}{{end}}
+    {{else if not .Editor.FormAction}}<script src="{{asset "js/chunnel-admin.js"}}?v={{.UIAssetVersion}}&amp;ui=admin-20261114-2" defer></script>{{if eq .Admin.Current "navigation"}}<script src="{{asset "js/chunnel-admin-menu.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}{{end}}
     {{if and (not .Editor.FormAction) (or (eq .Admin.Current "content") (eq .Admin.Current "comments") (eq .BodyClass "is-admin is-admin-taxonomy"))}}<script src="{{asset "js/chunnel-admin-lists.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
     {{if eq .Admin.Current "comments"}}<script src="{{asset "js/chunnel-admin-comments.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
     {{if or (eq .Admin.Current "settings") (eq .Admin.Current "appearance") (eq .Admin.Current "layout") (eq .Admin.Current "tools")}}<script src="{{asset "js/chunnel-admin-settings.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
@@ -126,7 +125,8 @@
     {{if eq .Admin.Current "payments"}}<script src="{{asset "js/chunnel-payments-admin.js"}}?v={{.UIAssetVersion}}&amp;ui=payments-20261115-1" defer></script>{{end}}
     {{if eq .Admin.Current "shop"}}<script src="{{asset "js/newpress-client.js"}}" defer></script><script src="{{asset "js/newpress-shop-services.js"}}?v={{.UIAssetVersion}}" defer></script><script src="{{asset "js/newpress-shop-service-editor.js"}}?v={{.UIAssetVersion}}" defer></script><script src="{{asset "js/newpress-shop-admin.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
     {{if eq .BodyClass "is-admin is-admin-links"}}<script src="{{asset "js/chunnel-links.js"}}?v={{.UIAssetVersion}}&amp;ui=admin-20261114-2" defer></script>{{end}}
-    {{if eq .Admin.Current "plugins"}}<script src="{{asset "js/chunnel-plugins.js"}}?v={{.UIAssetVersion}}&amp;ui=plugin-market-20261115-2" defer></script><script src="{{asset "js/chunnel-plugin-runtime.js"}}?v={{.UIAssetVersion}}&amp;ui=admin-20261114-2" defer></script>{{end}}
+    {{if .PluginAdmin.Cards}}<script src="{{asset "js/chunnel-plugins.js"}}?v={{.UIAssetVersion}}&amp;ui=plugin-market-20261115-2" defer></script>{{end}}
+    {{if .PluginRuntime.Manifest.Slug}}<script src="{{asset "js/chunnel-plugin-runtime.js"}}?v={{.UIAssetVersion}}&amp;ui=admin-20261114-2" defer></script>{{end}}
     {{if eq .Admin.Current "updates"}}<script src="{{asset "js/chunnel-updates.js"}}?v={{.UIAssetVersion}}&amp;core={{.Version}}&amp;ui=policy-3" defer></script>{{end}}
     {{if .ExtensionUpdates.Kind}}<script src="{{asset "js/chunnel-extension-updates.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
     {{if .ExtensionUpdates.Marketplace}}<script src="{{asset "js/newpress-themes.js"}}" defer></script>{{end}}
@@ -141,13 +141,13 @@
     {{if eq .Admin.Current "import"}}<script src="{{asset "js/chunnel-import.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
     {{if eq .Admin.Current "wechat"}}<script src="{{asset "js/chunnel-wechat-drafts.js"}}?v={{.UIAssetVersion}}" defer></script><script src="{{asset "js/chunnel-wechat.js"}}?v={{.UIAssetVersion}}&amp;ui=admin-20261114-2" defer></script>{{end}}
     {{if eq .Admin.Current "media"}}<script src="{{asset "js/chunnel-images.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
-    {{if or (eq .Admin.Current "seo") .Editor.FormAction}}<script src="{{asset "js/chunnel-seo.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
-    {{if or .Editor.FormAction (eq .Admin.Current "comments")}}<script src="{{asset "js/chunnel-emoji-editor.js"}}?v={{.UIAssetVersion}}" defer></script>
+    {{if and (eq .Admin.Current "seo") (not .Editor.FormAction)}}<script src="{{asset "js/chunnel-seo.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+    {{if and (eq .Admin.Current "comments") (not .Editor.FormAction)}}<script src="{{asset "js/chunnel-emoji-editor.js"}}?v={{.UIAssetVersion}}" defer></script>
     <script src="{{asset "js/chunnel-emoji.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
-    {{if eq .Admin.Current "settings"}}<script src="{{asset "js/chunnel-ai-settings.js"}}?v={{.UIAssetVersion}}&amp;ui=ai-ops-20261116-1" defer></script>{{end}}
+    {{if eq .Admin.Current "settings"}}<script src="{{asset "js/chunnel-ai-settings.js"}}?v={{.UIAssetVersion}}&amp;ui=ai-ops-20261116-1" defer></script><script src="{{asset "js/chunnel-writing-templates.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
     {{if eq .Admin.Current "shop"}}<script src="{{asset "js/chunnel-component-library.js"}}?v={{.UIAssetVersion}}" defer></script><script src="{{asset "js/chunnel-composer.js"}}?v={{.UIAssetVersion}}" defer></script><script src="{{asset "js/chunnel-editor-widgets.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
-    {{if .Editor.FormAction}}<script src="{{asset "js/newpress-component-loader.js"}}?v={{.UIAssetVersion}}" data-component-loader data-component-script="{{asset "js/chunnel-component-library.js"}}?v={{.UIAssetVersion}}" data-component-style="{{asset "css/chunnel-editor-components.css"}}?v={{.UIAssetVersion}}" defer></script><script src="{{asset "js/newpress-document-editor.js"}}?v={{.UIAssetVersion}}" defer></script><script src="{{asset "js/chunnel-editor-reuse.js"}}?v={{.UIAssetVersion}}" defer></script><script src="{{asset "js/newpress-editor-snippets.js"}}?v={{.UIAssetVersion}}" defer></script><script src="{{asset "js/chunnel-editor-widgets.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
-    {{if and .Editor.FormAction (.ModuleEnabled "ai")}}<script src="{{asset "js/chunnel-ai-loader.js"}}?v={{.UIAssetVersion}}" data-ai-assets data-text-script="{{asset "js/chunnel-ai-editor.js"}}?v={{.UIAssetVersion}}" data-text-style="{{asset "css/chunnel-ai-editor.css"}}?v={{.UIAssetVersion}}" data-image-script="{{asset "js/chunnel-ai-images.js"}}?v={{.UIAssetVersion}}" data-image-style="{{asset "css/chunnel-ai-images.css"}}?v={{.UIAssetVersion}}" defer></script>{{if .AIProMax.Enabled}}<script src="{{asset "js/chunnel-ai-pro-editor.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}{{end}}
+    {{if .Editor.FormAction}}<script src="{{asset "js/newpress-document-editor.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
+    {{if and .Editor.FormAction (.ModuleEnabled "ai")}}<script src="{{asset "js/chunnel-ai-loader.js"}}?v={{.UIAssetVersion}}" data-ai-assets data-user-id="{{.Admin.Principal.UserID}}" data-csrf="{{.Admin.CSRFToken}}" data-text-script="{{asset "js/chunnel-ai-editor.js"}}?v={{.UIAssetVersion}}" data-text-style="{{asset "css/chunnel-ai-editor.css"}}?v={{.UIAssetVersion}}" data-image-script="{{asset "js/chunnel-ai-images.js"}}?v={{.UIAssetVersion}}" data-image-style="{{asset "css/chunnel-ai-images.css"}}?v={{.UIAssetVersion}}" defer></script>{{if .AIProMax.Enabled}}<script src="{{asset "js/chunnel-ai-pro-editor.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}{{end}}
   
   {{if eq .Admin.Current "circles"}}<script src="{{asset "js/chunnel-circles.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}
   {{if eq .Admin.Current "login"}}<script src="{{asset "js/chunnel-selects.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}

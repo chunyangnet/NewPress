@@ -32,7 +32,7 @@
 
 ---
 
-NewPress 提供文章、頁面、媒體庫與管理後台，可用於部落格、資源分享、社群及企業網站。預設使用 Chunnel 佈景主題，內容可儲存在本機檔案或 PostgreSQL 中。
+NewPress 提供文章、頁面、媒體庫與管理後台，可用於部落格、資源分享、社群及企業網站。標準 Docker 映像與原生安裝精靈在新安裝時僅預裝並預設使用 Chunnel 佈景主題，其他佈景主題按需安裝；原始碼目錄還包含開發範例佈景主題。內容可儲存在本機檔案或 PostgreSQL 中。
 
 > [!NOTE]
 > 目前原始碼版本為 `1.0.0-beta.1`，尚未發布穩定版。檔案儲存僅支援單一程序寫入；登入工作階段已持久化，有效期限內重新啟動可繼續使用。詳見[工作階段與部署限制](SESSION_PERSISTENCE.md)。
@@ -109,7 +109,7 @@ bash newpress-install.sh --source gitee --dir ./newpress
 sudo bash scripts/deploy.sh
 ```
 
-在選單中選擇「安装 / 更新」，依提示選擇部署方式，填寫監聽位址、連接埠與網站存取網址。首次安裝會設定管理員，完成後顯示存取網址與健康檢查結果。
+在選單中選擇「安装 / 更新」（安裝 / 更新），依提示選擇部署方式，填寫監聽位址、連接埠與網站存取網址。首次安裝會設定管理員，完成後顯示存取網址與健康檢查結果。
 
 | 方式 | 執行元件 | 環境 |
 | --- | --- | --- |
@@ -130,19 +130,19 @@ Copy-Item .env.example .env
 New-Item -ItemType Directory -Force .secrets | Out-Null
 
 docker compose build migrate
-if ($LASTEXITCODE -ne 0) { throw '镜像构建失败' }
+if ($LASTEXITCODE -ne 0) { throw '映像建置失敗' }
 
 $databasePassword = [Convert]::ToHexString([Security.Cryptography.RandomNumberGenerator]::GetBytes(32)).ToLowerInvariant()
 Set-Content -LiteralPath .secrets/postgres_password -Value $databasePassword -Encoding utf8 -NoNewline
 Set-Content -LiteralPath .secrets/database_url -Value "postgres://newpress:$databasePassword@db:5432/newpress?sslmode=disable" -Encoding utf8 -NoNewline
-Read-Host '管理员密码（至少 12 个字符）' -MaskInput |
+Read-Host '管理員密碼（至少 12 個字元）' -MaskInput |
     docker run --rm -i --network none newpress:local admin hash-password |
     Set-Content -LiteralPath .secrets/admin_password_hash -Encoding utf8 -NoNewline
-if ($LASTEXITCODE -ne 0) { throw '管理员密码哈希生成失败' }
+if ($LASTEXITCODE -ne 0) { throw '管理員密碼雜湊產生失敗' }
 Remove-Variable databasePassword
 
 docker compose config --quiet
-if ($LASTEXITCODE -ne 0) { throw 'Compose 配置检查失败' }
+if ($LASTEXITCODE -ne 0) { throw 'Compose 設定檢查失敗' }
 docker compose up -d --no-build --wait
 ```
 
@@ -167,10 +167,10 @@ go run ./cmd/newpress serve
 
 ```powershell
 New-Item -ItemType Directory -Force .secrets | Out-Null
-Read-Host '管理员密码（至少 12 个字符）' -MaskInput |
+Read-Host '管理員密碼（至少 12 個字元）' -MaskInput |
     go run ./cmd/newpress admin hash-password |
     Set-Content -LiteralPath .secrets/admin_password_hash -Encoding utf8 -NoNewline
-if ($LASTEXITCODE -ne 0) { throw '管理员密码哈希生成失败' }
+if ($LASTEXITCODE -ne 0) { throw '管理員密碼雜湊產生失敗' }
 
 $env:NEWPRESS_ADMIN_USERNAME = 'admin'
 $env:NEWPRESS_ADMIN_PASSWORD_HASH_FILE = (Resolve-Path .secrets/admin_password_hash).Path
@@ -179,7 +179,7 @@ go run ./cmd/newpress serve
 
 管理員僅在空白使用者資料庫中建立，後續引導設定不會覆寫既有帳號。直接執行時，請透過程序環境變數傳入設定；程式不會自動讀取專案的 `.env`。
 
-預設初始化空白網站。從原始碼執行時，可設定 `NEWPRESS_SEED_DEMO=true` 載入示範內容，既有內容會保留；標準 Compose 的應用程式服務固定關閉示範內容。
+預設初始化空白網站。檔案儲存模式下，若要查看示範文章，需在首次建立內容庫前設定 `NEWPRESS_SEED_DEMO=true`；既有內容庫（包括已初始化的空庫）不會補入示範文章。可將 `NEWPRESS_DATA_DIR` 指向新的獨立目錄後啟動示範網站。標準 Compose 的應用程式服務固定關閉示範內容。
 
 </details>
 
@@ -231,7 +231,7 @@ sudo bash scripts/deploy.sh admin
 | `NEWPRESS_HTTP_BIND` | `0.0.0.0` | Compose / 精靈的主機監聽位址 |
 | `NEWPRESS_HTTP_PORT` | `8080` | Compose / 精靈的 HTTP 連接埠 |
 | `NEWPRESS_ADDR` | `:8080` | 直接執行 Go 服務時的監聽位址 |
-| `NEWPRESS_DATABASE_URL` / `NEWPRESS_DATABASE_URL_FILE` | 未設定 | 直接執行時，未設定則使用檔案儲存；標準 Compose 已掛載 PostgreSQL 連線密鑰 |
+| `NEWPRESS_DATABASE_URL` / `NEWPRESS_DATABASE_URL_FILE` | 未設定 | 直接執行時，未設定則使用檔案儲存；標準 Compose 已掛載 PostgreSQL 連線機密檔案 |
 | `NEWPRESS_COMMUNITY_ENABLED` | `false` | 啟用伺服器端圈子服務，另須在後台啟用社群模組 |
 
 </details>
@@ -283,15 +283,17 @@ docker compose up -d --no-build --wait
 
 部署腳本會保留已儲存的基底映像參照。需要升級這些映像時，請核對並修改環境檔案中的 `NEWPRESS_GO_IMAGE`、`NEWPRESS_RUNTIME_IMAGE`、`NEWPRESS_POSTGRES_IMAGE` 與 `NEWPRESS_PROXY_IMAGE`；參照須包含完整的 SHA-256 digest。
 
-附加 Compose 檔案可透過重複的 `--compose-file` 選擇，後續部署會重用已儲存的清單：
+附加 Compose 檔案可透過重複的 `--compose-file` 依序選擇。明確傳入參數會取代已儲存的清單，需同時列出所有要保留的附加檔案；省略該參數時才重用既有清單。基礎 `compose.yaml` 會自動加入，僅指定它可清除附加檔案選擇。例如啟用郵件設定：
 
 ```bash
 sudo bash scripts/deploy.sh deploy --compose-file deploy/compose.mail.yaml
 ```
 
-使用[郵件設定](deploy/compose.mail.yaml)等附加檔案前，請先準備檔案要求的服務參數與 secret。
+使用[郵件設定](deploy/compose.mail.yaml)等附加檔案前，請先準備檔案要求的服務參數與機密檔案（secret）。
 
 ### 後台核心更新
+
+線上安裝需要透過 `newpress run` 啟動託管模式，標準 Docker Compose 與原生安裝精靈已採用此方式。本機原始碼範例中的 `serve` 不支援線上切換；需要此功能時，請先建置二進位檔，再用 `newpress run` 啟動。
 
 後台 `/admin/updates/` 預設使用官方公開雙來源，無須 GitHub / Gitee 存取權杖：
 
@@ -318,7 +320,7 @@ Docker 將回執儲存在 `.secrets/update-recovery/backup.json`（自訂 `NEWPR
 sudo bash scripts/deploy.sh deploy --compose-file deploy/compose.update-recovery.yaml
 ```
 
-此設定無須 Gitee 權杖。舊有 `deploy/compose.updates-secret.yaml` 仍供私有來源使用。原生 PostgreSQL 部署則在服務環境中，將 `NEWPRESS_UPDATE_BACKUP_RECEIPT_FILE` 指向受限回執檔案的絕對路徑。每次升級均須重新備份、驗證並更新回執；不符合條件時，請改用停機備份與原始碼重新部署流程。
+若已啟用郵件等附加設定，以上命令還需重複傳入對應的 `--compose-file`，以保留完整清單。此設定無須 Gitee 權杖。舊有 `deploy/compose.updates-secret.yaml` 仍供私有來源使用。原生 PostgreSQL 部署則在服務環境中，將 `NEWPRESS_UPDATE_BACKUP_RECEIPT_FILE` 指向受限回執檔案的絕對路徑。每次升級均須重新備份、驗證並更新回執；不符合條件時，請改用停機備份與原始碼重新部署流程。
 
 </details>
 
@@ -418,9 +420,9 @@ go vet ./...
 go build -trimpath -buildvcs=false ./cmd/newpress
 ```
 
-新安裝只預裝 Chunnel，其他佈景主題按需安裝。開發規範見[公開指南](themes/README.md)，範例可從 [Starter](themes/starter/README.md)、[子佈景主題範例](themes/starter-child/README.md)與[呈現契約](internal/presentation/page.go)開始。設計慣例見 [DESIGN.md](DESIGN.md)，發布準備見 [RELEASING.md](RELEASING.md)。
+開發規範見[公開指南](themes/README.md)，範例可從 [Starter](themes/starter/README.md)、[子佈景主題範例](themes/starter-child/README.md)與[呈現契約](internal/presentation/page.go)開始。設計慣例見 [DESIGN.md](DESIGN.md)，發布準備見 [RELEASING.md](RELEASING.md)。
 
-公開說明隨原始碼提供。`docs/` 是維護者的本機資料，不隨公開原始碼封存檔與 Docker 建置內容分發。
+公開說明隨原始碼提供。`docs/` 是維護者的本機資料，不包含在公開原始碼封存檔或 Docker 建置上下文（build context）中。
 
 </details>
 

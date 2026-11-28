@@ -1,10 +1,6 @@
 package content
 
-import (
-	"bytes"
-
-	"newpress.local/newpress/internal/packagefs"
-)
+import "newpress.local/newpress/internal/packagefs"
 
 // NormalizeAutosave validates the recovery envelope and regenerates its safe
 // HTML projection. Editorial fields may be incomplete and must remain unchanged
@@ -16,7 +12,7 @@ func NormalizeAutosave(autosave Autosave) (Autosave, error) {
 	if err := validateAutosave(autosave, encodingErr == nil); err != nil {
 		return Autosave{}, err
 	}
-	snapshot, err := packagefs.DecodeJSONWithNumbers[Post](bytes.NewReader(payload), int64(len(payload)), "autosave snapshot")
+	snapshot, err := packagefs.DecodeJSONBytesWithNumbers[Post](payload, int64(len(payload)), "autosave snapshot")
 	if err != nil {
 		return Autosave{}, &ValidationError{Fields: map[string]string{"snapshot": "自动保存快照无法转换为可持久化的 JSON 数据"}}
 	}

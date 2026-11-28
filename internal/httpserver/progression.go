@@ -616,7 +616,7 @@ func (s *Server) adminProgressionPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if s.progression == nil || s.progression.Store == nil {
-		s.renderFeatureRecovery(w, r, "progression", "", s.adminView("progression", p, readOnly), 503, "")
+		s.renderFeatureRecovery(w, r, "progression", "", s.adminRecoveryIdentity("progression", p, readOnly), 503, "")
 		return
 	}
 	data := s.baseViewFor(w, "成长与会员", "配置经验奖励、等级门槛与会员方案", "/admin/progression/")

@@ -1,5 +1,7 @@
+import { bindNativeSubmission } from './admin-native-submit';
 import type { AdminUI, FieldSnapshot, FormControl, Savebar, SavebarAppearance, SavebarOptions, SettingsNavigation } from './admin-types';
 import { initializeWorkspaces } from './admin-workspaces';
+import { initializeSwitches, syncSwitch } from './admin-switch';
 import { node } from '../shared/dom';
 
 // Some workbench pages introduce their first select only after adding a row.
@@ -28,10 +30,6 @@ import { node } from '../shared/dom';
     const copy = node('span', 'admin-switch-copy'); copy.append(node('b', '', title));
     if (help) copy.append(node('small', '', help));
     label.append(input, track, copy); return label;
-  };
-  const syncSwitch = (input: FormControl) => {
-    const state = input.closest?.('.admin-switch')?.querySelector('[data-switch-state]');
-    if (state && 'checked' in input) state.textContent = input.checked ? '开启' : '关闭';
   };
   const capture = (form: HTMLFormElement): FieldSnapshot[] => [...form.querySelectorAll<FormControl>('input,select,textarea')]
     .filter(input => !input.hasAttribute('data-admin-transient') && (input.type !== 'hidden' || input.hasAttribute('data-admin-value')) && !['submit', 'button', 'file'].includes(input.type))
@@ -86,18 +84,19 @@ import { node } from '../shared/dom';
       const section = event.target instanceof Element ? event.target.closest('[data-settings-section]') : null;
       if (section) document.querySelector<HTMLElement>(`[data-settings-target="${section.getAttribute('id')}"]`)?.click();
     };
+    const nativeSubmission = options.native ? bindNativeSubmission(form, {
+      onPending() {
+        if (state.kind !== 'idle') return;
+        state = { kind: 'saving', snapshot: capture(form), departing: true };
+        refresh();
+      },
+      onRestore() { state = { kind: 'idle' }; refresh(); },
+    }) : null;
     const nativeSubmit = (event: SubmitEvent) => {
-      if (state.kind !== 'idle' || readOnly) { event.preventDefault(); return; }
-      queueMicrotask(() => {
-        if (!event.defaultPrevented && state.kind === 'idle') {
-          state = { kind: 'saving', snapshot: capture(form), departing: true };
-          // Let native submission serialize its named submitter before disabling it.
-          submitTimer = setTimeout(refresh, 0);
-        }
-      });
+      if (state.kind !== 'idle' || readOnly) event.preventDefault();
     };
     const beforeUnload = (event: BeforeUnloadEvent) => {
-      if (!(state.kind === 'saving' && state.departing) && (state.kind === 'saving' || isDirty())) { event.preventDefault(); event.returnValue = ''; }
+      if (!nativeSubmission?.pending() && !(state.kind === 'saving' && state.departing) && (state.kind === 'saving' || isDirty())) { event.preventDefault(); event.returnValue = ''; }
     };
     const pageShow = (event: PageTransitionEvent) => {
       if (event.persisted) { clearTimeout(submitTimer); state = { kind: 'idle' }; refresh(); }
@@ -135,6 +134,7 @@ import { node } from '../shared/dom';
         form.removeEventListener('input', changed); form.removeEventListener('change', changed);
         form.removeEventListener('invalid', invalid, true); form.removeEventListener('submit', nativeSubmit);
         window.removeEventListener('beforeunload', beforeUnload); window.removeEventListener('pageshow', pageShow);
+        nativeSubmission?.dispose();
         savebars.delete(form);
       }
     };
@@ -204,12 +204,7 @@ import { node } from '../shared/dom';
   document.addEventListener('chunnel:admin-before-replace', event => {
     for (const [form, api] of savebars) if (event.detail.regions.some(region => region === form || region.contains(form))) api.dispose();
   });
-  document.addEventListener('change', event => { if (event.target instanceof HTMLInputElement && event.target.matches('.admin-switch input')) syncSwitch(event.target); });
-  document.addEventListener('reset', event => {
-    const form = event.target;
-    if (form instanceof HTMLFormElement) queueMicrotask(() => form.querySelectorAll<HTMLInputElement>('.admin-switch input').forEach(syncSwitch));
-  });
-  document.querySelectorAll<HTMLInputElement>('.admin-switch input').forEach(syncSwitch);
+  initializeSwitches();
 
   const main = document.querySelector<HTMLElement>('.admin-main');
   let docks = [...document.querySelectorAll<HTMLElement>('.admin-save-dock')];

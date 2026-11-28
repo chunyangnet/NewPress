@@ -19,6 +19,7 @@ for (const name of selected) {
   });
   await context.route('**/*', route => {
     const request = route.request();
+    if (new URL(request.url()).origin !== new URL(fixture.base).origin) return route.abort('blockedbyclient');
     if (['GET', 'HEAD'].includes(request.method())) return route.fallback();
     intercepted.push({ method: request.method(), url: request.url() });
     if (request.url().includes('/article-components/validate')) return route.fulfill({ contentType: 'application/json', body: request.postData() });
@@ -29,7 +30,7 @@ for (const name of selected) {
     if (hold) { held = route; return; }
     return attempts === 1 ? route.abort('failed') : route.continue();
   });
-  const visit = async path => { await page.goto(fixture.base + path); await page.waitForLoadState('networkidle'); };
+  const visit = async path => { await page.goto(fixture.base + path); await page.waitForLoadState('domcontentloaded'); };
   const launch = async () => {
     const menu = page.locator('.editor-insert-menu');
     if (!(await menu.evaluate(node => node.open))) await menu.locator(':scope > summary').click();
@@ -79,6 +80,16 @@ for (const name of selected) {
     await page.setViewportSize({ width: 1280, height: 900 });
     assert.equal(await source.inputValue(), existing);
     check('Existing component blocks keep an edit action before assets load; cancelling preserves markup at both viewport sizes.');
+    await launch();
+    const kinds = await page.locator('[data-component-list] [data-component-kind]').evaluateAll(nodes => nodes.map(node => node.dataset.componentKind));
+    for (const kind of kinds) {
+      await page.locator(`[data-component-kind="${kind}"]`).click();
+      await page.locator(`[data-component-preview] [data-np-widget="${kind}"]`).waitFor();
+    }
+    assert.equal(kinds.length, 26);
+    await page.locator('[data-component-close]').click();
+    assert.equal(await source.inputValue(), existing);
+    check('All 26 typed component defaults render without changing the document.');
 
     await visit(fixture.paths.editor); hold = true; await launch();
     const deadline = Date.now() + 12000;

@@ -32,7 +32,7 @@
 
 ---
 
-NewPress 提供文章、页面、媒体库和管理后台，可用于博客、资源分享、社区及企业站点。新安装仅预装并默认使用 Chunnel 主题，其他主题按需安装；内容可保存在本地文件或 PostgreSQL 中。
+NewPress 提供文章、页面、媒体库和管理后台，可用于博客、资源分享、社区及企业站点。标准 Docker 镜像与原生安装向导在新安装时仅预装并默认使用 Chunnel 主题，其他主题按需安装；源码目录还包含开发示例主题。内容可保存在本地文件或 PostgreSQL 中。
 
 > [!NOTE]
 > 当前源码版本为 `1.0.0-beta.1`，尚未发布稳定版。文件存储仅支持单进程写入；登录会话已持久化，有效期内重启可继续使用。会话与多实例边界见[说明](SESSION_PERSISTENCE.md)。
@@ -179,7 +179,7 @@ go run ./cmd/newpress serve
 
 管理员仅在空用户库中创建，后续引导配置不会覆盖已有账号。直接运行时，通过进程环境传入配置；程序不会自动读取项目 `.env`。
 
-默认初始化空站点。源码运行时可设置 `NEWPRESS_SEED_DEMO=true` 加载演示内容，已有内容会保留；标准 Compose 的应用服务固定关闭演示内容。
+默认初始化空站点。文件存储模式下，若要查看演示文章，需在首次创建内容库前设置 `NEWPRESS_SEED_DEMO=true`；已有内容库（包括已初始化的空库）不会补入演示文章。可将 `NEWPRESS_DATA_DIR` 指向新的独立目录后启动演示站点。标准 Compose 的应用服务固定关闭演示内容。
 
 </details>
 
@@ -283,7 +283,7 @@ docker compose up -d --no-build --wait
 
 部署脚本保留已保存的基础镜像引用。需要升级这些镜像时，核对并修改环境文件中的 `NEWPRESS_GO_IMAGE`、`NEWPRESS_RUNTIME_IMAGE`、`NEWPRESS_POSTGRES_IMAGE` 和 `NEWPRESS_PROXY_IMAGE`；引用须包含完整 SHA-256 digest。
 
-附加 Compose 文件可通过重复的 `--compose-file` 选择，后续部署复用已保存的列表：
+附加 Compose 文件可通过重复的 `--compose-file` 按顺序选择。显式传参会替换已保存的列表，需同时列出所有要保留的附加文件；不传该参数时才复用已有列表。基础 `compose.yaml` 自动加入，仅指定它可清除附加文件选择。例如启用邮件配置：
 
 ```bash
 sudo bash scripts/deploy.sh deploy --compose-file deploy/compose.mail.yaml
@@ -292,6 +292,8 @@ sudo bash scripts/deploy.sh deploy --compose-file deploy/compose.mail.yaml
 使用 [邮件配置](deploy/compose.mail.yaml) 等附加文件前，先准备文件要求的服务参数与 secret。
 
 ### 后台核心更新
+
+在线安装需要通过 `newpress run` 启动托管模式，标准 Docker Compose 与原生安装向导已采用此方式。本地源码示例中的 `serve` 不支持在线切换；需要此功能时，先构建二进制，再用 `newpress run` 启动。
 
 后台 `/admin/updates/` 默认使用官方公开双源，无需 GitHub / Gitee 访问令牌：
 
@@ -318,7 +320,7 @@ Docker 在 `.secrets/update-recovery/backup.json` 保存回执（自定义 `NEWP
 sudo bash scripts/deploy.sh deploy --compose-file deploy/compose.update-recovery.yaml
 ```
 
-此配置无需 Gitee 令牌。旧的 `deploy/compose.updates-secret.yaml` 仍供私有源使用。原生 PostgreSQL 部署则在服务环境中将 `NEWPRESS_UPDATE_BACKUP_RECEIPT_FILE` 指向受限回执文件的绝对路径。每次升级重新备份、验证并更新回执；不满足条件时改用停机备份与源码重新部署流程。
+若已启用邮件等附加配置，以上命令还需重复传入对应的 `--compose-file`，以保留完整列表。此配置无需 Gitee 令牌。旧的 `deploy/compose.updates-secret.yaml` 仍供私有源使用。原生 PostgreSQL 部署则在服务环境中将 `NEWPRESS_UPDATE_BACKUP_RECEIPT_FILE` 指向受限回执文件的绝对路径。每次升级重新备份、验证并更新回执；不满足条件时改用停机备份与源码重新部署流程。
 
 </details>
 

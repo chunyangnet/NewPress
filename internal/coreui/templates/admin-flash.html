@@ -4,7 +4,7 @@
   {{if .FeatureStatus}}{{template "admin-feature-status" .}}{{end}}
 {{if not .Flash.Authenticated}}<section class="portal-empty"><h2>登录后发布快报</h2><a class="ui-button ui-button-primary" href="/account/access/">登录或注册</a></section>{{else}}
 {{if .Flash.Editing}}
-<form class="flash-editor" data-flash-editor data-user-id="{{.Flash.UserID}}" data-endpoint="{{.Flash.Endpoint}}" data-csrf="{{.Flash.CSRF}}" data-admin="{{.Flash.Admin}}" data-id="{{.Flash.Current.ID}}" data-version="{{.Flash.Current.Version}}">
+<form class="flash-editor" data-flash-editor data-user-id="{{.Flash.UserID}}" data-endpoint="{{.Flash.Endpoint}}" data-csrf="{{.Flash.CSRF}}" data-admin="{{.Flash.Admin}}" data-id="{{.Flash.Current.ID}}" data-version="{{.Flash.Current.Version}}" data-state="{{.Flash.Current.Status}}">
 {{with .Flash.Current.ReviewNote}}<p class="flash-review-note">退回说明：{{.}}</p>{{end}}
 <label>标题<input name="title" value="{{.Flash.Current.Title}}" required maxlength="200"></label><label>正文<textarea name="body" rows="9" required maxlength="5000">{{.Flash.Current.Body}}</textarea></label>
 <div class="flash-form-grid"><label>来源名称<input name="source_name" value="{{.Flash.Current.SourceName}}" maxlength="100"></label><label>来源网址<input name="source_url" type="url" value="{{.Flash.Current.SourceURL}}" maxlength="2048" placeholder="https://"></label></div>

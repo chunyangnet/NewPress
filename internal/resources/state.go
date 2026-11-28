@@ -149,6 +149,11 @@ func (s *Store) Consume(ctx context.Context, d Delivery, r Resource) (bool, erro
 }
 func (s *Store) Submit(ctx context.Context, actor string, post int64, r Resource, v Variant, fields, answers map[string]string, day string) (Submission, error) {
 	var result Submission
+	// Reject non-actions before opening a transaction. Otherwise arbitrary
+	// visitor identities can fill the shared submission store with empty rows.
+	if (fields == nil || len(v.Fields) == 0) && (answers == nil || len(v.Questions) == 0) {
+		return result, ErrInvalid
+	}
 	if len(fields) > 20 || len(answers) > 20 {
 		return result, ErrInvalid
 	}

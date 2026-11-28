@@ -108,10 +108,24 @@ type Store interface {
 
 func Empty() State { return State{Schema: 1, NextID: 1, Items: []Question{}} }
 func Clone(s State) State {
-	b, _ := json.Marshal(s)
-	var out State
-	_ = json.Unmarshal(b, &out)
-	return out
+	s.Items = slices.Clone(s.Items)
+	for i := range s.Items {
+		q := &s.Items[i]
+		q.Tags = slices.Clone(q.Tags)
+		q.Answers = slices.Clone(q.Answers)
+		for j := range q.Answers {
+			q.Answers[j].Notes = slices.Clone(q.Answers[j].Notes)
+		}
+		q.Notes = slices.Clone(q.Notes)
+		q.Reports = slices.Clone(q.Reports)
+	}
+	s.Receipts = slices.Clone(s.Receipts)
+	s.Events = slices.Clone(s.Events)
+	for i := range s.Events {
+		s.Events[i].Mentions = slices.Clone(s.Events[i].Mentions)
+		s.Events[i].Recipients = slices.Clone(s.Events[i].Recipients)
+	}
+	return s
 }
 func URL(id int64) string { return fmt.Sprintf("/questions/%d/", id) }
 func Get(s State, id int64) (Question, bool) {
@@ -395,12 +409,15 @@ func Decode(b []byte) (State, error) {
 		}
 		return true
 	}
-	seen := map[int64]bool{}
-	for _, q := range s.Items {
-		if q.ID <= 0 || q.ID >= s.NextID || seen[q.ID] || q.Version < 1 || q.AuthorID <= 0 || !text(q.Title, 160) || !text(q.Body, 20000) {
+	// Reuse the identity index for receipt and event references; repeatedly
+	// scanning all questions makes loading a large state quadratic.
+	questionsByID := make(map[int64]*Question, len(s.Items))
+	for i := range s.Items {
+		q := &s.Items[i]
+		if q.ID <= 0 || q.ID >= s.NextID || questionsByID[q.ID] != nil || q.Version < 1 || q.AuthorID <= 0 || !text(q.Title, 160) || !text(q.Body, 20000) {
 			return s, ErrInvalid
 		}
-		seen[q.ID] = true
+		questionsByID[q.ID] = q
 		tags, err := normalizeTags(q.Tags)
 		if err != nil || !slices.Equal(tags, q.Tags) || q.CreatedAt.IsZero() || q.UpdatedAt.Before(q.CreatedAt) || len(q.Answers) > 2000 || len(q.Reports) > 200 || !validNotes(q.Notes) {
 			return s, ErrInvalid
@@ -426,7 +443,7 @@ func Decode(b []byte) (State, error) {
 	keys := map[string]bool{}
 	for _, r := range s.Receipts {
 		key := fmt.Sprintf("%d:%s", r.Actor, r.Key)
-		q, found := Get(s, r.Result.ID)
+		q, found := questionsByID[r.Result.ID]
 		digest, err := hex.DecodeString(r.Digest)
 		if r.Actor <= 0 || !text(r.Key, 100) || len(r.Key) < 8 || keys[key] || err != nil || len(digest) != sha256.Size || !found || r.Result.Version < 1 || r.Result.Version > q.Version || r.Result.AnswerID < 0 || r.Result.AnswerID > int64(len(q.Answers)) || r.Result.Replay {
 			return s, ErrInvalid
@@ -434,7 +451,7 @@ func Decode(b []byte) (State, error) {
 		keys[key] = true
 	}
 	for _, event := range s.Events {
-		q, found := Get(s, event.ObjectID)
+		q, found := questionsByID[event.ObjectID]
 		if event.Kind != "questions" || !found || event.Version > q.Version || event.ReplyID > int64(len(q.Answers)) {
 			return s, ErrInvalid
 		}

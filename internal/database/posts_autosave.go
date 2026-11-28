@@ -94,6 +94,32 @@ func (r *PostRepository) GetAutosave(ctx context.Context, postID int64, ownerKey
 	return content.NormalizeAutosave(autosave)
 }
 
+func (r *PostRepository) GetAutosaveState(ctx context.Context, postID int64, ownerKey string) (content.AutosaveState, error) {
+	if err := ctx.Err(); err != nil {
+		return content.AutosaveState{}, err
+	}
+	if postID <= 0 || !content.ValidAutosaveOwnerKey(ownerKey) {
+		return content.AutosaveState{}, content.ErrAutosaveNotFound
+	}
+	var state content.AutosaveState
+	err := r.pool.QueryRow(ctx, `
+		SELECT p.id, CASE WHEN u.status='system' THEN 0 ELSE COALESCE(p.author_id,0) END,
+		       p.type,p.version,a.source_version,a.updated_at,a.expires_at
+		FROM np_post_autosaves a JOIN np_posts p ON p.id=a.post_id
+		LEFT JOIN np_users u ON u.id=p.author_id
+		WHERE a.post_id=$1 AND a.owner_key=$2 AND a.expires_at > now()`, postID, ownerKey).Scan(
+		&state.PostID, &state.AuthorID, &state.Type, &state.PostVersion,
+		&state.SourceVersion, &state.UpdatedAt, &state.ExpiresAt,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return content.AutosaveState{}, content.ErrAutosaveNotFound
+	}
+	if err != nil {
+		return content.AutosaveState{}, fmt.Errorf("load post autosave state: %w", err)
+	}
+	return state, ctx.Err()
+}
+
 func (r *PostRepository) DeleteAutosave(ctx context.Context, postID int64, ownerKey string) error {
 	if postID <= 0 || !content.ValidAutosaveOwnerKey(ownerKey) {
 		return nil

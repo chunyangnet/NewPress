@@ -6,6 +6,7 @@ const vm = require('node:vm');
 const hljs = require('highlight.js');
 const composer = require('../../internal/coreui/assets/js/chunnel-composer.js');
 const source = fs.readFileSync(path.resolve(__dirname, '../../internal/coreui/assets/js/newpress-highlight-worker.js'), 'utf8');
+const { compile } = require('./helpers/typescript.cjs');
 let response;
 const context = vm.createContext({self: {postMessage: data => { response = data; }}, console});
 vm.runInContext(source, context);
@@ -65,3 +66,17 @@ test('structured editor accepts language aliases without permitting extra classe
     assert.throws(() => composer.renderBlock({kind: 'code', text: 'hello', language}));
   }
 });
+
+for (const [variant, code] of [['typescript', compile('frontend/core/highlight-worker.ts')], ['generated', source]]) {
+  test(`${variant}: worker treats malformed message bodies as failures and preserves correlation ids`, () => {
+    const replies = [], scope = {postMessage: reply => replies.push(reply)};
+    vm.runInNewContext(code, {self: scope, console});
+    for (const data of [null, undefined, [], 7, {id: 4}, {id: 5, text: 'x'.repeat(48001)}]) {
+      scope.onmessage({data}); assert.equal(replies.at(-1).error, true);
+    }
+    scope.onmessage({data: {id: 42, text: '<script>example</script>', language: 'unknown-language'}});
+    assert.equal(replies.at(-1).id, 42);
+    assert.equal(replies.at(-1).label, 'unknown-language');
+    assert.doesNotMatch(replies.at(-1).html, /<script>/);
+  });
+}

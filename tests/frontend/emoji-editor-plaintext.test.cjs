@@ -5,9 +5,9 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 
-const source = fs.readFileSync('themes/chunnel/assets/js/chunnel-emoji-editor.js', 'utf8');
-const start = source.indexOf('    function plain(root) {');
-const end = source.indexOf('    function selection()', start);
+const source = require('./helpers/typescript.cjs').compile('frontend/shared/emoji-editor.ts');
+const start = source.indexOf('function plain(root) {');
+const end = source.indexOf('function selection()', start);
 assert.ok(start >= 0 && end > start);
 
 // Browser-generated block structure captured from real native text/IME input.
@@ -30,12 +30,13 @@ class Element {
     });
   }
 }
-const text = data => ({ nodeType: 3, nodeName: '#text', data });
+class Text { constructor(data) { this.nodeType = 3; this.nodeName = '#text'; this.data = data; } }
+const text = data => new Text(data);
 const el = (tag, ...children) => new Element(tag, children);
 const tail = () => new Element('br', [], { emojiTail: '' });
 const emoji = () => new Element('img', [], { emojiValue: '[微笑]' });
 const root = (...children) => el('fragment', ...children);
-const plain = vm.runInNewContext(`(${source.slice(start, end).trim()})`, { Node: { TEXT_NODE: 3 }, Element });
+const plain = vm.runInNewContext(`(${source.slice(start, end).trim()})`, { Node: { TEXT_NODE: 3 }, Element, HTMLElement: Element, Text });
 
 test('native multiline input retains consecutive and edge blank lines', () => {
   const samples = [
@@ -76,8 +77,8 @@ test('canonical text, placeholders and non-content nodes retain their semantics'
   assert.equal(plain(root(text('a'), el('span', text('b')), text('c'))), 'abc');
 });
 
-const beforeStart = source.indexOf("editor.addEventListener('beforeinput', (event) => {");
-const beforeEnd = source.indexOf("    editor.addEventListener('keydown'", beforeStart);
+const beforeStart = source.indexOf('editor.addEventListener("beforeinput", (event) => {');
+const beforeEnd = source.indexOf('editor.addEventListener("keydown"', beforeStart);
 assert.ok(beforeStart >= 0 && beforeEnd > beforeStart);
 function editEvent(inputType, data, options = {}) {
   let handler;

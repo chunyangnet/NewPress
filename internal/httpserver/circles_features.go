@@ -3,6 +3,7 @@ package httpserver
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"mime"
@@ -123,6 +124,20 @@ func (s *Server) circleUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.MultipartForm.RemoveAll()
+	a, err = s.circleUploadActor(r.Context(), r)
+	if err != nil {
+		s.circleAttachmentError(w, r, err)
+		return
+	}
+	c, err = s.circles.Get(r.Context(), c.Slug)
+	if err != nil {
+		s.circleError(w, r, err)
+		return
+	}
+	if !community.CanPost(c, a) {
+		s.circleError(w, r, community.ErrForbidden)
+		return
+	}
 	values := r.MultipartForm.Value
 	files := r.MultipartForm.File
 	if len(values) != 2 || len(values["version"]) != 1 || len(values["key"]) != 1 || len(files) != 1 || len(files["file"]) != 1 {
@@ -155,9 +170,15 @@ func (s *Server) circleUpload(w http.ResponseWriter, r *http.Request) {
 	defer reader.Close()
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
-	file, result, err := s.circleFiles.Upload(ctx, s.circles, c.Slug, a, values["key"][0], version, header.Filename, reader, time.Now().UTC())
+	store := &circleAttachmentUploadStore{Store: s.circles, actor: func(ctx context.Context) (community.Actor, error) {
+		return s.circleUploadActor(ctx, r)
+	}}
+	file, result, err := s.circleFiles.Upload(ctx, store, c.Slug, a, values["key"][0], version, header.Filename, reader, time.Now().UTC())
 	if err != nil {
-		s.circleError(w, r, err)
+		if store.authErr != nil {
+			err = store.authErr
+		}
+		s.circleAttachmentError(w, r, err)
 		return
 	}
 	writeJSON(w, 200, map[string]any{"slug": c.Slug, "version": result.Version, "attachment_id": result.AttachmentID, "replay": result.Replay, "attachment": presentation.CircleAttachment{ID: file.ID, Name: file.Name, URL: "/api/v1/community/circles/" + c.Slug + "/attachments/" + file.ID, MIME: file.MIME, Size: file.Size, Image: strings.HasPrefix(file.MIME, "image/"), Unbound: true}})
@@ -197,6 +218,11 @@ func (s *Server) circleDownload(w http.ResponseWriter, r *http.Request) {
 		s.circleError(w, r, err)
 		return
 	}
+	access := func() error { return s.circleAttachmentAccess(r, c.Slug, file) }
+	if err = access(); err != nil {
+		s.circleAttachmentError(w, r, err)
+		return
+	}
 	disposition := "attachment"
 	if q.Get("inline") == "1" && strings.HasPrefix(file.MIME, "image/") {
 		disposition = "inline"
@@ -206,7 +232,8 @@ func (s *Server) circleDownload(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Content-Security-Policy", "default-src 'none'; sandbox")
 	w.Header().Set("Referrer-Policy", "no-referrer")
-	http.ServeContent(w, r, file.Name, file.CreatedAt, bytes.NewReader(data))
+	writer := privateResponse(w, r, access)
+	http.ServeContent(writer, r, file.Name, file.CreatedAt, bytes.NewReader(data))
 }
 func (s *Server) circlePreview(w http.ResponseWriter, r *http.Request) {
 	if !s.circleEnabled(w, r) {
@@ -268,13 +295,34 @@ func (s *Server) circleExport(w http.ResponseWriter, r *http.Request) {
 		s.circleError(w, r, err)
 		return
 	}
+	r, ok = s.freshSessionRequest(w, r)
+	if !ok {
+		return
+	}
+	p, ok = s.socialPrincipal(w, r, false)
+	if !ok {
+		return
+	}
 	if !community.Owns(c, community.Actor{ID: p.UserID, Admin: p.Can(auth.CapabilitySettingsManage)}) {
 		s.circleError(w, r, community.ErrForbidden)
 		return
 	}
 	c.Receipts, c.Activities = nil, nil
+	payload, err := json.Marshal(map[string]any{"schema": 1, "exported_at": time.Now().UTC(), "circle": c})
+	if err != nil {
+		s.circleError(w, r, err)
+		return
+	}
+	access := func() error { return s.circleExportAccess(r, c.Slug) }
+	if err = access(); err != nil {
+		s.circleAttachmentError(w, r, err)
+		return
+	}
+	payload = append(payload, '\n')
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": "circle-" + c.Slug + ".json"}))
-	writeJSON(w, 200, map[string]any{"schema": 1, "exported_at": time.Now().UTC(), "circle": c})
+	w.Header().Set("Content-Length", strconv.Itoa(len(payload)))
+	_, _ = privateResponse(w, r, access).Write(payload)
 }
 func (s *Server) removeCircleOrphans(ctx context.Context, previous community.Circle) {
 	if s.circleFiles == nil {

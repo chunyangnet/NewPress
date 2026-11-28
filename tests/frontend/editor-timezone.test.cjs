@@ -3,7 +3,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
-const source = fs.readFileSync(path.join(__dirname, '../../internal/coreui/assets/js/chunnel-admin-editor.source.js'), 'utf8');
+const editor = require('./helpers/editor-save.cjs');
+const source = editor.source();
 
 function fixture() {
   const controls = ['published_at', 'published_timezone', 'published_source', 'version', 'title'].map(name => ({name, value: '', tagName: 'INPUT'}));
@@ -11,7 +12,8 @@ function fixture() {
   fields.published_timezone.value = 'Asia/Kathmandu'; fields.published_source.value = 'canonical'; fields.version.value = '1';
   const labels = [{textContent: 'Asia/Kathmandu'}];
   let confirm, changed = 0;
-  const context = vm.createContext({URLSearchParams, Event,
+  const context = vm.createContext({
+    ...editor.context,URLSearchParams, Event,
     editorTimezone: 'Asia/Kathmandu', timezoneNeedsReview: false, publishedZone: fields.published_timezone, publishedSource: fields.published_source,
     timezoneReview: {hidden: true, querySelector: () => ({addEventListener: (_, listener) => {confirm = listener;}})},
     editorForm: Object.assign(new EventTarget(), {querySelector: selector => fields[/name="(.*?)"/.exec(selector)?.[1]], querySelectorAll: selector => selector === 'input, textarea, select' ? controls : selector === '[data-published-timezone-label]' ? labels : []}),

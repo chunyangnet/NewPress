@@ -226,12 +226,18 @@ func (s *Server) proParagraph(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.decodeStrictAPIJSONLimit(w, r, &in, 48<<10, "48 KiB"); !ok {
 		return
 	}
+	if !s.recheckAIEditorTool(w, r, lease) {
+		return
+	}
 	mode := map[string]string{"polish": "润色", "shorten": "精简", "expand": "展开", "translate": "翻译"}[in.Mode]
 	if mode == "" || strings.TrimSpace(in.Text) == "" || utf8.RuneCountInString(in.Text) > 8000 || aieditor.LanguageName(in.Language) == "" {
 		s.writeAPIError(w, r, 422, "ai.selection", "请选择 1 到 8000 字并指定输出语言", nil)
 		return
 	}
 	st, err := s.aiJobs.Snapshot()
+	if !s.recheckAIEditorTool(w, r, lease) {
+		return
+	}
 	if err != nil {
 		s.queueError(w, err)
 		return
@@ -253,14 +259,14 @@ func (s *Server) proParagraph(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := lease.forRequest(r.Context(), 90*time.Second)
 	defer cancel()
 	_ = http.NewResponseController(w).SetWriteDeadline(time.Now().Add(95 * time.Second))
-	text, err := s.autoText(ctx, aijobs.Job{Provider: rules.Provider, Model: rules.Model, UserID: p.UserID, Work: aijobs.WorkSpec{Kind: "paragraph", Rules: rules}}, quotedMessages("对所选段落执行"+mode+"。保留事实，只输出替换用纯文本，不要添加前言或 HTML", in.Text, in.Language), nil, 4096)
+	access := func() error { return s.aiEditorToolAccess(r, lease) }
+	text, err := s.autoTextChecked(ctx, aijobs.Job{Provider: rules.Provider, Model: rules.Model, UserID: p.UserID, Author: p.Username, Work: aijobs.WorkSpec{Kind: "paragraph", Rules: rules}}, quotedMessages("对所选段落执行"+mode+"。保留事实，只输出替换用纯文本，不要添加前言或 HTML", in.Text, in.Language), nil, 4096, access)
+	if !s.recheckAIEditorTool(w, r, lease) {
+		return
+	}
 	if err != nil {
-		s.aiEditorError(w, r, err)
+		s.aiEditorToolError(w, r, err)
 		return
 	}
-	if !lease.active() {
-		s.writeAPIError(w, r, 409, "ai.inactive", "操作已中止", nil)
-		return
-	}
-	writeJSON(w, 200, map[string]string{"text": text})
+	writePrivateJSON(w, r, 200, map[string]string{"text": text}, nil, access, func(err error) { s.aiEditorToolError(w, r, err) })
 }

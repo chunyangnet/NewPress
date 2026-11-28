@@ -20,4 +20,9 @@ function loadModules(sources, context = {}) {
   vm.runInNewContext(code, { module, exports: module.exports, ...context });
   return sources.map((_, i) => module.exports[`module${i}`]);
 }
-module.exports = { compile, loadModule, loadModules };
+// Native-realm exports for parser tests that compare nested arrays and DOM stubs.
+function loadNativeModule(source) {
+  const Module=require('node:module'),loaded=new Module(path.resolve(root,source));
+  loaded._compile(compile(source,'cjs'),source);return loaded.exports;
+}
+module.exports = { compile, loadModule, loadModules, loadNativeModule };

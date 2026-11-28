@@ -93,7 +93,8 @@
   <link rel="stylesheet" href="{{.ThemeCSSURL}}">
   {{if .Integrations.FooterHTML}}<link rel="stylesheet" href="{{asset "css/chunnel-footer.css"}}?v={{.UIAssetVersion}}">{{end}}
   <link rel="stylesheet" href="{{asset "css/chunnel-color-mode.css"}}?v={{.UIAssetVersion}}&amp;ui=color-mode-20261118-2">
-  {{if or (eq .Kind "single") (eq .BodyClass "is-account") (eq .BodyClass "is-author")}}<link rel="stylesheet" href="{{asset "css/newpress-recognition.css"}}"><script src="{{asset "js/newpress-client.js"}}" defer></script><script src="{{asset "js/newpress-recognition.js"}}" defer></script>{{end}}
+  {{$hasRecognition := or (eq .Kind "single") (eq .BodyClass "is-account") (eq .BodyClass "is-author")}}
+  {{if $hasRecognition}}<link rel="stylesheet" href="{{asset "css/newpress-recognition.css"}}"><script src="{{asset "js/newpress-client.js"}}" defer></script><script src="{{asset "js/newpress-recognition.js"}}" defer></script>{{end}}
   {{if eq .BodyClass "is-questions"}}<link rel="stylesheet" href="/core-assets/css/newpress-questions.css"><script src="/core-assets/js/newpress-questions.js" defer></script>{{end}}
 </head>
 <body class="{{.BodyClass}} {{.ThemeClass}} portal-site">
@@ -125,7 +126,7 @@
   <script src="{{asset "js/chunnel.js"}}?v={{.UIAssetVersion}}&amp;ui=resources-20261114-1" defer></script>
   <script src="{{asset "js/chunnel-emoji-editor.js"}}?v={{.UIAssetVersion}}" defer></script>
   <script src="{{asset "js/chunnel-emoji.js"}}?v={{.UIAssetVersion}}" defer></script>
-  <script src="/core-assets/js/newpress-client.js" defer></script>
+  {{if not $hasRecognition}}<script src="/core-assets/js/newpress-client.js" defer></script>{{end}}
   {{if eq .BodyClass "is-shop"}}<script src="{{asset "js/newpress-shop-services.js"}}?v={{.UIAssetVersion}}" defer></script><script src="{{asset "js/newpress-shop.js"}}" defer></script>{{end}}
   <script src="{{asset "js/chunnel-interactions.js"}}?v={{.UIAssetVersion}}" defer></script>
   {{if eq .BodyClass "is-billing"}}<script src="{{asset "js/chunnel-currency-shared.js"}}?v={{.UIAssetVersion}}" defer></script><script src="{{asset "js/chunnel-billing.js"}}?v={{.UIAssetVersion}}" defer></script>{{end}}

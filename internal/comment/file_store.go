@@ -100,14 +100,20 @@ func NewFileStore(path string, seedDemo bool, ledgers ...*audit.Ledger) (*FileSt
 	return store, nil
 }
 
-func (store *FileStore) Ready(context.Context) error {
+func (store *FileStore) Ready(ctx context.Context) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	if store == nil {
 		return errors.New("comment store is nil")
 	}
 	store.mu.RLock()
 	defer store.mu.RUnlock()
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	if store.path == "" {
-		return nil
+		return ctx.Err()
 	}
 	if store.auditFault != nil {
 		return fmt.Errorf("comment store audit failure: %w", store.auditFault)
@@ -124,10 +130,13 @@ func (store *FileStore) Ready(context.Context) error {
 	if !info.IsDir() {
 		return errors.New("comment store parent is not a directory")
 	}
-	return nil
+	return ctx.Err()
 }
 
-func (store *FileStore) ListApproved(_ context.Context, postID int64, limit, offset int) ([]Comment, int, error) {
+func (store *FileStore) ListApproved(ctx context.Context, postID int64, limit, offset int) ([]Comment, int, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, 0, err
+	}
 	if store == nil || postID <= 0 || offset < 0 {
 		return nil, 0, ErrInvalidInput
 	}
@@ -136,22 +145,37 @@ func (store *FileStore) ListApproved(_ context.Context, postID int64, limit, off
 	}
 	store.mu.RLock()
 	defer store.mu.RUnlock()
-	items := make([]Comment, 0)
+	if err := ctx.Err(); err != nil {
+		return nil, 0, err
+	}
+	selection := newCommentSelection(len(store.items), limit, offset, false)
+	total, scanned := 0, 0
 	for _, item := range store.items {
+		if scanned%256 == 0 {
+			if err := ctx.Err(); err != nil {
+				return nil, 0, err
+			}
+		}
+		scanned++
 		if item.PostID == postID && item.Status == StatusApproved {
-			items = append(items, item)
+			total++
+			selection.add(item)
 		}
 	}
-	SortPublic(items)
-	total := len(items)
-	if offset >= total {
-		return []Comment{}, total, nil
+	if err := ctx.Err(); err != nil {
+		return nil, 0, err
 	}
-	end := min(total, offset+limit)
-	return append([]Comment(nil), items[offset:end]...), total, nil
+	items := selection.page(store.items, offset)
+	if err := ctx.Err(); err != nil {
+		return nil, 0, err
+	}
+	return items, total, nil
 }
 
-func (store *FileStore) ListAdmin(_ context.Context, query Query) (List, error) {
+func (store *FileStore) ListAdmin(ctx context.Context, query Query) (List, error) {
+	if err := ctx.Err(); err != nil {
+		return List{}, err
+	}
 	if store == nil {
 		return List{}, errors.New("comment store is nil")
 	}
@@ -161,19 +185,31 @@ func (store *FileStore) ListAdmin(_ context.Context, query Query) (List, error) 
 	}
 	store.mu.RLock()
 	defer store.mu.RUnlock()
-	all := store.itemsLocked()
-	if normalized.UserID > 0 || normalized.OwnOnly {
-		owned := make([]Comment, 0)
-		for _, item := range all {
-			if item.UserID == normalized.UserID && (!normalized.OwnOnly || item.Status == StatusPending || item.Status == StatusApproved) {
-				owned = append(owned, item)
+	if err := ctx.Err(); err != nil {
+		return List{}, err
+	}
+	selection := newCommentSelection(len(store.items), normalized.Limit, normalized.Offset, true)
+	result := List{StatusCounts: emptyStatusCounts(), Items: []Comment{}}
+	needle := strings.ToLower(normalized.Search)
+	scanned := 0
+	for _, item := range store.items {
+		if scanned%256 == 0 {
+			if err := ctx.Err(); err != nil {
+				return List{}, err
 			}
 		}
-		all = owned
-	}
-	needle := strings.ToLower(normalized.Search)
-	filtered := make([]Comment, 0, len(all))
-	for _, item := range all {
+		scanned++
+		if (normalized.UserID > 0 || normalized.OwnOnly) && item.UserID != normalized.UserID {
+			continue
+		}
+		if normalized.OwnOnly && item.Status != StatusPending && item.Status != StatusApproved {
+			continue
+		}
+		// Status counts cover the authorized owner scope, before post, status
+		// and text filters, matching the existing moderation/own-content API.
+		if ValidStatus(item.Status) {
+			result.StatusCounts[item.Status]++
+		}
 		if normalized.PostID > 0 && item.PostID != normalized.PostID {
 			continue
 		}
@@ -181,47 +217,80 @@ func (store *FileStore) ListAdmin(_ context.Context, query Query) (List, error) 
 			continue
 		}
 		if needle != "" {
-			haystack := strings.ToLower(strings.Join([]string{item.AuthorName, item.AuthorEmail, item.ContentSource}, " "))
+			var haystack string
 			if normalized.OwnOnly {
 				haystack = strings.ToLower(item.ContentSource)
+			} else {
+				haystack = strings.ToLower(strings.Join([]string{item.AuthorName, item.AuthorEmail, item.ContentSource}, " "))
 			}
 			if !strings.Contains(haystack, needle) {
 				continue
 			}
 		}
-		filtered = append(filtered, item)
+		result.Total++
+		selection.add(item)
 	}
-	SortAdmin(filtered)
-	result := List{Total: len(filtered), StatusCounts: StatusCounts(all), Items: []Comment{}}
-	if normalized.Offset >= len(filtered) {
-		return result, nil
+	if err := ctx.Err(); err != nil {
+		return List{}, err
 	}
-	end := min(len(filtered), normalized.Offset+normalized.Limit)
-	result.Items = append(result.Items, filtered[normalized.Offset:end]...)
+	result.Items = selection.page(store.items, normalized.Offset)
+	if err := ctx.Err(); err != nil {
+		return List{}, err
+	}
 	return result, nil
 }
 
-func (store *FileStore) Get(_ context.Context, id int64) (Comment, error) {
+func (store *FileStore) Get(ctx context.Context, id int64) (Comment, error) {
+	if err := ctx.Err(); err != nil {
+		return Comment{}, err
+	}
 	if store == nil || id <= 0 {
 		return Comment{}, ErrNotFound
 	}
 	store.mu.RLock()
 	defer store.mu.RUnlock()
+	if err := ctx.Err(); err != nil {
+		return Comment{}, err
+	}
 	item, ok := store.items[id]
+	if err := ctx.Err(); err != nil {
+		return Comment{}, err
+	}
 	if !ok {
 		return Comment{}, ErrNotFound
 	}
 	return item, nil
 }
 
-func (store *FileStore) Snapshot(_ context.Context) (Snapshot, error) {
+func (store *FileStore) Snapshot(ctx context.Context) (Snapshot, error) {
+	if err := ctx.Err(); err != nil {
+		return Snapshot{}, err
+	}
 	if store == nil {
 		return Snapshot{}, errors.New("comment store is nil")
 	}
 	store.mu.RLock()
 	defer store.mu.RUnlock()
-	items := store.itemsLocked()
-	return Snapshot{Total: len(items), StatusCounts: StatusCounts(items), UpdatedAt: store.updatedAt}, nil
+	if err := ctx.Err(); err != nil {
+		return Snapshot{}, err
+	}
+	counts := emptyStatusCounts()
+	scanned := 0
+	for _, item := range store.items {
+		if scanned%256 == 0 {
+			if err := ctx.Err(); err != nil {
+				return Snapshot{}, err
+			}
+		}
+		scanned++
+		if ValidStatus(item.Status) {
+			counts[item.Status]++
+		}
+	}
+	if err := ctx.Err(); err != nil {
+		return Snapshot{}, err
+	}
+	return Snapshot{Total: len(store.items), StatusCounts: counts, UpdatedAt: store.updatedAt}, nil
 }
 
 func (store *FileStore) validateParentLocked(postID, parentID int64) error {

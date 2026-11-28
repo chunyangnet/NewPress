@@ -6,12 +6,28 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
-	"newpress.local/newpress/internal/plugin"
 	"os"
 	"strings"
+
+	"newpress.local/newpress/internal/plugin"
 )
 
 const RemoteUploadLimit int64 = 64 << 20
+
+// AfterFunc wakes blocked I/O on revocation. Err also observes the leases
+// synchronously at operation boundaries, before those callbacks are scheduled.
+type fileSessionContext struct {
+	context.Context
+	lease, config context.Context
+	cancel        context.CancelFunc
+}
+
+func (c *fileSessionContext) Err() error {
+	if c.lease.Err() != nil || c.config.Err() != nil {
+		c.cancel()
+	}
+	return c.Context.Err()
+}
 
 func fileKey(p Profile, key string, directory bool) (string, error) {
 	if directory {
@@ -43,6 +59,9 @@ func managedKey(key string) bool {
 }
 
 func (s *Service) fileSession(ctx context.Context, id string, version int64) (context.Context, context.CancelFunc, Backend, Profile, error) {
+	if err := checkFileAccess(ctx); err != nil {
+		return ctx, func() {}, nil, Profile{}, err
+	}
 	if err := s.load(false); err != nil {
 		return ctx, func() {}, nil, Profile{}, err
 	}
@@ -61,6 +80,11 @@ func (s *Service) fileSession(ctx context.Context, id string, version int64) (co
 	stop := context.AfterFunc(lease, cancel)
 	stopConfig := context.AfterFunc(config, cancel)
 	close := func() { stop(); stopConfig(); cancel() }
+	ctx = &fileSessionContext{Context: ctx, lease: lease, config: config, cancel: cancel}
+	if err := ctx.Err(); err != nil {
+		close()
+		return ctx, close, nil, p, err
+	}
 	b, err := s.backend(p)
 	if err != nil {
 		close()
@@ -89,6 +113,9 @@ func (s *Service) RemoteList(ctx context.Context, id, prefix, token string, vers
 	if err != nil {
 		return page, err
 	}
+	if err := checkFileAccess(ctx); err != nil {
+		return RemotePage{}, err
+	}
 	filtered := []RemoteFile{}
 	for _, f := range page.Files {
 		if _, e := fileKey(p, f.Key, f.Directory); e == nil && strings.HasPrefix(f.Key, prefix) {
@@ -115,11 +142,19 @@ func (s *Service) RemoteDownload(ctx context.Context, id, key string, version in
 		close()
 		return nil, info, err
 	}
-	return &storageReadCloser{ReadCloser: reader, cancel: close}, info, nil
+	if err := checkFileAccess(ctx); err != nil {
+		reader.Close()
+		close()
+		return nil, ObjectInfo{}, err
+	}
+	return newFileDownloadReader(ctx, reader, close), info, nil
 }
 
 // Transfers are bounded, spooled to disk and verified before a move deletes its source.
-func transferFile(ctx context.Context, b Backend, key string, reader io.Reader, contentType string) error {
+func transferFile(ctx context.Context, b Backend, key string, reader io.Reader, source ObjectInfo) error {
+	if err := checkFileAccess(ctx); err != nil {
+		return err
+	}
 	if _, err := b.Head(ctx, key); err == nil {
 		return &OperationError{"目标文件已存在，请使用其他名称"}
 	} else if !errors.Is(err, ErrNotFound) {
@@ -132,21 +167,35 @@ func transferFile(ctx context.Context, b Backend, key string, reader io.Reader, 
 	defer os.Remove(temp.Name())
 	defer temp.Close()
 	hash := sha256.New()
-	size, err := io.Copy(io.MultiWriter(temp, hash), io.LimitReader(reader, RemoteUploadLimit+1))
+	size, err := io.Copy(io.MultiWriter(temp, hash), io.LimitReader(&contextReader{ctx: ctx, r: reader}, RemoteUploadLimit+1))
+	if contextErr := ctx.Err(); contextErr != nil {
+		return contextErr
+	}
 	if err != nil {
 		return &OperationError{"文件读取失败"}
 	}
 	if size > RemoteUploadLimit {
 		return &OperationError{"单文件最多支持 64 MiB"}
 	}
-	info := ObjectInfo{Size: size, ContentType: contentType, SHA256: hex.EncodeToString(hash.Sum(nil))}
+	info := ObjectInfo{Size: size, ContentType: source.ContentType, SHA256: hex.EncodeToString(hash.Sum(nil))}
+	// A verified destination is only useful if the copy contains the complete
+	// source. Negative size means an upstream stream without a known length.
+	if source.Size >= 0 && size != source.Size || source.SHA256 != "" && !strings.EqualFold(source.SHA256, info.SHA256) {
+		return &OperationError{"来源文件大小或 SHA-256 校验不一致，已停止传输"}
+	}
 	if _, err = temp.Seek(0, io.SeekStart); err != nil {
 		return &OperationError{"无法读取文件传输缓存"}
+	}
+	if err := checkFileAccess(ctx); err != nil {
+		return err
 	}
 	if err = b.Put(ctx, key, temp, info); err != nil {
 		return err
 	}
-	return verifyRemote(ctx, b, Record{RemoteKey: key, Size: size, SHA256: info.SHA256}, true)
+	if err := verifyRemote(ctx, b, Record{RemoteKey: key, Size: size, SHA256: info.SHA256}, true); err != nil {
+		return err
+	}
+	return checkFileAccess(ctx)
 }
 
 func (s *Service) RemoteUpload(ctx context.Context, id, key string, version int64, reader io.Reader, contentType string) error {
@@ -165,7 +214,7 @@ func (s *Service) RemoteUpload(ctx context.Context, id, key string, version int6
 	if managedKey(key) {
 		return &OperationError{"本站同步目录请通过媒体库管理，上传请选择独立目录"}
 	}
-	return transferFile(ctx, b, key, reader, contentType)
+	return transferFile(ctx, b, key, reader, ObjectInfo{Size: -1, ContentType: contentType})
 }
 
 func (s *Service) RemoteAction(ctx context.Context, id, key, targetID, target, action string, version int64) error {
@@ -186,6 +235,9 @@ func (s *Service) RemoteAction(ctx context.Context, id, key, targetID, target, a
 	}
 	if action == "delete" {
 		if _, err = b.Head(ctx, key); err != nil {
+			return err
+		}
+		if err := checkFileAccess(ctx); err != nil {
 			return err
 		}
 		return b.Delete(ctx, key)
@@ -215,7 +267,10 @@ func (s *Service) RemoteAction(ctx context.Context, id, key, targetID, target, a
 	if info.Size > RemoteUploadLimit {
 		return &OperationError{"单文件最多支持 64 MiB"}
 	}
-	if err = transferFile(targetCtx, destination, target, reader, info.ContentType); err != nil {
+	if err = transferFile(targetCtx, destination, target, reader, info); err != nil {
+		return err
+	}
+	if err := checkFileAccess(targetCtx); err != nil {
 		return err
 	}
 	if action == "move" {

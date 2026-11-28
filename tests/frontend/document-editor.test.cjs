@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const {loadModule} = require('./helpers/typescript.cjs');
-const {documentSchema, nodeHTML, safeLink, safeImage, createDocumentCodec} = loadModule('frontend/core/editor-document.ts', {TextEncoder, URL});
+const {documentSchema, nodeHTML, safeLink, safeImage, pastedImageURL, createDocumentCodec} = loadModule('frontend/core/editor-document.ts', {TextEncoder, URL});
 const schema = documentSchema();
 
 test('document HTML escapes text and attributes while retaining inline marks', () => {
@@ -23,6 +23,23 @@ test('raw HTML is preserved as data without ever constructing an active DOM', ()
   const codec=createDocumentCodec(schema,{createElement(){throw Error('must not parse executable markup');}});
   for(const raw of ['<script>alert(1)</script>','<p onclick="alert(1)">test</p>','<svg><script>alert(1)</script></svg>']){
     const doc=codec.parse(raw);assert.equal(doc.firstChild.type.name,'raw_block');assert.equal(codec.serialize(doc),raw);
+  }
+});
+
+test('HTML image paste normalizes same-origin media without accepting foreign origins or normalized traversal', () => {
+  const page='https://newpress.test/admin/content/1/edit/';
+  for(const [input,expected] of [
+    ['/media/7/image.png','/media/7/image.png'],
+    ['https://newpress.test/media/7/image.png','/media/7/image.png'],
+    ['https://NEWPRESS.test:443/theme-assets/theme/cover.webp','/theme-assets/theme/cover.webp'],
+  ]) assert.equal(pastedImageURL(input,page),expected,input);
+  for(const input of ['https://outside.test/media/7/image.png','http://newpress.test/media/7/image.png',
+    'https://newpress.test:8443/media/7/image.png','https://owner@newpress.test/media/7/image.png',
+    '//newpress.test/media/7/image.png','https://newpress.test/admin/private.png',
+    'https://newpress.test/media/../media/image.png','https://newpress.test/media/%2e%2e/media/image.png',
+    'https://newpress.test/media/image.png?token=private','https://newpress.test/media/image.png#fragment',
+    'data:image/png;base64,AA==','javascript:alert(1)','https://newpress.test/media/\\image.png']) {
+    assert.equal(pastedImageURL(input,page),null,input);
   }
 });
 test('document limits cover UTF-8 bytes, top-level blocks and table dimensions', () => {

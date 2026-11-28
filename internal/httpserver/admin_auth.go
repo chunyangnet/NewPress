@@ -22,12 +22,13 @@ func (s *Server) currentAdminSession(request *http.Request) (auth.Principal, str
 	if !s.auth.Configured() {
 		return auth.Principal{}, "", false
 	}
-	for _, cookie := range request.Cookies() {
-		if cookie.Name != auth.CookieName {
-			continue
-		}
-		if principal, ok := s.auth.ValidateSessionContext(request.Context(), cookie.Value); ok {
-			return principal, cookie.Value, true
+	tokens, ok := browserSessionTokens(request)
+	if !ok {
+		return auth.Principal{}, "", false
+	}
+	for _, token := range tokens {
+		if principal, ok := s.auth.ValidateSessionContext(request.Context(), token); ok {
+			return principal, token, true
 		}
 	}
 	return auth.Principal{}, "", false
@@ -99,10 +100,7 @@ func (s *Server) requireAdminAPI(writer http.ResponseWriter, request *http.Reque
 }
 
 func (s *Server) setAdminCookie(writer http.ResponseWriter, token string) {
-	secure := false
-	if publicURL, err := url.Parse(s.config.PublicURL); err == nil {
-		secure = strings.EqualFold(publicURL.Scheme, "https")
-	}
+	secure := s.secureSessionCookie()
 	maxAge := int(s.config.AdminSessionTTL.Seconds())
 	if maxAge <= 0 {
 		maxAge = int((12 * time.Hour).Seconds())
@@ -120,9 +118,21 @@ func (s *Server) clearAdminCookie(writer http.ResponseWriter) {
 func (s *Server) expireAdminCookie(writer http.ResponseWriter, cookiePath string) {
 	http.SetCookie(writer, &http.Cookie{
 		Name: auth.CookieName, Value: "", Path: cookiePath, MaxAge: -1,
-		Expires: time.Unix(1, 0), HttpOnly: true, Secure: strings.HasPrefix(strings.ToLower(s.config.PublicURL), "https://"),
+		Expires: time.Unix(1, 0), HttpOnly: true, Secure: s.secureSessionCookie(),
 		SameSite: http.SameSiteStrictMode,
 	})
+}
+
+func (s *Server) secureSessionCookie() bool {
+	u, err := url.Parse(s.config.PublicURL)
+	if err != nil || u.Scheme != "http" {
+		return true
+	}
+	if strings.EqualFold(u.Hostname(), "localhost") {
+		return false
+	}
+	a, err := netip.ParseAddr(u.Hostname())
+	return err != nil || a.Zone() != "" || !a.IsLoopback()
 }
 
 func safeAdminNext(candidate string) string {

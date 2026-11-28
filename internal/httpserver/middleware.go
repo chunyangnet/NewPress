@@ -98,6 +98,9 @@ func recoverer(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		defer func() {
 			if recovered := recover(); recovered != nil {
+				if recovered == http.ErrAbortHandler {
+					panic(recovered)
+				}
 				slog.Error("panic recovered", "error", recovered, "request_id", request.Header.Get("X-Request-ID"))
 				writeJSON(writer, http.StatusInternalServerError, map[string]string{"error": "internal_server_error"})
 			}

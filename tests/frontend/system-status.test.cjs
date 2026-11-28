@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createStatusPoller, validSnapshot } = require('../../internal/coreui/assets/js/chunnel-system.js');
+const { createStatusPoller, validSnapshot } = require('./helpers/typescript.cjs').loadNativeModule('frontend/core/system.ts');
 
 function fixture() {
   let id = 0, visible = true;

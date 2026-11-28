@@ -16,6 +16,8 @@ for (const name of selected) {
   page.on('dialog', dialog => dialog.accept());
   await context.route('**/*', route => {
     const request = route.request();
+    if (new URL(request.url()).pathname === '/api/v1/admin/updates') return route.fulfill({ status: 503, contentType: 'application/json', body: '{"error":{"message":"unavailable in this fixture"}}' });
+    if (new URL(request.url()).pathname === '/api/v1/admin/shop/article-widgets') return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ items: [{ id: 7, title: '商城文章引用', permalink: '/posts/shop-widget', excerpt: '', author_name: '作者', category: '分类', cover_url: '' }], pagination: { page: 1, pages: 1, total: 1 } }) });
     if (['GET', 'HEAD'].includes(request.method())) return route.fallback();
     intercepted.push(request.url());
     if (request.url().endsWith('/shop/components/validate')) return route.fulfill({ contentType: 'application/json', body: request.postData() });
@@ -52,6 +54,15 @@ for (const name of selected) {
     await page.locator('[data-composer-undo]').click();
     assert.equal(await source.inputValue(), before);
     check('Shop keeps its block editor; typing and component insertion share the source and remain undoable.');
+    assert.equal(await page.locator('script[data-editor-tools-loader]').count(), 0);
+    await page.locator('[data-editor-widget-open]').first().click();
+    await page.locator('[data-article-choice="7"]').click();
+    await page.locator('[data-editor-widget-insert]').click();
+    await page.waitForFunction(() => !document.querySelector('[data-editor-widget-dialog]').open);
+    assert.match(await source.inputValue(), /data-np-post="7"/);
+    await page.locator('[data-composer-undo]').click(); assert.equal(await source.inputValue(), before);
+    assert.equal(await page.locator('script[src*="newpress-editor-insert-tools.js"]').count(), 0);
+    check('The shop retains its eager article-card entry; inserting and undoing a card needs no article-only loader.');
     for (const width of [1280, 375]) {
       await page.setViewportSize({ width, height: 900 });
       await page.screenshot({ path: resolve(directory, `composer-shop-${name}-${width}.png`) });

@@ -279,7 +279,9 @@ html[data-style] body.admin-workbench .np-update-console-header .admin-switch { 
   html[data-style] body.admin-workbench .currency-preview { display: none; }
 }
 @media(max-width:440px) {
-  html[data-style] body.admin-workbench .admin-breadcrumb { max-width: 100px; }
+  html[data-style] body.admin-workbench .admin-topbar { flex-wrap: wrap; }
+  html[data-style] body.admin-workbench .admin-breadcrumb { flex: 1 1 0; max-width: none; }
+  html[data-style] body.admin-workbench .admin-command-wrap { order: 1; flex: 0 0 100%; max-width: 100%; margin-left: 0; }
   html[data-style] body.admin-workbench .admin-top-action { display: none; }
   html[data-style] body.admin-workbench .admin-account > button > span:not(:first-child), html[data-style] body.admin-workbench .admin-account > button > .icon { display: none; }
   html[data-style] body.admin-workbench .admin-setting-section > header { padding-inline: 18px; }

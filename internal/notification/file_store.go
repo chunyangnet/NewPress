@@ -8,13 +8,10 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"io"
 	"newpress.local/newpress/internal/activity"
 	"newpress.local/newpress/internal/packagefs"
 	"os"
 	"path/filepath"
-	"runtime"
-	"sort"
 	"strconv"
 	"sync"
 	"time"
@@ -90,29 +87,6 @@ func NewFileStore(path string) (*FileStore, error) {
 	s.digest = sha256.Sum256(data)
 	return s, nil
 }
-func readFile(path string) ([]byte, error) {
-	f, before, err := packagefs.OpenRegularNoSymlink(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	data, err := io.ReadAll(io.LimitReader(f, maxFileBytes+1))
-	if err != nil {
-		return nil, err
-	}
-	if len(data) > maxFileBytes {
-		return nil, errors.New("notification store exceeds size limit")
-	}
-	after, err := packagefs.LstatNoSymlink(path)
-	if err != nil {
-		return nil, err
-	}
-	if !os.SameFile(before, after) || before.Size() != int64(len(data)) || after.Size() != before.Size() || !after.ModTime().Equal(before.ModTime()) {
-		return nil, errors.New("notification file changed during read")
-	}
-	return data, nil
-}
-
 func validateDocument(d document) error {
 	if d.Schema != 1 || d.Kind != "newpress.notifications" || d.NextID <= 0 || d.Preferences == nil || d.Receipts == nil || d.Jobs == nil {
 		return ErrInvalid
@@ -162,21 +136,22 @@ func validateDocument(d document) error {
 	return nil
 }
 
-func (s *FileStore) readyLocked() error {
+func (s *FileStore) readyLocked(ctx context.Context) error {
 	if s.path == "" {
-		return nil
+		return ctx.Err()
 	}
-	data, err := readFile(s.path)
+	hash := sha256.New()
+	err := readFileTo(ctx, s.path, hash)
 	if errors.Is(err, os.ErrNotExist) && s.digest == ([32]byte{}) {
-		return nil
+		return ctx.Err()
 	}
 	if err != nil {
 		return err
 	}
-	if sha256.Sum256(data) != s.digest {
+	if !bytes.Equal(hash.Sum(nil), s.digest[:]) {
 		return errors.New("notification file changed outside this process")
 	}
-	return nil
+	return ctx.Err()
 }
 func (s *FileStore) Ready(ctx context.Context) error {
 	s.mu.RLock()
@@ -184,27 +159,37 @@ func (s *FileStore) Ready(ctx context.Context) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	return s.readyLocked()
+	return s.readyLocked(ctx)
 }
 func (s *FileStore) change(ctx context.Context, fn func(*document) error) error {
+	return s.changeIf(ctx, nil, fn)
+}
+
+// The optional predicate runs under the same lock and integrity check as a
+// mutation. It may only inspect state. Idle pollers can avoid encoding and
+// cloning the entire durable receipt history when no transition is due.
+func (s *FileStore) changeIf(ctx context.Context, needed func(document) bool, fn func(*document) error) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	if err := s.readyLocked(); err != nil {
+	if err := s.readyLocked(ctx); err != nil {
 		return err
+	}
+	if needed != nil && !needed(s.state) {
+		return ctx.Err()
 	}
 	raw, err := json.Marshal(s.state)
 	if err != nil {
 		return err
 	}
-	var candidate document
 	original := raw
-	if err = json.Unmarshal(raw, &candidate); err != nil {
+	candidate := cloneDocument(s.state)
+	if err = fn(&candidate); err != nil {
 		return err
 	}
-	if err = fn(&candidate); err != nil {
+	if err := ctx.Err(); err != nil {
 		return err
 	}
 	raw, err = json.Marshal(candidate)
@@ -227,46 +212,12 @@ func (s *FileStore) change(ctx context.Context, fn func(*document) error) error 
 		return err
 	}
 	if s.path != "" {
-		if err = writeFile(s.path, raw); err != nil {
+		if err = writeFile(ctx, s.path, raw, func() error { return s.readyLocked(ctx) }); err != nil {
 			return err
 		}
 		s.digest = sha256.Sum256(raw)
 	}
 	s.state = candidate
-	return nil
-}
-func writeFile(path string, data []byte) error {
-	dir := filepath.Dir(path)
-	if err := packagefs.MkdirAllNoSymlink(dir, 0o750); err != nil {
-		return err
-	}
-	f, err := os.CreateTemp(dir, ".notifications-*.tmp")
-	if err != nil {
-		return err
-	}
-	defer os.Remove(f.Name())
-	defer f.Close()
-	if err = f.Chmod(0o600); err != nil {
-		return err
-	}
-	if _, err = f.Write(data); err != nil {
-		return err
-	}
-	if err = f.Sync(); err != nil {
-		return err
-	}
-	if err = f.Close(); err != nil {
-		return err
-	}
-	if err = packagefs.ReplaceRegularFileNoSymlink(f.Name(), path); err != nil {
-		return err
-	}
-	if runtime.GOOS != "windows" {
-		if dirFile, err := packagefs.OpenDirectoryNoSymlink(dir); err == nil {
-			_ = dirFile.Sync()
-			_ = dirFile.Close()
-		}
-	}
 	return nil
 }
 func (s *FileStore) Preferences(ctx context.Context, user int64) (Preferences, error) {
@@ -414,17 +365,13 @@ func (s *FileStore) UpdateNotices(ctx context.Context, user, through int64, acti
 func (s *FileStore) Subscribers(ctx context.Context, after int64, limit int) ([]Preferences, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	if limit <= 0 || limit > 200 {
 		limit = 100
 	}
-	items := []Preferences{}
-	for id, p := range s.state.Preferences {
-		if id > after && p.Weekly {
-			items = append(items, p)
-		}
-	}
-	sort.Slice(items, func(i, j int) bool { return items[i].UserID < items[j].UserID })
-	return items[:min(len(items), limit)], ctx.Err()
+	return subscriberPage(s.state.Preferences, after, limit), ctx.Err()
 }
 func (s *FileStore) QueueWeekly(ctx context.Context, user int64, end, now time.Time) error {
 	return s.change(ctx, func(d *document) error {
@@ -443,7 +390,15 @@ func (s *FileStore) QueueWeekly(ctx context.Context, user int64, end, now time.T
 func (s *FileStore) ClaimMail(ctx context.Context, now time.Time) (Job, bool, error) {
 	var selected Job
 	found := false
-	err := s.change(ctx, func(d *document) error {
+	err := s.changeIf(ctx, func(d document) bool {
+		for _, j := range d.Jobs {
+			if j.State == "pending" && !j.AvailableAt.After(now) ||
+				j.State == "sending" && j.LeaseUntil != nil && !j.LeaseUntil.After(now) {
+				return true
+			}
+		}
+		return false
+	}, func(d *document) error {
 		for key, j := range d.Jobs {
 			if j.State == "sending" && j.LeaseUntil != nil && !j.LeaseUntil.After(now) {
 				j.State = "uncertain"

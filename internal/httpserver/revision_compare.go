@@ -187,7 +187,8 @@ func (s *Server) renderRevisionComparison(writer http.ResponseWriter, request *h
 		EditorURL: "/admin/content/" + strconv.FormatInt(post.ID, 10) + "/edit/",
 		PublicURL: publicURL, IsPublic: content.PublicAt(post, time.Now()),
 	}
-	s.render(writer, http.StatusOK, "admin-revision-compare", data)
+	access := func() error { return s.contentObjectAccess(request, post.ID, false, false) }
+	s.renderChecked(writer, http.StatusOK, "admin-revision-compare", data, request, s.contentBeforeOutput(writer, request, false, access), access)
 }
 
 func parseRevisionCompareQuery(raw string) (int64, string, error) {
