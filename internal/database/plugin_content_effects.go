@@ -276,6 +276,8 @@ func (r *PluginContentEffectRepository) WriteContent(ctx context.Context, reques
 	if err = tx.QueryRow(ctx, `SELECT clock_timestamp()`).Scan(&at); err != nil {
 		return plugineffects.Result{}, plugineffects.ErrUnavailable
 	}
+	// Match the UTC representation restored from the durable JSON receipt.
+	at = at.UTC()
 	actor := fmt.Sprintf("plugin:%s user:%d", current.Plugin, current.ActorID)
 	if changed {
 		if _, err = tx.Exec(ctx, `UPDATE np_posts SET title=$2,excerpt=$3,content_source=$4,content_html=$5,version=version+1,updated_at=$6 WHERE id=$1`, post.ID, next.Title, next.Excerpt, next.ContentSource, next.ContentHTML, at); err != nil {

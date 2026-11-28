@@ -187,12 +187,24 @@ func TestPluginHostSettingsRejectsUnreadableWrite(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	input, err := json.Marshal(BusinessInput{Schema: 1, Event: "admin.action", Now: 1795141900, Payload: payload})
-	if err != nil || len(input) >= 64<<10 {
-		t.Fatalf("fixture must fit the WASM input limit: bytes=%d err=%v", len(input), err)
+	if len(payload) >= businessBytes {
+		t.Fatalf("fixture must fit the host request limit: bytes=%d", len(payload))
 	}
-	t.Logf("WASM input=%d bytes; persisted configuration would be 65537 bytes", len(input))
-	result, err := m.Dispatch(t.Context(), manifest.Slug, BusinessInput{Event: "admin.action", Payload: payload}, nil)
+	// A static guest exercises the real host boundary without parsing 64 KiB
+	// through the fixture's generic JSON bridge inside the 250ms sandbox budget.
+	dispatch := func(request []byte) (BusinessResult, error) {
+		t.Helper()
+		code := configurationSequenceModule(request)
+		if err := os.WriteFile(filepath.Join(m.root, manifest.Slug, "plugin.wasm"), code, 0600); err != nil {
+			t.Fatal(err)
+		}
+		if err := recordIntegrity(filepath.Join(m.root, manifest.Slug), manifest); err != nil {
+			t.Fatal(err)
+		}
+		return m.Dispatch(t.Context(), manifest.Slug, BusinessInput{Event: "admin.action"}, nil)
+	}
+	t.Logf("Host request=%d bytes; persisted configuration would be 65537 bytes", len(payload))
+	result, err := dispatch(payload)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -212,7 +224,7 @@ func TestPluginHostSettingsRejectsUnreadableWrite(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	result, err = m.Dispatch(t.Context(), manifest.Slug, BusinessInput{Event: "admin.action", Payload: payload}, nil)
+	result, err = dispatch(payload)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -120,6 +120,9 @@ func TestPostgreSQLPluginContentAtomicReplayAndNoop(t *testing.T) {
 	if err != nil || !first.Changed || first.Version != 2 || first.PreviousVersion != 1 {
 		t.Fatal(first, err)
 	}
+	if first.CommittedAt.Location() != time.UTC {
+		t.Fatal("receipt timestamp is not canonical UTC", first.CommittedAt)
+	}
 	f.assertCounts(t, 2, 2, 1, 1, 1)
 	updated, err := posts.GetByID(f.ctx, f.post.ID)
 	if err != nil {

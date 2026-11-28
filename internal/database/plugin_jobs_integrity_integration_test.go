@@ -23,7 +23,9 @@ func newPluginJobsIntegrationStore(t *testing.T) (context.Context, *pgxpool.Pool
 	if dsn == "" {
 		t.Skip("NEWPRESS_TEST_DATABASE_URL is not set")
 	}
-	ctx, cancel := context.WithTimeout(t.Context(), 90*time.Second)
+	// Capacity tests validate tens of MiB repeatedly with the race detector.
+	// Keep a per-fixture bound without aborting valid work on shared CI runners.
+	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Minute)
 	t.Cleanup(cancel)
 	pool, err := Open(ctx, dsn)
 	if err != nil {
