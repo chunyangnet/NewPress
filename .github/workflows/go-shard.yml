@@ -1,0 +1,46 @@
+name: Go race test shard
+on:
+  workflow_call:
+    inputs:
+      package:
+        required: true
+        type: string
+      index:
+        required: true
+        type: number
+      total:
+        required: true
+        type: number
+permissions:
+  contents: read
+jobs:
+  shard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    services:
+      postgres:
+        image: postgres:18.7-bookworm@sha256:e742a2668255221388004f3a42b6150a2103f5054ab3a4a93ae9e4f01e551c35
+        env:
+          POSTGRES_DB: newpress_test
+          POSTGRES_USER: newpress
+          POSTGRES_PASSWORD: newpress-ci-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U newpress -d newpress_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.11'
+          cache: true
+      - name: Run all tests assigned to this shard
+        env:
+          NEWPRESS_TEST_DATABASE_URL: postgres://newpress:newpress-ci-password@127.0.0.1:5432/newpress_test?sslmode=disable
+          SHARD_PACKAGE: ${{ inputs.package }}
+          SHARD_INDEX: ${{ inputs.index }}
+          SHARD_TOTAL: ${{ inputs.total }}
+        run: python3 scripts/run_go_shard.py --package "$SHARD_PACKAGE" --index "$SHARD_INDEX" --total "$SHARD_TOTAL"
