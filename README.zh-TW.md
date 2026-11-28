@@ -297,8 +297,8 @@ sudo bash scripts/deploy.sh deploy --compose-file deploy/compose.mail.yaml
 
 後台 `/admin/updates/` 預設使用官方公開雙來源，無須 GitHub / Gitee 存取權杖：
 
-- GitHub：`chunyangnet/NewPress` 的 `releases` 分支；
-- Gitee：`chunyangnet_0/newpress` 的 `releases` 分支；
+- GitHub：`chunyangnet/NewPress` 的 `releases` 更新通道標籤；
+- Gitee：`chunyangnet_0/newpress` 的 `releases` 更新通道標籤；
 - 目前測試版通道：`updates/beta.json`。
 
 官方更新公鑰隨程式內建，首次安裝無須填寫公鑰或存取權杖，公開公鑰檔案見 [official_ed25519.pub](internal/update/official_ed25519.pub)。需要自訂發布者時，可透過受信任的管道取得其公鑰，並設定 `NEWPRESS_UPDATE_PUBLIC_KEY` 覆寫內建值；私有來源必須明確設定發布者的公鑰。無效的覆寫值會報錯，不會靜默退回官方公鑰。程式不會從待驗證的更新儲存庫自動匯入新公鑰。發布分支或簽章清單尚未上傳時，檢查會明確失敗，不會將缺少檔案視為「已是最新版本」。

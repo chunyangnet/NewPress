@@ -297,8 +297,8 @@ sudo bash scripts/deploy.sh deploy --compose-file deploy/compose.mail.yaml
 
 后台 `/admin/updates/` 默认使用官方公开双源，无需 GitHub / Gitee 访问令牌：
 
-- GitHub：`chunyangnet/NewPress` 的 `releases` 分支；
-- Gitee：`chunyangnet_0/newpress` 的 `releases` 分支；
+- GitHub：`chunyangnet/NewPress` 的 `releases` 更新通道标签；
+- Gitee：`chunyangnet_0/newpress` 的 `releases` 更新通道标签；
 - 当前测试版通道：`updates/beta.json`。
 
 官方更新公钥随程序内置，首次安装无需填写公钥或访问令牌，公开公钥文件见 [official_ed25519.pub](internal/update/official_ed25519.pub)。需要自定义发布者时，可通过受信渠道取得其公钥并设置 `NEWPRESS_UPDATE_PUBLIC_KEY`，覆盖内置值；私有源必须显式配置其发布者公钥。无效的覆盖值会报错，不会静默退回官方公钥。程序不会从待验证的更新仓库自动导入新公钥。发布分支或签名清单尚未上传时，检查会明确失败，不会把缺失文件当成“已是最新版本”。

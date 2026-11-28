@@ -297,8 +297,8 @@ Online installation requires managed mode started with `newpress run`, as used b
 
 The `/admin/updates/` dashboard uses both official public sources by default, without GitHub / Gitee access tokens:
 
-- GitHub: the `releases` branch of `chunyangnet/NewPress`;
-- Gitee: the `releases` branch of `chunyangnet_0/newpress`;
+- GitHub: the `releases` update channel tag of `chunyangnet/NewPress`;
+- Gitee: the `releases` update channel tag of `chunyangnet_0/newpress`;
 - Current Beta channel: `updates/beta.json`.
 
 The official update public key is embedded in the application. A fresh installation does not need a manually configured public key or access token; see [official_ed25519.pub](internal/update/official_ed25519.pub). For a custom publisher, obtain its public key through a trusted channel and set `NEWPRESS_UPDATE_PUBLIC_KEY` to override the built-in key. Private sources require an explicitly configured publisher key. An invalid override produces an error instead of silently falling back to the official key. The application never imports a new public key automatically from the update repository it is verifying. If the release branch or signed manifest has not been published, the check fails explicitly; missing files do not mean “up to date.”

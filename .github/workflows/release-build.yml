@@ -1,8 +1,6 @@
 name: release-build
 on:
   workflow_dispatch:
-  push:
-    branches: [codex/release-beta2]
 concurrency:
   group: release-build-${{ github.ref }}
   cancel-in-progress: true

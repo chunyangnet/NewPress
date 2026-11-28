@@ -54,4 +54,4 @@ PostgreSQL 站点需按 [README 的恢复回执说明](README.md#后台核心更
 
 核心包同样自动测速 GitHub 加速站，下载失败或 SHA-256 不符时切换；只有签名清单确认的提交、长度和摘要可用于安装。
 
-后台更新清单位于两仓库同一 `releases` 分支提交的 `updates/beta.json`，与 GitHub Release 附件使用相同核心包。安装来源无须访问令牌；不要下载或配置任何发布私钥。
+后台更新清单位于两仓库 `releases` 更新通道标签指向的同一提交中的 `updates/beta.json`，与 GitHub Release 附件使用相同核心包。源码只维护 `main` 分支；`releases` 是随签名发布推进的通道标签，`v1.0.0-beta.2` 等版本标签保持固定。安装来源无须访问令牌；不要下载或配置任何发布私钥。

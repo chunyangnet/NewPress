@@ -297,8 +297,8 @@ sudo bash scripts/deploy.sh deploy --compose-file deploy/compose.mail.yaml
 
 管理画面の `/admin/updates/` は、標準で 2 つの公式公開ソースを使用します。GitHub / Gitee のアクセストークンは不要です。
 
-- GitHub：`chunyangnet/NewPress` の `releases` ブランチ。
-- Gitee：`chunyangnet_0/newpress` の `releases` ブランチ。
+- GitHub：`chunyangnet/NewPress` の更新チャネルタグ `releases`。
+- Gitee：`chunyangnet_0/newpress` の更新チャネルタグ `releases`。
 - 現在のベータ版チャンネル：`updates/beta.json`。
 
 公式更新の公開鍵はプログラムに組み込まれているため、初回インストールで公開鍵やアクセストークンを設定する必要はありません。公開鍵ファイルは [official_ed25519.pub](internal/update/official_ed25519.pub) を参照してください。独自の配信者を使用する場合は、信頼できる経路でその公開鍵を取得し、`NEWPRESS_UPDATE_PUBLIC_KEY` で組み込み鍵を上書きします。非公開ソースでは配信者の公開鍵を明示的に設定する必要があります。上書き値が無効な場合はエラーとなり、公式鍵へ自動的に戻ることはありません。検証対象の更新リポジトリから新しい公開鍵を自動的に取り込むこともありません。配信ブランチや署名付きマニフェストが未公開なら、確認処理は明示的に失敗し、ファイルの欠落を「最新版」とは扱いません。
