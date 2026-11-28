@@ -77,11 +77,11 @@ NewPress 提供文章、頁面、媒體庫與管理後台，可用於部落格�
 
 ## 部署
 
-### 雙來源原始碼安裝入口
+### 一鍵安裝預編譯部署包
 
-安裝程式預設使用 `v1.0.0-beta.2`。以下入口用於原始碼安裝；免建置下載包與啟動方法見 [預編譯包使用說明](BINARY_RELEASES.md)。
+安裝程式預設使用 `v1.0.0-beta.2`，依 CPU 架構下載部署包並校驗 SHA-256。原生模式直接安裝程式，Docker 模式匯入預建置映像；伺服器無需 Git、Go、Node.js 或 Buildx。詳見 [預編譯包使用說明](BINARY_RELEASES.md)。
 
-伺服器需要 Linux、Bash、Git 與 curl。Debian / Ubuntu 可先執行 `sudo apt-get update && sudo apt-get install -y git curl ca-certificates`。請以一般使用者下載並執行入口腳本，精靈會在安裝系統服務時視需要使用 sudo。
+伺服器需要 Linux、Bash、curl、tar 和 sha256sum。Debian / Ubuntu 可先執行 `sudo apt-get update && sudo apt-get install -y curl ca-certificates tar coreutils`。以一般使用者執行入口，安裝系統服務時按需使用 sudo。
 
 **GitHub 入口：**
 
@@ -97,15 +97,15 @@ curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time
 bash newpress-install.sh --source gitee --dir ./newpress
 ```
 
-已取得安裝程式時，可用 `--source auto` 依 GitHub、Gitee 的順序在失敗時切換；`--ref` 指定其他已發布標籤，`--commit` 可額外核對發行說明中的完整提交 SHA。自動切換不會猜測伺服器所在地。`--source` 控制主程式儲存庫，後續 Go / Docker 相依套件仍由部署精靈獨立偵測、驗證與選擇來源。
+`--source auto` 依序嘗試 GitHub、Gitee。`--source gitee` 僅從 Gitee 下載部署包與映像分片。`--ref` 選擇已發布標籤，`--commit` 可核對原始碼提交。缺少系統元件時使用對應套件來源。
 
-安裝程式只寫入**尚不存在的新目錄**，不會覆寫既有原始碼、設定或網站資料。部署參數放在 `--` 後，例如 `bash newpress-install.sh --source gitee --dir ./newpress -- --mode native`。安裝後請保留該原始碼目錄，後續管理指令均透過其中的 `scripts/deploy.sh` 執行。
+目標必須為新目錄，部署參數放在 `--` 後，例如 `-- --mode native`。保留部署目錄，以其 `scripts/deploy.sh` 執行後續管理。
 
 ### Linux 安裝精靈
 
 支援 Linux `amd64` / `arm64`。取得完整原始碼後，在包含 `go.mod`、`compose.yaml`、`themes/` 與 `plugins/` 的專案根目錄執行：
 
-```bash
+支援 Linux amd64 / arm64。一鍵入口會自動啟動精靈；手動解壓部署包後，從含 `deployment.json`、`compose.yaml` 與 `themes/` 的目錄執行：
 sudo bash scripts/deploy.sh
 ```
 

@@ -77,11 +77,11 @@ NewPress は、投稿、固定ページ、メディアライブラリ、管理�
 
 ## デプロイ
 
-### GitHub または Gitee からのインストール
+### ビルド済みパッケージのワンコマンドインストール
 
-インストーラーは既定で `v1.0.0-beta.2` を使用します。以下はソースからのインストール手順です。ビルド不要の配布物と起動方法は [バイナリ配布](BINARY_RELEASES.md) を参照してください。
+インストーラーは既定で `v1.0.0-beta.2` を使い、CPU に合った配布物をダウンロードして SHA-256 を確認します。ネイティブでは同梱バイナリ、Docker では事前ビルド済みイメージを使用します。導入先に Git、Go、Node.js、Buildx は不要です。[バイナリ配布](BINARY_RELEASES.md) を参照してください。
 
-サーバーには Linux、Bash、Git、curl が必要です。Debian / Ubuntu では、先に `sudo apt-get update && sudo apt-get install -y git curl ca-certificates` を実行できます。一般ユーザーでスクリプトをダウンロードして実行してください。システムサービスのインストール時には、必要に応じてウィザードが sudo を使用します。
+Linux、Bash、curl、tar、sha256sum が必要です。Debian / Ubuntu: `sudo apt-get update && sudo apt-get install -y curl ca-certificates tar coreutils`。通常ユーザーで実行し、サービスのインストール時に必要に応じて sudo を使います。
 
 **GitHub：**
 
@@ -97,15 +97,15 @@ curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time
 bash newpress-install.sh --source gitee --dir ./newpress
 ```
 
-インストーラーを取得済みなら、`--source auto` により GitHub、Gitee の順に試行し、失敗時に切り替えられます。`--ref` で別の公開済みタグを指定し、`--commit` でリリースノートに記載された完全なコミット SHA を追加検証できます。自動切り替えはサーバーの地域を推測しません。`--source` はコアの取得先を制御し、Go / Docker の依存関係の取得先は、デプロイウィザードが別途検出・検証・選択します。
+`--source auto` は GitHub、Gitee の順に試します。`--source gitee` は配布物とイメージ分割ファイルを Gitee からのみ取得します。`--ref` は公開済みタグ、`--commit` はソースコミットの追加確認に使えます。不足するシステムコンポーネントは各パッケージリポジトリから導入します。
 
-インストーラーは**まだ存在しない新規ディレクトリ**にのみ書き込み、既存のソース、設定、サイトデータを上書きしません。デプロイ用の引数は `--` の後に指定します。例：`bash newpress-install.sh --source gitee --dir ./newpress -- --mode native`。以後の管理コマンドには、このディレクトリの `scripts/deploy.sh` を使用するため、インストール後もソースディレクトリを保存してください。
+対象は新しいディレクトリに限ります。導入オプションは `--` の後（例: `-- --mode native`）に指定します。導入ディレクトリを保存し、その `scripts/deploy.sh` で管理してください。
 
 ### Linux インストールウィザード
 
 Linux `amd64` / `arm64` に対応しています。完全なソースを取得後、`go.mod`、`compose.yaml`、`themes/`、`plugins/` を含むプロジェクトルートで実行します。
 
-```bash
+Linux amd64 / arm64 に対応します。ワンコマンド入口はウィザードを自動起動します。手動で展開した場合は `deployment.json`、`compose.yaml`、`themes/` を含むディレクトリで実行してください：
 sudo bash scripts/deploy.sh
 ```
 

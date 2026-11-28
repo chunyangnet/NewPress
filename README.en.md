@@ -77,11 +77,11 @@ Click a thumbnail to view the full-size screenshot. These captures use an isolat
 
 ## Deployment
 
-### Install from GitHub or Gitee
+### One-command prebuilt installation
 
-The installer defaults to `v1.0.0-beta.2`. These commands install from source. For prebuilt downloads and startup instructions, see [binary releases](BINARY_RELEASES.md).
+The installer defaults to `v1.0.0-beta.2`, selects the CPU architecture, and verifies a prebuilt deployment bundle. Native installations use the included executable; Docker installations import publisher-built images. Git, Go, Node.js, and Buildx are not required on the target. See [binary releases](BINARY_RELEASES.md).
 
-The server needs Linux, Bash, Git, and curl. On Debian / Ubuntu, install prerequisites with `sudo apt-get update && sudo apt-get install -y git curl ca-certificates`. Download and run the entry script as a regular user; the wizard uses sudo when installing system services as needed.
+The server needs Linux, Bash, curl, tar, and sha256sum. On Debian / Ubuntu: `sudo apt-get update && sudo apt-get install -y curl ca-certificates tar coreutils`. Run the installer as a regular user; service installation uses sudo when needed.
 
 **GitHub:**
 
@@ -97,15 +97,15 @@ curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time
 bash newpress-install.sh --source gitee --dir ./newpress
 ```
 
-If you already have the installer, `--source auto` tries GitHub first, then Gitee on failure. Use `--ref` for another published tag and `--commit` to additionally verify the full commit SHA from the release notes. Automatic fallback does not guess the server's location. `--source` selects the core repository; the deployment wizard independently probes, verifies, and selects sources for Go and Docker dependencies.
+`--source auto` tries GitHub and then Gitee. `--source gitee` fetches the bundle and image parts only from Gitee. `--ref` selects a published version tag; `--commit` optionally checks its source commit. Missing system components use their own package repositories.
 
-The installer writes only to a **new directory that does not exist**. It does not overwrite existing source, configuration, or site data. Put deployment arguments after `--`, for example `bash newpress-install.sh --source gitee --dir ./newpress -- --mode native`. Keep this source directory after installation: subsequent management commands use its `scripts/deploy.sh`.
+The destination must be a new directory. Deployment options follow `--`, for example `-- --mode native`. Keep the deployment directory to run its `scripts/deploy.sh` management commands.
 
 ### Linux installation wizard
 
 Supports Linux `amd64` / `arm64`. After obtaining the complete source, run the following from the project root containing `go.mod`, `compose.yaml`, `themes/`, and `plugins/`:
 
-```bash
+Linux amd64 and arm64 are supported. The installer starts the wizard automatically. For a manually extracted bundle, run from the directory containing `deployment.json`, `compose.yaml`, and `themes/`:
 sudo bash scripts/deploy.sh
 ```
 

@@ -77,11 +77,11 @@ NewPress 提供文章、页面、媒体库和管理后台，可用于博客、�
 
 ## 部署
 
-### 双源源码安装入口
+### 一键安装预编译部署包
 
-安装器默认使用 `v1.0.0-beta.2`。以下入口用于源码安装；无需构建的下载包与启动方法见 [预编译包使用说明](BINARY_RELEASES.md)。
+安装器默认使用 `v1.0.0-beta.2`，根据 CPU 下载预编译部署包并校验 SHA-256。原生模式直接安装程序，Docker 模式下载并导入预构建镜像；服务器无需 Git、Go、Node.js 或 Buildx。包内容与手动启动方法见 [预编译包使用说明](BINARY_RELEASES.md)。
 
-服务器需要 Linux、Bash、Git 和 curl。Debian / Ubuntu 可先执行 `sudo apt-get update && sudo apt-get install -y git curl ca-certificates`。以普通用户下载并运行入口，向导在安装系统服务时按需使用 sudo。
+服务器需要 Linux、Bash、curl、tar 和 sha256sum。Debian / Ubuntu 可先执行 `sudo apt-get update && sudo apt-get install -y curl ca-certificates tar coreutils`。以普通用户运行入口，安装系统服务时按需使用 sudo。
 
 **GitHub 入口：**
 
@@ -90,22 +90,22 @@ curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time
 bash newpress-install.sh --source github --dir ./newpress
 ```
 
-**Gitee 国内入口（获取安装器和主程序源码均不依赖 GitHub）：**
+**Gitee 国内入口（安装器、程序和预构建镜像均从 Gitee 下载）：**
 
 ```bash
 curl --proto '=https' --proto-redir '=https' -fL --connect-timeout 10 --max-time 60 -o newpress-install.sh https://gitee.com/chunyangnet_0/newpress/raw/v1.0.0-beta.2/install.sh && \
 bash newpress-install.sh --source gitee --dir ./newpress
 ```
 
-已取得安装器时，可用 `--source auto` 按 GitHub、Gitee 顺序失败切换；`--ref` 指定其他已发布标签，`--commit` 可额外核对发布说明中的完整提交 SHA。自动切换不按服务器地域猜测。`--source` 控制主程序仓库，后续 Go / Docker 依赖仍由部署向导独立检测、校验和选源。
+已取得安装器时，可用 `--source auto` 按 GitHub、Gitee 顺序失败切换；`--ref` 指定已发布版本标签，`--commit` 可额外核对发布说明中的完整源码提交 SHA。指定 `--source gitee` 时，部署包及镜像分片均只从 Gitee 获取。Docker / Python 等系统组件缺失时，仍由向导从对应软件源安装。
 
-安装器只写入**不存在的新目录**，不会覆盖已有源码、配置或站点数据。部署参数放在 `--` 后，例如 `bash newpress-install.sh --source gitee --dir ./newpress -- --mode native`。安装后保留该源码目录，后续管理命令均从其 `scripts/deploy.sh` 执行。
+安装器只写入**不存在的新目录**，不会覆盖已有配置或站点数据。部署参数放在 `--` 后，例如 `bash newpress-install.sh --source gitee --dir ./newpress -- --mode native`。安装后保留部署目录，后续管理命令从其 `scripts/deploy.sh` 执行。
 
 ### Linux 安装向导
 
 支持 Linux `amd64` / `arm64`。获取完整源码后，在包含 `go.mod`、`compose.yaml`、`themes/` 和 `plugins/` 的项目根目录运行：
 
-```bash
+支持 Linux `amd64` / `arm64`。一键入口下载后会自动启动向导；已手动解压部署包时，在包含 `deployment.json`、`compose.yaml` 和 `themes/` 的目录运行：
 sudo bash scripts/deploy.sh
 ```
 
