@@ -2,53 +2,53 @@
   "images": {
     "app": {
       "tag": "newpress:1.0.0-beta.2-arm64",
-      "id": "sha256:72e0382a7c5a853afbb5352bc69efbbd69070276dc5971223799bc84c4b2a90a"
+      "id": "sha256:637ceb44052830ed64019472ec843762f2be4df0fb058188f3013d03c9d1a80f"
     },
     "postgres": {
       "tag": "newpress-postgres:1.0.0-beta.2-arm64",
-      "id": "sha256:356acb3aa7372ec7ba65f333d8b681107358f2daec799ed2cd27b1ee6aed106b"
+      "id": "sha256:878f10348b2116a637b51a3584eb9ff21a7a462788905eade30cdafedb2af788"
     },
     "proxy": {
       "tag": "newpress-nginx:1.0.0-beta.2-arm64",
-      "id": "sha256:f5143572e50338ae8d24835fb52d0f91fb2b7904e50ac833436579bd4c5a8ae0"
+      "id": "sha256:e4c88d046c70c7ad01bc4fe9dd59edabad48e22879ea90bf6d3391f8de3902a4"
     },
     "redis": {
       "tag": "newpress-redis:1.0.0-beta.2-arm64",
-      "id": "sha256:d08db201d3dd32affe9e4c8995c9ed2a4285122f56ba57170723a5e425bf0ca8"
+      "id": "sha256:5399219180fb96b51a89ad00c9a6021c0c0a1bfa7446074428de2b8b935cc7d1"
     }
   },
-  "sha256": "cff5bdf192bbe3d093acd392e791a6d8218272800e9da998d37cc26a3e94da9f",
-  "size": 255546294,
+  "sha256": "8a53f41bded9663345b3142255eb760aafcea630da2076be80b2be2f12eef1cb",
+  "size": 255530603,
   "parts": [
     {
       "name": "newpress-1.0.0-beta.2-linux-arm64-docker.tar.gz.part000",
       "size": 50331648,
-      "sha256": "ca841f6738b779811fd9bb4b1bfc667a7d028e7c546caa3fcd59a641c4147187"
+      "sha256": "0d6b2a64c4c2661e82b4a18cf38efcd0842568a993079eb00613f5556f3b014b"
     },
     {
       "name": "newpress-1.0.0-beta.2-linux-arm64-docker.tar.gz.part001",
       "size": 50331648,
-      "sha256": "f99324b505f37b1035a5c570bc82d248e6afe789bbe6ccc56a18eacd2adb9a9b"
+      "sha256": "a40daf9c67396ffe5359d61c78bdd3f2f268a70b089ee1b7205a1b472c6a39c4"
     },
     {
       "name": "newpress-1.0.0-beta.2-linux-arm64-docker.tar.gz.part002",
       "size": 50331648,
-      "sha256": "003bc78524e08dd4e759c50687a9cb86b8d1e6aee62a3ba3d12c1670efaf1a30"
+      "sha256": "ccc2e48a9a3ecd10a4d407d1d1615781559ec489b6273b47cb2a7a5d0ced21b8"
     },
     {
       "name": "newpress-1.0.0-beta.2-linux-arm64-docker.tar.gz.part003",
       "size": 50331648,
-      "sha256": "384d57dd6c9bfd7e90a09685259df280e255d5616dea9b9b8195b0e64d281c2c"
+      "sha256": "8534442cfafa73822fd459c2b23ebccaaae8c52840b4b3cfb9cc78de63adcda5"
     },
     {
       "name": "newpress-1.0.0-beta.2-linux-arm64-docker.tar.gz.part004",
       "size": 50331648,
-      "sha256": "0046e0adb9ca64f389bff949098648c7ca1cb22c7a5f2b0c5be2c94347f8b7dc"
+      "sha256": "ec10907a148c4b17198b202bef2cce94a241efc1e235409052b40037bf04c57c"
     },
     {
       "name": "newpress-1.0.0-beta.2-linux-arm64-docker.tar.gz.part005",
-      "size": 3888054,
-      "sha256": "84a9f90557eb9a5dffc756a0f6ae5dc46289902344ff6da8ce090dcc4053ac9c"
+      "size": 3872363,
+      "sha256": "5cba5046fce3e6d8cc53bae084781fb2e29d2c15acfc6db93ac0a9e71189fed3"
     }
   ],
   "mirrors": {

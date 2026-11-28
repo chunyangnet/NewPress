@@ -8,4 +8,4 @@ NewPress 1.0.0-beta.2
 
 完整运行包包含 Chunnel 0.48.21；市场主题沿用独立版本。签名私钥不随包分发。
 
-Source commit: `d7b146327c8e57e60796bd2c320fe58ae82ae83b`
+Source commit: `e345bcb7f46955fc37ded8e1ff6f2e81978ccc2b`
